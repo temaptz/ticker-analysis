@@ -1,8 +1,10 @@
 import sqlite3
 
+import const
+
 
 def init_table():
-    connection = sqlite3.connect('../db.sqlite')
+    connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS 
@@ -19,7 +21,7 @@ def init_table():
 
 
 def get_instruments():
-    connection = sqlite3.connect('../db.sqlite')
+    connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Instruments')
     instruments = cursor.fetchall()
@@ -28,7 +30,7 @@ def get_instruments():
     return instruments
 
 def get_instrument(figi: str):
-    connection = sqlite3.connect('../db.sqlite')
+    connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Instruments WHERE figi = ?', (figi,))
     instrument = cursor.fetchall()
@@ -38,7 +40,7 @@ def get_instrument(figi: str):
 
 
 def insert_instrument(figi: str, ticker: str, name: str):
-    connection = sqlite3.connect('../db.sqlite')
+    connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
     cursor.execute('INSERT INTO Instruments (figi, ticker, name) VALUES (?, ?, ?)', (figi, ticker, name))
     connection.commit()

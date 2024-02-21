@@ -9,31 +9,31 @@ def init_table():
     cursor = connection.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS 
-    "Prices" 
+    "Forecasts" 
     (
-    "figi" TEXT, 
-    "price" NUMERIC, 
+    "uid" TEXT, 
+    "forecasts" TEXT, 
     "date" timestamp, 
-    PRIMARY KEY("figi") 
+    PRIMARY KEY("uid") 
     )
     ''')
     connection.commit()
     connection.close()
 
 
-def get_prices():
+def get_forecasts():
     connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM Prices')
-    prices = cursor.fetchall()
+    cursor.execute('SELECT * FROM Forecasts')
+    forecasts = cursor.fetchall()
     connection.close()
 
-    return prices
+    return forecasts
 
 
-def insert_price(figi: str, price: float):
+def insert_forecast(uid: str, forecast: str):
     connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
-    cursor.execute('INSERT INTO Prices (figi, price, date) VALUES (?, ?, ?)', (figi, price, datetime.datetime.now()))
+    cursor.execute('INSERT INTO Forecasts (uid, forecasts, date) VALUES (?, ?, ?)', (uid, forecast, datetime.datetime.now()))
     connection.commit()
     connection.close()
