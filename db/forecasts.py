@@ -13,8 +13,7 @@ def init_table():
     (
     "uid" TEXT, 
     "forecasts" TEXT, 
-    "date" timestamp, 
-    PRIMARY KEY("uid") 
+    "date" timestamp 
     )
     ''')
     connection.commit()
