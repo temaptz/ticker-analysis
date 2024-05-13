@@ -9,6 +9,9 @@ from tinkoff.invest import (
 )
 from tinkoff.invest.schemas import (
     GetAssetFundamentalsRequest,
+    GetTechAnalysisRequest,
+    Deviation,
+    Quotation,
 )
 from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
@@ -33,14 +36,9 @@ def collect():
             for i in history:
                 print(i)
 
-            f = forecasts.get_forecasts(client=client, favorite=favorite)
-            if f:
-                print('FORECASTS')
-                for i in f.targets:
-                    print(i)
-
-                print('CONSENSUS FORECASTS')
-                print(f.consensus)
+            tech = get_tech_analysis(client=client, favorite=favorite)
+            print('TECH ANALYSIS')
+            print(tech)
 
 
 def get_fundamentals(client: Services, favorite: FavoriteInstrument) -> StatisticResponse:
@@ -78,5 +76,32 @@ def get_history(client: Services, favorite: FavoriteInstrument) -> list[Historic
 
 
 def get_tech_analysis(client: Services, favorite: FavoriteInstrument) -> None:
-    return None
+    try:
+        resp = client.market_data.get_tech_analysis(
+            request=GetTechAnalysisRequest(
+                indicator_type=GetTechAnalysisRequest.indicator_type.INDICATOR_TYPE_SMA,
+                instrument_uid=favorite.uid,
+                from_=(datetime.datetime.now() - datetime.timedelta(days=90)),
+                to=datetime.datetime.now(),
+                interval=GetTechAnalysisRequest.interval.INDICATOR_INTERVAL_WEEK,
+                type_of_price=GetTechAnalysisRequest.type_of_price.TYPE_OF_PRICE_AVG,
+                length=1,
+                deviation=Deviation(
+                    deviation_multiplier=Quotation(
+                        units=1,
+                        nano=0
+                    )
+                ),
+                smoothing=Deviation(
+                    deviation_multiplier=Quotation(
+                        units=0,
+                        nano=1
+                    )
+                )
+            )
+        )
 
+        return resp
+
+    except Exception:
+        print('ERROR GETTING TECH ANALYSIS OF:', favorite.ticker)

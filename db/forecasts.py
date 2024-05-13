@@ -1,4 +1,5 @@
 import datetime
+import pickle
 import sqlite3
 
 import const
@@ -30,9 +31,26 @@ def get_forecasts():
     return forecasts
 
 
+def get_forecasts_by_uid(uid: str):
+    connection = sqlite3.connect(const.DB_PATH)
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM Forecasts WHERE uid = ?', (uid,))
+    forecasts = cursor.fetchall()
+    connection.close()
+
+    return forecasts
+
+
 def insert_forecast(uid: str, forecast: str):
     connection = sqlite3.connect(const.DB_PATH)
     cursor = connection.cursor()
     cursor.execute('INSERT INTO Forecasts (uid, forecasts, date) VALUES (?, ?, ?)', (uid, forecast, datetime.datetime.now()))
     connection.commit()
     connection.close()
+
+
+def serialize(data) -> str:
+    return pickle.dumps(data)
+
+def deserialize(string: str) -> any:
+    return pickle.loads(string)

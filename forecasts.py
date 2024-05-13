@@ -1,5 +1,3 @@
-import pickle
-
 from tinkoff.invest import (
     Client,
     FavoriteInstrument,
@@ -35,7 +33,7 @@ def save_favorite_forecasts():
 
                 forecasts.insert_forecast(
                     uid=favorite.uid,
-                    forecast=pickle.dumps(f)
+                    forecast=forecasts.serialize(f)
                 )
 
 
@@ -43,7 +41,7 @@ def show_saved_forecasts():
     for f in forecasts.get_forecasts():
         uid = f[0]
         date = f[2]
-        data = pickle.loads(f[1])
+        data = forecasts.deserialize(f[1])
         print(uid)
         print(date)
         print(data)
