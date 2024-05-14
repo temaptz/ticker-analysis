@@ -11,7 +11,12 @@ from tinkoff.invest.schemas import (
     GetAssetFundamentalsRequest,
     GetTechAnalysisRequest,
     Deviation,
+    Smoothing,
     Quotation,
+    IndicatorType,
+    IndicatorInterval,
+    TypeOfPrice,
+    TechAnalysisItem,
 )
 from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
@@ -75,16 +80,16 @@ def get_history(client: Services, favorite: FavoriteInstrument) -> list[Historic
     return candles
 
 
-def get_tech_analysis(client: Services, favorite: FavoriteInstrument) -> None:
+def get_tech_analysis(client: Services, favorite: FavoriteInstrument) -> list[TechAnalysisItem]:
     try:
         resp = client.market_data.get_tech_analysis(
             request=GetTechAnalysisRequest(
-                indicator_type=GetTechAnalysisRequest.indicator_type.INDICATOR_TYPE_SMA,
+                indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
                 instrument_uid=favorite.uid,
                 from_=(datetime.datetime.now() - datetime.timedelta(days=90)),
                 to=datetime.datetime.now(),
-                interval=GetTechAnalysisRequest.interval.INDICATOR_INTERVAL_WEEK,
-                type_of_price=GetTechAnalysisRequest.type_of_price.TYPE_OF_PRICE_AVG,
+                interval=IndicatorInterval.INDICATOR_INTERVAL_WEEK,
+                type_of_price=TypeOfPrice.TYPE_OF_PRICE_AVG,
                 length=1,
                 deviation=Deviation(
                     deviation_multiplier=Quotation(
@@ -92,16 +97,15 @@ def get_tech_analysis(client: Services, favorite: FavoriteInstrument) -> None:
                         nano=0
                     )
                 ),
-                smoothing=Deviation(
-                    deviation_multiplier=Quotation(
-                        units=0,
-                        nano=1
-                    )
+                smoothing=Smoothing(
+                    fast_length=3,
+                    slow_length=1,
+                    signal_smoothing=2
                 )
             )
         )
 
-        return resp
+        return resp.technical_indicators
 
     except Exception:
         print('ERROR GETTING TECH ANALYSIS OF:', favorite.ticker)
