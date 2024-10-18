@@ -32,14 +32,23 @@ def collect():
             print(favorite.ticker)
             print(favorite.name)
 
-            fundamentals = get_fundamentals(client=client, favorite=favorite)
-            print('FUNDAMENTALS')
-            print(fundamentals)
-
-            history = get_history(client=client, favorite=favorite)
-            print('HISTORY')
-            for i in history:
-                print(i)
+            # fundamentals = get_fundamentals(client=client, favorite=favorite)
+            # print('FUNDAMENTALS')
+            # print(fundamentals)
+            #
+            # history = get_history(client=client, favorite=favorite)
+            # print('HISTORY')
+            # for i in history:
+            #     print(i)
+            #
+            # f = forecasts.get_forecasts(client=client, favorite=favorite)
+            # if f:
+            #     print('FORECASTS')
+            #     for i in f.targets:
+            #         print(i)
+            #
+            #     print('CONSENSUS FORECASTS')
+            #     print(f.consensus)
 
             tech = get_tech_analysis(client=client, favorite=favorite)
             print('TECH ANALYSIS')
