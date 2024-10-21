@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { InstrumentHistoryPrice, InstrumentInList, InstrumentLastPrice } from './types';
+import { CandleInterval } from './enums';
 
 @Injectable({
   providedIn: 'root'
@@ -23,18 +24,20 @@ export class AppService {
     return this.http.get<InstrumentInList[]>('http://127.0.0.1:8000/instrument', { params: params });
   }
 
-  getInstrumentLastPrice(uid: string): Observable<InstrumentLastPrice[]> {
+  getInstrumentLastPrices(uid: string): Observable<InstrumentLastPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
     return this.http.get<InstrumentLastPrice[]>('http://127.0.0.1:8000/instrument/last_prices', { params: params });
   }
 
-  getInstrumentHistoryPrice(uid: string): Observable<InstrumentHistoryPrice[]> {
+  getInstrumentHistoryPrices(uid: string, days: number, interval: CandleInterval): Observable<InstrumentHistoryPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('days', days);
+    params = params.set('interval', interval);
 
-    return this.http.get<InstrumentHistoryPrice[]>('http://127.0.0.1:8000/instrument/history_price', { params: params });
+    return this.http.get<InstrumentHistoryPrice[]>('http://127.0.0.1:8000/instrument/history_prices', { params: params });
   }
 
 }

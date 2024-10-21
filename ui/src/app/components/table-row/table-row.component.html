@@ -2,4 +2,25 @@
   <td>{{ instr.name }}</td>
   <td>{{ instr.ticker }}</td>
   <td>{{ instrumentLastPrice()?.price }}</td>
+  <td>
+    <graph
+      [instrumentUid]="instrumentUid"
+      [days]="365 * 5"
+      [interval]="candleInterval.CANDLE_INTERVAL_MONTH"
+    ></graph>
+  </td>
+  <td>
+    <graph
+      [instrumentUid]="instrumentUid"
+      [days]="365"
+      [interval]="candleInterval.CANDLE_INTERVAL_WEEK"
+    ></graph>
+  </td>
+  <td>
+    <graph
+      [instrumentUid]="instrumentUid"
+      [days]="30"
+      [interval]="candleInterval.CANDLE_INTERVAL_DAY"
+    ></graph>
+  </td>
 </ng-container>

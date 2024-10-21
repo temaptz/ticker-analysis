@@ -22,7 +22,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.appService.getInstruments()
-      .subscribe(resp => this.instruments.set(resp));
+      .subscribe(resp => this.instruments.set(resp.filter((i, index) => index < 10)));
   }
 
 }

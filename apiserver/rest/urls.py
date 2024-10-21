@@ -11,5 +11,5 @@ urlpatterns = [
     path('instruments', views.instruments_list),
     path('instrument', views.instrument_info),
     path('instrument/last_prices', views.instrument_last_prices),
-    path('instrument/history_price', views.instrument_history_prices),
+    path('instrument/history_prices', views.instrument_history_prices),
 ]

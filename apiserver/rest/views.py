@@ -1,5 +1,8 @@
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
+from tinkoff.invest import (
+    CandleInterval
+)
 from .invest import instruments
 from .invest import serializer
 import json
@@ -42,13 +45,13 @@ def instrument_last_prices(request):
 
 @api_view(['GET'])
 def instrument_history_prices(request):
-    resp = ''
+    resp = list()
     uid = request.GET.get('uid')
+    days = request.GET.get('days')
+    interval = request.GET.get('interval')
 
-    if uid:
-        price = instruments.get_instrument_history_price_by_uid(uid)
-
-        if price:
-            resp = serializer.getDictByObject(price)
+    if uid and days and interval:
+        for i in instruments.get_instrument_history_price_by_uid(uid, int(days), CandleInterval(int(interval))):
+            resp.append(serializer.getDictByObject(i))
 
     return HttpResponse(json.dumps(resp))

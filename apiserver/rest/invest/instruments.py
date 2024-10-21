@@ -9,6 +9,7 @@ from tinkoff.invest import (
 )
 import os
 import sys
+import datetime
 
 root_directory = os.path.abspath('../')
 sys.path.append(root_directory)
@@ -35,9 +36,11 @@ def get_instrument_last_price_by_uid(uid: str):
         ).last_prices
 
 
-def get_instrument_history_price_by_uid(uid: str):
+def get_instrument_history_price_by_uid(uid: str, daysCount: int, interval: CandleInterval):
     with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.market_data.get_candles(
-            id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
-            id=uid
+            instrument_id=uid,
+            from_=(datetime.datetime.now() - datetime.timedelta(days=daysCount)),
+            to=datetime.datetime.now(),
+            interval=interval
         ).candles
