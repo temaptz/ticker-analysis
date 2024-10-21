@@ -5,6 +5,7 @@ from tinkoff.invest import (
     CandleInterval,
     HistoricCandle,
     constants,
+    InstrumentIdType
 )
 import os
 import sys
@@ -14,8 +15,29 @@ sys.path.append(root_directory)
 from const import TOKEN
 
 
+def get_instrument_by_uid(uid: str):
+    with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.instruments.get_instrument_by(
+            id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
+            id=uid
+        ).instrument
+
+
 def get_favorites():
     with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
-        favorites = client.instruments.get_favorites().favorite_instruments
+        return client.instruments.get_favorites().favorite_instruments
 
-        return favorites
+
+def get_instrument_last_price_by_uid(uid: str):
+    with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.market_data.get_last_prices(
+            instrument_id=[uid]
+        ).last_prices
+
+
+def get_instrument_history_price_by_uid(uid: str):
+    with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.market_data.get_candles(
+            id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
+            id=uid
+        ).candles

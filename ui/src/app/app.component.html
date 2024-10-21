@@ -1,7 +1,14 @@
 <table>
+  <thead>
+    <th>Название</th>
+    <th>Тикер</th>
+    <th>Цена</th>
+  </thead>
   <tbody>
-    <tr *ngFor="let instrument of instruments()">
-      <td>{{ instrument.name }}</td>
-    </tr>
+    <tr
+      *ngFor="let instrument of instruments()"
+      app-table-row
+      [instrumentUid]="instrument.uid"
+    ></tr>
   </tbody>
 </table>

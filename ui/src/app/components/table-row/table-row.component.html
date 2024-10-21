@@ -1,0 +1,5 @@
+<ng-container *ngIf="instrument() as instr">
+  <td>{{ instr.name }}</td>
+  <td>{{ instr.ticker }}</td>
+  <td>{{ instrumentLastPrice()?.price }}</td>
+</ng-container>
