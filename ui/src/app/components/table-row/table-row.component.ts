@@ -5,11 +5,14 @@ import { Instrument, InstrumentInList, InstrumentLastPrice } from '../../types';
 import { isBefore, parse, parseJSON } from 'date-fns';
 import { GraphComponent } from '../graph/graph.component';
 import { CandleInterval } from '../../enums';
+import { getPriceByQuotation } from '../../utils';
+import { ForecastComponent } from '../forecast/forecast.component';
+import { ForecastHistoryComponent } from '../forecast-history/forecast-history.component';
 
 @Component({
   selector: '[app-table-row]',
   standalone: true,
-  imports: [CommonModule, GraphComponent],
+  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent],
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss'
 })
@@ -20,6 +23,7 @@ export class TableRowComponent implements OnInit {
   instrument = signal<Instrument>(null);
   instrumentLastPrice = signal<InstrumentLastPrice>(null);
   candleInterval = CandleInterval;
+  getPriceByQuotation = getPriceByQuotation;
 
   constructor(
     private appService: AppService,

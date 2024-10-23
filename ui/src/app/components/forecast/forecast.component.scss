@@ -1,0 +1,19 @@
+.plus {
+  color: green;
+
+  &:before {
+    content: '+';
+  }
+}
+
+.minus {
+  color: red;
+}
+
+.small {
+  font-size: .5em;
+}
+
+.date {
+  font-size: .5em;
+}

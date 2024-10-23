@@ -1,16 +1,25 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexTitleSubtitle,
+  ApexXAxis,
+  ApexYAxis,
+  NgApexchartsModule
+} from 'ng-apexcharts';
 import { AppService } from '../../app.service';
 import { InstrumentHistoryPrice, InstrumentInList } from '../../types';
 import { CandleInterval } from '../../enums';
-import { ChartConfiguration } from 'chart.js';
-import { BaseChartDirective } from 'ng2-charts';
+import { parseJSON } from 'date-fns';
+import { getPriceByQuotation } from '../../utils';
 
 
 @Component({
   selector: 'graph',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, NgApexchartsModule],
+  providers: [],
   templateUrl: './graph.component.html',
   styleUrl: './graph.component.scss'
 })
@@ -20,42 +29,21 @@ export class GraphComponent implements OnInit {
   @Input({required: true}) days!: number;
   @Input({required: true}) interval!: CandleInterval;
 
-  chartData = signal<ChartConfiguration<'line'>['data']>({
-    datasets: [],
-  });
-  chartOptions: ChartConfiguration<'line'>['options'] = {
-    plugins: {
-      legend: {
-        display: false
-      }
-    },
-    elements: {
-      line: {
-        borderWidth: 1,
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-      },
-      point: {
-        borderColor: 'transparent',
-        backgroundColor: 'transparent',
-        radius: 1,
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false
-        },
-        display: false
-      },
-      y: {
-        grid: {
-          display: false
-        },
-        display: false,
-      }
+  series = signal<ApexAxisChartSeries | null>(null);
+  chart?: ApexChart = {
+    type: 'candlestick',
+    width: 250,
+    height: 200,
+  };
+  xaxis?: ApexXAxis = {
+    type: 'datetime',
+  };
+  yaxis?: ApexYAxis = {
+    tooltip: {
+      enabled: true,
     },
   };
+  title?: ApexTitleSubtitle;
 
   constructor(
     private appService: AppService,
@@ -64,16 +52,17 @@ export class GraphComponent implements OnInit {
   ngOnInit() {
     this.appService.getInstrumentHistoryPrices(this.instrumentUid, this.days, this.interval)
       .subscribe((resp: InstrumentHistoryPrice[]) => {
-        const chartData: ChartConfiguration<'line'>['data'] = {
-          labels: resp.map(i => ''),
-          datasets: [
-            {
-              data: resp.map(i => ((i.high + i.low) / 2)),
-              tension: 0.1,
-            }
-          ]
-        };
-        this.chartData.set(chartData);
+        const series: ApexAxisChartSeries = [{
+          data: resp?.map(i => [
+            parseJSON(i.time).getTime(),
+            getPriceByQuotation(i.open) ?? 0,
+            getPriceByQuotation(i.high) ?? 0,
+            getPriceByQuotation(i.low) ?? 0,
+            getPriceByQuotation(i.close) ?? 0,
+          ])
+            ?? [],
+        }];
+        this.series.set(series);
       });
   }
 
