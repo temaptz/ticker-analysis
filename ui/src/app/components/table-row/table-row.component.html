@@ -60,4 +60,15 @@
       <span>-</span>
     }
   </td>
+  <td>
+    @defer (on viewport) {
+      <fundamentals
+        [instrumentAssetUid]="instr.asset_uid"
+      ></fundamentals>
+    }
+    @placeholder (minimum 0.5s) {
+      <span>-</span>
+    }
+  </td>
+  <td></td>
 </ng-container>

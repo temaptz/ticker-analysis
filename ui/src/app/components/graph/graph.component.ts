@@ -33,7 +33,7 @@ export class GraphComponent implements OnInit {
   chart?: ApexChart = {
     type: 'candlestick',
     width: 250,
-    height: 200,
+    height: 150,
   };
   xaxis?: ApexXAxis = {
     type: 'datetime',

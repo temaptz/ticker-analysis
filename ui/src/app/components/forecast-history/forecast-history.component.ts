@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AppService } from '../../app.service';
 import { Forecast, InstrumentInList } from '../../types';
 import { getPriceByQuotation } from '../../utils';
+import { parseJSON, isSameMonth } from 'date-fns';
 
 
 @Component({
@@ -26,7 +27,19 @@ export class ForecastHistoryComponent implements OnInit {
 
   ngOnInit() {
     this.appService.getInstrumentHistoryForecasts(this.instrumentUid)
-      .subscribe((resp: Forecast[]) => this.history.set(resp));
+      .subscribe((resp: Forecast[]) => {
+        const respFiltered: Forecast[] = [];
+
+        resp?.forEach(i => {
+          const date = parseJSON(i.time);
+
+          if (!respFiltered.some(j => isSameMonth(date, parseJSON(j.time)))) {
+            respFiltered.push(i);
+          }
+        });
+
+        this.history.set(respFiltered);
+      });
   }
 
 }

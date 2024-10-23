@@ -8,11 +8,12 @@ import { CandleInterval } from '../../enums';
 import { getPriceByQuotation } from '../../utils';
 import { ForecastComponent } from '../forecast/forecast.component';
 import { ForecastHistoryComponent } from '../forecast-history/forecast-history.component';
+import { FundamentalsComponent } from '../fundamentals/fundamentals.component';
 
 @Component({
   selector: '[app-table-row]',
   standalone: true,
-  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent],
+  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent],
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss'
 })

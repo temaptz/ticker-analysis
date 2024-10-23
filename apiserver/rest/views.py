@@ -5,6 +5,7 @@ from tinkoff.invest import (
 )
 from .invest import instruments
 from .invest import serializer
+from .invest import forecasts
 import json
 
 
@@ -13,7 +14,7 @@ def instruments_list(request):
     resp = list()
 
     for i in instruments.get_favorites():
-        resp.append(serializer.getDictByObject(i))
+        resp.append(serializer.get_dict_by_object(i))
 
     return HttpResponse(json.dumps(resp))
 
@@ -26,7 +27,7 @@ def instrument_info(request):
         instrument = instruments.get_instrument_by_uid(uid)
 
         if instrument:
-            resp = serializer.getDictByObject(instrument)
+            resp = serializer.get_dict_by_object(instrument)
 
     return HttpResponse(json.dumps(resp))
 
@@ -38,7 +39,7 @@ def instrument_last_prices(request):
 
     if uid:
         for i in instruments.get_instrument_last_price_by_uid(uid):
-            resp.append(serializer.getDictByObject(i))
+            resp.append(serializer.get_dict_by_object(i))
 
     return HttpResponse(json.dumps(resp))
 
@@ -52,6 +53,52 @@ def instrument_history_prices(request):
 
     if uid and days and interval:
         for i in instruments.get_instrument_history_price_by_uid(uid, int(days), CandleInterval(int(interval))):
-            resp.append(serializer.getDictByObject(i))
+            resp.append(serializer.get_dict_by_object(i))
+
+    return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_consensus_forecast(request):
+    resp = ''
+    uid = request.GET.get('uid')
+
+    if uid:
+        fc = instruments.get_instrument_consensus_forecast_by_uid(uid)
+
+        if fc:
+            resp = serializer.get_dict_by_object(fc)
+
+    return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_history_forecasts(request):
+    resp = list()
+    uid = request.GET.get('uid')
+
+    if uid:
+        fc = forecasts.get_forecasts(uid)
+
+        for f in fc:
+            forecast = f[1]
+            date = f[2]
+
+            resp.append({'time': date, 'consensus': serializer.get_dict_by_object(forecast.consensus)})
+
+    return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_fundamental(request):
+    resp = list()
+    uid = request.GET.get('asset_uid')
+
+    if uid:
+        fundamentals = instruments.get_instrument_fundamentals_by_uid(uid)
+
+        if fundamentals:
+            for f in fundamentals:
+                resp = serializer.get_dict_by_object(f)
 
     return HttpResponse(json.dumps(resp))

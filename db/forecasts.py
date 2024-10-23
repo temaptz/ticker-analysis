@@ -3,6 +3,7 @@ import pickle
 import sqlite3
 
 import const
+from .utils import get_db_path
 
 
 def init_table():
@@ -32,7 +33,7 @@ def get_forecasts():
 
 
 def get_forecasts_by_uid(uid: str):
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(get_db_path(const.DB_PATH))
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Forecasts WHERE uid = ?', (uid,))
     forecasts = cursor.fetchall()
@@ -51,6 +52,7 @@ def insert_forecast(uid: str, forecast: str):
 
 def serialize(data) -> str:
     return pickle.dumps(data)
+
 
 def deserialize(string: str) -> any:
     return pickle.loads(string)
