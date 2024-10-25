@@ -25,7 +25,11 @@ from tinkoff.invest.schemas import GetForecastResponse
 
 
 def prepare_cards():
-    c = LearningCard(uid='ca845f68-6c43-44bc-b584-330d2a1e5eb7', date=datetime.datetime.now())
+    c = LearningCard(
+        uid='ca845f68-6c43-44bc-b584-330d2a1e5eb7',
+        date=(datetime.datetime.now() - datetime.timedelta(days=30)),
+        target_forecast_days=30
+    )
     c.print_card()
 
 
