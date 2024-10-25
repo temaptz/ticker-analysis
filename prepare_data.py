@@ -20,7 +20,13 @@ import utils
 import prices
 from const import TOKEN
 from db import forecasts
+from learning_card import LearningCard
 from tinkoff.invest.schemas import GetForecastResponse
+
+
+def prepare_cards():
+    c = LearningCard(uid='ca845f68-6c43-44bc-b584-330d2a1e5eb7', date=datetime.datetime.now())
+    c.print_card()
 
 
 def show():

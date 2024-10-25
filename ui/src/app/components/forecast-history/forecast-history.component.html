@@ -1,10 +1,14 @@
-<div *ngFor="let h of history()">
-  <span
-    *ngIf="getPriceByQuotation(h.consensus.price_change_rel) as priceChangeRel"
-    class="small"
-    [class.plus]="priceChangeRel > 0"
-    [class.minus]="priceChangeRel < 0"
-  >{{ priceChangeRel }}% -> {{ getPriceByQuotation(h.consensus.consensus) }}</span>
+@defer (when isLoaded()) {
+  <div *ngFor="let h of history()">
+    <span
+      *ngIf="getPriceByQuotation(h.consensus.price_change_rel) as priceChangeRel"
+      class="small"
+      [class.plus]="priceChangeRel > 0"
+      [class.minus]="priceChangeRel < 0"
+    >{{ priceChangeRel }}% -> {{ getPriceByQuotation(h.consensus.consensus) }}</span>
 
-  <span>({{ h.time | date }})</span>
-</div>
+    <span>({{ h.time | date }})</span>
+  </div>
+} @placeholder {
+  <preloader></preloader>
+}

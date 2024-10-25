@@ -13,12 +13,14 @@ import { InstrumentHistoryPrice, InstrumentInList } from '../../types';
 import { CandleInterval } from '../../enums';
 import { parseJSON } from 'date-fns';
 import { getPriceByQuotation } from '../../utils';
+import { finalize } from 'rxjs';
+import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
   selector: 'graph',
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
   providers: [],
   templateUrl: './graph.component.html',
   styleUrl: './graph.component.scss'
@@ -29,6 +31,7 @@ export class GraphComponent implements OnInit {
   @Input({required: true}) days!: number;
   @Input({required: true}) interval!: CandleInterval;
 
+  isLoaded = signal<boolean>(false);
   series = signal<ApexAxisChartSeries | null>(null);
   chart?: ApexChart = {
     type: 'candlestick',
@@ -51,6 +54,7 @@ export class GraphComponent implements OnInit {
 
   ngOnInit() {
     this.appService.getInstrumentHistoryPrices(this.instrumentUid, this.days, this.interval)
+      .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe((resp: InstrumentHistoryPrice[]) => {
         const series: ApexAxisChartSeries = [{
           data: resp?.map(i => [

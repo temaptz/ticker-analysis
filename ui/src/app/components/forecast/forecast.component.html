@@ -4,10 +4,15 @@
 <!--<p>max: {{ getPriceByQuotation(forecast()?.max_target) }}</p>-->
 <!--<p>change: {{ getPriceByQuotation(forecast()?.price_change) }}</p>-->
 <!--<p>change_rel: {{ getPriceByQuotation(forecast()?.price_change_rel) }}</p>-->
-<span
-  *ngIf="getPriceByQuotation(forecast()?.price_change_rel) as priceChangeRel"
-  [class.plus]="priceChangeRel > 0"
-  [class.minus]="priceChangeRel < 0"
->
-  {{ priceChangeRel }}% -> {{ getPriceByQuotation(forecast()?.consensus) }}
-</span>
+
+@defer (when isLoaded()) {
+  <span
+    *ngIf="getPriceByQuotation(forecast()?.price_change_rel) as priceChangeRel"
+    [class.plus]="priceChangeRel > 0"
+    [class.minus]="priceChangeRel < 0"
+  >
+    {{ priceChangeRel }}% -> {{ getPriceByQuotation(forecast()?.consensus) }}
+  </span>
+} @placeholder {
+  <preloader></preloader>
+}

@@ -1,8 +1,12 @@
-<apx-chart
-  *ngIf="series() as s"
-  [series]="s"
-  [chart]="chart"
-  [xaxis]="xaxis"
-  [yaxis]="yaxis"
-  [title]="title"
-></apx-chart>
+@defer (when isLoaded()) {
+  <apx-chart
+    *ngIf="series() as s"
+    [series]="s"
+    [chart]="chart"
+    [xaxis]="xaxis"
+    [yaxis]="yaxis"
+    [title]="title"
+  ></apx-chart>
+} @placeholder {
+  <preloader></preloader>
+}

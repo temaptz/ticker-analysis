@@ -1,74 +1,57 @@
-<ng-container *ngIf="instrument() as instr">
-  <td>
-    <h5>{{ instr.ticker }}</h5>
-    {{ instr.name }}
-  </td>
-  <td>
-    @defer (on viewport) {
-      <graph
-        [instrumentUid]="instrumentUid"
-        [days]="365 * 5"
-        [interval]="candleInterval.CANDLE_INTERVAL_MONTH"
-      ></graph>
-    }
-    @placeholder (minimum 0.5s) {
-      <span>-</span>
-    }
-  </td>
-  <td>
-    @defer (on viewport) {
-      <graph
-        [instrumentUid]="instrumentUid"
-        [days]="365"
-        [interval]="candleInterval.CANDLE_INTERVAL_WEEK"
-      ></graph>
-    }
-    @placeholder (minimum 0.5s) {
-      <span>-</span>
-    }
-  </td>
-  <td>
-    @defer (on viewport) {
-      <graph
-        [instrumentUid]="instrumentUid"
-        [days]="30"
-        [interval]="candleInterval.CANDLE_INTERVAL_DAY"
-      ></graph>
-    }
-    @placeholder (minimum 0.5s) {
-      <span>-</span>
-    }
-  </td>
-  <td>{{ getPriceByQuotation(instrumentLastPrice()?.price) }}</td>
-  <td>
-    @defer (on viewport) {
-      <forecast
-        [instrumentUid]="instrumentUid"
-      ></forecast>
-    }
-    @placeholder (minimum 0.5s) {
-      <span>-</span>
-    }
-  </td>
-  <td>
-    @defer (on viewport) {
-      <forecast-history
-        [instrumentUid]="instrumentUid"
-      ></forecast-history>
-    }
-    @placeholder (minimum 0.5s) {
-      <span>-</span>
-    }
-  </td>
-  <td>
-    @defer (on viewport) {
-      <fundamentals
-        [instrumentAssetUid]="instr.asset_uid"
-      ></fundamentals>
-    }
-    @placeholder (minimum 0.5s) {
-      <span>-</span>
-    }
-  </td>
-  <td></td>
-</ng-container>
+<td>
+  @defer (when isLoadedInstrument()) {
+    <h5>{{ instrument().ticker }}</h5>
+    {{ instrument().name }}
+  } @placeholder {
+    <preloader></preloader>
+  }
+</td>
+<td>
+  <graph
+    [instrumentUid]="instrumentUid"
+    [days]="365 * 5"
+    [interval]="candleInterval.CANDLE_INTERVAL_MONTH"
+  ></graph>
+</td>
+<td>
+  <graph
+    [instrumentUid]="instrumentUid"
+    [days]="365"
+    [interval]="candleInterval.CANDLE_INTERVAL_WEEK"
+  ></graph>
+</td>
+<td>
+  <graph
+    [instrumentUid]="instrumentUid"
+    [days]="30"
+    [interval]="candleInterval.CANDLE_INTERVAL_DAY"
+  ></graph>
+</td>
+<td>
+  @defer (when isLoadedInstrument()) {
+    {{ getPriceByQuotation(instrumentLastPrice()?.price) }}
+  } @placeholder {
+    <preloader></preloader>
+  }
+</td>
+<td>
+  <forecast
+    [instrumentUid]="instrumentUid"
+  ></forecast>
+</td>
+<td>
+  <forecast-history
+    [instrumentUid]="instrumentUid"
+  ></forecast-history>
+</td>
+<td>
+  @defer (when isLoadedInstrument()) {
+    <fundamentals
+      *ngIf="instrument()?.asset_uid as asset_uid"
+      [instrumentAssetUid]="asset_uid"
+    ></fundamentals>
+  } @placeholder {
+    <preloader></preloader>
+  }
+</td>
+<td></td>

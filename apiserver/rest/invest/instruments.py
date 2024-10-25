@@ -17,17 +17,17 @@ sys.path.append(root_directory)
 from const import TOKEN
 
 
+def get_favorites():
+    with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.instruments.get_favorites().favorite_instruments
+
+
 def get_instrument_by_uid(uid: str):
     with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
             id=uid
         ).instrument
-
-
-def get_favorites():
-    with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
-        return client.instruments.get_favorites().favorite_instruments
 
 
 def get_instrument_last_price_by_uid(uid: str):
@@ -41,13 +41,13 @@ def get_instrument_last_price_by_uid(uid: str):
         print('ERROR get_instrument_last_price_by_uid')
 
 
-def get_instrument_history_price_by_uid(uid: str, daysCount: int, interval: CandleInterval):
+def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime):
     try:
         with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.market_data.get_candles(
                 instrument_id=uid,
-                from_=(datetime.datetime.now() - datetime.timedelta(days=daysCount)),
-                to=datetime.datetime.now(),
+                from_=(to_date - datetime.timedelta(days=days_count)),
+                to=to_date,
                 interval=interval
             ).candles
 

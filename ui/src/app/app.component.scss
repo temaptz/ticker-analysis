@@ -1,3 +1,11 @@
+table {
+  width: 100%;
+}
+
+table::ng-deep td {
+  height: 150px;
+}
+
 table,
 th,
 table::ng-deep td {

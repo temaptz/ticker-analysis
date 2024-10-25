@@ -1,3 +1,5 @@
+import datetime
+
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from tinkoff.invest import (
@@ -52,7 +54,12 @@ def instrument_history_prices(request):
     interval = request.GET.get('interval')
 
     if uid and days and interval:
-        for i in instruments.get_instrument_history_price_by_uid(uid, int(days), CandleInterval(int(interval))):
+        for i in instruments.get_instrument_history_price_by_uid(
+                uid=uid,
+                days_count=int(days),
+                interval=CandleInterval(int(interval)),
+                to_date=datetime.datetime.now()
+        ):
             resp.append(serializer.get_dict_by_object(i))
 
     return HttpResponse(json.dumps(resp))
