@@ -9,11 +9,11 @@ from tinkoff.invest.schemas import (
 from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
 from const import TOKEN
-from db import forecasts
+import forecasts_db
 
 
 def save_favorite_forecasts():
-    forecasts.init_table()
+    forecasts_db.init_table()
 
     with Client(TOKEN, target=INVEST_GRPC_API) as client:
         favorites = client.instruments.get_favorites().favorite_instruments
@@ -31,17 +31,17 @@ def save_favorite_forecasts():
                 print('CONSENSUS FORECASTS')
                 print(f.consensus)
 
-                forecasts.insert_forecast(
+                forecasts_db.insert_forecast(
                     uid=favorite.uid,
-                    forecast=forecasts.serialize(f)
+                    forecast=forecasts_db.serialize(f)
                 )
 
 
 def show_saved_forecasts():
-    for f in forecasts.get_forecasts():
+    for f in forecasts_db.get_forecasts():
         uid = f[0]
         date = f[2]
-        data = forecasts.deserialize(f[1])
+        data = forecasts_db.deserialize(f[1])
         print(uid)
         print(date)
         print(data)

@@ -11,9 +11,6 @@ from tinkoff.invest import (
 import os
 import sys
 import datetime
-
-root_directory = os.path.abspath('../')
-sys.path.append(root_directory)
 from const import TOKEN
 
 
@@ -68,12 +65,12 @@ def get_instrument_consensus_forecast_by_uid(uid: str):
         print('ERROR get_instrument_consensus_forecast_by_uid')
 
 
-def get_instrument_fundamentals_by_uid(uid: str):
+def get_instrument_fundamentals_by_asset_uid(asset_uid: str):
     try:
         with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.instruments.get_asset_fundamentals(
                 request=schemas.GetAssetFundamentalsRequest(
-                    assets=[uid]
+                    assets=[asset_uid]
                 )
             ).fundamentals
 

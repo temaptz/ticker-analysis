@@ -6,7 +6,7 @@ from tinkoff.invest import (
     CandleInterval
 )
 from .invest import instruments
-from .invest import serializer
+import serializer
 from .invest import forecasts
 import json
 
@@ -85,7 +85,7 @@ def instrument_history_forecasts(request):
     uid = request.GET.get('uid')
 
     if uid:
-        fc = forecasts.get_forecasts(uid)
+        fc = forecasts.get_db_forecasts_by_uid(uid=uid)
 
         for f in fc:
             forecast = f[1]
@@ -102,7 +102,7 @@ def instrument_fundamental(request):
     uid = request.GET.get('asset_uid')
 
     if uid:
-        fundamentals = instruments.get_instrument_fundamentals_by_uid(uid)
+        fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(uid)
 
         if fundamentals:
             for f in fundamentals:

@@ -1,7 +1,5 @@
 import datetime
 import tinkoff.invest
-import os
-import sys
 
 
 def get_dict_by_object(input) -> dict:

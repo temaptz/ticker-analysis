@@ -17,20 +17,62 @@ from tinkoff.invest.services import Services
 import const
 import entity
 import utils
-import prices
 from const import TOKEN
-from db import forecasts
+from db import forecasts_db
 from learning_card import LearningCard
 from tinkoff.invest.schemas import GetForecastResponse
 
 
 def prepare_cards():
-    c = LearningCard(
-        uid='ca845f68-6c43-44bc-b584-330d2a1e5eb7',
-        date=(datetime.datetime.now() - datetime.timedelta(days=30)),
-        target_forecast_days=30
-    )
-    c.print_card()
+    forecast_days = 30
+    i = 0
+    j = 0
+
+    for uid in get_uids():
+        for day in get_days(days=365, offset_days=forecast_days):
+            print(i, uid, day)
+            c = LearningCard(
+                uid=uid,
+                date=day,
+                target_forecast_days=forecast_days
+            )
+
+            c.print_card()
+
+            if c.is_ok:
+                j += 1
+
+            i += 1
+
+            print('('+str(j)+' / '+str(i)+')')
+
+    # c = LearningCard(
+    #     uid='ca845f68-6c43-44bc-b584-330d2a1e5eb7',
+    #     date=(datetime.datetime.now() - datetime.timedelta(days=30)),
+    #     target_forecast_days=forecast_days
+    # )
+    # c.print_card()
+
+
+def get_uids() -> list[str]:
+    result = list[str]()
+
+    with Client(TOKEN, target=INVEST_GRPC_API) as client:
+        for i in client.instruments.get_favorites().favorite_instruments:
+            result.append(i.uid)
+
+    return result
+
+
+def get_days(days: int, offset_days: int) -> list[datetime.datetime]:
+    result = list[datetime.datetime]()
+    end_date = datetime.datetime.now() - datetime.timedelta(days=offset_days)
+
+    for i in range(0, days):
+        date = end_date - datetime.timedelta(days=i)
+        result.append(date)
+
+    return result
 
 
 def show():
@@ -58,41 +100,6 @@ def show():
                     date_target = date0 + datetime.timedelta(hours=const.TIME_DELTA_HOURS)
 
                     if date_target <= datetime.datetime.now():
-                        price0 = prices.get_price_by_date(client=client, uid=favorite.uid, date=date0)
-                        price1 = prices.get_price_by_date(client=client, uid=favorite.uid, date=date1)
-                        price2 = prices.get_price_by_date(client=client, uid=favorite.uid, date=date2)
-                        price3 = prices.get_price_by_date(client=client, uid=favorite.uid, date=date3)
-                        price4 = prices.get_price_by_date(client=client, uid=favorite.uid, date=date4)
-                        price5 = prices.get_price_by_date(client=client, uid=favorite.uid, date=date5)
-                        price_target = prices.get_price_by_date(client=client, uid=favorite.uid, date=date_target)
-
-                        if price0 and price1 and price2 and price3 and price4 and price5 and date0 and consensus_price:
-                            if date_target and price_target:
-                                ent = entity.EntityResolved(
-                                    date=date0,
-                                    price0=price0,
-                                    price1=price1,
-                                    price2=price2,
-                                    price3=price3,
-                                    price4=price4,
-                                    price5=price5,
-                                    prediction=consensus_price,
-                                    result=price_target,
-                                    market_capitalization=fundamentals.market_capitalization,
-                                    high_price_last_52_weeks=fundamentals.high_price_last_52_weeks,
-                                    low_price_last_52_weeks=fundamentals.low_price_last_52_weeks,
-                                    average_daily_volume_last_10_days=fundamentals.average_daily_volume_last_10_days,
-                                    average_daily_volume_last_4_weeks=fundamentals.average_daily_volume_last_4_weeks,
-                                    revenue_ttm=fundamentals.revenue_ttm,
-                                    ebitda_ttm=fundamentals.ebitda_ttm,
-                                    net_income_ttm=fundamentals.net_income_ttm,
-                                    free_cash_flow_ttm=fundamentals.free_cash_flow_ttm,
-                                    total_enterprise_value_mrq=fundamentals.total_enterprise_value_mrq,
-                                    net_margin_mrq=fundamentals.net_margin_mrq,
-                                    total_debt_mrq=fundamentals.total_debt_mrq,
-                                    current_ratio_mrq=fundamentals.current_ratio_mrq,
-                                    one_year_annual_revenue_growth_rate=fundamentals.one_year_annual_revenue_growth_rate
-                                )
                                 iterator += 1
                                 print(iterator)
                                 ent.display()

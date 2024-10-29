@@ -1,9 +1,8 @@
 import datetime
 import pickle
 import sqlite3
-
 import const
-from .utils import get_db_path
+from utils import get_db_path
 
 
 def init_table():

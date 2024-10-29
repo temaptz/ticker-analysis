@@ -1,7 +1,7 @@
 <td>
   @defer (when isLoadedInstrument()) {
-    <h5>{{ instrument().ticker }}</h5>
-    {{ instrument().name }}
+    <h5>{{ instrument()?.ticker }}</h5>
+    {{ instrument()?.name }}
   } @placeholder {
     <preloader></preloader>
   }
