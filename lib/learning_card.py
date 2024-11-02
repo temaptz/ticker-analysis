@@ -1,3 +1,6 @@
+import json
+import numpy
+
 from tinkoff.invest import (
     InstrumentResponse,
     CandleInterval,
@@ -10,12 +13,14 @@ import os
 import utils
 import instruments
 import forecasts
+import serializer
 
 
 class LearningCard:
 
     is_ok: bool = True  # будет меняться в случае ошибки
     uid: str = ''  # uid
+    asset_uid: str = ''  # asset_uid
     date: datetime.datetime  # Дата создания прогноза
     target_date: datetime.datetime  # Дата прогнозируемой цены
     ticker: str = ''
@@ -32,8 +37,11 @@ class LearningCard:
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
 
+    def __init__(self):
+        return
+
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def __init__(self, uid: str, date: datetime.datetime, target_forecast_days: int):
+    def load(self, uid: str, date: datetime.datetime, target_forecast_days: int):
         try:
             self.uid = uid
             self.asset_uid = instruments.get_instrument_by_uid(uid).asset_uid
@@ -66,7 +74,7 @@ class LearningCard:
             self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
 
         except Exception:
-            print('ERROR constructing LearningCard')
+            print('ERROR loading LearningCard')
             self.is_ok = False
 
     # Вернет цены за последние 52 недели (год) в хронологическом порядке
@@ -120,3 +128,49 @@ class LearningCard:
 
         else:
             print('CARD IS BROKEN')
+
+    def get_json_db(self) -> str:
+        return json.dumps(serializer.get_dict_by_object(self))
+
+    def restore_from_json_db(self, json_data: str):
+        try:
+            data = json.loads(json_data)
+            self.is_ok = data['is_ok']
+            self.uid = data['uid']
+            self.asset_uid = data['asset_uid']
+            self.date = data['date']
+            self.target_date = data['target_date']
+            self.ticker = data['ticker']
+            self.price = data['price']
+            self.target_price = data['target_price']
+            self.history = data['history']
+            self.forecast_price = data['forecast_price']
+            self.revenue_ttm = data['revenue_ttm']
+            self.ebitda_ttm = data['ebitda_ttm']
+            self.market_capitalization = data['market_capitalization']
+            self.total_debt_mrq = data['total_debt_mrq']
+            self.eps_ttm = data['eps_ttm']
+            self.pe_ratio_ttm = data['pe_ratio_ttm']
+            self.ev_to_ebitda_mrq = data['ev_to_ebitda_mrq']
+            self.dividend_payout_ratio_fy = data['dividend_payout_ratio_fy']
+
+        except Exception:
+            print('ERROR restore_from_json_db LearningCard')
+            self.is_ok = False
+
+    def get_x(self) -> list:
+        return [
+            numpy.float32(self.price),
+            numpy.float32(self.forecast_price),
+            numpy.float32(self.revenue_ttm),
+            numpy.float32(self.ebitda_ttm),
+            numpy.float32(self.market_capitalization),
+            numpy.float32(self.total_debt_mrq),
+            numpy.float32(self.eps_ttm),
+            numpy.float32(self.pe_ratio_ttm),
+            numpy.float32(self.ev_to_ebitda_mrq),
+            numpy.float32(self.dividend_payout_ratio_fy)
+        ] + [numpy.float32(i) for i in self.history[-51:]]
+
+    def get_y(self) -> float:
+        return self.target_price

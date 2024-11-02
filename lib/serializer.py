@@ -17,7 +17,7 @@ def get_dict_by_object(input) -> dict:
             if is_datetime:
                 property_value = datetime.datetime.isoformat(property_value)
 
-            if type(property_value) in (str, int, float, bool, dict):
+            if type(property_value) in (str, int, float, bool, dict, list):
                 result.update({property_name: property_value})
 
     return result

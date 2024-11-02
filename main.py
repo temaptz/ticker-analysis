@@ -12,7 +12,8 @@ sys.path.append(invest_lib_directory)
 # import prices
 # import statistic
 # import forecasts_save
-import prepare_data
+# import prepare_data
+import learn
 
 # instruments.show_instruments()
 # prices.show_prices()
@@ -20,5 +21,6 @@ import prepare_data
 # forecasts_save.save_favorite_forecasts()
 # forecasts_save.show_saved_forecasts()
 # prepare_data.show()
-prepare_data.prepare_cards()
-
+# prepare_data.prepare_cards()
+# prepare_data.get_saved()
+learn.learn()
