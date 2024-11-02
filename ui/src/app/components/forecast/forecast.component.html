@@ -11,7 +11,7 @@
     [class.plus]="priceChangeRel > 0"
     [class.minus]="priceChangeRel < 0"
   >
-    {{ priceChangeRel }}% -> {{ getPriceByQuotation(forecast()?.consensus) }}
+    {{ priceChangeRel }}% -> <b>{{ getPriceByQuotation(forecast()?.consensus) }}</b>
   </span>
 } @placeholder {
   <preloader></preloader>
