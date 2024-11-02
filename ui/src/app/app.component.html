@@ -9,7 +9,7 @@
     <th>Прогноз аналитиков</th>
     <th>История прогнозов</th>
     <th>Фундаментальные показатели</th>
-    <th>Прогноз</th>
+    <th (click)="handleSortPrediction()">Прогноз</th>
     </thead>
     <tbody>
     <ng-container *ngFor="let instrument of instruments()">

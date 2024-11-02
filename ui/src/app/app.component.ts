@@ -21,6 +21,8 @@ export class AppComponent implements OnInit {
   instruments = signal<InstrumentInList[]>([]);
   isLoaded = signal<boolean>(false);
 
+  isSortDirectionAsc = true;
+
   constructor(
     private appService: AppService,
   ) {}
@@ -31,5 +33,25 @@ export class AppComponent implements OnInit {
       .subscribe(resp => this.instruments.set(resp.filter((i, index) => index < 1000)));
   }
 
-    protected readonly candleInterval = CandleInterval;
+  handleSortPrediction(): void {
+    this.instruments()
+      .sort((a: InstrumentInList, b: InstrumentInList) => {
+        const aVal = this.appService.predictionPercentByUidMap.get(a.uid);
+        const bVal = this.appService.predictionPercentByUidMap.get(b.uid);
+
+        if (aVal || aVal === 0) {
+          if (bVal || bVal === 0) {
+            return this.isSortDirectionAsc ? (bVal - aVal) : (aVal - bVal);
+          }
+
+          return -1;
+        } else if (bVal || bVal === 0) {
+          return 1;
+        }
+
+        return 0;
+      });
+
+    this.isSortDirectionAsc = !this.isSortDirectionAsc;
+  }
 }

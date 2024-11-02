@@ -9,6 +9,8 @@ import { CandleInterval } from './enums';
 })
 export class AppService {
 
+  predictionPercentByUidMap = new Map<string, number>();
+
   constructor(
     private http: HttpClient,
   ) {}

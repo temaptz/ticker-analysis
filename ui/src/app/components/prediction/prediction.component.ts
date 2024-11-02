@@ -37,10 +37,14 @@ export class PredictionComponent implements OnInit {
       .subscribe((resp: Forecast) => {
         const current = this.currentPrice ?? 0;
         const target = resp ?? 0;
+        const absPercentChange = Math.round(Math.abs(target - current) / current * 100) / 100;
+        const isPlus = target - current >= 0;
 
         this.prediction.set(target);
-        this.isPlus.set(target - current >= 0);
-        this.percent.set(Math.round(Math.abs(target - current) / current * 100) / 100);
+        this.isPlus.set(isPlus);
+        this.percent.set(absPercentChange);
+
+        this.appService.predictionPercentByUidMap.set(this.instrumentUid, absPercentChange*(isPlus ? 1 : -1));
       });
   }
 
