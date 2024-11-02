@@ -1,0 +1,19 @@
+span {
+  white-space: nowrap;
+}
+
+.plus {
+  color: green;
+
+  &:before {
+    content: '+';
+  }
+}
+
+.minus {
+  color: red;
+
+  &:before {
+    content: '-';
+  }
+}

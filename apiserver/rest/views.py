@@ -5,9 +5,10 @@ from django.http import HttpResponse
 from tinkoff.invest import (
     CandleInterval
 )
-from .invest import instruments
 import serializer
+from .invest import instruments
 from .invest import forecasts
+from .invest import predictions
 import json
 
 
@@ -107,5 +108,16 @@ def instrument_fundamental(request):
         if fundamentals:
             for f in fundamentals:
                 resp = serializer.get_dict_by_object(f)
+
+    return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_prediction(request):
+    resp = None
+    uid = request.GET.get('uid')
+
+    if uid:
+        resp = predictions.get_prediction_by_uid(uid)
 
     return HttpResponse(json.dumps(resp))

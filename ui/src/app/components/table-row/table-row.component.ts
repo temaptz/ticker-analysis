@@ -11,11 +11,12 @@ import { ForecastHistoryComponent } from '../forecast-history/forecast-history.c
 import { FundamentalsComponent } from '../fundamentals/fundamentals.component';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
+import { PredictionComponent } from '../prediction/prediction.component';
 
 @Component({
   selector: '[app-table-row]',
   standalone: true,
-  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent],
+  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent],
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss'
 })

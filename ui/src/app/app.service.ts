@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Fundamentals, InstrumentHistoryPrice, InstrumentInList, InstrumentLastPrice } from './types';
+import { Fundamentals, InstrumentHistoryPrice, InstrumentInList, InstrumentLastPrice, Prediction } from './types';
 import { CandleInterval } from './enums';
 
 @Injectable({
@@ -59,6 +59,13 @@ export class AppService {
     params = params.set('asset_uid', assetUid);
 
     return this.http.get<Fundamentals>('http://127.0.0.1:8000/instrument/fundamental', {params: params});
+  }
+
+  getInstrumentPrediction(uid: string): Observable<Prediction> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+
+    return this.http.get<Fundamentals>('http://127.0.0.1:8000/instrument/prediction', {params: params});
   }
 
 }

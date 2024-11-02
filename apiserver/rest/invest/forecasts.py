@@ -4,6 +4,7 @@ import os
 import sys
 from serializer import get_dict_by_object
 import forecasts_db
+from const import TOKEN
 
 
 def get_db_forecasts_by_uid(uid: str) -> (str, tinkoff.invest.schemas.GetForecastResponse, str):

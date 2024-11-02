@@ -21,8 +21,8 @@ class LearningCard:
     is_ok: bool = True  # будет меняться в случае ошибки
     uid: str = ''  # uid
     asset_uid: str = ''  # asset_uid
-    date: datetime.datetime  # Дата создания прогноза
-    target_date: datetime.datetime  # Дата прогнозируемой цены
+    date: datetime.datetime = None  # Дата создания прогноза
+    target_date: datetime.datetime = None  # Дата прогнозируемой цены
     ticker: str = ''
     price: float = None  # Цена в дату создания прогноза
     target_price: float = None  # Прогнозируемая цена
@@ -39,6 +39,39 @@ class LearningCard:
 
     def __init__(self):
         return
+
+    def load_by_uid(self, uid: str):
+        try:
+            return self._load_by_uid(uid=uid)
+        except Exception:
+            print('ERROR LearningCard load_by_uid')
+            self.is_ok = False
+
+    # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
+    def _load_by_uid(self, uid: str):
+        self.uid = uid
+        self.asset_uid = instruments.get_instrument_by_uid(uid).asset_uid
+        self.date = datetime.datetime.now()
+        self.ticker = instruments.get_instrument_by_uid(uid=self.uid).ticker
+        self.history = self.get_history(candles=instruments.get_instrument_history_price_by_uid(
+            uid=self.uid,
+            days_count=365,
+            interval=CandleInterval.CANDLE_INTERVAL_WEEK,
+            to_date=self.date
+        ))
+        self.price = utils.get_price_by_quotation(instruments.get_instrument_last_price_by_uid(uid=self.uid)[0].price)
+        self.forecast_price = utils.get_price_by_quotation(instruments.get_instrument_consensus_forecast_by_uid(uid=self.uid).consensus)
+
+        fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(self.asset_uid)[0]
+        self.revenue_ttm = fundamentals.revenue_ttm
+        self.ebitda_ttm = fundamentals.ebitda_ttm
+        self.market_capitalization = fundamentals.market_capitalization
+        self.total_debt_mrq = fundamentals.total_debt_mrq
+        self.eps_ttm = fundamentals.eps_ttm
+        self.pe_ratio_ttm = fundamentals.pe_ratio_ttm
+        self.ev_to_ebitda_mrq = fundamentals.ev_to_ebitda_mrq
+        self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
+
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
     def load(self, uid: str, date: datetime.datetime, target_forecast_days: int):
@@ -107,27 +140,23 @@ class LearningCard:
         return 0
 
     def print_card(self):
-        if self.is_ok:
-            print('+++')
-            print('TICKER', self.ticker)
-            print('DATE', self.date)
-            print('DATE TARGET', self.target_date)
-            print('HISTORY', self.history)
-            print('PRICE', self.price)
-            print('PRICE TARGET', self.target_price)
-            print('PRICE CONSENSUS FORECAST', self.forecast_price)
-            print('Выручка', self.revenue_ttm)
-            print('EBITDA', self.ebitda_ttm)
-            print('Капитализация', self.market_capitalization)
-            print('Долг', self.total_debt_mrq)
-            print('EPS — прибыль на акцию', self.eps_ttm)
-            print('P/E — цена/прибыль', self.pe_ratio_ttm)
-            print('EV/EBITDA — стоимость компании / EBITDA', self.ev_to_ebitda_mrq)
-            print('DPR — коэффициент выплаты дивидендов', self.dividend_payout_ratio_fy)
-            print('IS OK', self.is_ok)
-
-        else:
-            print('CARD IS BROKEN')
+        print('+++')
+        print('TICKER', self.ticker)
+        print('DATE', self.date)
+        print('DATE TARGET', self.target_date)
+        print('HISTORY', self.history)
+        print('PRICE', self.price)
+        print('PRICE TARGET', self.target_price)
+        print('PRICE CONSENSUS FORECAST', self.forecast_price)
+        print('Выручка', self.revenue_ttm)
+        print('EBITDA', self.ebitda_ttm)
+        print('Капитализация', self.market_capitalization)
+        print('Долг', self.total_debt_mrq)
+        print('EPS — прибыль на акцию', self.eps_ttm)
+        print('P/E — цена/прибыль', self.pe_ratio_ttm)
+        print('EV/EBITDA — стоимость компании / EBITDA', self.ev_to_ebitda_mrq)
+        print('DPR — коэффициент выплаты дивидендов', self.dividend_payout_ratio_fy)
+        print('IS OK', self.is_ok)
 
     def get_json_db(self) -> str:
         return json.dumps(serializer.get_dict_by_object(self))

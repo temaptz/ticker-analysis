@@ -6,3 +6,4 @@ export type Candle = any;
 export type Quotation = any;
 export type Forecast = any;
 export type Fundamentals = any;
+export type Prediction = any;
