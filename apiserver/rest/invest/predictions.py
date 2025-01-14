@@ -1,12 +1,6 @@
-import datetime
-import tinkoff.invest
-import os
-import sys
-from serializer import get_dict_by_object
-import forecasts_db
-import forecasts_db
 from learning_card import LearningCard
 import learn
+import predictions_db
 
 
 def get_prediction_by_uid(uid: str) -> float:
@@ -14,6 +8,27 @@ def get_prediction_by_uid(uid: str) -> float:
     c.load_by_uid(uid=uid)
     x = c.get_x()
 
-    prediction = learn.predict(x)
+    try:
+        return learn.predict(x)
+    except Exception:
+        print('ERROR get_prediction_by_uid')
+        return 0
 
-    return prediction
+
+def get_prediction_graph_by_uid(uid: str):
+    try:
+        result = list()
+
+        for i in predictions_db.get_predictions_by_uid(uid):
+            result.append({
+                'prediction': i[1],
+                'date': i[2],
+            })
+            print(i)
+
+        print(result)
+
+        return result
+    except Exception:
+        print('ERROR get_prediction_graph_by_uid')
+        return []

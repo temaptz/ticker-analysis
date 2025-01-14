@@ -37,6 +37,15 @@ export class GraphComponent implements OnInit {
     type: 'candlestick',
     width: 250,
     height: 150,
+    toolbar: {
+      show: false,
+    },
+    animations: {
+      enabled: false,
+    },
+    zoom: {
+      enabled: false,
+    },
   };
   xaxis?: ApexXAxis = {
     type: 'datetime',

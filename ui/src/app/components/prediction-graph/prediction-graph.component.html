@@ -1,0 +1,12 @@
+@defer (when isLoaded()) {
+  <apx-chart
+    *ngIf="series() as s"
+    [series]="s"
+    [chart]="chartOptions.chart"
+    [xaxis]="chartOptions.xaxis"
+    [yaxis]="chartOptions.yaxis"
+    [tooltip]="chartOptions.tooltip"
+  ></apx-chart>
+} @placeholder {
+  <preloader></preloader>
+}

@@ -31,6 +31,24 @@ export class AppComponent implements OnInit {
     this.appService.getInstruments()
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe(resp => this.instruments.set(resp.filter((i, index) => index < 1000)));
+
+    // @ts-ignore
+    window.autoscrollInterval = null;
+
+    // @ts-ignore
+    window.autoscroll = () => {
+      let scrollX = window.scrollX;
+      // @ts-ignore
+      window.autoscrollInterval = setInterval(() => {
+        window.scrollTo(0, scrollX += 1);
+      }, 10);
+    }
+
+    // @ts-ignore
+    window.stopAutoscroll = () => {
+    // @ts-ignore
+      clearInterval(window.autoscrollInterval);
+    }
   }
 
   handleSortPrediction(): void {

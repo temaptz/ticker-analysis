@@ -121,3 +121,14 @@ def instrument_prediction(request):
         resp = predictions.get_prediction_by_uid(uid)
 
     return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_prediction_graph(request):
+    resp = None
+    uid = request.GET.get('uid')
+
+    if uid:
+        resp = predictions.get_prediction_graph_by_uid(uid)
+
+    return HttpResponse(json.dumps(resp))

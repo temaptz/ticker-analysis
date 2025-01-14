@@ -15,7 +15,16 @@ export const getPriceByQuotation = (price: Quotation): number | null => {
       return null;
     }
 
-    return (price.units + Math.round(price.nano / 10000000) / 100).toFixed(2);
+    return (price.units + Math.round(price.nano / 10000000) / 100);
+  } catch (e) {
+    console.error((e as any)?.message ?? e);
+    return null;
+  }
+}
+
+export const getRoundPrice = (price: number): string | null => {
+  try {
+    return price.toFixed(2);
   } catch (e) {
     console.error((e as any)?.message ?? e);
     return null;
