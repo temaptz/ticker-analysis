@@ -1,15 +1,10 @@
 from tinkoff.invest import (
     Client,
-    StatisticResponse,
-    FavoriteInstrument,
     CandleInterval,
-    HistoricCandle,
     constants,
     InstrumentIdType,
     schemas
 )
-import os
-import sys
 import datetime
 from const import TOKEN
 

@@ -1,14 +1,13 @@
 import datetime
-
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from tinkoff.invest import (
     CandleInterval
 )
-import serializer
-from .invest import instruments
-from .invest import forecasts
-from .invest import predictions
+from lib import serializer
+from lib import instruments
+from lib import forecasts
+from lib import predictions
 import json
 
 

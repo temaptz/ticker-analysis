@@ -6,8 +6,8 @@ from tinkoff.invest import (
 )
 import datetime
 from lib import utils
-from apiserver.rest.invest import instruments
-from apiserver.rest.invest import forecasts
+from lib import instruments
+from lib import forecasts
 from lib import serializer
 
 
