@@ -1,0 +1,14 @@
+FROM python:3.9
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY ./apiserver /app/apiserver
+COPY ./lib /app/lib
+COPY ./main.py /app/main.py
+COPY ./const.py /app/const.py
+COPY ./learn.txt /app/learn.txt
+COPY ./requirements.txt /app/requirements.txt
+
+RUN pip install -r requirements.txt

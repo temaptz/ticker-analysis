@@ -1,9 +1,9 @@
 import catboost
 import numpy
-import prepare_data
-import utils
+from lib import prepare_data
+from lib.utils import get_file_abspath_recursive
 
-model_file_path = '/Users/artem/PycharmProjects/ticker-analysis/learn.txt'
+model_file_path = get_file_abspath_recursive('learn.txt')
 
 
 def learn():

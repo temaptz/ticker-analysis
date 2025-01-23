@@ -1,0 +1,44 @@
+services:
+  apiserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+    ports:
+      - "8000:8000"
+    command:
+      - python
+      - apiserver/manage.py
+      - 0.0.0.0:8000
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - apiserver
+
+  collect-forecasts:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+    command:
+      - python
+      - main.py
+      - collect-forecasts
+
+  collect-predictions:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+    command:
+      - python
+      - main.py
+      - collect-predictions

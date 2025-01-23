@@ -1,6 +1,6 @@
-from learning_card import LearningCard
-import learn
-import predictions_db
+from lib.learning_card import LearningCard
+from lib import learn
+from lib.db import predictions_db
 
 
 def get_prediction_by_uid(uid: str) -> float:

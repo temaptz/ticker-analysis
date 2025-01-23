@@ -1,12 +1,11 @@
 import datetime
-import pickle
 import sqlite3
 import const
-from utils import get_db_path
+from lib.utils import get_file_abspath_recursive
 
 
 def init_table():
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS 
@@ -22,7 +21,7 @@ def init_table():
 
 
 def get_learning():
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Learning')
     forecasts = cursor.fetchall()
@@ -32,7 +31,7 @@ def get_learning():
 
 
 def get_learning_by_uid_date(uid: str, date: datetime.datetime):
-    connection = sqlite3.connect(get_db_path(const.DB_PATH))
+    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Learning WHERE uid = ? AND date = ?', (uid, date))
     forecasts = cursor.fetchall()
@@ -42,7 +41,7 @@ def get_learning_by_uid_date(uid: str, date: datetime.datetime):
 
 
 def insert_learning(uid: str, date: datetime.datetime, json: str):
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
     cursor.execute('INSERT INTO Learning (uid, date, json) VALUES (?, ?, ?)', (uid, date, json))
     connection.commit()

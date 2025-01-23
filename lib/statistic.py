@@ -21,7 +21,6 @@ from tinkoff.invest.schemas import (
 from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
 from const import TOKEN
-import forecasts
 
 
 def collect():

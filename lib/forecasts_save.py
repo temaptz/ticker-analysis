@@ -9,7 +9,7 @@ from tinkoff.invest.schemas import (
 from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
 from const import TOKEN
-import forecasts_db
+from lib.db import forecasts_db
 
 
 def save_favorite_forecasts():

@@ -52,10 +52,14 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200',
-    'http://localhost:56746',
-]
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:4200',
+#     'http://localhost:56746',
+#     'http://localhost',
+#     'http://0.0.0.0',
+# ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 CACHES = {
     "default": {

@@ -2,18 +2,13 @@ import json
 import numpy
 
 from tinkoff.invest import (
-    InstrumentResponse,
     CandleInterval,
-    GetCandlesResponse,
-    schemas
 )
 import datetime
-import sys
-import os
-import utils
-import instruments
-import forecasts
-import serializer
+from lib import utils
+from apiserver.rest.invest import instruments
+from apiserver.rest.invest import forecasts
+from lib import serializer
 
 
 class LearningCard:

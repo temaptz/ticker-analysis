@@ -1,16 +1,10 @@
 from tinkoff.invest import (
     Client,
-    FavoriteInstrument,
-)
-from tinkoff.invest.schemas import (
-    GetForecastResponse,
-    GetForecastRequest,
 )
 from tinkoff.invest.constants import INVEST_GRPC_API
-from tinkoff.invest.services import Services
 from const import TOKEN
-import predictions_db
-import predictions
+from lib.db import predictions_db
+from apiserver.rest.invest import predictions
 
 
 def save_favorite_predictions():

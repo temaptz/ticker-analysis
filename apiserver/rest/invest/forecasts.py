@@ -1,10 +1,5 @@
-import datetime
 import tinkoff.invest
-import os
-import sys
-from serializer import get_dict_by_object
-import forecasts_db
-from const import TOKEN
+from lib.db import forecasts_db
 
 
 def get_db_forecasts_by_uid(uid: str) -> (str, tinkoff.invest.schemas.GetForecastResponse, str):

@@ -15,12 +15,10 @@ from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
 
 import const
-import entity
-import utils
+from lib import utils
 from const import TOKEN
-from db import forecasts_db
-from db import learning_db
-from learning_card import LearningCard
+from lib.db import learning_db
+from lib.learning_card import LearningCard
 from tinkoff.invest.schemas import GetForecastResponse
 import numpy
 

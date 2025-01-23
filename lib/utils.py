@@ -21,18 +21,22 @@ def get_price_by_quotation(price: Quotation) -> float or None:
         return float(str(price.units)+'.'+str(price.nano))
 
     except Exception:
-        print('ERROR get_price_by_candle', candle)
+        print('ERROR get_price_by_candle', price)
 
         return None
 
 
-def get_db_path(db_path: str) -> str:
-    if os.path.exists(db_path):
-        return db_path
+def get_file_abspath_recursive(file_name: str, dir_name: str = '') -> str or None:
+    dir_abspath = os.path.abspath(dir_name)
+    db_abspath = dir_abspath+'/'+os.path.basename(file_name)
 
-    root_directory = os.path.abspath('../')
+    if os.path.exists(db_abspath):
+        return db_abspath
 
-    return root_directory+'/'+os.path.basename(db_path)
+    if dir_abspath != '/':
+        return get_file_abspath_recursive(file_name, os.path.dirname(dir_abspath))
+
+    return None
 
 
 def parse_json_date(date: str or None) -> datetime.datetime or None:

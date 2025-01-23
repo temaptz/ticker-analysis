@@ -2,11 +2,11 @@ import datetime
 import pickle
 import sqlite3
 import const
-from utils import get_db_path
+from lib.utils import get_file_abspath_recursive
 
 
 def init_table():
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS 
@@ -22,7 +22,7 @@ def init_table():
 
 
 def get_forecasts():
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Forecasts')
     forecasts = cursor.fetchall()
@@ -32,7 +32,7 @@ def get_forecasts():
 
 
 def get_forecasts_by_uid(uid: str):
-    connection = sqlite3.connect(get_db_path(const.DB_PATH))
+    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM Forecasts WHERE uid = ?', (uid,))
     forecasts = cursor.fetchall()
@@ -42,7 +42,7 @@ def get_forecasts_by_uid(uid: str):
 
 
 def insert_forecast(uid: str, forecast: str):
-    connection = sqlite3.connect(const.DB_PATH)
+    connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
     cursor.execute('INSERT INTO Forecasts (uid, forecasts, date) VALUES (?, ?, ?)', (uid, forecast, datetime.datetime.now()))
     connection.commit()
