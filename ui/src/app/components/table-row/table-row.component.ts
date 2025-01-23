@@ -13,11 +13,12 @@ import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PredictionComponent } from '../prediction/prediction.component';
 import { PredictionGraphComponent } from '../prediction-graph/prediction-graph.component';
+import { ComplexGraphComponent } from '../complex-graph/complex-graph.component';
 
 @Component({
   selector: '[app-table-row]',
   standalone: true,
-  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, PredictionGraphComponent],
+  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, PredictionGraphComponent, ComplexGraphComponent],
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss'
 })
