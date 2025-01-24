@@ -7,8 +7,6 @@ services:
       - ./db.sqlite:/app/db.sqlite
     ports:
       - "8000:8000"
-    environment:
-      PYTHONPATH: "/app"
     command:
       - python
       - apiserver/manage.py
@@ -24,24 +22,24 @@ services:
     depends_on:
       - apiserver
 
-#  collect-forecasts:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile-python-services
-#    volumes:
-#      - ./db.sqlite:/app/db.sqlite
-#    command:
-#      - python
-#      - main.py
-#      - collect-forecasts
-#
-#  collect-predictions:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile-python-services
-#    volumes:
-#      - ./db.sqlite:/app/db.sqlite
-#    command:
-#      - python
-#      - main.py
-#      - collect-predictions
+  collect-forecasts:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+    command:
+      - python
+      - main.py
+      - collect-forecasts
+
+  collect-predictions:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+    command:
+      - python
+      - main.py
+      - collect-predictions

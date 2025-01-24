@@ -4,7 +4,7 @@ from tinkoff.invest import (
 from tinkoff.invest.constants import INVEST_GRPC_API
 from const import TOKEN
 from lib.db import predictions_db
-from apiserver.rest.invest import predictions
+from lib import predictions
 
 
 def save_favorite_predictions():
