@@ -22,7 +22,7 @@ services:
     depends_on:
       - apiserver
 
-  collect-forecasts:
+  tasks:
     build:
       context: .
       dockerfile: Dockerfile-python-services
@@ -31,15 +31,3 @@ services:
     command:
       - python
       - main.py
-      - collect-forecasts
-
-  collect-predictions:
-    build:
-      context: .
-      dockerfile: Dockerfile-python-services
-    volumes:
-      - ./db.sqlite:/app/db.sqlite
-    command:
-      - python
-      - main.py
-      - collect-predictions
