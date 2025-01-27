@@ -1,4 +1,3 @@
-import sys
 from apscheduler.schedulers.blocking import BlockingScheduler
 import pytz
 
@@ -14,8 +13,6 @@ from lib import sound
 # import statistic
 # import prepare_data
 # import learn
-
-sound.play_file('./sounds/collect-forecasts.mp3')
 
 timezone = pytz.timezone('Europe/Moscow')
 scheduler = BlockingScheduler()
