@@ -6,7 +6,8 @@ from lib import (
     predictions_save,
     news_save,
     telegram,
-    docker
+    docker,
+    yandex_disk
 )
 
 # import instruments
@@ -50,6 +51,16 @@ if docker.is_docker():
         news_save.save_news,
         'cron',
         minute=0,
+        timezone=timezone
+    )
+
+    # Резервное копирование БД
+    scheduler.add_job(
+        yandex_disk.upload_db_backup,
+        'cron',
+        day_of_week='fri',
+        hour=15,
+        minute=30,
         timezone=timezone
     )
 
