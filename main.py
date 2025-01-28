@@ -4,9 +4,10 @@ import pytz
 from lib import (
     forecasts_save,
     predictions_save,
-    news_save
+    news_save,
+    telegram,
+    docker
 )
-from lib import telegram
 
 # import instruments
 # import prices
@@ -20,8 +21,6 @@ scheduler = BlockingScheduler()
 tg_updates = telegram.get_updates()
 print('TELEGRAM UPDATES')
 print(tg_updates)
-
-telegram.send_message('Скрипт ticker-analysis main запущен')
 
 
 # Сбор прогнозов аналитиков
@@ -42,31 +41,35 @@ def job_news():
     news_save.save_news()
 
 
-scheduler.add_job(
-    job_forecasts,
-    'cron',
-    day_of_week='mon',
-    hour=12,
-    minute=0,
-    timezone=timezone
-)
+if docker.is_docker():
+    telegram.send_message('Скрипт ticker-analysis main запущен')
 
-scheduler.add_job(
-    job_predictions,
-    'cron',
-    hour=11,
-    minute=0,
-    timezone=timezone
-)
+    scheduler.add_job(
+        job_forecasts,
+        'cron',
+        day_of_week='mon',
+        hour=12,
+        minute=0,
+        timezone=timezone
+    )
 
-scheduler.add_job(
-    job_news,
-    'cron',
-    minute=0,
-    timezone=timezone
-)
+    scheduler.add_job(
+        job_predictions,
+        'cron',
+        hour=11,
+        minute=0,
+        timezone=timezone
+    )
 
-scheduler.start()
+    scheduler.add_job(
+        job_news,
+        'cron',
+        minute=0,
+        timezone=timezone
+    )
+
+    scheduler.start()
+
 
 # instruments.show_instruments()
 # prices.show_prices()

@@ -1,4 +1,5 @@
 import feedparser
+from lib import date_utils
 
 
 def get_news():
@@ -15,12 +16,15 @@ def get_news():
 
         if parsed_feed and parsed_feed.entries:
             for i in parsed_feed.entries:
-                uid = i['rbc_news_news_id']
-                title = i['title']
-                text = i['rbc_news_full-text']
-                date = i['published']
+                try:
+                    uid = i['rbc_news_news_id']
+                    title = i['title']
+                    text = i['rbc_news_full-text']
+                    date = date_utils.parse_date(i['published'])
 
-                result.append((uid, title, text, date, source_name))
+                    result.append((uid, title, text, date, source_name))
+
+                except Exception as e:
+                    print(f"ERROR PARSING NEWS FROM {source_name}: {e}", i)
 
     return result
-
