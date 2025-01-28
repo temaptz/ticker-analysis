@@ -10,10 +10,15 @@ from tinkoff.invest.constants import INVEST_GRPC_API
 from tinkoff.invest.services import Services
 from const import TOKEN
 from lib.db import forecasts_db
+from lib import telegram
 
 
 def save_favorite_forecasts():
+    telegram.send_message('Начато сохранение прогнозов аналитиков')
+
     forecasts_db.init_table()
+
+    counter = 0
 
     with Client(TOKEN, target=INVEST_GRPC_API) as client:
         favorites = client.instruments.get_favorites().favorite_instruments
@@ -35,6 +40,10 @@ def save_favorite_forecasts():
                     uid=favorite.uid,
                     forecast=forecasts_db.serialize(f)
                 )
+
+                counter += 1
+
+    telegram.send_message('Всего сохранено '+str(counter)+' прогнозов аналитиков')
 
 
 def show_saved_forecasts():

@@ -23,29 +23,12 @@ print('TELEGRAM UPDATES')
 print(tg_updates)
 
 
-# Сбор прогнозов аналитиков
-def job_forecasts():
-    telegram.send_message('Начато выполнение задания: collect-forecasts')
-    forecasts_save.save_favorite_forecasts()
-
-
-# Сбор предсказаний нейросети
-def job_predictions():
-    telegram.send_message('Начато выполнение задания: collect-predictions')
-    predictions_save.save_favorite_predictions()
-
-
-# Сбор свежих новостей
-def job_news():
-    telegram.send_message('Начато выполнение задания: collect-news')
-    news_save.save_news()
-
-
 if docker.is_docker():
     telegram.send_message('Скрипт ticker-analysis main запущен')
 
+    # Сбор прогнозов аналитиков
     scheduler.add_job(
-        job_forecasts,
+        forecasts_save.save_favorite_forecasts,
         'cron',
         day_of_week='mon',
         hour=12,
@@ -53,16 +36,18 @@ if docker.is_docker():
         timezone=timezone
     )
 
+    # Сбор предсказаний нейросети
     scheduler.add_job(
-        job_predictions,
+        predictions_save.save_favorite_predictions,
         'cron',
         hour=11,
         minute=0,
         timezone=timezone
     )
 
+    # Сбор свежих новостей
     scheduler.add_job(
-        job_news,
+        news_save.save_news,
         'cron',
         minute=0,
         timezone=timezone

@@ -1,9 +1,11 @@
 from lib.db import news_db
 from lib.news_parsers import (rbc, rg, finam)
+from lib import telegram
 
 
 def save_news():
     print('UPDATING NEWS')
+    telegram.send_message('Начато сохранение новостей')
     news_db.init_table()
 
     saved_news_counter = 0
@@ -13,6 +15,7 @@ def save_news():
     saved_news_counter += save_news_from_source_to_db('FINAM', finam.get_news())
 
     print('TOTAL SAVED '+str(saved_news_counter)+' NEWS')
+    telegram.send_message('Всего сохранено '+str(saved_news_counter)+' новостей')
 
 
 def save_news_from_source_to_db(source_name: str, news: list):
