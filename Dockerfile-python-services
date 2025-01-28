@@ -8,7 +8,6 @@ ENV PYTHONPATH=/app
 
 COPY ./apiserver /app/apiserver
 COPY ./lib /app/lib
-COPY ./sounds /app/sounds
 COPY ./main.py /app/main.py
 COPY ./const.py /app/const.py
 COPY ./learn.txt /app/learn.txt

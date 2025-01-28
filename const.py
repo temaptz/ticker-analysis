@@ -1,3 +1,5 @@
 TOKEN = ''
 DB_FILENAME = 'db.sqlite'
 TIME_DELTA_HOURS = 24 * 30
+TELEGRAM_BOT_API_KEY = ''
+TELEGRAM_CHAT_IDS: list[int] = []

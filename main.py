@@ -6,7 +6,7 @@ from lib import (
     predictions_save,
     news_save
 )
-from lib import sound
+from lib import telegram
 
 # import instruments
 # import prices
@@ -17,22 +17,28 @@ from lib import sound
 timezone = pytz.timezone('Europe/Moscow')
 scheduler = BlockingScheduler()
 
+tg_updates = telegram.get_updates()
+print('TELEGRAM UPDATES')
+print(tg_updates)
+
+telegram.send_message('Скрипт ticker-analysis main запущен')
+
 
 # Сбор прогнозов аналитиков
 def job_forecasts():
-    sound.play_file('./sounds/collect-forecasts.mp3')
+    telegram.send_message('Начато выполнение задания: collect-forecasts')
     forecasts_save.save_favorite_forecasts()
 
 
 # Сбор предсказаний нейросети
 def job_predictions():
-    sound.play_file('./sounds/collect-predictions.mp3')
+    telegram.send_message('Начато выполнение задания: collect-predictions')
     predictions_save.save_favorite_predictions()
 
 
 # Сбор свежих новостей
 def job_news():
-    sound.play_file('./sounds/collect-news.mp3')
+    telegram.send_message('Начато выполнение задания: collect-news')
     news_save.save_news()
 
 
