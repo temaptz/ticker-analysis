@@ -41,3 +41,4 @@ def upload_db_backup() -> None:
 
     except Exception as e:
         print('ERROR YANDEX DISK BACKUP', e)
+        telegram.send_message('Ошибка резервного копирования: '+str(e))
