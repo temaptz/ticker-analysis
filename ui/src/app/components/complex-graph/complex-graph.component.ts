@@ -2,10 +2,6 @@ import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ApexAxisChartSeries,
-  ApexChart, ApexDataLabels,
-  ApexTitleSubtitle, ApexTooltip,
-  ApexXAxis,
-  ApexYAxis,
   NgApexchartsModule,
   ApexOptions
 } from 'ng-apexcharts';
@@ -64,7 +60,7 @@ export class ComplexGraphComponent implements OnInit {
     combineLatest([
       this.appService.getInstrumentHistoryPrices(
         this.instrumentUid,
-        30,
+        90,
         CandleInterval.CANDLE_INTERVAL_DAY
       ),
       this.appService.getInstrumentPredictionGraph(this.instrumentUid)

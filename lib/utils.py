@@ -47,3 +47,20 @@ def parse_json_date(date: str or None) -> datetime.datetime or None:
         print('ERROR parse_json_date', date)
 
         return None
+
+
+def get_file_size_readable(filepath) -> str:
+    """
+    Функция для получения размера файла по его абсолютному пути и преобразования его в читаемый вид.
+    """
+    file_size_bytes = os.path.getsize(filepath)
+
+    # Преобразование размера из байтов в более читаемый формат
+    if file_size_bytes > 1024 ** 3:
+        size_str = f"{file_size_bytes / 1024 ** 3:.2f} GB"
+    elif file_size_bytes > 1024 ** 2:
+        size_str = f"{file_size_bytes / 1024 ** 2:.2f} MB"
+    else:
+        size_str = f"{file_size_bytes / 1024:.2f} KB"
+
+    return size_str

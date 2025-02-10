@@ -1,5 +1,6 @@
 import requests
 import const
+from lib import cache, yandex_disk
 
 
 def get_bot_url() -> str:
@@ -14,10 +15,6 @@ def send_message(message: str) -> None:
 
 
 def get_updates(offset_update_id: int = None) -> list:
-    print(get_bot_url()
-          + '/getUpdates'
-          + (('?offset=' + str(offset_update_id)) if offset_update_id else ''))
-
     res = requests.get(
         get_bot_url()
         + '/getUpdates'
@@ -31,3 +28,24 @@ def get_updates(offset_update_id: int = None) -> list:
             return json['result']
 
     return []
+
+
+def process_updates() -> None:
+    cache_key = 'telegram_offset_update_id'
+    offset_update_id = cache.get(cache_key)
+    updates = get_updates(offset_update_id=offset_update_id)
+
+    for u in updates:
+        update_id = u['update_id']
+        text = u['message']['text']
+        cache.set(cache_key, update_id)
+
+        if update_id != offset_update_id:
+            process_single_update(text)
+
+
+def process_single_update(text: str = None) -> None:
+    print('PROCESS TELEGRAM TASK', text)
+
+    if text == 'backup':
+        yandex_disk.upload_db_backup()

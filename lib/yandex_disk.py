@@ -28,13 +28,16 @@ def upload_db_backup() -> None:
             headers={'Authorization': 'OAuth %s' % const.Y_DISK_TOKEN}
         ).json()
 
-        with open(utils.get_file_abspath_recursive(const.DB_FILENAME), 'rb') as file:
+        file_abspath = utils.get_file_abspath_recursive(const.DB_FILENAME)
+
+        with open(file_abspath, 'rb') as file:
             response_upload = requests.put(response_resource['href'], files={'file': file})
 
             if response_upload:
+                file_size = utils.get_file_size_readable(filepath=file_abspath)
                 print('BACKUP UPLOADED', response_upload.status_code, file_path_on_disk)
 
-                telegram.send_message('Резервное копирование успешно завершено с кодом: '+str(response_upload.status_code)+'. Создан файл: '+file_path_on_disk)
+                telegram.send_message('Резервное копирование успешно завершено с кодом: '+str(response_upload.status_code)+'. Создан файл: '+file_path_on_disk+' Размер: '+file_size)
 
     except Exception as e:
         print('ERROR YANDEX DISK BACKUP', e)
