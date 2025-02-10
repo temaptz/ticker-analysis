@@ -2,16 +2,15 @@
   <table>
     <thead>
     <th>Название</th>
+    <th>Фундаментальные показатели</th>
     <th>5 лет</th>
     <th>Год</th>
-    <th>30 дней</th>
-    <th>Цена</th>
-    <th>Прогноз аналитиков</th>
-    <th>История прогнозов</th>
-    <th>Фундаментальные показатели</th>
-    <th (click)="handleSortPrediction()">Прогноз</th>
-    <th>График прогнозов</th>
     <th>90 дней + прогнозы</th>
+    <th>Цена</th>
+    <th>Баланс (Основной)</th>
+    <th>Баланс (Аналитический)</th>
+    <th>Прогноз аналитиков</th>
+    <th (click)="handleSortPrediction()">Прогноз на месяц</th>
     </thead>
     <tbody>
     <ng-container *ngFor="let instrument of instruments()">

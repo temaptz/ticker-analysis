@@ -5,7 +5,7 @@ import {
   Fundamentals,
   InstrumentHistoryPrice,
   InstrumentInList,
-  InstrumentLastPrice,
+  InstrumentLastPrice, Operation,
   Prediction,
   PredictionGraph
 } from './types';
@@ -82,6 +82,22 @@ export class AppService {
     params = params.set('uid', uid);
 
     return this.http.get<PredictionGraph[]>('http://127.0.0.1:8000/instrument/prediction/graph', {params: params});
+  }
+
+  getInstrumentBalance(account_name: string, uid: string): Observable<number> {
+    let params = new HttpParams();
+    params = params.set('account_name', account_name);
+    params = params.set('uid', uid);
+
+    return this.http.get<number>('http://127.0.0.1:8000/instrument/balance', {params: params});
+  }
+
+  getInstrumentOperations(account_name: string, figi: string): Observable<Operation[]> {
+    let params = new HttpParams();
+    params = params.set('account_name', account_name);
+    params = params.set('figi', figi);
+
+    return this.http.get<Operation[]>('http://127.0.0.1:8000/instrument/operations', {params: params});
   }
 
 }

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppService } from '../../app.service';
-import { Instrument, InstrumentInList, InstrumentLastPrice } from '../../types';
+import { Instrument, InstrumentInList } from '../../types';
 import { parseJSON } from 'date-fns';
 import { GraphComponent } from '../graph/graph.component';
 import { CandleInterval } from '../../enums';
@@ -14,11 +14,13 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 import { PredictionComponent } from '../prediction/prediction.component';
 import { PredictionGraphComponent } from '../prediction-graph/prediction-graph.component';
 import { ComplexGraphComponent } from '../complex-graph/complex-graph.component';
+import { BalanceComponent } from '../balance/balance.component';
+
 
 @Component({
   selector: '[app-table-row]',
   standalone: true,
-  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, PredictionGraphComponent, ComplexGraphComponent],
+  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, PredictionGraphComponent, ComplexGraphComponent, BalanceComponent],
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss'
 })
@@ -29,9 +31,8 @@ export class TableRowComponent implements OnInit {
   isLoadedInstrument = signal<boolean>(false);
   isLoadedPrice = signal<boolean>(false);
   instrument = signal<Instrument>(null);
-  instrumentLastPrice = signal<InstrumentLastPrice>(null);
+  instrumentLastPrice = signal<number | null>(null);
   candleInterval = CandleInterval;
-  getPriceByQuotation = getPriceByQuotation;
 
   constructor(
     private appService: AppService,
@@ -49,7 +50,7 @@ export class TableRowComponent implements OnInit {
           ?.sort((a, b) => parseJSON(a.time).getTime() - parseJSON(b.time).getTime())
           ?.[0];
 
-        this.instrumentLastPrice.set(price);
+        this.instrumentLastPrice.set(getPriceByQuotation(price.price));
       });
   }
 

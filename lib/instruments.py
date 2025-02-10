@@ -7,6 +7,7 @@ from tinkoff.invest import (
 )
 import datetime
 from const import TOKEN
+from lib import cache
 
 
 def get_favorites():
@@ -15,11 +16,22 @@ def get_favorites():
 
 
 def get_instrument_by_uid(uid: str):
+    cache_key = 'get_instrument_by_uid'+uid
+    c = cache.get(cache_key)
+
+    if c:
+        return c
+
     with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
-        return client.instruments.get_instrument_by(
+        result = client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
             id=uid
         ).instrument
+
+        if result:
+            cache.set(cache_key, result)
+
+        return result
 
 
 def get_instrument_last_price_by_uid(uid: str):

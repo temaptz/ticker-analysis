@@ -9,13 +9,15 @@ export const getPriceByCandle = (candle: Quotation): number | null => {
     : null;
 }
 
-export const getPriceByQuotation = (price: Quotation): number | null => {
+export const getPriceByQuotation = (price: Quotation, isAbsolute = false): number | null => {
   try {
     if (!price?.units && !price?.nano) {
       return null;
     }
 
-    return (price.units + Math.round(price.nano / 10000000) / 100);
+    const result = (price.units + Math.round(price.nano / 10000000) / 100);
+
+    return isAbsolute ? Math.abs(result) : result;
   } catch (e) {
     console.error((e as any)?.message ?? e);
     return null;

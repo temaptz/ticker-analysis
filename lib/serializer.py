@@ -1,5 +1,27 @@
 import datetime
 import tinkoff.invest
+import json
+
+
+def to_json(obj) -> str:
+    return json.dumps(get_dict_by_object_recursive(obj))
+
+
+def get_dict_by_object_recursive(data):
+    if isinstance(data, dict):  # Если это словарь
+        return {key: get_dict_by_object_recursive(value) for key, value in data.items()}
+    elif isinstance(data, list):  # Если это список
+        return [get_dict_by_object_recursive(item) for item in data]
+    elif isinstance(data, tuple):  # Если это кортеж
+        return [get_dict_by_object_recursive(item) for item in data]
+    elif isinstance(data, set):  # Если это множество
+        return [get_dict_by_object_recursive(item) for item in data]  # Преобразуем в список
+    elif hasattr(data, "__dict__"):  # Если это объект с атрибутами
+        return get_dict_by_object_recursive(data.__dict__)
+    elif isinstance(data, (int, float, bool, str, type(None))):  # Примитивные типы
+        return data
+    else:
+        return str(data)  # Если неизвестный тип, конвертируем в строку
 
 
 def get_dict_by_object(input) -> dict:

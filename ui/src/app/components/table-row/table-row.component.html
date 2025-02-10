@@ -6,44 +6,7 @@
     <preloader></preloader>
   }
 </td>
-<td>
-  <graph
-    [instrumentUid]="instrumentUid"
-    [days]="365 * 5"
-    [interval]="candleInterval.CANDLE_INTERVAL_MONTH"
-  ></graph>
-</td>
-<td>
-  <graph
-    [instrumentUid]="instrumentUid"
-    [days]="365"
-    [interval]="candleInterval.CANDLE_INTERVAL_WEEK"
-  ></graph>
-</td>
-<td>
-  <graph
-    [instrumentUid]="instrumentUid"
-    [days]="30"
-    [interval]="candleInterval.CANDLE_INTERVAL_DAY"
-  ></graph>
-</td>
-<td>
-  @defer (when isLoadedInstrument()) {
-    {{ getPriceByQuotation(instrumentLastPrice()?.price) }}
-  } @placeholder {
-    <preloader></preloader>
-  }
-</td>
-<td>
-  <forecast
-    [instrumentUid]="instrumentUid"
-  ></forecast>
-</td>
-<td>
-  <forecast-history
-    [instrumentUid]="instrumentUid"
-  ></forecast-history>
-</td>
+
 <td>
   @defer (when isLoadedInstrument()) {
     <fundamentals
@@ -54,19 +17,79 @@
     <preloader></preloader>
   }
 </td>
+
 <td>
-  <prediction
+  <graph
     [instrumentUid]="instrumentUid"
-    [currentPrice]="getPriceByQuotation(instrumentLastPrice()?.price)"
-  ></prediction>
+    [days]="365 * 5"
+    [interval]="candleInterval.CANDLE_INTERVAL_MONTH"
+  ></graph>
 </td>
+
 <td>
-  <prediction-graph
+  <graph
     [instrumentUid]="instrumentUid"
-  ></prediction-graph>
+    [days]="365"
+    [interval]="candleInterval.CANDLE_INTERVAL_WEEK"
+  ></graph>
 </td>
+
 <td>
   <complex-graph
     [instrumentUid]="instrumentUid"
   ></complex-graph>
+</td>
+
+<td>
+  @defer (when isLoadedInstrument()) {
+    {{ instrumentLastPrice() }}
+  } @placeholder {
+    <preloader></preloader>
+  }
+</td>
+
+<td>
+  @defer (when isLoadedInstrument()) {
+    <balance
+      *ngIf="instrument()?.figi as figi"
+      accountName="Основной"
+      [instrumentUid]="instrumentUid"
+      [instrumentFigi]="figi"
+      [currentPrice]="instrumentLastPrice() ?? 0"
+    ></balance>
+  } @placeholder {
+    <preloader></preloader>
+  }
+</td>
+
+<td>
+  @defer (when isLoadedInstrument()) {
+    <balance
+      *ngIf="instrument()?.figi as figi"
+      accountName="Аналитический"
+      [instrumentUid]="instrumentUid"
+      [instrumentFigi]="figi"
+      [currentPrice]="instrumentLastPrice() ?? 0"
+    ></balance>
+  } @placeholder {
+    <preloader></preloader>
+  }
+</td>
+
+<td>
+  <forecast
+    [instrumentUid]="instrumentUid"
+  ></forecast>
+  <br>
+  <br>
+  <forecast-history
+    [instrumentUid]="instrumentUid"
+  ></forecast-history>
+</td>
+
+<td>
+  <prediction
+    [instrumentUid]="instrumentUid"
+    [currentPrice]="instrumentLastPrice()"
+  ></prediction>
 </td>

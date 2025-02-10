@@ -4,10 +4,7 @@ from django.http import HttpResponse
 from tinkoff.invest import (
     CandleInterval
 )
-from lib import serializer
-from lib import instruments
-from lib import forecasts
-from lib import predictions
+from lib import serializer, instruments, forecasts, predictions, users
 import json
 
 
@@ -131,3 +128,27 @@ def instrument_prediction_graph(request):
         resp = predictions.get_prediction_graph_by_uid(uid)
 
     return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_balance(request):
+    resp = None
+    account_name = request.GET.get('account_name')
+    uid = request.GET.get('uid')
+
+    if account_name and uid:
+        resp = users.get_user_instrument_balance(account_name=account_name, instrument_uid=uid)
+
+    return HttpResponse(json.dumps(resp))
+
+
+@api_view(['GET'])
+def instrument_operations(request):
+    resp = None
+    account_name = request.GET.get('account_name')
+    figi = request.GET.get('figi')
+
+    if account_name and figi:
+        resp = users.get_user_instrument_operations(account_name=account_name, instrument_figi=figi)
+
+    return HttpResponse(serializer.to_json(resp))

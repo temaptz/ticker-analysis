@@ -1,0 +1,33 @@
+div {
+  white-space: nowrap;
+}
+
+.small {
+  font-size: .5em;
+}
+
+.plus {
+  color: green;
+
+  &:before {
+    content: '+';
+  }
+}
+
+.minus {
+  color: red;
+
+  &:before {
+    content: '-';
+  }
+}
+
+div:before {
+  content: '' !important;
+}
+
+label {
+  display: block;
+  font-size: .7em;
+  color: gray;
+}

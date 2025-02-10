@@ -1,7 +1,10 @@
 from lib import (
     telegram,
     docker,
-    schedule
+    schedule,
+    users,
+    serializer,
+    news
 )
 
 # import instruments
@@ -14,6 +17,9 @@ from lib import (
 if docker.is_docker():
     telegram.send_message('Скрипт ticker-analysis main запущен')
     schedule.start_schedule()
+else:
+    print('ELSE')
+    # news.get_news_by_instrument_uid()
 
 
 # instruments.show_instruments()
