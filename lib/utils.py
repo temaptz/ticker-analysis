@@ -1,9 +1,14 @@
 import datetime
+import math
 import os
+
+import numpy as np
 from tinkoff.invest.schemas import (
     Quotation,
     HistoricCandle,
 )
+from decimal import Decimal
+import numpy
 
 
 def get_price_by_candle(candle: HistoricCandle) -> float or None:
@@ -64,3 +69,7 @@ def get_file_size_readable(filepath) -> str:
         size_str = f"{file_size_bytes / 1024:.2f} KB"
 
     return size_str
+
+
+def round_float(num: float) -> float:
+    return float(str(num)[0:10])

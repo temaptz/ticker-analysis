@@ -152,3 +152,14 @@ def instrument_operations(request):
         resp = users.get_user_instrument_operations(account_name=account_name, instrument_figi=figi)
 
     return HttpResponse(serializer.to_json(resp))
+
+
+@api_view(['GET'])
+def instrument_news(request):
+    resp = None
+    uid = request.GET.get('uid')
+
+    if uid:
+        resp = instrument_news.get_sorted_news_by_instrument_uid_by_source(uid=uid)
+
+    return HttpResponse(serializer.to_json(resp))

@@ -19,4 +19,5 @@ urlpatterns = [
     path('instrument/prediction', views.instrument_prediction),
     path('instrument/balance', views.instrument_balance),
     path('instrument/operations', views.instrument_operations),
+    path('instrument/news', views.instrument_news),
 ]

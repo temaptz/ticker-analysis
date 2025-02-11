@@ -10,30 +10,22 @@ from const import TOKEN
 from lib import cache
 
 
+@cache.ttl_cache(ttl=60)
 def get_favorites():
     with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_favorites().favorite_instruments
 
 
+@cache.ttl_cache()
 def get_instrument_by_uid(uid: str):
-    cache_key = 'get_instrument_by_uid'+uid
-    c = cache.get(cache_key)
-
-    if c:
-        return c
-
     with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
-        result = client.instruments.get_instrument_by(
+        return client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
             id=uid
         ).instrument
 
-        if result:
-            cache.set(cache_key, result)
 
-        return result
-
-
+@cache.ttl_cache()
 def get_instrument_last_price_by_uid(uid: str):
     try:
         with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -45,6 +37,7 @@ def get_instrument_last_price_by_uid(uid: str):
         print('ERROR get_instrument_last_price_by_uid')
 
 
+@cache.ttl_cache()
 def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime):
     try:
         with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -59,6 +52,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
         print('ERROR get_instrument_history_price_by_uid')
 
 
+@cache.ttl_cache()
 def get_instrument_consensus_forecast_by_uid(uid: str):
     try:
         with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -72,6 +66,7 @@ def get_instrument_consensus_forecast_by_uid(uid: str):
         print('ERROR get_instrument_consensus_forecast_by_uid')
 
 
+@cache.ttl_cache()
 def get_instrument_fundamentals_by_asset_uid(asset_uid: str):
     try:
         with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:

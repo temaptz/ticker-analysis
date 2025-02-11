@@ -19,7 +19,7 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('ELSE')
-    # news.get_news_by_instrument_uid()
+    news.get_sorted_news_by_instrument_uid_by_source('35fb8d6b-ed5f-45ca-b383-c4e3752c9a8a')
 
 
 # instruments.show_instruments()

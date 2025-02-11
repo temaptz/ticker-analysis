@@ -47,6 +47,7 @@ def get_news_by_source_date_keywords(start_date: datetime.datetime, end_date: da
     cursor = connection.cursor()
 
     keyword_conditions = " OR ".join(["LOWER(title) LIKE LOWER(?) OR LOWER(text) LIKE LOWER(?)" for _ in keywords])
+
     query = f'''
         SELECT * FROM News
         WHERE date BETWEEN ? AND ?
