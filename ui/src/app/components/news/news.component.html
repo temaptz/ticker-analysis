@@ -1,37 +1,39 @@
 @defer (when isLoaded()) {
-  <ng-container *ngIf="news() as newsList">
+  <ng-container *ngIf="news() as newsResp">
     <div
       class="date"
     >{{ dateFrom | date : 'yyyy-MM-dd' }} - {{ dateTo | date : 'yyyy-MM-dd' }}</div>
 
+    <div class="keywords">Ключевые слова: {{ newsResp?.keywords?.join('; ') }}</div>
+
     <div
-      *ngFor="let source of Object.keys(newsList)"
+      *ngFor="let source of Object.keys(newsResp.sources)"
       class="source"
     >
       <div
-        *ngIf="newsList[source] as s"
+        *ngIf="newsResp.sources[source] as s"
         class="bar"
       >
         <div
           class="green"
-          [style.height.px]="(s['positive'] ?? 0) * barHeightMultiply"
-          [title]="s['positive']"
-        >{{ s['positive'] }}</div>
+          [style.height.px]="s.positive * barHeightMultiply"
+          [title]="s.positive"
+        >{{ s.positive }}</div>
 
         <div
           class="red"
-          [style.height.px]="(s['negative'] ?? 0) * barHeightMultiply"
-          [title]="s['negative']"
-        >{{ s['negative'] }}</div>
+          [style.height.px]="s.negative * barHeightMultiply"
+          [title]="s.negative"
+        >{{ s.negative }}</div>
 
         <div
           class="gray"
-          [style.height.px]="(s['neutral'] ?? 0) * barHeightMultiply"
-          [title]="s['neutral']"
-        >{{ s['neutral'] }}</div>
+          [style.height.px]="s.neutral * barHeightMultiply"
+          [title]="s.neutral"
+        >{{ s.neutral }}</div>
       </div>
 
-      <div>{{ source }} - {{ newsList[source]['total'] }} Шт</div>
+      <div>{{ source }} - {{ newsResp.sources[source].total }} Шт</div>
     </div>
   </ng-container>
 } @placeholder {

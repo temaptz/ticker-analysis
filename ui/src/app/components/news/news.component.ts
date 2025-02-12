@@ -25,7 +25,7 @@ export class NewsComponent {
   news = signal<NewsResponse | null>(null);
   dateFrom = subDays(new Date(), 7);
   dateTo = new Date();
-  barHeightMultiply = 2
+  barHeightMultiply = 3
 
   constructor(
     private appService: AppService,

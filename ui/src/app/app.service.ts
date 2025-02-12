@@ -100,13 +100,13 @@ export class AppService {
     return this.http.get<Operation[]>('http://127.0.0.1:8000/instrument/operations', {params: params});
   }
 
-  getInstrumentNews(uid: string, startDate: Date, endDate: Date): Observable<NewsResponse[]> {
+  getInstrumentNews(uid: string, startDate: Date, endDate: Date): Observable<NewsResponse> {
     let params = new HttpParams();
     params = params.set('uid', uid);
     params = params.set('start_date', startDate.toJSON());
     params = params.set('end_date', endDate.toJSON());
 
-    return this.http.get<NewsResponse[]>('http://127.0.0.1:8000/instrument/news', {params: params});
+    return this.http.get<NewsResponse>('http://127.0.0.1:8000/instrument/news', {params: params});
   }
 
 }

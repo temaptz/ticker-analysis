@@ -9,24 +9,27 @@ def get_sorted_news_by_instrument_uid(
         end_date: datetime.datetime
 ):
     result = {
-        'RBC': {
-            'positive': 0,
-            'negative': 0,
-            'neutral': 0,
-            'total': 0,
+        'sources': {
+            'RBC': {
+                'positive': 0,
+                'negative': 0,
+                'neutral': 0,
+                'total': 0,
+            },
+            'FINAM': {
+                'positive': 0,
+                'negative': 0,
+                'neutral': 0,
+                'total': 0,
+            },
+            'RG': {
+                'positive': 0,
+                'negative': 0,
+                'neutral': 0,
+                'total': 0,
+            }
         },
-        'FINAM': {
-            'positive': 0,
-            'negative': 0,
-            'neutral': 0,
-            'total': 0,
-        },
-        'RG': {
-            'positive': 0,
-            'negative': 0,
-            'neutral': 0,
-            'total': 0,
-        }
+        'keywords': get_keywords_by_instrument_uid(instrument_uid)
     }
 
     news = get_news_by_instrument_uid(
@@ -45,13 +48,13 @@ def get_sorted_news_by_instrument_uid(
         print('NEWS RATED', rate, n)
 
         if rate == 1:
-            result[source]['positive'] += 1
+            result['sources'][source]['positive'] += 1
         elif rate == -1:
-            result[source]['negative'] += 1
+            result['sources'][source]['negative'] += 1
         elif rate == 0:
-            result[source]['neutral'] += 1
+            result['sources'][source]['neutral'] += 1
 
-        result[source]['total'] += 1
+        result['sources'][source]['total'] += 1
 
     return result
 
@@ -117,6 +120,8 @@ def get_keywords_by_instrument_uid(uid: str) -> list[str]:
     i = instruments.get_instrument_by_uid(uid)
     result = [i.ticker.lower()]
 
-    gpt_words = yandex.get_keywords(legal_name=i.name)
+    for word in yandex.get_keywords(legal_name=i.name):
+        if word not in result:
+            result.append(word)
 
-    return result + gpt_words
+    return result
