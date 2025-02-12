@@ -1,27 +1,13 @@
 import datetime
-from tinkoff.invest import (
-    Client,
-    constants,
-    GetAccountsResponse,
-    PositionsResponse,
-    Operation,
-    OperationState
-)
-from const import TOKEN
-
-from lib.db import news_db
-from lib.news_parsers import (rbc, rg, finam)
+from lib.db import news_db, news_rate_db
 from lib import instruments, yandex, cache
 
 
-def get_sorted_news_by_instrument_uid_by_source(
-        uid: str,
-        # start_date: datetime.datetime,
-        # end_date: datetime.datetime
+def get_sorted_news_by_instrument_uid(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime
 ):
-    start_date = datetime.datetime.now() - datetime.timedelta(days=3)
-    end_date = datetime.datetime.now()
-
     result = {
         'RBC': {
             'positive': 0,
@@ -44,17 +30,19 @@ def get_sorted_news_by_instrument_uid_by_source(
     }
 
     news = get_news_by_instrument_uid(
-        uid=uid,
+        uid=instrument_uid,
         start_date=start_date,
         end_date=end_date
     )
-    instrument = instruments.get_instrument_by_uid(uid)
+
+    print('GOT NEWS', len(news))
 
     for n in news:
-        title = n[1]
-        text = n[2]
+        news_uid = n[0]
         source = n[4]
-        rate = get_news_rate(title=title, text=text, subject_name=yandex.get_human_name(instrument.name))
+        rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
+
+        print('NEWS RATED', rate, n)
 
         if rate == 1:
             result[source]['positive'] += 1
@@ -65,18 +53,46 @@ def get_sorted_news_by_instrument_uid_by_source(
 
         result[source]['total'] += 1
 
-    print(result)
-
     return result
 
 
-@cache.ttl_cache()
 def get_news_rate(
-        title: str,
-        text: str,
-        subject_name: str
-) -> int:
-    return yandex.get_text_classify(title=title, text=text, subject_name=subject_name)
+        news_uid: str,
+        instrument_uid: str,
+) -> int or None:
+    print('CALL GET RATE')
+
+    rate_saved_db = news_rate_db.get_rate_by_uid(news_uid=news_uid, instrument_uid=instrument_uid)
+
+    if rate_saved_db and len(rate_saved_db) and rate_saved_db[0] and rate_saved_db[0][2] is not None:
+        print('RATE FROM DB', rate_saved_db[0][2])
+
+        return rate_saved_db[0][2]
+    else:
+        news = news_db.get_news_by_uid(news_uid)
+        instrument = instruments.get_instrument_by_uid(instrument_uid)
+
+        if news and len(news) > 0 and news[0] and instrument:
+            title = news[0][1]
+            text = news[0][2]
+
+            subject_name = yandex.get_human_name(instrument.name)
+            gpt_rate = yandex.get_text_classify(
+                title=title,
+                text=text,
+                subject_name=subject_name
+            )
+
+            if gpt_rate is not None:
+                news_rate_db.insert_rate(news_uid=news_uid, instrument_uid=instrument_uid, rate=gpt_rate)
+
+                print('RATE FROM GPT', gpt_rate)
+
+                return gpt_rate
+
+    print('RATE NONE')
+
+    return None
 
 
 @cache.ttl_cache()
@@ -85,29 +101,22 @@ def get_news_by_instrument_uid(
         start_date: datetime.datetime,
         end_date: datetime.datetime
 ):
+    keywords = get_keywords_by_instrument_uid(uid)
+
+    print('GET NEWS BY KEYWORDS', keywords)
+
     return news_db.get_news_by_source_date_keywords(
         start_date=start_date,
         end_date=end_date,
-        keywords=get_keywords_by_instrument_uid(uid)
+        keywords=keywords
     )
 
 
 @cache.ttl_cache()
 def get_keywords_by_instrument_uid(uid: str) -> list[str]:
-    result = list()
     i = instruments.get_instrument_by_uid(uid)
-    result.append(i.ticker.lower())
-    result.append(i.name.lower())
+    result = [i.ticker.lower()]
 
-    gpt_resp = yandex.get_gpt_text(
-        'Как в СМИ называют эту компанию, однозначно и понятно для большинства: "'
-        + i.name + '"? '
-        + 'Составь список из одного или нескольких вариантов. '
-        + 'В качестве разделителя используй точку с запятой. '
-    ).strip('.')
+    gpt_words = yandex.get_keywords(legal_name=i.name)
 
-    for word in [s.strip().lower() for s in gpt_resp.split(';')]:
-        if word not in result:
-            result.append(word)
-
-    return result
+    return result + gpt_words

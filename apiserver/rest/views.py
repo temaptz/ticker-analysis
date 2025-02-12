@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from tinkoff.invest import (
     CandleInterval
 )
-from lib import serializer, instruments, forecasts, predictions, users
+from lib import serializer, instruments, forecasts, predictions, users, news, utils
 import json
 
 
@@ -158,8 +158,10 @@ def instrument_operations(request):
 def instrument_news(request):
     resp = None
     uid = request.GET.get('uid')
+    start_date = utils.parse_json_date(request.GET.get('start_date'))
+    end_date = utils.parse_json_date(request.GET.get('end_date'))
 
-    if uid:
-        resp = instrument_news.get_sorted_news_by_instrument_uid_by_source(uid=uid)
+    if uid and start_date and end_date:
+        resp = news.get_sorted_news_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
 
     return HttpResponse(serializer.to_json(resp))

@@ -15,12 +15,13 @@ import { PredictionComponent } from '../prediction/prediction.component';
 import { PredictionGraphComponent } from '../prediction-graph/prediction-graph.component';
 import { ComplexGraphComponent } from '../complex-graph/complex-graph.component';
 import { BalanceComponent } from '../balance/balance.component';
+import { NewsComponent } from '../news/news.component';
 
 
 @Component({
   selector: '[app-table-row]',
   standalone: true,
-  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, PredictionGraphComponent, ComplexGraphComponent, BalanceComponent],
+  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, PredictionGraphComponent, ComplexGraphComponent, BalanceComponent, NewsComponent],
   templateUrl: './table-row.component.html',
   styleUrl: './table-row.component.scss'
 })

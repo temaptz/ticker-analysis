@@ -1,14 +1,10 @@
 import datetime
-import math
 import os
-
-import numpy as np
 from tinkoff.invest.schemas import (
     Quotation,
     HistoricCandle,
 )
-from decimal import Decimal
-import numpy
+import dateutil.parser
 
 
 def get_price_by_candle(candle: HistoricCandle) -> float or None:
@@ -46,10 +42,10 @@ def get_file_abspath_recursive(file_name: str, dir_name: str = '') -> str or Non
 
 def parse_json_date(date: str or None) -> datetime.datetime or None:
     try:
-        return datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+        return dateutil.parser.parse(date)
 
-    except Exception:
-        print('ERROR parse_json_date', date)
+    except Exception as e:
+        print('ERROR parse_json_date', date, e)
 
         return None
 

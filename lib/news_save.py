@@ -6,7 +6,6 @@ from lib import telegram
 def save_news():
     print('UPDATING NEWS')
     telegram.send_message('Начато сохранение новостей')
-    news_db.init_table()
 
     saved_news_counter = 0
 

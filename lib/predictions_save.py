@@ -10,8 +10,6 @@ from lib import (predictions, telegram)
 def save_favorite_predictions():
     telegram.send_message('Начато сохранение предсказаний нейросети')
 
-    predictions_db.init_table()
-
     counter = 0
 
     with Client(TOKEN, target=INVEST_GRPC_API) as client:

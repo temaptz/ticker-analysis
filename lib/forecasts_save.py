@@ -16,8 +16,6 @@ from lib import telegram
 def save_favorite_forecasts():
     telegram.send_message('Начато сохранение прогнозов аналитиков')
 
-    forecasts_db.init_table()
-
     counter = 0
 
     with Client(TOKEN, target=INVEST_GRPC_API) as client:

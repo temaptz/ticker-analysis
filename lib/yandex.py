@@ -1,34 +1,53 @@
-import math
-
-import numpy
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
 from lib import utils, cache
-from decimal import Decimal
+from lib.db import gpt_requests_db
 
 
 # Функция для отправки текстового запроса к GPT и получения ответа
-def get_gpt_text(text_query: str) -> str:
+def get_gpt_text(text_query: str, instruction: str = '') -> str:
     try:
+        print('GPT TEXT REQUEST', text_query, instruction)
+        db_request = 'User: '+text_query+' System: '+instruction
+        db_response = gpt_requests_db.get_response(request=db_request)
+        if db_response:
+            print('GPT SAVED DB TEXT RESPONSE', db_response)
+            return db_response
+
         sdk = YCloudML(
             auth=const.Y_API_SECRET,
             folder_id=const.Y_API_FOLDER_ID
         )
 
-        model = sdk.models.completions('yandexgpt')
-        model = model.configure(temperature=0.5)
+        model = sdk.models.completions('yandexgpt').configure(temperature=0)
 
-        result = model.run(text_query)
+        messages = [{
+            'role': 'user',
+            'text': text_query
+        }]
 
-        return result.alternatives[0].text
+        if instruction:
+            messages.insert(0, {
+                'role': 'system',
+                'text': instruction
+            })
+
+        result = model.run(messages).alternatives[0].text
+
+        if result:
+            gpt_requests_db.insert_response(request=db_request, response=result)
+
+        print('GPT TEXT RESPONSE', result)
+
+        return result
 
     except Exception as e:
         print('ERROR get_gpt_text', e)
         return ''
 
 
-def get_text_classify(title: str, text: str, subject_name: str) -> int:
+def get_text_classify(title: str, text: str, subject_name: str) -> int or None:
     try:
         sdk = YCloudML(
             auth=const.Y_API_SECRET,
@@ -40,31 +59,17 @@ def get_text_classify(title: str, text: str, subject_name: str) -> int:
 
         # Формирование описания задачи с учетом названия компании
         task_description = (
-            f"Оцените экономическое влияние следующей новости на компанию {subject_name}:"
+            f"Оцени экономическое влияние следующей новости на компанию {subject_name}:"
         )
-
-        # Примеры для Few-shot обучения
-        samples = [
-            {
-                "text": f"Компания {subject_name} объявила о сокращении 500 сотрудников из-за падения продаж.",
-                "label": "отрицательное влияние"
-            },
-            {
-                "text": f"Компания {subject_name} выпустила новый продукт, который получил положительные отзывы.",
-                "label": "положительное влияние"
-            },
-            {
-                "text": f"Компания {subject_name} провела ежегодное собрание акционеров без значимых объявлений.",
-                "label": "нейтральное влияние"
-            }
-        ]
 
         # Настройка модели классификации
         model = sdk.models.text_classifiers('yandexgpt').configure(
             task_description=task_description,
             labels=['положительное влияние', 'отрицательное влияние', 'нейтральное влияние'],
-            samples=samples
+            samples=get_news_rate_samples(instrument_name=subject_name)
         )
+
+        print('GPT REQUEST', task_description)
 
         result: FewShotTextClassifiersModelResult = model.run(news_text)
 
@@ -73,17 +78,98 @@ def get_text_classify(title: str, text: str, subject_name: str) -> int:
 
             if 'положительное' in largest.label:
                 return 1
-
-            if 'отрицательное' in largest.label:
+            elif 'отрицательное' in largest.label:
                 return -1
-
-        return 0
+            elif 'нейтральное' in largest.label:
+                return 0
 
     except Exception as e:
         print('ERROR get_gpt_text', e)
-        return 0
+
+    return None
 
 
-@cache.ttl_cache()
+# Возвращает распространенное в обиходе название
 def get_human_name(legal_name: str) -> str:
-    return get_gpt_text('Какое краткое общепринятое название этой компании: "'+legal_name+'"?')
+    instruction = (
+        'Ты эксперт в области бизнеса, финансов и журналистики. '
+        + 'Я говорю тебе как называется сущность, а ты находишь публичное, краткое, распространенное, '
+        + 'общепринятое название этой сущности, которое чаще всего встречается в российских СМИ '
+        + 'и будет лучше всего понятно большинству людей. '
+        + 'Ответ должен содержать только одно название, которое однозначно идентифицирует сущность.\n'
+        + 'Пример 1: Запрос - Сбер Банк Ответ: Сбер Банк\n'
+        + 'Пример 2: Запрос - Норильский никель Ответ: Норильский никель\n'
+        + 'Пример 3: Запрос - ФСК Россети Ответ: ФСК Россети\n'
+        + 'Пример 4: Запрос - Fix Price Group Ответ: FixPrice\n'
+        + 'Пример 5: Запрос - Ozon Holdings PLC Ответ: Озон\n'
+        + 'Пример 6: Запрос - Группа Позитив Ответ: Positive Technologies\n'
+        + 'Пример 7: Запрос - МГТС - акции привилегированные Ответ: МГТС\n'
+    )
+
+    return (
+        get_gpt_text(text_query=legal_name, instruction=instruction)
+        .replace('"', '')
+        .strip('.')
+    )
+
+
+# Возвращает массив ключевых слов для поиска по названию
+def get_keywords(legal_name: str) -> list[str]:
+    result = list()
+    instruction = (
+            'Ты эксперт в области бизнеса, финансов и журналистики. '
+            + 'Я говорю тебе как называется сущность, а ты придумываешь краткое, распространенное, '
+            + 'общепринятое название этой сущности, которое чаще всего встречается в российских СМИ '
+            + 'и будет лучше всего понятно большинству людей. '
+            + 'Если таких названий несколько, то напиши их через точку с запятой.\n'
+            + 'Пример 1: Запрос - Сбер Банк - привилегированные акции Ответ: сбер;сбербанк;сбер банк\n'
+            + 'Пример 2: Запрос - Магнит Ответ: магнит\n'
+            + 'Пример 3: Запрос - Норильский никель Ответ: норильский никель;норникель\n'
+            + 'Пример 4: Запрос - Аэрофлот Ответ: аэрофлот\n'
+            + 'Пример 5: Запрос - Северсталь Ответ: северсталь\n'
+            + 'Пример 6: Запрос - ФСК Россети Ответ: фск россети;россети\n'
+            + 'Пример 7: Запрос - Ozon Holdings PLC Ответ: озон;ozon\n'
+            + 'Пример 8: Запрос - МТС Ответ; мтс;мобильные телесистемы\n'
+            + 'Пример 9: Запрос - Fix Price Group Ответ: фикс прайс;fix price\n'
+            + 'Пример 10: Запрос - Группа Позитив Ответ: positive technologies\n'
+            + 'Пример 11: Запрос - МГТС - акции привилегированные Ответ: мгтс\n'
+    )
+
+    response = (
+        get_gpt_text(text_query=legal_name, instruction=instruction)
+        .strip('.')
+        .replace('"', '')
+        .lower()
+    )
+
+    for word in [i.strip() for i in response.split(';')]:
+        if word not in result:
+            result.append(word)
+
+    return result
+
+
+# Примеры для Few-shot обучения
+def get_news_rate_samples(instrument_name: str):
+    return [
+        {
+            "text": f"Компания {instrument_name} выпустила новый продукт, который получил положительные отзывы.",
+            "label": "положительное влияние"
+        },
+        {
+            "text": f"Лучшую динамику в ходе торгов демонстрируют акции {instrument_name}",
+            "label": "положительное влияние"
+        },
+        {
+            "text": f"Компания {instrument_name} объявила о сокращении 500 сотрудников из-за падения продаж.",
+            "label": "отрицательное влияние"
+        },
+        {
+            "text": f"Сильнее остальных просели бумаги {instrument_name}",
+            "label": "отрицательное влияние"
+        },
+        {
+            "text": f"Компания {instrument_name} провела ежегодное собрание акционеров без значимых объявлений.",
+            "label": "нейтральное влияние"
+        },
+    ]

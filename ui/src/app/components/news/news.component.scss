@@ -1,0 +1,46 @@
+.bar {
+  display: flex;
+  align-items: flex-end;
+
+  & > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 30px;
+    font-size: .5em;
+    overflow: hidden;
+
+    &.green {
+      background-color: green;
+    }
+
+    &.red {
+      background-color: red;
+    }
+
+    &.gray {
+      background-color: lightgray;
+    }
+  }
+}
+
+.source {
+  margin-top: 3px;
+  padding: 5px 3px;
+  border: 1px solid lightgray;
+}
+
+.date {
+  margin-bottom: 10px;
+  font-size: .7em;
+  color: gray;
+}
+
+div {
+  white-space: nowrap;
+}
+
+.small {
+  font-size: .7em;
+}
