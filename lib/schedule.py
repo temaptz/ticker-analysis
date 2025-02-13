@@ -16,7 +16,7 @@ def start_schedule() -> None:
 
     # Сбор прогнозов аналитиков
     scheduler.add_job(
-        forecasts_save.save_favorite_forecasts,
+        forecasts_save.save_forecasts,
         'cron',
         day_of_week='mon',
         hour=12,
@@ -26,7 +26,7 @@ def start_schedule() -> None:
 
     # Сбор предсказаний нейросети
     scheduler.add_job(
-        predictions_save.save_favorite_predictions,
+        predictions_save.save_predictions,
         'cron',
         hour=11,
         minute=0,

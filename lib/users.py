@@ -6,7 +6,7 @@ from tinkoff.invest import (
     Operation,
     OperationState
 )
-from const import TOKEN
+from const import TINKOFF_INVEST_TOKEN
 from lib import cache
 
 
@@ -40,7 +40,7 @@ def get_accounts() -> GetAccountsResponse.accounts:
         if c:
             return c
 
-        with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             result = client.users.get_accounts().accounts
 
             if result:
@@ -54,7 +54,7 @@ def get_accounts() -> GetAccountsResponse.accounts:
 
 def get_portfolio(account_id: str):
     try:
-        with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.operations.get_portfolio(account_id=account_id)
 
     except Exception as e:
@@ -63,7 +63,7 @@ def get_portfolio(account_id: str):
 
 def get_positions(account_id: str) -> PositionsResponse:
     try:
-        with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.operations.get_positions(account_id=account_id)
 
     except Exception as e:
@@ -74,7 +74,7 @@ def get_operations(account_id: str, figi: str) -> list[Operation]:
     try:
         resp = list()
 
-        with Client(TOKEN, target=constants.INVEST_GRPC_API) as client:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             for operation in client.operations.get_operations(account_id=account_id, figi=figi).operations:
                 if operation.state == OperationState.OPERATION_STATE_EXECUTED:
                     resp.append(operation)

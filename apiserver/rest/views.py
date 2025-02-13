@@ -10,12 +10,8 @@ import json
 
 @api_view(['GET'])
 def instruments_list(request):
-    resp = list()
+    return HttpResponse(serializer.to_json(instruments.get_instruments_white_list()))
 
-    for i in instruments.get_favorites():
-        resp.append(serializer.get_dict_by_object(i))
-
-    return HttpResponse(json.dumps(resp))
 
 @api_view(['GET'])
 def instrument_info(request):

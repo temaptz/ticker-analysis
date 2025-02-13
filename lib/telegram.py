@@ -1,6 +1,6 @@
 import requests
 import const
-from lib import cache, yandex_disk
+from lib import cache, yandex_disk, forecasts_save, predictions_save
 
 
 def get_bot_url() -> str:
@@ -49,3 +49,9 @@ def process_single_update(text: str = None) -> None:
 
     if text == 'backup':
         yandex_disk.upload_db_backup()
+
+    if text == 'forecasts':
+        forecasts_save.save_forecasts()
+
+    if text == 'predictions':
+        predictions_save.save_predictions()

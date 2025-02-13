@@ -8,7 +8,7 @@ RUN npm run build
 
 FROM nginx:latest
 # Копируем конфиг nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+#COPY nginx.conf /etc/nginx/nginx.conf
 
 # Копируем файл с пользователями
 COPY htpasswd /etc/nginx/.htpasswd

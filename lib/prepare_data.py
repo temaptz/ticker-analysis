@@ -1,22 +1,10 @@
 import datetime
 import time
-
-from tinkoff.invest import (
-    Client,
-    StatisticResponse,
-    FavoriteInstrument,
-    CandleInterval,
-    HistoricCandle,
-)
-from tinkoff.invest.schemas import (
-    GetAssetFundamentalsRequest,
-)
-from tinkoff.invest.constants import INVEST_GRPC_API
+from tinkoff.invest import StatisticResponse, FavoriteInstrument, CandleInterval, HistoricCandle
+from tinkoff.invest.schemas import GetAssetFundamentalsRequest
 from tinkoff.invest.services import Services
-
 import const
-from lib import utils
-from const import TOKEN
+from lib import utils, instruments, forecasts
 from lib.db import learning_db
 from lib.learning_card import LearningCard
 from tinkoff.invest.schemas import GetForecastResponse
@@ -105,9 +93,8 @@ def get_saved_prepared_data():
 def get_uids() -> list[str]:
     result = list[str]()
 
-    with Client(TOKEN, target=INVEST_GRPC_API) as client:
-        for i in client.instruments.get_favorites().favorite_instruments:
-            result.append(i.uid)
+    for instrument in instruments.get_instruments_white_list():
+        result.append(instrument.uid)
 
     return result
 
@@ -124,36 +111,34 @@ def get_days(days: int, offset_days: int) -> list[datetime.datetime]:
 
 
 def show():
-    with Client(TOKEN, target=INVEST_GRPC_API) as client:
-        favorites = client.instruments.get_favorites().favorite_instruments
-        iterator = 0
+    iterator = 0
 
-        for favorite in favorites:
-            fundamentals = get_fundamentals(client=client, favorite=favorite)
+    for instrument in instruments.get_instruments_white_list():
+        fundamentals = get_fundamentals(client=client, favorite=favorite)
 
-            if fundamentals:
-                print(favorite.ticker)
-                print(favorite.name)
-                time.sleep(1)
+        if fundamentals:
+            print(instrument.ticker)
+            print(instrument.name)
+            time.sleep(1)
 
-                for f in forecasts.get_forecasts_by_uid(favorite.uid):
-                    forecast_response: GetForecastResponse = forecasts.deserialize(f[1])
-                    consensus_price = utils.get_price_by_quotation(forecast_response.consensus.consensus)
-                    date0 = datetime.datetime.fromisoformat(f[2])
-                    date1 = date0 - datetime.timedelta(weeks=1)
-                    date2 = date0 - datetime.timedelta(weeks=2)
-                    date3 = date0 - datetime.timedelta(weeks=3)
-                    date4 = date0 - datetime.timedelta(weeks=4)
-                    date5 = date0 - datetime.timedelta(weeks=5)
-                    date_target = date0 + datetime.timedelta(hours=const.TIME_DELTA_HOURS)
+            for f in forecasts.get_forecasts_by_uid(instrument.uid):
+                forecast_response: GetForecastResponse = forecasts.deserialize(f[1])
+                consensus_price = utils.get_price_by_quotation(forecast_response.consensus.consensus)
+                date0 = datetime.datetime.fromisoformat(f[2])
+                date1 = date0 - datetime.timedelta(weeks=1)
+                date2 = date0 - datetime.timedelta(weeks=2)
+                date3 = date0 - datetime.timedelta(weeks=3)
+                date4 = date0 - datetime.timedelta(weeks=4)
+                date5 = date0 - datetime.timedelta(weeks=5)
+                date_target = date0 + datetime.timedelta(hours=const.TIME_DELTA_HOURS)
 
-                    if date_target <= datetime.datetime.now():
-                                iterator += 1
-                                print(iterator)
-                                ent.display()
-                                print(fundamentals)
-            else:
-                print('NO FUNDAMENTALS', favorite.ticker)
+                if date_target <= datetime.datetime.now():
+                    iterator += 1
+                    print(iterator)
+                    # ent.display()
+                    print(fundamentals)
+        else:
+            print('NO FUNDAMENTALS', instrument.ticker)
 
 
 
