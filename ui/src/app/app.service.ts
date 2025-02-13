@@ -5,7 +5,7 @@ import {
   Fundamentals,
   InstrumentHistoryPrice,
   InstrumentInList,
-  InstrumentLastPrice, NewsResponse, Operation,
+  InstrumentLastPrice, NewsContentResponse, NewsResponse, Operation,
   Prediction,
   PredictionGraph
 } from './types';
@@ -107,6 +107,15 @@ export class AppService {
     params = params.set('end_date', endDate.toJSON());
 
     return this.http.get<NewsResponse>('http://127.0.0.1:8000/instrument/news', {params: params});
+  }
+
+  getInstrumentNewsContent(uid: string, startDate: Date, endDate: Date): Observable<NewsContentResponse> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('start_date', startDate.toJSON());
+    params = params.set('end_date', endDate.toJSON());
+
+    return this.http.get<NewsContentResponse>('http://127.0.0.1:8000/instrument/news_content_rated', {params: params});
   }
 
 }

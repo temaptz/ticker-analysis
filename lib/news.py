@@ -3,6 +3,45 @@ from lib.db import news_db, news_rate_db
 from lib import instruments, yandex, cache
 
 
+def get_sorted_rated_news_content_by_instrument_uid(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime
+):
+    result = {
+        'sources': {
+            'RBC': list(),
+            'FINAM': list(),
+            'RG': list(),
+        },
+        'keywords': get_keywords_by_instrument_uid(instrument_uid)
+    }
+
+    news = get_news_by_instrument_uid(
+        uid=instrument_uid,
+        start_date=start_date,
+        end_date=end_date
+    )
+
+    for n in news:
+        news_uid = n[0]
+        title = n[1]
+        text = n[2]
+        date = n[3]
+        source = n[4]
+        rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
+
+        result['sources'][source].append({
+            'uid': news_uid,
+            'title': title,
+            'text': text,
+            'date': date,
+            'rate': rate,
+        })
+
+    return result
+
+
 def get_sorted_news_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
@@ -108,7 +147,7 @@ def get_news_by_instrument_uid(
 
     print('GET NEWS BY KEYWORDS', keywords)
 
-    return news_db.get_news_by_source_date_keywords(
+    return news_db.get_news_by_date_keywords(
         start_date=start_date,
         end_date=end_date,
         keywords=keywords

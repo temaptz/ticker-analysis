@@ -1,0 +1,42 @@
+<h3>Новости</h3>
+
+@defer (when isLoaded()) {
+  <ng-container *ngIf="news() as newsResp">
+    <div>Ключевые слова: {{ newsResp.keywords.join('; ') }}</div>
+
+    <div *ngFor="let source of Object.keys(newsResp.sources)">
+      <ng-container *ngIf="newsResp.sources[source] as sourceNews">
+        <h4>Источник: {{ source }}</h4>
+
+
+        <div
+          *ngFor="let n of sourceNews"
+          class="news"
+        >
+          <div class="date">{{ n.date | date : 'yyyy-MM-dd' }}</div>
+
+          <h6>
+            @switch (n.rate) {
+              @case (1) {
+                <span class="green">Позитивная</span>
+              }
+              @case (-1) {
+                <span class="red">Негативная</span>
+              }
+              @case (0) {
+                <span class="gray">Нейтральная</span>
+              }
+            }
+          </h6>
+
+          <h5>{{ n.title }}</h5>
+
+          <p [innerHTML]="n.text"></p>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+}
+@placeholder {
+  <preloader></preloader>
+}

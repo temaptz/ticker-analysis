@@ -42,7 +42,7 @@ def get_news_by_uid(uid: str):
     return news
 
 
-def get_news_by_source_date_keywords(start_date: datetime.datetime, end_date: datetime.datetime, keywords: list[str]):
+def get_news_by_date_keywords(start_date: datetime.datetime, end_date: datetime.datetime, keywords: list[str]):
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
 
