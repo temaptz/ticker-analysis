@@ -5,7 +5,9 @@ from lib import (
     users,
     serializer,
     news,
-    fundamentals_save
+    fundamentals_save,
+    predictions,
+    predictions_save
 )
 from lib.db import init
 from lib.learn import ta_2
@@ -18,4 +20,5 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
-    ta_2.generate_data()
+    # ta_2.generate_data()
+    predictions_save.save_predictions()

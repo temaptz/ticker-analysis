@@ -1,12 +1,8 @@
 import datetime
 import time
-from tinkoff.invest import StatisticResponse, FavoriteInstrument, CandleInterval, HistoricCandle
-from tinkoff.invest.schemas import GetAssetFundamentalsRequest
-from tinkoff.invest.services import Services
-from lib import utils, instruments, forecasts
+from lib import instruments
 from lib.db import learning_db
 from lib.learn.ta_1.learning_card import LearningCard
-from tinkoff.invest.schemas import GetForecastResponse
 import numpy
 
 
@@ -107,99 +103,3 @@ def get_days(days: int, offset_days: int) -> list[datetime.datetime]:
         result.append(date)
 
     return result
-
-
-def show():
-    iterator = 0
-
-    for instrument in instruments.get_instruments_white_list():
-        fundamentals = get_fundamentals(client=client, favorite=favorite)
-
-        if fundamentals:
-            print(instrument.ticker)
-            print(instrument.name)
-            time.sleep(1)
-
-            for f in forecasts.get_forecasts_by_uid(instrument.uid):
-                forecast_response: GetForecastResponse = forecasts.deserialize(f[1])
-                consensus_price = utils.get_price_by_quotation(forecast_response.consensus.consensus)
-                date0 = datetime.datetime.fromisoformat(f[2])
-                date1 = date0 - datetime.timedelta(weeks=1)
-                date2 = date0 - datetime.timedelta(weeks=2)
-                date3 = date0 - datetime.timedelta(weeks=3)
-                date4 = date0 - datetime.timedelta(weeks=4)
-                date5 = date0 - datetime.timedelta(weeks=5)
-                date_target = date0 + datetime.timedelta(days=30)
-
-                if date_target <= datetime.datetime.now():
-                    iterator += 1
-                    print(iterator)
-                    # ent.display()
-                    print(fundamentals)
-        else:
-            print('NO FUNDAMENTALS', instrument.ticker)
-
-
-
-
-
-
-
-
-
-        #
-        #     fundamentals = get_fundamentals(client=client, favorite=favorite)
-        #     print('FUNDAMENTALS')
-        #     print(fundamentals)
-        #
-        #     history = get_history(client=client, favorite=favorite)
-        #     print('HISTORY')
-        #     for i in history:
-        #         print(i)
-        #
-        #     f = forecasts.get_forecasts(client=client, favorite=favorite)
-        #     if f:
-        #         print('FORECASTS')
-        #         for i in f.targets:
-        #             print(i)
-        #
-        #         print('CONSENSUS FORECASTS')
-        #         print(f.consensus)
-
-
-def get_fundamentals(client: Services, favorite: FavoriteInstrument) -> StatisticResponse:
-    try:
-        resp = client.instruments.get_asset_fundamentals(
-            request=GetAssetFundamentalsRequest(
-                assets=[favorite.uid]
-            )
-        )
-
-        return resp.fundamentals[0]
-
-    except Exception:
-        print('ERROR GETTING FUNDAMENTALS OF:', favorite.ticker)
-
-
-def get_history(client: Services, favorite: FavoriteInstrument) -> list[HistoricCandle]:
-    candles: list[HistoricCandle] = []
-
-    try:
-        resp = client.market_data.get_candles(
-            instrument_id=favorite.uid,
-            from_=(datetime.datetime.now() - datetime.timedelta(days=365)),
-            to=datetime.datetime.now(),
-            interval=CandleInterval.CANDLE_INTERVAL_DAY
-        )
-
-        for c in resp.candles:
-            candles.append(c)
-
-    except Exception:
-        print('ERROR GETTING HISTORY OF:', favorite.ticker)
-
-    return candles
-
-
-def get_tech_analysis(client: Services, favorite: FavoriteInstrument) -> None:
-    return None

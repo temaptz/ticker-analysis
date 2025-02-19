@@ -41,6 +41,21 @@ def get_forecasts_by_uid(uid: str):
     return forecasts
 
 
+def get_forecast_by_uid_date(uid: str, date: datetime.datetime):
+    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT * FROM Forecasts 
+        WHERE uid = ? 
+        ORDER BY ABS(strftime('%s', date) - strftime('%s', ?)) 
+        LIMIT 1
+    ''', (uid, date.strftime('%Y-%m-%d %H:%M:%S')))
+    forecast = cursor.fetchone()
+    connection.close()
+
+    return forecast
+
+
 def insert_forecast(uid: str, forecast: str):
     connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()

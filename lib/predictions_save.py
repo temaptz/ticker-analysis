@@ -11,12 +11,12 @@ def save_predictions():
         print(instrument.ticker)
         print(instrument.name)
 
-        prediction = predictions.get_prediction_ta_1_by_uid(instrument.uid)
+        prediction = predictions.get_prediction_ta_1_by_uid(uid=instrument.uid)
 
         if prediction:
             print('PREDICTION: ', prediction)
 
-            predictions_db.insert_prediction(
+            predictions_ta_1_db.insert_prediction(
                 uid=instrument.uid,
                 prediction=prediction
             )

@@ -78,9 +78,7 @@ def instrument_history_forecasts(request):
     uid = request.GET.get('uid')
 
     if uid:
-        fc = forecasts.get_db_forecasts_by_uid(uid=uid)
-
-        for f in fc:
+        for f in forecasts.get_db_forecasts_by_uid(uid=uid):
             forecast = f[1]
             date = f[2]
 

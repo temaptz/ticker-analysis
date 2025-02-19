@@ -1,14 +1,8 @@
 import json
 import numpy
-
-from tinkoff.invest import (
-    CandleInterval,
-)
+from tinkoff.invest import CandleInterval
 import datetime
-from lib import utils
-from lib import instruments
-from lib import forecasts
-from lib import serializer
+from lib import utils, instruments, forecasts, serializer, fundamentals
 
 
 class LearningCard:
@@ -38,8 +32,8 @@ class LearningCard:
     def load_by_uid(self, uid: str):
         try:
             return self._load_by_uid(uid=uid)
-        except Exception:
-            print('ERROR LearningCard load_by_uid')
+        except Exception as e:
+            print('ERROR TA-1 LearningCard load_by_uid', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
@@ -55,17 +49,18 @@ class LearningCard:
             to_date=self.date
         ))
         self.price = utils.get_price_by_quotation(instruments.get_instrument_last_price_by_uid(uid=self.uid)[0].price)
-        self.forecast_price = utils.get_price_by_quotation(forecasts.get_forecasts(uid=self.uid).consensus.consensus)
+        self.forecast_price = utils.get_price_by_quotation(forecasts.get_forecasts(instrument_uid=self.uid).consensus.consensus)
 
-        fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(self.asset_uid)[0]
-        self.revenue_ttm = fundamentals.revenue_ttm
-        self.ebitda_ttm = fundamentals.ebitda_ttm
-        self.market_capitalization = fundamentals.market_capitalization
-        self.total_debt_mrq = fundamentals.total_debt_mrq
-        self.eps_ttm = fundamentals.eps_ttm
-        self.pe_ratio_ttm = fundamentals.pe_ratio_ttm
-        self.ev_to_ebitda_mrq = fundamentals.ev_to_ebitda_mrq
-        self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
+        fundamentals_res = fundamentals.get_db_fundamentals_by_asset_uid(asset_uid=self.asset_uid, date=self.date)[1]
+
+        self.revenue_ttm = fundamentals_res.revenue_ttm
+        self.ebitda_ttm = fundamentals_res.ebitda_ttm
+        self.market_capitalization = fundamentals_res.market_capitalization
+        self.total_debt_mrq = fundamentals_res.total_debt_mrq
+        self.eps_ttm = fundamentals_res.eps_ttm
+        self.pe_ratio_ttm = fundamentals_res.pe_ratio_ttm
+        self.ev_to_ebitda_mrq = fundamentals_res.ev_to_ebitda_mrq
+        self.dividend_payout_ratio_fy = fundamentals_res.dividend_payout_ratio_fy
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
     def load(self, uid: str, date: datetime.datetime, target_forecast_days: int):
@@ -113,25 +108,13 @@ class LearningCard:
 
         return result
 
-    def get_forecast(self) -> float:
-        best_forecast = None
+    def get_forecast(self) -> float or None:
+        f = forecasts.get_db_forecast_by_uid_date(uid=self.uid, date=self.date)
 
-        for f in forecasts.get_db_forecasts_by_uid(uid=self.uid):
-            if not best_forecast:
-                best_forecast = f
-                continue
+        if f:
+            return utils.get_price_by_quotation(price=f[1].consensus.consensus)
 
-            time_best = utils.parse_json_date(best_forecast and best_forecast[2])
-            f_time = utils.parse_json_date(f[2])
-            time_best_delta = abs(time_best - self.date)
-            f_time_delta = abs(f_time - self.date)
-            if f_time_delta < time_best_delta:
-                best_forecast = f
-
-        if best_forecast:
-            return utils.get_price_by_quotation(price=best_forecast[1].consensus.consensus)
-
-        return 0
+        return None
 
     def print_card(self):
         print('+++')

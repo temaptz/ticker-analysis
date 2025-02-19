@@ -3,8 +3,6 @@ import numpy
 from lib.learn.ta_1 import prepare_data
 from lib.utils import get_file_abspath_recursive
 
-model_file_path = get_file_abspath_recursive('learn.txt', 'learn_models')
-
 
 def learn():
     model = catboost.CatBoostRegressor(
@@ -34,7 +32,7 @@ def learn():
         plot=True,
     )
 
-    model.save_model(model_file_path)
+    model.save_model(get_model_file_path())
 
     for i in range(0, 100):
         prediction = predict(data=data['test_x'][i])
@@ -44,6 +42,10 @@ def learn():
 
 def predict(data: list):
     model = catboost.CatBoostRegressor()
-    model.load_model(model_file_path)
+    model.load_model(get_model_file_path())
 
     return model.predict(data=data)
+
+
+def get_model_file_path():
+    return get_file_abspath_recursive('ta-1.txt', 'learn_models')

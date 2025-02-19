@@ -1,3 +1,5 @@
+import datetime
+
 from tinkoff.invest import (
     Client,
     constants,
@@ -31,3 +33,12 @@ def get_db_forecasts_by_uid(uid: str) -> (str, GetForecastResponse, str):
         result.append((uid, forecast, date))
 
     return result
+
+
+def get_db_forecast_by_uid_date(uid: str, date: datetime.datetime) -> (str, GetForecastResponse, str):
+    db_resp = forecasts_db.get_forecast_by_uid_date(uid=uid, date=date)
+    uid = db_resp[0]
+    date = db_resp[2]
+    forecast = forecasts_db.deserialize(db_resp[1])
+
+    return uid, forecast, date

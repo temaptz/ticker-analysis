@@ -40,7 +40,7 @@ class LearningCard:
         try:
             return self._load_by_uid(uid=uid)
         except Exception:
-            print('ERROR LearningCard load_by_uid')
+            print('ERROR TA-2 LearningCard load_by_uid')
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
@@ -114,26 +114,6 @@ class LearningCard:
             result.append(utils.get_price_by_candle(candle=i))
 
         return result
-
-    def get_forecast(self) -> float:
-        best_forecast = None
-
-        for f in forecasts.get_db_forecasts_by_uid(uid=self.uid):
-            if not best_forecast:
-                best_forecast = f
-                continue
-
-            time_best = utils.parse_json_date(best_forecast and best_forecast[2])
-            f_time = utils.parse_json_date(f[2])
-            time_best_delta = abs(time_best - self.date)
-            f_time_delta = abs(f_time - self.date)
-            if f_time_delta < time_best_delta:
-                best_forecast = f
-
-        if best_forecast:
-            return utils.get_price_by_quotation(price=best_forecast[1].consensus.consensus)
-
-        return 0
 
     def print_card(self):
         print('+++')
