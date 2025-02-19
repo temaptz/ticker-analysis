@@ -1,9 +1,9 @@
 import catboost
 import numpy
-from lib import prepare_data
+from lib.learn.ta_1 import prepare_data
 from lib.utils import get_file_abspath_recursive
 
-model_file_path = get_file_abspath_recursive('learn.txt')
+model_file_path = get_file_abspath_recursive('learn.txt', 'learn_models')
 
 
 def learn():

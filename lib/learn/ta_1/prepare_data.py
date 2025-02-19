@@ -3,10 +3,9 @@ import time
 from tinkoff.invest import StatisticResponse, FavoriteInstrument, CandleInterval, HistoricCandle
 from tinkoff.invest.schemas import GetAssetFundamentalsRequest
 from tinkoff.invest.services import Services
-import const
 from lib import utils, instruments, forecasts
 from lib.db import learning_db
-from lib.learning_card import LearningCard
+from lib.learn.ta_1.learning_card import LearningCard
 from tinkoff.invest.schemas import GetForecastResponse
 import numpy
 
@@ -130,7 +129,7 @@ def show():
                 date3 = date0 - datetime.timedelta(weeks=3)
                 date4 = date0 - datetime.timedelta(weeks=4)
                 date5 = date0 - datetime.timedelta(weeks=5)
-                date_target = date0 + datetime.timedelta(hours=const.TIME_DELTA_HOURS)
+                date_target = date0 + datetime.timedelta(days=30)
 
                 if date_target <= datetime.datetime.now():
                     iterator += 1
@@ -204,4 +203,3 @@ def get_history(client: Services, favorite: FavoriteInstrument) -> list[Historic
 
 def get_tech_analysis(client: Services, favorite: FavoriteInstrument) -> None:
     return None
-

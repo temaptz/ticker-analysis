@@ -1,5 +1,5 @@
 from lib import predictions, telegram, instruments
-from lib.db import predictions_db
+from lib.db import predictions_ta_1_db
 
 
 def save_predictions():
@@ -11,7 +11,7 @@ def save_predictions():
         print(instrument.ticker)
         print(instrument.name)
 
-        prediction = predictions.get_prediction_by_uid(instrument.uid)
+        prediction = predictions.get_prediction_ta_1_by_uid(instrument.uid)
 
         if prediction:
             print('PREDICTION: ', prediction)

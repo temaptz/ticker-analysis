@@ -10,7 +10,7 @@ COPY ./apiserver /app/apiserver
 COPY ./lib /app/lib
 COPY ./main.py /app/main.py
 COPY ./const.py /app/const.py
-COPY ./learn.txt /app/learn.txt
+COPY ./learn_models /app/learn_models
 COPY ./requirements.txt /app/requirements.txt
 
 RUN pip install -r requirements.txt

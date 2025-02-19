@@ -81,3 +81,4 @@ TICKER_LIST: list[str] = [
     'KROT',
     'RKKE',
 ]
+IS_NEWS_CLASSIFY_ENABLED = False

@@ -1,13 +1,6 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 import pytz
-
-from lib import (
-    forecasts_save,
-    predictions_save,
-    news_save,
-    yandex_disk,
-    telegram,
-)
+from lib import forecasts_save, predictions_save, news_save, yandex_disk, telegram, fundamentals_save
 
 
 def start_schedule() -> None:
@@ -20,6 +13,16 @@ def start_schedule() -> None:
         'cron',
         day_of_week='mon',
         hour=12,
+        minute=0,
+        timezone=timezone
+    )
+
+    # Сбор фундаментальных показателей
+    scheduler.add_job(
+        fundamentals_save.save_fundamentals,
+        'cron',
+        day_of_week='mon',
+        hour=15,
         minute=0,
         timezone=timezone
     )

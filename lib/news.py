@@ -1,4 +1,6 @@
 import datetime
+
+import const
 from lib.db import news_db, news_rate_db
 from lib import instruments, yandex, cache
 
@@ -110,6 +112,9 @@ def get_news_rate(
         print('RATE FROM DB', rate_saved_db[0][2])
 
         return rate_saved_db[0][2]
+
+    elif not const.IS_NEWS_CLASSIFY_ENABLED:
+        return 0
     else:
         news = news_db.get_news_by_uid(news_uid)
         instrument = instruments.get_instrument_by_uid(instrument_uid)

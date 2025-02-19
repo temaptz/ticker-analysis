@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from tinkoff.invest import (
     CandleInterval
 )
-from lib import serializer, instruments, forecasts, predictions, users, news, utils
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals
 import json
 
 
@@ -64,10 +64,10 @@ def instrument_consensus_forecast(request):
     uid = request.GET.get('uid')
 
     if uid:
-        fc = instruments.get_instrument_consensus_forecast_by_uid(uid)
+        consensus = forecasts.get_forecasts(uid).consensus
 
-        if fc:
-            resp = serializer.get_dict_by_object(fc)
+        if consensus:
+            resp = serializer.get_dict_by_object(consensus)
 
     return HttpResponse(json.dumps(resp))
 
@@ -95,10 +95,10 @@ def instrument_fundamental(request):
     uid = request.GET.get('asset_uid')
 
     if uid:
-        fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(uid)
+        fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(uid)
 
-        if fundamentals:
-            for f in fundamentals:
+        if fundamentals_resp:
+            for f in fundamentals_resp:
                 resp = serializer.get_dict_by_object(f)
 
     return HttpResponse(json.dumps(resp))
@@ -110,7 +110,7 @@ def instrument_prediction(request):
     uid = request.GET.get('uid')
 
     if uid:
-        resp = predictions.get_prediction_by_uid(uid)
+        resp = predictions.get_prediction_ta_1_by_uid(uid)
 
     return HttpResponse(json.dumps(resp))
 
@@ -121,7 +121,7 @@ def instrument_prediction_graph(request):
     uid = request.GET.get('uid')
 
     if uid:
-        resp = predictions.get_prediction_graph_by_uid(uid)
+        resp = predictions.get_prediction_ta_1_graph_by_uid(uid)
 
     return HttpResponse(json.dumps(resp))
 

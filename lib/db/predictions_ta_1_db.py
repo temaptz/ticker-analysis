@@ -9,7 +9,7 @@ def init_table():
     cursor = connection.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS 
-    "Predictions" 
+    "Predictions_ta_1" 
     (
     "uid" TEXT, 
     "prediction" REAL, 
@@ -23,7 +23,7 @@ def init_table():
 def get_predictions():
     connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM Predictions')
+    cursor.execute('SELECT * FROM Predictions_ta_1')
     predictions = cursor.fetchall()
     connection.close()
 
@@ -33,7 +33,7 @@ def get_predictions():
 def get_predictions_by_uid(uid: str):
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM Predictions WHERE uid = ?', (uid,))
+    cursor.execute('SELECT * FROM Predictions_ta_1 WHERE uid = ?', (uid,))
     predictions = cursor.fetchall()
     connection.close()
 
@@ -43,6 +43,6 @@ def get_predictions_by_uid(uid: str):
 def insert_prediction(uid: str, prediction: float):
     connection = sqlite3.connect(const.DB_FILENAME)
     cursor = connection.cursor()
-    cursor.execute('INSERT INTO Predictions (uid, prediction, date) VALUES (?, ?, ?)', (uid, prediction, datetime.datetime.now()))
+    cursor.execute('INSERT INTO Predictions_ta_1 (uid, prediction, date) VALUES (?, ?, ?)', (uid, prediction, datetime.datetime.now()))
     connection.commit()
     connection.close()

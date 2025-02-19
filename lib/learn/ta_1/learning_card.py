@@ -55,7 +55,7 @@ class LearningCard:
             to_date=self.date
         ))
         self.price = utils.get_price_by_quotation(instruments.get_instrument_last_price_by_uid(uid=self.uid)[0].price)
-        self.forecast_price = utils.get_price_by_quotation(instruments.get_instrument_consensus_forecast_by_uid(uid=self.uid).consensus)
+        self.forecast_price = utils.get_price_by_quotation(forecasts.get_forecasts(uid=self.uid).consensus.consensus)
 
         fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(self.asset_uid)[0]
         self.revenue_ttm = fundamentals.revenue_ttm
@@ -66,7 +66,6 @@ class LearningCard:
         self.pe_ratio_ttm = fundamentals.pe_ratio_ttm
         self.ev_to_ebitda_mrq = fundamentals.ev_to_ebitda_mrq
         self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
-
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
     def load(self, uid: str, date: datetime.datetime, target_forecast_days: int):
@@ -182,6 +181,7 @@ class LearningCard:
             print('ERROR restore_from_json_db LearningCard')
             self.is_ok = False
 
+    # Входные данные для обучения
     def get_x(self) -> list:
         return [
             numpy.float32(self.price),
@@ -196,5 +196,6 @@ class LearningCard:
             numpy.float32(self.dividend_payout_ratio_fy)
         ] + [numpy.float32(i) for i in self.history[-51:]]
 
+    # Выходные данные для обучения
     def get_y(self) -> float:
         return self.target_price
