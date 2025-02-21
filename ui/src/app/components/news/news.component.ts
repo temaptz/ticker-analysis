@@ -4,16 +4,13 @@ import { AppService } from '../../app.service';
 import { InstrumentInList, NewsResponse } from '../../types';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { PriceByQuotationPipe } from '../../pipes/price-by-quotation.pipe';
-import { PricePipe } from '../../pipes/price.pipe';
 import { subDays } from 'date-fns';
-import { RouterLink } from '@angular/router';
 
 
 @Component({
   selector: 'news',
   standalone: true,
-  imports: [CommonModule, PreloaderComponent, PriceByQuotationPipe, PricePipe, RouterLink],
+  imports: [CommonModule, PreloaderComponent],
   providers: [],
   templateUrl: './news.component.html',
   styleUrl: './news.component.scss'

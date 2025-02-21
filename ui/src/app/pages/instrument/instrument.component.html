@@ -1,3 +1,11 @@
+<instrument-complex-info
+  [instrumentUid]="instrumentUid()"
+></instrument-complex-info>
+
+<br>
+<br>
+<br>
+
 <h3>Новости</h3>
 
 @defer (when isLoaded()) {
@@ -29,7 +37,7 @@
             }
           </h6>
 
-          <h5>{{ n.title }}</h5>
+          <h1>{{ n.title }}</h1>
 
           <p [innerHTML]="n.text"></p>
         </div>

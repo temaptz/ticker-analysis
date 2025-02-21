@@ -1,19 +1,20 @@
 import datetime
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
-from tinkoff.invest import (
-    CandleInterval
-)
+from django.views.decorators.cache import cache_control
+from tinkoff.invest import CandleInterval
 from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals
 import json
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=3600 * 24 * 7)
 def instruments_list(request):
     return HttpResponse(serializer.to_json(instruments.get_instruments_white_list()))
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=3600 * 24 * 7)
 def instrument_info(request):
     resp = ''
     uid = request.GET.get('uid')
@@ -40,6 +41,7 @@ def instrument_last_prices(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=3600)
 def instrument_history_prices(request):
     resp = list()
     uid = request.GET.get('uid')
@@ -103,6 +105,7 @@ def instrument_fundamental(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=60)
 def instrument_prediction(request):
     resp = None
     uid = request.GET.get('uid')
@@ -125,6 +128,7 @@ def instrument_prediction_graph(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=60)
 def instrument_balance(request):
     resp = None
     account_name = request.GET.get('account_name')
@@ -137,6 +141,7 @@ def instrument_balance(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=60)
 def instrument_operations(request):
     resp = None
     account_name = request.GET.get('account_name')
@@ -170,5 +175,20 @@ def instrument_news_content_rated(request):
 
     if uid and start_date and end_date:
         resp = news.get_sorted_rated_news_content_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
+
+    return HttpResponse(serializer.to_json(resp))
+
+
+@api_view(['GET'])
+@cache_control(public=True, max_age=3600 * 24 * 30)
+def instrument_brand(request):
+    resp = None
+    uid = request.GET.get('uid')
+
+    if uid:
+        instrument = instruments.get_instrument_by_uid(uid=uid)
+
+        if instrument:
+            resp = instruments.get_instrument_by_ticker(ticker=instrument.ticker).brand
 
     return HttpResponse(serializer.to_json(resp))

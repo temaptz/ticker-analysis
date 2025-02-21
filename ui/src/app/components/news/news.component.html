@@ -2,7 +2,6 @@
   <ng-container *ngIf="news() as newsResp">
     <div
       class="date"
-      [routerLink]="['news', instrumentUid()]"
     >{{ dateFrom | date : 'yyyy-MM-dd' }} - {{ dateTo | date : 'yyyy-MM-dd' }}</div>
 
     <div class="keywords">Ключевые слова: {{ newsResp?.keywords?.join('; ') }}</div>

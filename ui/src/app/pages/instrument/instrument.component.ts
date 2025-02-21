@@ -6,19 +6,23 @@ import { NewsContentResponse } from '../../types';
 import { ActivatedRoute } from '@angular/router';
 import { subDays } from 'date-fns';
 import { finalize } from 'rxjs';
+import {
+  InstrumentComplexInfoComponent
+} from '../../components/instrument-complex-info/instrument-complex-info.component';
 
 
 @Component({
-  selector: 'news-page',
+  selector: 'instrument',
   standalone: true,
-  imports: [CommonModule, PreloaderComponent],
+  imports: [CommonModule, PreloaderComponent, InstrumentComplexInfoComponent],
   providers: [],
-  templateUrl: './news-page.component.html',
-  styleUrl: './news-page.component.scss'
+  templateUrl: './instrument.component.html',
+  styleUrl: './instrument.component.scss'
 })
-export class NewsPageComponent implements OnInit {
+export class InstrumentComponent implements OnInit {
 
   isLoaded = signal<boolean>(false);
+  instrumentUid = signal<string>('');
   news = signal<NewsContentResponse | null>(null);
   dateFrom = subDays(new Date(), 7);
   dateTo = new Date();
@@ -26,11 +30,15 @@ export class NewsPageComponent implements OnInit {
   constructor(
     private appService: AppService,
     private activatedRoute: ActivatedRoute
-  ) {}
+  ) {
+    this.instrumentUid.set(
+      this.activatedRoute.snapshot.params['instrumentUid']
+    );
+  }
 
   ngOnInit() {
     this.appService.getInstrumentNewsContent(
-      this.activatedRoute.snapshot.params['instrumentUid'],
+      this.instrumentUid(),
       this.dateFrom,
       this.dateTo
     )

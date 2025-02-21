@@ -1,8 +1,8 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, effect, input, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ApexAxisChartSeries,
-  ApexChart,
+  ApexChart, ApexOptions,
   ApexTitleSubtitle,
   ApexXAxis,
   ApexYAxis,
@@ -27,42 +27,51 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 })
 export class GraphComponent implements OnInit {
 
-  @Input({required: true}) instrumentUid!: InstrumentInList['uid'];
-  @Input({required: true}) days!: number;
-  @Input({required: true}) interval!: CandleInterval;
+  instrumentUid = input.required<InstrumentInList['uid']>();
+  days = input.required<number>();
+  interval = input.required<CandleInterval>();
+  width = input<string>('250px');
+  height = input<string>('150px');
 
   isLoaded = signal<boolean>(false);
   series = signal<ApexAxisChartSeries | null>(null);
-  chart?: ApexChart = {
-    type: 'candlestick',
-    width: 250,
-    height: 150,
-    toolbar: {
-      show: false,
-    },
-    animations: {
-      enabled: false,
-    },
-    zoom: {
-      enabled: false,
-    },
-  };
-  xaxis?: ApexXAxis = {
-    type: 'datetime',
-  };
-  yaxis?: ApexYAxis = {
-    tooltip: {
-      enabled: true,
-    },
-  };
-  title?: ApexTitleSubtitle;
+  graphOptions = signal<ApexOptions>({});
 
   constructor(
     private appService: AppService,
-  ) {}
+  ) {
+    effect(() => {
+      const nextOptions: ApexOptions = {
+        chart: {
+          type: 'candlestick',
+          width: this.width(),
+          height: this.height(),
+          toolbar: {
+            show: false,
+          },
+          animations: {
+            enabled: false,
+          },
+          zoom: {
+            enabled: false,
+          },
+        },
+        xaxis: {
+          type: 'datetime',
+        },
+        yaxis: {
+          tooltip: {
+            enabled: true,
+          },
+        },
+      }
+
+      this.graphOptions.set(nextOptions)
+    }, { allowSignalWrites: true });
+  }
 
   ngOnInit() {
-    this.appService.getInstrumentHistoryPrices(this.instrumentUid, this.days, this.interval)
+    this.appService.getInstrumentHistoryPrices(this.instrumentUid(), this.days(), this.interval())
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe((resp: InstrumentHistoryPrice[]) => {
         const series: ApexAxisChartSeries = [{

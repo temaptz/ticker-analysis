@@ -1,10 +1,13 @@
 <td>
-  @defer (when isLoadedInstrument()) {
+  <a [routerLink]="['instrument', instrumentUid]">
+    <instrument-logo
+      [instrumentUid]="instrumentUid"
+    ></instrument-logo>
+
     <h5>{{ instrument()?.ticker }}</h5>
+
     {{ instrument()?.name }}
-  } @placeholder {
-    <preloader></preloader>
-  }
+  </a>
 </td>
 
 <td>

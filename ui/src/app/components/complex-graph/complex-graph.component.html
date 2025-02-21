@@ -1,13 +1,16 @@
 @defer (when isLoaded()) {
-  <apx-chart
-    *ngIf="series() as s"
-    [series]="s"
-    [chart]="chartOptions.chart"
-    [xaxis]="chartOptions.xaxis"
-    [yaxis]="chartOptions.yaxis"
-    [tooltip]="chartOptions.tooltip"
-    [legend]="chartOptions.legend"
-  ></apx-chart>
+  <ng-container *ngIf="chartOptions() as options">
+    <apx-chart
+      *ngIf="series() as s"
+      [series]="s"
+      [chart]="options.chart"
+      [xaxis]="options.xaxis"
+      [yaxis]="options.yaxis"
+      [tooltip]="options.tooltip"
+      [legend]="options.legend"
+      [plotOptions]="options.plotOptions"
+    ></apx-chart>
+  </ng-container>
 } @placeholder {
   <preloader></preloader>
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
-  Fundamentals,
+  Fundamentals, InstrumentBrandResponse,
   InstrumentHistoryPrice,
   InstrumentInList,
   InstrumentLastPrice, NewsContentResponse, NewsResponse, Operation,
@@ -116,6 +116,13 @@ export class AppService {
     params = params.set('end_date', endDate.toJSON());
 
     return this.http.get<NewsContentResponse>('http://127.0.0.1:8000/instrument/news_content_rated', {params: params});
+  }
+
+  getInstrumentBrand(uid: string): Observable<InstrumentBrandResponse> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+
+    return this.http.get<InstrumentBrandResponse>('http://127.0.0.1:8000/instrument/brand', {params: params});
   }
 
 }

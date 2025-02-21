@@ -8,6 +8,7 @@ export type Forecast = any;
 export type Fundamentals = any;
 export type Prediction = any;
 export type Operation = any;
+export type InstrumentBrandResponse = any;
 
 export interface NewsResponse {
   sources: {

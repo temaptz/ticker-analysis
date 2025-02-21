@@ -21,4 +21,5 @@ urlpatterns = [
     path('instrument/operations', views.instrument_operations),
     path('instrument/news', views.instrument_news),
     path('instrument/news_content_rated', views.instrument_news_content_rated),
+    path('instrument/brand', views.instrument_brand),
 ]
