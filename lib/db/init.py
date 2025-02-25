@@ -12,3 +12,5 @@ def init_db() -> None:
     news_rate_db.init_table()
     predictions_ta_1_db.init_table()
     fundamentals_db.init_table()
+
+    news_db.optimize_db()
