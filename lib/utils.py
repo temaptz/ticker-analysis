@@ -5,6 +5,8 @@ from tinkoff.invest.schemas import (
     HistoricCandle,
 )
 import dateutil.parser
+import hashlib
+
 
 
 def get_price_by_candle(candle: HistoricCandle) -> float or None:
@@ -69,3 +71,8 @@ def get_file_size_readable(filepath) -> str:
 
 def round_float(num: float) -> float:
     return float(str(num)[0:10])
+
+
+def get_md5(data: str) -> str:
+    return hashlib.md5(data.encode()).hexdigest()
+

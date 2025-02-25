@@ -152,7 +152,7 @@ def get_news_by_instrument_uid(
 
     print('GET NEWS BY KEYWORDS', keywords)
 
-    return news_db.get_news_by_date_keywords(
+    return news_db.get_news_by_date_keywords_fts(
         start_date=start_date,
         end_date=end_date,
         keywords=keywords
@@ -162,7 +162,7 @@ def get_news_by_instrument_uid(
 @cache.ttl_cache()
 def get_keywords_by_instrument_uid(uid: str) -> list[str]:
     i = instruments.get_instrument_by_uid(uid)
-    result = [i.ticker.lower()]
+    result = []
 
     for word in yandex.get_keywords(legal_name=i.name):
         if word not in result:

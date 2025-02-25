@@ -154,6 +154,7 @@ def instrument_operations(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=60)
 def instrument_news(request):
     resp = None
     uid = request.GET.get('uid')
@@ -167,6 +168,7 @@ def instrument_news(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=60)
 def instrument_news_content_rated(request):
     resp = None
     uid = request.GET.get('uid')

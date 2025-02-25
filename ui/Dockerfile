@@ -6,9 +6,9 @@ COPY . .
 RUN npm run build
 
 
-FROM nginx:latest
+FROM nginx:stable-alpine
 # Копируем конфиг nginx
-#COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Копируем файл с пользователями
 COPY htpasswd /etc/nginx/.htpasswd

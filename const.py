@@ -62,7 +62,6 @@ TICKER_LIST: list[str] = [
     'ETLN',
     'OKEY',
     'LSNG',
-    'RBCM',
     'MSNG',
     'GTRK',
     'SFIN',
