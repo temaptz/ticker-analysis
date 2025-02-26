@@ -9,11 +9,10 @@ RUN npm install --force
 FROM node:20-slim AS build
 ENV NG_BUILD_MAX_WORKERS=1
 ENV NG_BUILD_PARALLEL_TS=0
-ENV NODE_OPTIONS="--max-old-space-size=500"
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# RUN npm run build:pi
+RUN npm run build:pi
 
 
 # Nginx
