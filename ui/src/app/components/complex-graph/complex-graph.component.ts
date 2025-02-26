@@ -15,12 +15,11 @@ import { CandleInterval } from '../../enums';
 
 
 @Component({
-  selector: 'complex-graph',
-  standalone: true,
-  imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
-  providers: [],
-  templateUrl: './complex-graph.component.html',
-  styleUrl: './complex-graph.component.scss'
+    selector: 'complex-graph',
+    imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
+    providers: [],
+    templateUrl: './complex-graph.component.html',
+    styleUrl: './complex-graph.component.scss'
 })
 export class ComplexGraphComponent {
 

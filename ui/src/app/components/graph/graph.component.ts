@@ -18,12 +18,11 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-  selector: 'graph',
-  standalone: true,
-  imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
-  providers: [],
-  templateUrl: './graph.component.html',
-  styleUrl: './graph.component.scss'
+    selector: 'graph',
+    imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
+    providers: [],
+    templateUrl: './graph.component.html',
+    styleUrl: './graph.component.scss'
 })
 export class GraphComponent implements OnInit {
 

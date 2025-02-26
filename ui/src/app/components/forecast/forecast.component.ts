@@ -8,12 +8,11 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-  selector: 'forecast',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent],
-  providers: [],
-  templateUrl: './forecast.component.html',
-  styleUrl: './forecast.component.scss'
+    selector: 'forecast',
+    imports: [CommonModule, PreloaderComponent],
+    providers: [],
+    templateUrl: './forecast.component.html',
+    styleUrl: './forecast.component.scss'
 })
 export class ForecastComponent implements OnInit {
 

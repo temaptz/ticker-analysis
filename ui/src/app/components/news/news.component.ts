@@ -8,12 +8,11 @@ import { subDays } from 'date-fns';
 
 
 @Component({
-  selector: 'news',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent],
-  providers: [],
-  templateUrl: './news.component.html',
-  styleUrl: './news.component.scss'
+    selector: 'news',
+    imports: [CommonModule, PreloaderComponent],
+    providers: [],
+    templateUrl: './news.component.html',
+    styleUrl: './news.component.scss'
 })
 export class NewsComponent {
 

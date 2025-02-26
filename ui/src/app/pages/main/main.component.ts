@@ -8,12 +8,11 @@ import { PreloaderComponent } from '../../components/preloader/preloader.compone
 
 
 @Component({
-  selector: 'main',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent, TableRowComponent],
-  providers: [],
-  templateUrl: './main.component.html',
-  styleUrl: './main.component.scss'
+    selector: 'main',
+    imports: [CommonModule, PreloaderComponent, TableRowComponent],
+    providers: [],
+    templateUrl: './main.component.html',
+    styleUrl: './main.component.scss'
 })
 export class MainComponent implements OnInit {
 

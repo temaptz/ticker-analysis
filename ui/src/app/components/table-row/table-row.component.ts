@@ -20,11 +20,10 @@ import { InstrumentLogoComponent } from '../instrument-logo/instrument-logo.comp
 
 
 @Component({
-  selector: '[app-table-row]',
-  standalone: true,
-  imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, ComplexGraphComponent, BalanceComponent, NewsComponent, RouterLink, InstrumentLogoComponent],
-  templateUrl: './table-row.component.html',
-  styleUrl: './table-row.component.scss'
+    selector: '[app-table-row]',
+    imports: [CommonModule, GraphComponent, ForecastComponent, ForecastHistoryComponent, FundamentalsComponent, PreloaderComponent, PredictionComponent, ComplexGraphComponent, BalanceComponent, NewsComponent, RouterLink, InstrumentLogoComponent],
+    templateUrl: './table-row.component.html',
+    styleUrl: './table-row.component.scss'
 })
 export class TableRowComponent implements OnInit {
 

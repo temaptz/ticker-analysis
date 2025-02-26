@@ -9,12 +9,11 @@ import { PricePipe } from '../../pipes/price.pipe';
 
 
 @Component({
-  selector: 'prediction',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent, PricePipe],
-  providers: [],
-  templateUrl: './prediction.component.html',
-  styleUrl: './prediction.component.scss'
+    selector: 'prediction',
+    imports: [CommonModule, PreloaderComponent, PricePipe],
+    providers: [],
+    templateUrl: './prediction.component.html',
+    styleUrl: './prediction.component.scss'
 })
 export class PredictionComponent {
 

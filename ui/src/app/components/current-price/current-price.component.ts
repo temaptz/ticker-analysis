@@ -9,11 +9,10 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-  selector: 'current-price',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent],
-  templateUrl: './current-price.component.html',
-  styleUrl: './current-price.component.scss'
+    selector: 'current-price',
+    imports: [CommonModule, PreloaderComponent],
+    templateUrl: './current-price.component.html',
+    styleUrl: './current-price.component.scss'
 })
 export class CurrentPriceComponent {
 

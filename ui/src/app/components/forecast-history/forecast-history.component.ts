@@ -9,12 +9,11 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-  selector: 'forecast-history',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent],
-  providers: [],
-  templateUrl: './forecast-history.component.html',
-  styleUrl: './forecast-history.component.scss'
+    selector: 'forecast-history',
+    imports: [CommonModule, PreloaderComponent],
+    providers: [],
+    templateUrl: './forecast-history.component.html',
+    styleUrl: './forecast-history.component.scss'
 })
 export class ForecastHistoryComponent implements OnInit {
 

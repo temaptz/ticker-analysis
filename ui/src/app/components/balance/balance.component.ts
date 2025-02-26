@@ -10,12 +10,11 @@ import { PricePipe } from '../../pipes/price.pipe';
 
 
 @Component({
-  selector: 'balance',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent, PriceByQuotationPipe, PricePipe],
-  providers: [],
-  templateUrl: './balance.component.html',
-  styleUrl: './balance.component.scss'
+    selector: 'balance',
+    imports: [CommonModule, PreloaderComponent, PriceByQuotationPipe, PricePipe],
+    providers: [],
+    templateUrl: './balance.component.html',
+    styleUrl: './balance.component.scss'
 })
 export class BalanceComponent {
 

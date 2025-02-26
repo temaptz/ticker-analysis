@@ -12,12 +12,11 @@ import {
 
 
 @Component({
-  selector: 'instrument',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent, InstrumentComplexInfoComponent],
-  providers: [],
-  templateUrl: './instrument.component.html',
-  styleUrl: './instrument.component.scss'
+    selector: 'instrument',
+    imports: [CommonModule, PreloaderComponent, InstrumentComplexInfoComponent],
+    providers: [],
+    templateUrl: './instrument.component.html',
+    styleUrl: './instrument.component.scss'
 })
 export class InstrumentComponent implements OnInit {
 

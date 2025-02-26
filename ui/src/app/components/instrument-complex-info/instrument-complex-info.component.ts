@@ -21,12 +21,11 @@ import { CurrentPriceComponent } from '../current-price/current-price.component'
 
 
 @Component({
-  selector: 'instrument-complex-info',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, ComplexGraphComponent, FundamentalsComponent, GraphComponent, BalanceComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, NewsComponent, CurrentPriceComponent],
-  providers: [],
-  templateUrl: './instrument-complex-info.component.html',
-  styleUrl: './instrument-complex-info.component.scss'
+    selector: 'instrument-complex-info',
+    imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, ComplexGraphComponent, FundamentalsComponent, GraphComponent, BalanceComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, NewsComponent, CurrentPriceComponent],
+    providers: [],
+    templateUrl: './instrument-complex-info.component.html',
+    styleUrl: './instrument-complex-info.component.scss'
 })
 export class InstrumentComplexInfoComponent implements OnInit {
 

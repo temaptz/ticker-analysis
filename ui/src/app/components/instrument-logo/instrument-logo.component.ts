@@ -5,12 +5,11 @@ import { AppService } from '../../app.service';
 
 
 @Component({
-  selector: 'instrument-logo',
-  standalone: true,
-  imports: [CommonModule],
-  providers: [],
-  templateUrl: './instrument-logo.component.html',
-  styleUrl: './instrument-logo.component.scss'
+    selector: 'instrument-logo',
+    imports: [CommonModule],
+    providers: [],
+    templateUrl: './instrument-logo.component.html',
+    styleUrl: './instrument-logo.component.scss'
 })
 export class InstrumentLogoComponent {
 

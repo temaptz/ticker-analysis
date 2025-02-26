@@ -8,12 +8,11 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-  selector: 'fundamentals',
-  standalone: true,
-  imports: [CommonModule, PreloaderComponent],
-  providers: [],
-  templateUrl: './fundamentals.component.html',
-  styleUrl: './fundamentals.component.scss'
+    selector: 'fundamentals',
+    imports: [CommonModule, PreloaderComponent],
+    providers: [],
+    templateUrl: './fundamentals.component.html',
+    styleUrl: './fundamentals.component.scss'
 })
 export class FundamentalsComponent implements OnInit {
 
