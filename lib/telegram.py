@@ -1,6 +1,7 @@
 import requests
 import const
 from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save
+from lib.db import db_utils
 
 
 def get_bot_url() -> str:
@@ -61,3 +62,7 @@ def process_single_update(text: str = None) -> None:
 
     elif text == 'news':
         news_save.save_news()
+
+    elif text == 'optimize':
+        db_utils.optimize_db()
+

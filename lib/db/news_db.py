@@ -160,29 +160,6 @@ def insert_news_batch(records: list[types.NewsDbRecord]):
 #     connection.close()
 
 
-def optimize_db():
-    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
-    cursor = connection.cursor()
-
-    try:
-        cursor.execute('VACUUM')
-    except Exception as e:
-        print('ERROR optimize_db VACUUM', e)
-
-    try:
-        cursor.execute('REINDEX')
-    except Exception as e:
-        print('ERROR optimize_db REINDEX', e)
-
-    try:
-        cursor.execute('PRAGMA optimize')
-    except Exception as e:
-        print('ERROR optimize_db PRAGMA optimize', e)
-
-    connection.commit()
-    connection.close()
-
-
 def list_list():
     print('LIST')
 

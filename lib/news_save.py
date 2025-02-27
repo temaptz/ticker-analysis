@@ -1,4 +1,4 @@
-from lib.db import news_db
+from lib.db import news_db, db_utils
 from lib.news_parsers import (rbc, rg, finam)
 from lib import telegram, types
 
@@ -40,7 +40,7 @@ def save_news_from_source_to_db(source_name: str, news: list):
 
         if len(news_batch) > 0:
             news_db.insert_news_batch(news_batch)
-            news_db.optimize_db()
+            db_utils.optimize_db()
 
     else:
         print('NO NEWS FROM '+source_name)

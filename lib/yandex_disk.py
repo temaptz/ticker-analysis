@@ -3,14 +3,17 @@ import datetime
 import requests
 import urllib.parse
 import const
-from lib import (telegram, utils)
+from lib import telegram, utils
+from lib.db import db_utils
 
 
 def upload_db_backup() -> None:
-    try:
-        print('START BACKUP')
-        telegram.send_message('Начало резервного копирования')
+    print('START BACKUP')
+    telegram.send_message('Начало резервного копирования')
 
+    db_utils.optimize_db()
+
+    try:
         file_path_on_disk = (
                 '/ticker-analysis-backup/'
                 + os.path.splitext(os.path.basename(const.DB_FILENAME))[0]

@@ -11,10 +11,11 @@ from lib import (
     utils,
     news_save
 )
-from lib.db import init, news_db
+from lib.db import init, news_db, db_utils
 from lib.learn import ta_2
 
 init.init_db()
+db_utils.optimize_db()
 
 
 if docker.is_docker():
@@ -31,4 +32,4 @@ else:
     # )
     #
     # print('GOT NEWS', len(news))
-    news_save.save_news()
+    # news_save.save_news()
