@@ -1,14 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppService } from '../../app.service';
-import { PreloaderComponent } from '../../components/preloader/preloader.component';
+import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { NewsContentResponse } from '../../types';
 import { ActivatedRoute } from '@angular/router';
 import { subDays } from 'date-fns';
 import { finalize } from 'rxjs';
 import {
   InstrumentComplexInfoComponent
-} from '../../components/instrument-complex-info/instrument-complex-info.component';
+} from '../../entities/instrument-complex-info/instrument-complex-info.component';
 
 
 @Component({

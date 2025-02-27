@@ -1,0 +1,6 @@
+<graph
+  *ngIf="instrument()?.uid as uid"
+  [instrumentUid]="uid"
+  [days]="days()"
+  [interval]="interval()"
+></graph>

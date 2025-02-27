@@ -1,0 +1,17 @@
+div {
+  font-size: .5em;
+  line-height: 1.6em;
+  white-space: nowrap;
+}
+
+.plus {
+  color: green;
+
+  &:before {
+    content: '+';
+  }
+}
+
+.minus {
+  color: red;
+}

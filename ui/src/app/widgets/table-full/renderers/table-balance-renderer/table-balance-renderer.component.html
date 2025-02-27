@@ -1,0 +1,9 @@
+@if (accountName()) {
+  <balance
+    *ngIf="instrument() as instr"
+    [instrumentUid]="instr.uid"
+    [accountName]="accountName()!"
+    [instrumentFigi]="instr.figi"
+    [currentPrice]="currentPrice() ?? null"
+  ></balance>
+}

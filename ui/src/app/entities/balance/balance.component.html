@@ -1,0 +1,45 @@
+@defer (when isLoadedBalance() && isLoadedOperations()) {
+  <ng-container *ngIf="balance() as b">
+    <label>Баланс:</label>
+
+    <div>{{ b }} Шт. * {{ avgPrice() | priceRound }} = {{ totalCost() | priceRound }}</div>
+
+    <label>История:</label>
+
+    <div
+      *ngFor="let operation of operations()"
+      class="small"
+    >
+    <span
+      [class.plus]="operation.operation_type._name_ === 'OPERATION_TYPE_BUY'"
+      [class.minus]="operation.operation_type._name_ === 'OPERATION_TYPE_SELL'"
+    >
+      {{ operation.quantity }} * {{ operation.price | priceByQuotation }} = {{ operation.payment | priceByQuotation : true }}
+    </span>
+
+      <span>({{ operation.date | date : 'yyyy-MM-dd' }})</span>
+    </div>
+
+    <label>Изменение цены:</label>
+
+    <div
+      [class.plus]="isPlus()"
+      [class.minus]="!isPlus()"
+    >
+      {{ avgPrice() | priceRound }} -> {{ currentPrice() | priceRound }}
+      (<span
+        [class.plus]="isPlus()"
+        [class.minus]="!isPlus()"
+      >{{ percentChange() }}%</span>)
+    </div>
+
+    <label>Если продам сейчас, то заработаю:</label>
+
+    <span
+      [class.plus]="isPlus()"
+      [class.minus]="!isPlus()"
+    ><b>{{ willEarn() | priceRound }}</b></span>
+  </ng-container>
+} @placeholder {
+  <preloader></preloader>
+}

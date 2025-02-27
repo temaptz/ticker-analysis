@@ -79,7 +79,7 @@ def get_sorted_news_by_instrument_uid(
         end_date=end_date
     )
 
-    print('GOT NEWS', len(news))
+    print('GOT NEWS', news and len(news or []))
 
     for n in news:
         news_uid = n[0]

@@ -1,4 +1,11 @@
-export type InstrumentInList = any;
+export interface InstrumentInList {
+  uid: string;
+  asset_uid: string;
+  figi: string;
+  ticker: string;
+  [key: string]: unknown;
+}
+
 export type Instrument = any;
 export type InstrumentLastPrice = any;
 export type InstrumentHistoryPrice = any;

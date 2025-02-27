@@ -1,0 +1,11 @@
+<ng-container *ngIf="instrument()?.uid as uid">
+  <forecast
+    [instrumentUid]="uid"
+  ></forecast>
+
+  <br>
+
+  <forecast-history
+    [instrumentUid]="uid"
+  ></forecast-history>
+</ng-container>

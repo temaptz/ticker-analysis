@@ -1,0 +1,8 @@
+@defer (when isLoaded()) {
+  <span
+    [class.plus]="isPlus()"
+    [class.minus]="!isPlus()"
+  >{{ percent() }}% -> <b>{{ prediction() | priceRound }}</b></span>
+} @placeholder {
+  <preloader></preloader>
+}

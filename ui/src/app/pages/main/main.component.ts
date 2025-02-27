@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { AppService } from '../../app.service';
 import { InstrumentInList } from '../../types';
-import { TableRowComponent } from '../../components/table-row/table-row.component';
-import { PreloaderComponent } from '../../components/preloader/preloader.component';
+import { TableRowComponent } from '../../entities/table-row/table-row.component';
+import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 
 
 @Component({
