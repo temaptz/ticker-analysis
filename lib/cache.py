@@ -1,12 +1,13 @@
 import time
-from cachetools import LRUCache, TTLCache
+from cachetools import LRUCache
 from functools import wraps
+from lib import utils
 
 cache = LRUCache(maxsize=100)
 expirations = {}
 
 
-def get(key: str):
+def cache_get(key: str):
     if key in cache and time.time() < expirations.get(key, 0):
         return cache[key]
     cache.pop(key, None)  # Удаляем устаревший ключ
@@ -14,24 +15,25 @@ def get(key: str):
     return None
 
 
-def set(key: str, value: any, ttl: int = 3600) -> None:
+def cache_set(key: str, value: any, ttl: int = 3600) -> None:
     cache[key] = value
     expirations[key] = time.time() + ttl
 
 
 def ttl_cache(ttl: int = 3600, maxsize: int = 1024):
     """Декоратор кэширования с временем жизни (ttl) и ограничением по размеру."""
-    c = TTLCache(maxsize=maxsize, ttl=ttl)  # Создаём кэш
-
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                key = (args, frozenset(kwargs.items()))  # Создаём ключ на основе аргументов
-                if key in c:
-                    return c[key]  # Возвращаем из кэша, если есть
+                key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}')
+                saved_cache = cache_get(key=key_md5)
+                if saved_cache:
+                    return saved_cache  # Возвращаем из кэша, если есть
+
                 result = func(*args, **kwargs)  # Вычисляем функцию
-                c[key] = result  # Сохраняем в кэше
+                cache_set(key=key_md5, value=result, ttl=ttl)  # Сохраняем в кэше
+
                 return result
 
             except Exception as e:

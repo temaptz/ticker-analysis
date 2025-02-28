@@ -34,6 +34,7 @@ def get_instrument_by_uid(uid: str):
 
 @cache.ttl_cache()
 def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
+    print('GET BY TICKER', ticker)
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_TICKER,

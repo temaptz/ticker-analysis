@@ -24,7 +24,6 @@ def get_prediction_ta_1_graph_by_uid(uid: str) -> list:
                 'prediction': i[1],
                 'date': i[2],
             })
-            print(i)
 
         print(result)
 

@@ -25,7 +25,7 @@ def get_sorted_rated_news_content_by_instrument_uid(
         end_date=end_date
     )
 
-    for n in news:
+    for n in news or []:
         news_uid = n[0]
         title = n[1]
         text = n[2]
@@ -79,9 +79,9 @@ def get_sorted_news_by_instrument_uid(
         end_date=end_date
     )
 
-    print('GOT NEWS', news and len(news or []))
+    print('GOT NEWS', news and len(news))
 
-    for n in news:
+    for n in news or []:
         news_uid = n[0]
         source = n[4]
         rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)

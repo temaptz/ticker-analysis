@@ -1,0 +1,18 @@
+<button
+  (click)="toggleDialog()"
+>⚙️</button>
+
+<div
+  *ngIf="isDialogOpen()"
+  class="dialog"
+>
+  <p *ngFor="let item of colDefs()">
+    <input
+      type="checkbox"
+      [name]="item.colId!"
+      [ngModel]="!item.hide"
+      (ngModelChange)="handleChange(item, $event)"
+    >
+    {{ item.headerName }}
+  </p>
+</div>

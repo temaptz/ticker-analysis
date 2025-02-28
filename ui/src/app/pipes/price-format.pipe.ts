@@ -6,13 +6,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class PriceFormatPipe implements PipeTransform {
 
-  transform(value: string): string {
+  transform(value: string | number | null): string {
     try {
-      return value;
+      return value?.toString() ?? '';
     } catch (e) {
       console.error('Error PriceFormatPipe transform', (e as any)?.message ?? e);
 
-      return value;
+      return '';
     }
   }
 

@@ -29,6 +29,7 @@ def instrument_info(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=3600)
 def instrument_last_prices(request):
     resp = list()
     uid = request.GET.get('uid')

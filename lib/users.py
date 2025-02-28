@@ -36,7 +36,7 @@ def get_user_instrument_operations(account_name: str, instrument_figi: str) -> l
 def get_accounts() -> GetAccountsResponse.accounts:
     cache_key = 'get_accounts'
     try:
-        c = cache.get(cache_key)
+        c = cache.cache_get(cache_key)
         if c:
             return c
 
@@ -44,7 +44,7 @@ def get_accounts() -> GetAccountsResponse.accounts:
             result = client.users.get_accounts().accounts
 
             if result:
-                cache.set(cache_key, result)
+                cache.cache_set(cache_key, result)
 
             return result
 

@@ -33,13 +33,13 @@ def get_updates(offset_update_id: int = None) -> list:
 
 def process_updates() -> None:
     cache_key = 'telegram_offset_update_id'
-    offset_update_id = cache.get(cache_key)
+    offset_update_id = cache.cache_get(cache_key)
     updates = get_updates(offset_update_id=offset_update_id)
 
     for u in updates:
         update_id = u['update_id']
         text = u['message']['text']
-        cache.set(cache_key, update_id)
+        cache.cache_set(cache_key, update_id)
 
         if update_id != offset_update_id:
             process_single_update(text)

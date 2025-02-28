@@ -1,0 +1,25 @@
+button {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  font-size: 1.7em;
+}
+
+.dialog {
+  position: fixed;
+  top: 50px;
+  right: 0;
+  padding: 30px;
+  background-color: #fff;
+  border: 1px solid gray;
+  z-index: 1000;
+}
+
+p {
+  margin: 20px 0;
+}
+
+input {
+  transform: scale(1.4);
+}

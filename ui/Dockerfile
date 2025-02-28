@@ -12,7 +12,7 @@ ENV NG_BUILD_PARALLEL_TS=0
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build:pi
+RUN npm run build
 
 
 # Nginx
