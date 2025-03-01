@@ -1,5 +1,5 @@
 import feedparser
-from lib import date_utils
+from lib import date_utils, utils
 
 
 def get_news():
@@ -15,10 +15,12 @@ def get_news():
 
         parsed_feed = feedparser.parse(source_link)
 
+        print(parsed_feed)
+
         if parsed_feed and parsed_feed.entries:
             for i in parsed_feed.entries:
                 try:
-                    uid = i['link']
+                    uid = utils.get_md5(i['link'])
                     title = i['title']
                     text = i['summary']
                     date = date_utils.parse_date(i['published'])

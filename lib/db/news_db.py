@@ -2,7 +2,7 @@ import datetime
 import sqlite3
 import const
 from lib.utils import get_file_abspath_recursive
-from lib import types
+from lib import types, utils
 
 table_name = 'News'
 table_name_fts = 'News_fts'
@@ -199,3 +199,56 @@ def list_list():
 #     insert_news_batch(insert_batch)
 #
 #     # rebuild_index_fts()
+
+
+# def get_news_with_links():
+#     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+#     cursor = connection.cursor()
+#     query = f'''
+#     SELECT
+#     N.*,
+#     F.title,
+#     F.text
+#     FROM {table_name} N
+#     JOIN {table_name_fts} F ON N.uid = F.uid
+#     WHERE N.uid LIKE '%http%';
+#     '''
+#
+#     cursor.execute(query)
+#     news = cursor.fetchall()
+#     connection.close()
+#
+#     return news
+
+
+# def update_uid(currentUid: str, nextUid: str):
+#     """Обновляет uid в двух таблицах (обычной и FTS)"""
+#     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+#     cursor = connection.cursor()
+#
+#     # Обновляем в основной таблице
+#     cursor.execute(f"UPDATE '{table_name}' SET uid = ? WHERE uid = ?", (nextUid, currentUid))
+#     # Обновляем в FTS-таблице
+#     cursor.execute(f"UPDATE '{table_name_fts}' SET uid = ? WHERE uid = ?", (nextUid, currentUid))
+#
+#     connection.commit()
+#     connection.close()
+#
+#
+# def replace_md5():
+#     print('MOVE MD5')
+#
+#     news = get_news()
+#
+#     counter = 0
+#
+#     for i in news:
+#         if 'http' in i[0]:
+#             currentUid = i[0]
+#             nextUid = utils.get_md5(i[0])
+#             print(nextUid, currentUid)
+#             update_uid(currentUid=currentUid, nextUid=nextUid)
+#             counter += 1
+#             print('UPDATED', counter)
+#
+#     print('NEWS COUNT', counter, ' / ', len(news))
