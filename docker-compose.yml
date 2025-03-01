@@ -34,3 +34,14 @@ services:
       - python
       - main.py
     restart: always
+
+  phpliteadmin:
+    hostname: phpliteadmin
+    build:
+      context: ./phpliteadmin
+      dockerfile: Dockerfile
+#    ports:
+#      - "8080:80"
+    volumes:
+      - ./db.sqlite:/var/www/html/db.sqlite
+    restart: always

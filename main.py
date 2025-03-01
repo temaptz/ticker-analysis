@@ -23,6 +23,8 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
+
+    # news_db.replace_md5()
     # ta_2.generate_data()
     # predictions_save.save_predictions()
     # news = news_db.get_news_by_date_keywords_fts(
