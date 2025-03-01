@@ -33,8 +33,8 @@ def show_saved():
         now = datetime.datetime.now()
         past_week = now - datetime.timedelta(weeks=1)
 
-        saved_past_week = fundamentals.get_db_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid, date=past_week)
-        saved_last = fundamentals.get_db_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid, date=now)
+        saved_past_week = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=instrument.asset_uid, date=past_week)
+        saved_last = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=instrument.asset_uid, date=now)
 
         print('FUNDAMENTALS SAVED PAST WEEK', saved_past_week)
         print('FUNDAMENTALS SAVED LAST', saved_last)

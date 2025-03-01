@@ -8,13 +8,12 @@ import dateutil.parser
 import hashlib
 
 
-
 def get_price_by_candle(candle: HistoricCandle) -> float or None:
     try:
         return (get_price_by_quotation(price=candle.high) + get_price_by_quotation(price=candle.low)) / 2
 
-    except Exception:
-        print('ERROR get_price_by_candle', candle)
+    except Exception as e:
+        print('ERROR get_price_by_candle', e, candle)
 
         return None
 
@@ -23,8 +22,8 @@ def get_price_by_quotation(price: Quotation) -> float or None:
     try:
         return float(str(price.units)+'.'+str(price.nano))
 
-    except Exception:
-        print('ERROR get_price_by_candle', price)
+    except Exception as e:
+        print('ERROR get_price_by_candle', e, price)
 
         return None
 

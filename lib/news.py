@@ -159,7 +159,7 @@ def get_news_by_instrument_uid(
     )
 
 
-@cache.ttl_cache()
+@cache.ttl_cache(ttl=3600 * 24 * 365)
 def get_keywords_by_instrument_uid(uid: str) -> list[str]:
     i = instruments.get_instrument_by_uid(uid)
     result = []

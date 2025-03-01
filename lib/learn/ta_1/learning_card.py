@@ -51,7 +51,7 @@ class LearningCard:
         self.price = utils.get_price_by_quotation(instruments.get_instrument_last_price_by_uid(uid=self.uid)[0].price)
         self.forecast_price = utils.get_price_by_quotation(forecasts.get_forecasts(instrument_uid=self.uid).consensus.consensus)
 
-        fundamentals_res = fundamentals.get_db_fundamentals_by_asset_uid(asset_uid=self.asset_uid, date=self.date)[1]
+        fundamentals_res = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.asset_uid, date=self.date)[1]
 
         self.revenue_ttm = fundamentals_res.revenue_ttm
         self.ebitda_ttm = fundamentals_res.ebitda_ttm

@@ -1,7 +1,7 @@
-from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse
+from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse, HistoricCandle
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache
+from lib import cache, utils, date_utils
 
 
 @cache.ttl_cache()
@@ -34,7 +34,6 @@ def get_instrument_by_uid(uid: str):
 
 @cache.ttl_cache(ttl=3600 * 24 * 7)
 def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
-    print('GET BY TICKER', ticker)
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_TICKER,
@@ -56,7 +55,7 @@ def get_instrument_last_price_by_uid(uid: str):
 
 
 @cache.ttl_cache(ttl=3600 * 4)
-def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime):
+def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime) -> list[HistoricCandle]:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.market_data.get_candles(
@@ -66,5 +65,40 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
                 interval=interval
             ).candles
 
-    except Exception:
-        print('ERROR get_instrument_history_price_by_uid')
+    except Exception as e:
+        print('ERROR get_instrument_history_price_by_uid', e)
+
+
+@cache.ttl_cache(ttl=3600 * 24 * 7)
+def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or None:
+    try:
+        with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            date_utc = date_utils.convert_to_utc(date=date)
+            candles = client.market_data.get_candles(
+                instrument_id=uid,
+                from_=date_utc - datetime.timedelta(minutes=30),
+                to=date_utc + datetime.timedelta(minutes=30),
+                interval=CandleInterval.CANDLE_INTERVAL_HOUR
+            ).candles
+
+            nearest: HistoricCandle or None = None
+
+        for i in candles:
+            time_local = date_utils.convert_date_from_utc_to_local(i.time)
+
+            if nearest:
+                delta_sec_i = (date - time_local).total_seconds()
+                delta_sec_nearest = (date - date_utils.convert_date_from_utc_to_local(nearest.time)).total_seconds()
+
+                if delta_sec_i < delta_sec_nearest:
+                    nearest = i
+            else:
+                nearest = i
+
+        if nearest:
+            return utils.get_price_by_candle(nearest)
+
+    except Exception as e:
+        print('ERROR get_instrument_price_by_date', e)
+
+    return None

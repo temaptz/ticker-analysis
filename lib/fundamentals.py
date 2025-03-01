@@ -21,7 +21,10 @@ def get_fundamentals_by_asset_uid(asset_uid: str) -> GetAssetFundamentalsRespons
         print('ERROR get_instrument_fundamentals_by_asset_uid', asset_uid, e)
 
 
-def get_db_fundamentals_by_asset_uid(asset_uid: str, date: datetime.datetime) -> (str, GetAssetFundamentalsResponse.fundamentals, str):
+def get_db_fundamentals_by_asset_uid_date(
+        asset_uid: str,
+        date: datetime.datetime
+) -> (str, GetAssetFundamentalsResponse.fundamentals, str):
     db_data = fundamentals_db.get_fundamentals_by_asset_uid(asset_uid, date=date)
     asset_uid = db_data[0]
     date = db_data[2]

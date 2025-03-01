@@ -1,119 +1,104 @@
-import json
 import numpy
-
-from tinkoff.invest import (
-    CandleInterval,
-)
+from tinkoff.invest import CandleInterval, InstrumentResponse
 import datetime
-from lib import utils
-from lib import instruments
-from lib import forecasts
-from lib import serializer
+import const
+from lib import utils, instruments, forecasts, fundamentals, news
 
 
-class LearningCard:
-
+class Ta2LearningCard:
     is_ok: bool = True  # будет меняться в случае ошибки
-    uid: str = ''  # uid
-    asset_uid: str = ''  # asset_uid
+    instrument: InstrumentResponse.instrument = None
     date: datetime.datetime = None  # Дата создания прогноза
+    target_date: datetime.datetime = None  # Дата на которую составляется прогноз
     target_date_days: int = None  # Количество дней до даты прогнозируемой цены
-    ticker: str = ''
     price: float = None  # Цена в дату создания прогноза
     target_price: float = None  # Прогнозируемая цена
     history: list = []  # Список цен за год с интервалом в неделю в хронологическом порядке
-    forecast_price: float = None  # Прогноз аналитиков
+    consensus_forecast_price: float = None  # Прогноз аналитиков
     revenue_ttm: float = None  # Выручка
     ebitda_ttm: float = None  # EBITDA
-    market_capitalization: float = None   # Капитализация
+    market_capitalization: float = None  # Капитализация
     total_debt_mrq: float = None  # Долг
     eps_ttm: float = None  # EPS — прибыль на акцию
     pe_ratio_ttm: float = None  # P/E — цена/прибыль
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
-    news_week_count: int = 0  # Количество упоминаний в новостях за неделю до даты прогноза
+    news_count_0: int = 0  # Количество упоминаний в новостях 0-7 дней до даты
+    news_count_1: int = 0  # Количество упоминаний в новостях 8-14 дней до даты
+    news_count_2: int = 0  # Количество упоминаний в новостях 15-21 дней до даты
+    news_count_3: int = 0  # Количество упоминаний в новостях 22-28 дней до даты
 
-    def __init__(self):
-        return
+    def __init__(self, instrument: InstrumentResponse.instrument, date: datetime.datetime, target_date: datetime.datetime):
+        self.instrument = instrument
+        self.date = date
+        self.target_date = target_date
 
-    def load_by_uid(self, uid: str):
         try:
-            return self._load_by_uid(uid=uid)
-        except Exception:
-            print('ERROR TA-2 LearningCard load_by_uid')
+            self.fill_card()
+        except Exception as e:
+            print('ERROR INIT Ta2LearningCard', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def _load_by_uid(self, uid: str):
-        self.uid = uid
-        self.asset_uid = instruments.get_instrument_by_uid(uid).asset_uid
-        self.date = datetime.datetime.now()
-        self.ticker = instruments.get_instrument_by_uid(uid=self.uid).ticker
-        self.history = self.get_history(candles=instruments.get_instrument_history_price_by_uid(
-            uid=self.uid,
+    def fill_card(self):
+        self.history = self.get_history()
+        self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
+        self.target_price = self.get_target_price()
+        self.consensus_forecast_price = utils.get_price_by_quotation(
+            forecasts.get_db_forecast_by_uid_date(
+                uid=self.instrument.uid,
+                date=self.date
+            )[1].consensus.current_price
+        )
+
+        f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]
+        self.revenue_ttm = f.revenue_ttm
+        self.ebitda_ttm = f.ebitda_ttm
+        self.market_capitalization = f.market_capitalization
+        self.total_debt_mrq = f.total_debt_mrq
+        self.eps_ttm = f.eps_ttm
+        self.pe_ratio_ttm = f.pe_ratio_ttm
+        self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
+        self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+
+        self.news_count_0 = self.get_news_count(days_from=0, days_to=7)
+        self.news_count_1 = self.get_news_count(days_from=8, days_to=14)
+        self.news_count_2 = self.get_news_count(days_from=15, days_to=21)
+        self.news_count_3 = self.get_news_count(days_from=22, days_to=28)
+
+    # Вернет цены за последние 52 недели (год) в хронологическом порядке
+    def get_history(self) -> list:
+        result = []
+
+        candles = instruments.get_instrument_history_price_by_uid(
+            uid=self.instrument.uid,
             days_count=365,
             interval=CandleInterval.CANDLE_INTERVAL_WEEK,
             to_date=self.date
-        ))
-        self.price = utils.get_price_by_quotation(instruments.get_instrument_last_price_by_uid(uid=self.uid)[0].price)
-        self.forecast_price = utils.get_price_by_quotation(forecasts.get_forecasts(uid=self.uid).consensus.consensus)
-
-        fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(self.asset_uid)[0]
-        self.revenue_ttm = fundamentals.revenue_ttm
-        self.ebitda_ttm = fundamentals.ebitda_ttm
-        self.market_capitalization = fundamentals.market_capitalization
-        self.total_debt_mrq = fundamentals.total_debt_mrq
-        self.eps_ttm = fundamentals.eps_ttm
-        self.pe_ratio_ttm = fundamentals.pe_ratio_ttm
-        self.ev_to_ebitda_mrq = fundamentals.ev_to_ebitda_mrq
-        self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
-
-
-    # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def load(self, uid: str, date: datetime.datetime, target_forecast_days: int):
-        try:
-            self.uid = uid
-            self.asset_uid = instruments.get_instrument_by_uid(uid).asset_uid
-            self.date = date
-            self.target_date = (self.date + datetime.timedelta(days=target_forecast_days))
-            self.ticker = instruments.get_instrument_by_uid(uid=self.uid).ticker
-            self.history = self.get_history(candles=instruments.get_instrument_history_price_by_uid(
-                uid=self.uid,
-                days_count=365,
-                interval=CandleInterval.CANDLE_INTERVAL_WEEK,
-                to_date=self.date
-            ))
-            self.price = self.history[-1]
-            self.target_price = utils.get_price_by_candle(instruments.get_instrument_history_price_by_uid(
-                uid=self.uid,
-                days_count=1,
-                interval=CandleInterval.CANDLE_INTERVAL_DAY,
-                to_date=self.target_date
-            )[0])
-            self.forecast_price = self.get_forecast()
-
-            fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(self.asset_uid)[0]
-            self.revenue_ttm = fundamentals.revenue_ttm
-            self.ebitda_ttm = fundamentals.ebitda_ttm
-            self.market_capitalization = fundamentals.market_capitalization
-            self.total_debt_mrq = fundamentals.total_debt_mrq
-            self.eps_ttm = fundamentals.eps_ttm
-            self.pe_ratio_ttm = fundamentals.pe_ratio_ttm
-            self.ev_to_ebitda_mrq = fundamentals.ev_to_ebitda_mrq
-            self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
-
-        except Exception:
-            print('ERROR loading LearningCard')
-            self.is_ok = False
-
-    # Вернет цены за последние 52 недели (год) в хронологическом порядке
-    def get_history(self, candles: CandleInterval) -> list:
-        result = []
+        )
 
         for i in candles[:52]:
             result.append(utils.get_price_by_candle(candle=i))
 
         return result
+
+    def get_news_count(self, days_from: int, days_to: int):
+        start_date = self.date - datetime.timedelta(days=days_to)
+        end_date = self.date - datetime.timedelta(days=days_from)
+
+        n = news.get_news_by_instrument_uid(
+            uid=self.instrument.uid,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        return len(n or [])
+
+    def get_target_price(self) -> float or None:
+        if self.target_date < datetime.datetime.now():
+            return instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date)
+
+        return None
 
     def print_card(self):
         print('+++')
@@ -123,7 +108,7 @@ class LearningCard:
         print('HISTORY', self.history)
         print('PRICE', self.price)
         print('PRICE TARGET', self.target_price)
-        print('PRICE CONSENSUS FORECAST', self.forecast_price)
+        print('PRICE CONSENSUS FORECAST', self.consensus_forecast_price)
         print('Выручка', self.revenue_ttm)
         print('EBITDA', self.ebitda_ttm)
         print('Капитализация', self.market_capitalization)
@@ -134,40 +119,18 @@ class LearningCard:
         print('DPR — коэффициент выплаты дивидендов', self.dividend_payout_ratio_fy)
         print('IS OK', self.is_ok)
 
-    def get_json_db(self) -> str:
-        return json.dumps(serializer.get_dict_by_object(self))
-
-    def restore_from_json_db(self, json_data: str):
-        try:
-            data = json.loads(json_data)
-            self.is_ok = data['is_ok']
-            self.uid = data['uid']
-            self.asset_uid = data['asset_uid']
-            self.date = data['date']
-            self.target_date = data['target_date']
-            self.ticker = data['ticker']
-            self.price = data['price']
-            self.target_price = data['target_price']
-            self.history = data['history']
-            self.forecast_price = data['forecast_price']
-            self.revenue_ttm = data['revenue_ttm']
-            self.ebitda_ttm = data['ebitda_ttm']
-            self.market_capitalization = data['market_capitalization']
-            self.total_debt_mrq = data['total_debt_mrq']
-            self.eps_ttm = data['eps_ttm']
-            self.pe_ratio_ttm = data['pe_ratio_ttm']
-            self.ev_to_ebitda_mrq = data['ev_to_ebitda_mrq']
-            self.dividend_payout_ratio_fy = data['dividend_payout_ratio_fy']
-
-        except Exception:
-            print('ERROR restore_from_json_db LearningCard')
-            self.is_ok = False
-
     # Входные данные для обучения
     def get_x(self) -> list:
+        target_days_count = (self.target_date - self.date).days
+
         return [
+            target_days_count,
+            self.news_count_0,
+            self.news_count_1,
+            self.news_count_2,
+            self.news_count_3,
             numpy.float32(self.price),
-            numpy.float32(self.forecast_price),
+            numpy.float32(self.consensus_forecast_price),
             numpy.float32(self.revenue_ttm),
             numpy.float32(self.ebitda_ttm),
             numpy.float32(self.market_capitalization),
@@ -182,22 +145,46 @@ class LearningCard:
     def get_y(self) -> float:
         return self.target_price
 
+
 def generate_data():
     news_beginning_date = datetime.datetime(year=2025, month=1, day=29)  # Самые первые новости
     news_beginning_date2 = datetime.datetime(year=2025, month=2, day=17)  # По всем тикерам
     date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(12))
-    date_start = news_beginning_date + datetime.timedelta(days=7)
+    date_start = datetime.datetime.combine((news_beginning_date2 + datetime.timedelta(days=7)), datetime.time(12)) # TODO 30 дней
     dates = [date_start + datetime.timedelta(days=i) for i in range((date_end - date_start).days + 1)]
+    counter_total = 0
+    counter_success = 0
 
     print('GENERATE DATA TA-2')
-
-    for i in dates:
-        print(i)
-
-    return
+    print(len(const.TICKER_LIST))
 
     for instrument in instruments.get_instruments_white_list():
-        print(instrument.ticker)
+        print('INSTRUMENT\n', instrument.ticker)
+
+        for date in get_array_between_dates(date_from=date_start, date_to=date_end):
+
+            for date_target in get_array_between_dates(date_from=date + datetime.timedelta(days=1), date_to=date_end):
+                print('DATES', date, ' -> ', date_target)
+
+                card = Ta2LearningCard(instrument=instrument, date=date, target_date=date_target)
+                if card.is_ok:
+                    return
+                    counter_success += 1
+                counter_total += 1
+
+    print('TOTAL CARDS', counter_total)
+    print('SUCCESS', counter_success)
+    print('ERRORS', counter_total - counter_success)
 
 
+def get_array_between_dates(date_from: datetime.datetime, date_to: datetime.datetime) -> list[datetime.datetime]:
+    result = []
+    delta_hours = 24
 
+    if date_from < date_to:
+        result.append(date_from)
+
+    while len(result) > 0 and result[-1] < date_to - datetime.timedelta(hours=delta_hours):
+        result.append(result[-1] + datetime.timedelta(hours=delta_hours))
+
+    return result
