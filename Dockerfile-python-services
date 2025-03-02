@@ -1,16 +1,17 @@
-FROM python:3.12-slim
-
-ENV PYTHONUNBUFFERED=1
+FROM python:3.12-slim as requirements
 
 WORKDIR /app
-
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
+COPY ./requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+FROM requirements
 COPY ./apiserver /app/apiserver
 COPY ./lib /app/lib
 COPY ./main.py /app/main.py
 COPY ./const.py /app/const.py
 COPY ./learn_models /app/learn_models
-COPY ./requirements.txt /app/requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
