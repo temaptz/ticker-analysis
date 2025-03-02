@@ -12,6 +12,8 @@ services:
       - apiserver/manage.py
       - runserver
       - 0.0.0.0:8000
+    depends_on:
+      - memcached
     restart: always
 
   ui:
@@ -33,6 +35,8 @@ services:
     command:
       - python
       - main.py
+    depends_on:
+      - memcached
     restart: always
 
   phpliteadmin:
