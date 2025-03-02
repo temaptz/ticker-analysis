@@ -1,6 +1,7 @@
 .bar {
   display: flex;
   align-items: flex-end;
+  height: 30px;
 
   & > div {
     display: flex;

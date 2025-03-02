@@ -8,7 +8,7 @@ import { subDays } from 'date-fns';
 import { finalize } from 'rxjs';
 import {
   InstrumentComplexInfoComponent
-} from '../../entities/instrument-complex-info/instrument-complex-info.component';
+} from '../../widgets/instrument-complex-info/instrument-complex-info.component';
 
 
 @Component({

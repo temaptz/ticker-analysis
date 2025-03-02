@@ -16,11 +16,11 @@ def parse_date(date: str) -> datetime.datetime or None:
     return None
 
 
-def convert_date_from_utc_to_local(date: datetime.datetime) -> datetime.datetime:
+def convert_to_local(date: datetime.datetime) -> datetime.datetime:
     try:
         time_local = date.astimezone(timezone('Europe/Moscow')).replace(tzinfo=None)
 
-        return datetime.datetime.combine(date=time_local.date(), time=time_local.time())
+        return datetime.datetime.combine(date=time_local.date(), time=time_local.time(), tzinfo=timezone('Europe/Moscow'))
 
     except Exception as e:
         print('ERROR convert_date_from_utc_to_local', e)

@@ -42,6 +42,17 @@ def instrument_last_prices(request):
 
 
 @api_view(['GET'])
+@cache_control(public=True, max_age=3600 * 24 * 7)
+def instrument_price_by_date(request):
+    uid = request.GET.get('uid')
+    date = utils.parse_json_date(request.GET.get('date'))
+
+    return HttpResponse(
+        instruments.get_instrument_price_by_date(uid=uid, date=date) or json.dumps(None)
+    )
+
+
+@api_view(['GET'])
 @cache_control(public=True, max_age=3600)
 def instrument_history_prices(request):
     resp = list()
@@ -163,7 +174,7 @@ def instrument_news(request):
     end_date = utils.parse_json_date(request.GET.get('end_date'))
 
     if uid and start_date and end_date:
-        resp = news.get_sorted_news_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
+        resp = news.get_sorted_news_count_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
 
     return HttpResponse(serializer.to_json(resp))
 

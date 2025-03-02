@@ -63,7 +63,7 @@ def get_text_classify(title: str, text: str, subject_name: str) -> int or None:
         )
 
         # Настройка модели классификации
-        model = sdk.models.text_classifiers('yandexgpt').configure(
+        model = sdk.models.text_classifiers('yandexgpt-lite').configure(
             task_description=task_description,
             labels=['положительное влияние', 'отрицательное влияние', 'нейтральное влияние'],
             samples=get_news_rate_samples(instrument_name=subject_name)

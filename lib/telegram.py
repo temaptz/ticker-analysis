@@ -1,6 +1,6 @@
 import requests
 import const
-from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save
+from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker
 from lib.db import db_utils
 
 
@@ -64,5 +64,13 @@ def process_single_update(text: str = None) -> None:
         news_save.save_news()
 
     elif text == 'optimize':
+        send_message('Начало оптимизации БД')
         db_utils.optimize_db()
+
+    elif text == 'stat' or text == 'info':
+        send_message('Сбор статистики')
+        send_message('uptime')
+        send_message(docker.get_uptime())
+        send_message('df -h')
+        send_message(docker.get_df())
 

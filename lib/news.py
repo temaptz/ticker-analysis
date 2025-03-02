@@ -5,6 +5,23 @@ from lib.db import news_db, news_rate_db
 from lib import instruments, yandex, cache
 
 
+class NewsSourceRated:
+    def __init__(self):
+        self.positive_count = 0
+        self.positive_percent = 0
+        self.negative_count = 0
+        self.negative_percent = 0
+        self.neutral_count = 0
+        self.neutral_percent = 0
+        self.total_count = 0
+
+    def update_percents(self):
+        if self.total_count > 0:
+            self.positive_percent = round((self.positive_count / self.total_count * 100), 2)
+            self.negative_percent = round((self.negative_count / self.total_count * 100), 2)
+            self.neutral_percent = round((self.neutral_count / self.total_count * 100), 2)
+
+
 def get_sorted_rated_news_content_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
@@ -44,31 +61,16 @@ def get_sorted_rated_news_content_by_instrument_uid(
     return result
 
 
-def get_sorted_news_by_instrument_uid(
+def get_sorted_news_count_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime
 ):
     result = {
         'sources': {
-            'RBC': {
-                'positive': 0,
-                'negative': 0,
-                'neutral': 0,
-                'total': 0,
-            },
-            'FINAM': {
-                'positive': 0,
-                'negative': 0,
-                'neutral': 0,
-                'total': 0,
-            },
-            'RG': {
-                'positive': 0,
-                'negative': 0,
-                'neutral': 0,
-                'total': 0,
-            }
+            'RBC': NewsSourceRated(),
+            'FINAM': NewsSourceRated(),
+            'RG': NewsSourceRated()
         },
         'keywords': get_keywords_by_instrument_uid(instrument_uid)
     }
@@ -85,17 +87,19 @@ def get_sorted_news_by_instrument_uid(
         news_uid = n[0]
         source = n[4]
         rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
+        result_source: NewsSourceRated = result['sources'][source]
 
         print('NEWS RATED', rate, n)
 
         if rate == 1:
-            result['sources'][source]['positive'] += 1
+            result_source.positive_count += 1
         elif rate == -1:
-            result['sources'][source]['negative'] += 1
+            result_source.negative_count += 1
         elif rate == 0:
-            result['sources'][source]['neutral'] += 1
+            result_source.neutral_count += 1
 
-        result['sources'][source]['total'] += 1
+        result_source.total_count += 1
+        result_source.update_percents()
 
     return result
 

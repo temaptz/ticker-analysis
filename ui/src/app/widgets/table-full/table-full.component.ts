@@ -135,7 +135,7 @@ export class TableFullComponent implements OnInit {
         colId: '6',
         headerName: '90 дней + прогнозы',
         cellRenderer: TableComplexGraphRendererComponent,
-        width: 400,
+        width: 600,
         autoHeight: true,
       },
       {

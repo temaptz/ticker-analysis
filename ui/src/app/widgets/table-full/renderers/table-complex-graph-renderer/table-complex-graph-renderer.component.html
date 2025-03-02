@@ -3,4 +3,17 @@
   width="100%"
   height="200px"
   [instrumentUid]="uid"
+  [historyDays]="complexGraphHistoryDaysCount"
 ></complex-graph>
+
+<select [(ngModel)]="complexGraphHistoryDaysCount">
+  <option [value]="30">30 дней</option>
+  <option [value]="60">60 дней</option>
+  <option [value]="90">90 дней</option>
+  <option [value]="120">120 дней</option>
+  <option [value]="180">180 дней</option>
+  <option [value]="210">210 дней</option>
+  <option [value]="240">240 дней</option>
+  <option [value]="270">270 дней</option>
+  <option [value]="300">300 дней</option>
+</select>

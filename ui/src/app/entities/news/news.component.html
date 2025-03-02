@@ -16,24 +16,24 @@
       >
         <div
           class="green"
-          [style.height.px]="s.positive * barHeightMultiply"
-          [title]="s.positive"
-        >{{ s.positive }}</div>
+          [style.height.%]="s.positive_percent"
+          [title]="s.positive_count+' шт. ('+s.positive_percent+'%)'"
+        >{{ s.positive_count }}</div>
 
         <div
           class="red"
-          [style.height.px]="s.negative * barHeightMultiply"
-          [title]="s.negative"
-        >{{ s.negative }}</div>
+          [style.height.%]="s.negative_percent"
+          [title]="s.negative_count+' шт. ('+s.negative_percent+'%)'"
+        >{{ s.negative_count }}</div>
 
         <div
           class="gray"
-          [style.height.px]="s.neutral * barHeightMultiply"
-          [title]="s.neutral"
-        >{{ s.neutral }}</div>
+          [style.height.%]="s.neutral_percent"
+          [title]="s.neutral_count+' шт. ('+s.neutral_percent+'%)'"
+        >{{ s.neutral_count }}</div>
       </div>
 
-      <div>{{ source }} - {{ newsResp.sources[source].total }} Шт</div>
+      <div>{{ source }} - {{ newsResp.sources[source].total_count }} Шт</div>
     </div>
   </ng-container>
 } @placeholder {

@@ -20,10 +20,13 @@ export type InstrumentBrandResponse = any;
 export interface NewsResponse {
   sources: {
     [key: string]: {
-      positive: number;
-      negative: number;
-      neutral: number;
-      total: number;
+      positive_count: number;
+      positive_percent: number;
+      negative_count: number;
+      negative_percent: number;
+      neutral_count: number;
+      neutral_percent: number;
+      total_count: number;
     };
   };
   keywords: string[];

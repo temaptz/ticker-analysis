@@ -44,6 +44,14 @@ export class AppService {
     return this.http.get<InstrumentLastPrice[]>(`${this.apiUrl}/instrument/last_prices`, {params: params});
   }
 
+  getInstrumentPriceByDate(uid: string, date: Date): Observable<number> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('date', date.toJSON());
+
+    return this.http.get<number>(`${this.apiUrl}/instrument/price_by_date`, {params: params});
+  }
+
   getInstrumentHistoryPrices(uid: string, days: number, interval: CandleInterval): Observable<InstrumentHistoryPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);

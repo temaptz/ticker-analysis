@@ -84,11 +84,11 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or 
             nearest: HistoricCandle or None = None
 
         for i in candles:
-            time_local = date_utils.convert_date_from_utc_to_local(i.time)
+            time_local = date_utils.convert_to_local(i.time)
 
             if nearest:
                 delta_sec_i = (date - time_local).total_seconds()
-                delta_sec_nearest = (date - date_utils.convert_date_from_utc_to_local(nearest.time)).total_seconds()
+                delta_sec_nearest = (date - date_utils.convert_to_local(nearest.time)).total_seconds()
 
                 if delta_sec_i < delta_sec_nearest:
                     nearest = i
