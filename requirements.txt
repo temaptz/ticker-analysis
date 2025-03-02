@@ -10,5 +10,5 @@ apscheduler==3.11.0
 pytz==2024.2
 requests==2.32.3
 python-dateutil==2.9.0
-cachetools==5.5.1
 yandex-cloud-ml-sdk==0.3.0
+python-memcached==1.62

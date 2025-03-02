@@ -1,23 +1,21 @@
-import time
-from cachetools import LRUCache
 from functools import wraps
-from lib import utils
-
-cache = LRUCache(maxsize=100)
-expirations = {}
+from lib import utils, memcached
 
 
 def cache_get(key: str):
-    if key in cache and time.time() < expirations.get(key, 0):
-        return cache[key]
-    cache.pop(key, None)  # Удаляем устаревший ключ
-    expirations.pop(key, None)
+    try:
+        return memcached.cache_get(key=key)
+    except Exception as e:
+        print('ERROR cache_get', e)
+
     return None
 
 
 def cache_set(key: str, value: any, ttl: int = 3600) -> None:
-    cache[key] = value
-    expirations[key] = time.time() + ttl
+    try:
+        memcached.cache_set(key=key, value=value, ttl_sec=ttl)
+    except Exception as e:
+        print('ERROR cache_set', e)
 
 
 def ttl_cache(ttl: int = 3600, maxsize: int = 1024):

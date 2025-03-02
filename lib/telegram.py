@@ -1,6 +1,6 @@
 import requests
 import const
-from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker, counter
+from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker, counter, memcached
 from lib.db import db_utils
 
 
@@ -73,5 +73,8 @@ def process_single_update(text: str = None) -> None:
         send_message(docker.get_uptime())
         send_message('df -h')
         send_message(docker.get_df())
+        send_message('Счетчики')
         send_message(counter.get_stat())
+        send_message('Статистика memcached')
+        send_message(memcached.get_memcached_stats())
 

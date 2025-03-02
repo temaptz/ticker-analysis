@@ -45,3 +45,11 @@ services:
     volumes:
       - ./db.sqlite:/var/www/html/db.sqlite
     restart: always
+
+  memcached:
+    image: memcached:alpine
+    container_name: memcached
+    command: [ "-m", "256" ]
+    ports:
+      - "11211:11211"
+    restart: always
