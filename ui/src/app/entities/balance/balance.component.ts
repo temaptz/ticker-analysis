@@ -1,6 +1,6 @@
 import { Component, effect, input,  signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { finalize, map } from 'rxjs';
@@ -35,7 +35,7 @@ export class BalanceComponent {
   getPriceByQuotation = getPriceByQuotation;
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {
     effect(() => this.appService.getInstrumentBalance(this.accountName(), this.instrumentUid())
       .pipe(finalize(() => this.isLoadedBalance.set(true)))

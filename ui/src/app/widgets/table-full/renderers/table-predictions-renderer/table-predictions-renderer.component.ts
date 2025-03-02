@@ -4,7 +4,7 @@ import { ICellRendererAngularComp } from 'ag-grid-angular';
 import type { ICellRendererParams, } from 'ag-grid-community';
 import { InstrumentInList } from '../../../../types';
 import { PredictionComponent } from '../../../../entities/prediction/prediction.component';
-import { CurrentPriceService } from '../../../../current-price.service';
+import { CurrentPriceService } from '../../../../shared/services/current-price.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 

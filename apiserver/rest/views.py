@@ -78,10 +78,10 @@ def instrument_consensus_forecast(request):
     uid = request.GET.get('uid')
 
     if uid:
-        consensus = forecasts.get_forecasts(uid).consensus
+        consensus = forecasts.get_forecasts(uid)
 
         if consensus:
-            resp = serializer.get_dict_by_object(consensus)
+            resp = serializer.get_dict_by_object(consensus.consensus)
 
     return HttpResponse(json.dumps(resp))
 

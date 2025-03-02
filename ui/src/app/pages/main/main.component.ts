@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
 import { TableRowComponent } from '../../entities/table-row/table-row.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
@@ -22,7 +22,7 @@ export class MainComponent implements OnInit {
   isSortDirectionAsc = true;
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {}
 
   ngOnInit() {

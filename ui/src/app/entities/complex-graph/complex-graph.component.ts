@@ -5,7 +5,7 @@ import {
   NgApexchartsModule,
   ApexOptions, ChartComponent
 } from 'ng-apexcharts';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentHistoryPrice, InstrumentInList, PredictionGraph } from '../../types';
 import { addDays, parseJSON } from 'date-fns';
 import { combineLatest, finalize } from 'rxjs';
@@ -44,7 +44,7 @@ export class ComplexGraphComponent implements AfterViewInit {
   private containerElRef?: ElementRef<HTMLDivElement>;
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {
     effect(() => {
       const nextOptions: ApexOptions = {
@@ -120,23 +120,25 @@ export class ComplexGraphComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (this.width() === '100%') {
-      const container = this.containerElRef?.nativeElement;
+    setTimeout(() => {
+      if (this.width() === '100%') {
+        const container = this.containerElRef?.nativeElement;
 
-      if (container) {
-        // Инициализируем ResizeObserver и определяем колбэк-функцию
-        this.resizeObserver = new ResizeObserver(entries => {
-          for (let entry of entries) {
-            if (entry.target === container) {
-              this.redrawChart();
+        if (container) {
+          // Инициализируем ResizeObserver и определяем колбэк-функцию
+          this.resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+              if (entry.target === container) {
+                this.redrawChart();
+              }
             }
-          }
-        });
+          });
 
-        // Начинаем наблюдение за изменениями размера контейнера
-        this.resizeObserver.observe(container);
+          // Начинаем наблюдение за изменениями размера контейнера
+          this.resizeObserver.observe(container);
+        }
       }
-    }
+    });
   }
 
   ngOnDestroy(): void {

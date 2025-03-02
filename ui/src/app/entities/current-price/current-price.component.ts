@@ -2,7 +2,7 @@ import { Component, effect, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { parseJSON } from 'date-fns';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
@@ -22,7 +22,7 @@ export class CurrentPriceComponent {
   price = signal<number | null>(null);
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {
     effect(() => {
       this.appService.getInstrumentLastPrices(this.instrumentUid())

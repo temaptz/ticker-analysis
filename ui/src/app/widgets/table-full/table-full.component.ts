@@ -4,7 +4,7 @@ import { finalize } from 'rxjs';
 import { AgGridAngular } from 'ag-grid-angular';
 import { AllCommunityModule, ColDef, ModuleRegistry, CellClickedEvent, GridOptions, GridReadyEvent, GridApi } from 'ag-grid-community';
 import { InstrumentInList } from '../../types';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { TableLogoRendererComponent } from './renderers/table-logo-renderer/table-logo-renderer.component';
 import {
   TableFundamentalsRendererComponent
@@ -53,7 +53,7 @@ export class TableFullComponent implements OnInit {
   };
 
   private router = inject(Router);
-  private appService = inject(AppService);
+  private appService = inject(ApiService);
   private gridApi?: GridApi;
 
   constructor() {

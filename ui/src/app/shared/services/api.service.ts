@@ -8,13 +8,14 @@ import {
   InstrumentLastPrice, NewsContentResponse, NewsResponse, Operation,
   Prediction,
   PredictionGraph
-} from './types';
-import { CandleInterval } from './enums';
+} from '../../types';
+import { CandleInterval } from '../../enums';
+import { CacheObservable } from '../utils/cache';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AppService {
+export class ApiService {
 
   predictionPercentByUidMap = new Map<string, number>();
 
@@ -30,6 +31,7 @@ export class AppService {
     return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`);
   }
 
+  @CacheObservable()
   getInstrument(uid: string): Observable<InstrumentInList[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -37,6 +39,7 @@ export class AppService {
     return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instrument`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentLastPrices(uid: string): Observable<InstrumentLastPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -44,6 +47,7 @@ export class AppService {
     return this.http.get<InstrumentLastPrice[]>(`${this.apiUrl}/instrument/last_prices`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentPriceByDate(uid: string, date: Date): Observable<number> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -52,6 +56,7 @@ export class AppService {
     return this.http.get<number>(`${this.apiUrl}/instrument/price_by_date`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentHistoryPrices(uid: string, days: number, interval: CandleInterval): Observable<InstrumentHistoryPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -61,6 +66,7 @@ export class AppService {
     return this.http.get<InstrumentHistoryPrice[]>(`${this.apiUrl}/instrument/history_prices`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentConsensusForecast(uid: string): Observable<InstrumentHistoryPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -68,6 +74,7 @@ export class AppService {
     return this.http.get<InstrumentHistoryPrice[]>(`${this.apiUrl}/instrument/consensus_forecast`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentHistoryForecasts(uid: string): Observable<InstrumentHistoryPrice[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -75,6 +82,7 @@ export class AppService {
     return this.http.get<InstrumentHistoryPrice[]>(`${this.apiUrl}/instrument/history_forecasts`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentFundamentals(assetUid: string): Observable<Fundamentals> {
     let params = new HttpParams();
     params = params.set('asset_uid', assetUid);
@@ -82,6 +90,7 @@ export class AppService {
     return this.http.get<Fundamentals>(`${this.apiUrl}/instrument/fundamental`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentPrediction(uid: string): Observable<Prediction> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -89,6 +98,7 @@ export class AppService {
     return this.http.get<Fundamentals>(`${this.apiUrl}/instrument/prediction`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentPredictionGraph(uid: string): Observable<PredictionGraph[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -96,6 +106,7 @@ export class AppService {
     return this.http.get<PredictionGraph[]>(`${this.apiUrl}/instrument/prediction/graph`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentBalance(account_name: string, uid: string): Observable<number> {
     let params = new HttpParams();
     params = params.set('account_name', account_name);
@@ -104,6 +115,7 @@ export class AppService {
     return this.http.get<number>(`${this.apiUrl}/instrument/balance`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentOperations(account_name: string, figi: string): Observable<Operation[]> {
     let params = new HttpParams();
     params = params.set('account_name', account_name);
@@ -112,6 +124,7 @@ export class AppService {
     return this.http.get<Operation[]>(`${this.apiUrl}/instrument/operations`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentNews(uid: string, startDate: Date, endDate: Date): Observable<NewsResponse> {
     let params = new HttpParams();
     params = params.set('uid', uid);
@@ -130,6 +143,7 @@ export class AppService {
     return this.http.get<NewsContentResponse>(`${this.apiUrl}/instrument/news_content_rated`, {params: params});
   }
 
+  @CacheObservable()
   getInstrumentBrand(uid: string): Observable<InstrumentBrandResponse> {
     let params = new HttpParams();
     params = params.set('uid', uid);

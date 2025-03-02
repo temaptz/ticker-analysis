@@ -1,7 +1,7 @@
 import { Component, effect, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InstrumentBrandResponse } from '../../types';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 
 
 @Component({
@@ -18,7 +18,7 @@ export class InstrumentLogoComponent {
   logoUrl = signal<InstrumentBrandResponse>(null);
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {
     effect(() => {
       this.appService.getInstrumentBrand(this.instrumentUid())

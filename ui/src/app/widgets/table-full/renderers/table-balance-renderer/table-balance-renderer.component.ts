@@ -4,7 +4,7 @@ import { ICellRendererAngularComp } from 'ag-grid-angular';
 import type { ICellRendererParams, } from 'ag-grid-community';
 import { InstrumentInList } from '../../../../types';
 import { BalanceComponent } from '../../../../entities/balance/balance.component';
-import { CurrentPriceService } from '../../../../current-price.service';
+import { CurrentPriceService } from '../../../../shared/services/current-price.service';
 
 
 @Component({

@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { Instrument, InstrumentInList } from '../../types';
 import { parseJSON } from 'date-fns';
 import { GraphComponent } from '../graph/graph.component';
@@ -36,7 +36,7 @@ export class TableRowComponent implements OnInit {
   candleInterval = CandleInterval;
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {}
 
   ngOnInit() {

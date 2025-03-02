@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { ApexAxisChartSeries, ApexOptions, ChartComponent, NgApexchartsModule } from 'ng-apexcharts';
 import { parseJSON } from 'date-fns';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentHistoryPrice, InstrumentInList } from '../../types';
 import { CandleInterval } from '../../enums';
 import { getPriceByQuotation } from '../../utils';
@@ -47,7 +47,7 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
   private containerElRef?: ElementRef<HTMLDivElement>;
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {
     effect(() => {
       const nextOptions: ApexOptions = {
@@ -98,23 +98,25 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    if (this.width() === '100%') {
-      const container = this.containerElRef?.nativeElement;
+    setTimeout(() => {
+      if (this.width() === '100%') {
+        const container = this.containerElRef?.nativeElement;
 
-      if (container) {
-        // Инициализируем ResizeObserver и определяем колбэк-функцию
-        this.resizeObserver = new ResizeObserver(entries => {
-          for (let entry of entries) {
-            if (entry.target === container) {
-              this.redrawChart();
+        if (container) {
+          // Инициализируем ResizeObserver и определяем колбэк-функцию
+          this.resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+              if (entry.target === container) {
+                this.redrawChart();
+              }
             }
-          }
-        });
+          });
 
-        // Начинаем наблюдение за изменениями размера контейнера
-        this.resizeObserver.observe(container);
+          // Начинаем наблюдение за изменениями размера контейнера
+          this.resizeObserver.observe(container);
+        }
       }
-    }
+    });
   }
 
   ngOnDestroy(): void {

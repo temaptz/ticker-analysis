@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { Forecast, InstrumentInList } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { parseJSON, isSameMonth } from 'date-fns';
@@ -24,7 +24,7 @@ export class ForecastHistoryComponent implements OnInit {
   getPriceByQuotation = getPriceByQuotation;
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {}
 
   ngOnInit() {

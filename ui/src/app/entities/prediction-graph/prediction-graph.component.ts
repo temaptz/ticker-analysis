@@ -9,7 +9,7 @@ import {
   NgApexchartsModule,
   ApexOptions
 } from 'ng-apexcharts';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, PredictionGraph } from '../../types';
 import { addDays, parseJSON } from 'date-fns';
 import { finalize } from 'rxjs';
@@ -77,7 +77,7 @@ export class PredictionGraphComponent implements OnInit {
   }
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {}
 
   ngOnInit() {

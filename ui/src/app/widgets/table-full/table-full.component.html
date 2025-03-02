@@ -1,6 +1,7 @@
 <ag-grid-angular
   style="width: 100%; height: calc(100vh - 16px);"
   [rowData]="instruments()"
+  [rowHeight]="260"
   [columnDefs]="colDefs()"
   [gridOptions]="gridOptions"
   (gridReady)="onGridReady($event)"

@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { NewsContentResponse } from '../../types';
 import { ActivatedRoute } from '@angular/router';
@@ -27,7 +27,7 @@ export class InstrumentComponent implements OnInit {
   dateTo = new Date();
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
     private activatedRoute: ActivatedRoute
   ) {
     this.instrumentUid.set(

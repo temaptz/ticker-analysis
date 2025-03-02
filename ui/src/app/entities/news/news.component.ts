@@ -1,10 +1,10 @@
 import { Component, effect, input,  signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, NewsResponse } from '../../types';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { subDays } from 'date-fns';
+import { setHours, startOfDay, subDays } from 'date-fns';
 
 
 @Component({
@@ -20,11 +20,11 @@ export class NewsComponent {
 
   isLoaded = signal<boolean>(false);
   news = signal<NewsResponse | null>(null);
-  dateFrom = subDays(new Date(), 7);
-  dateTo = new Date();
+  dateTo = setHours(startOfDay(new Date()), 12);
+  dateFrom = subDays(this.dateTo, 7);
 
   constructor(
-    private appService: AppService,
+    private appService: ApiService,
   ) {
     effect(() => this.appService.getInstrumentNews(
       this.instrumentUid(),

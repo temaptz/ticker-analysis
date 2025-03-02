@@ -1,6 +1,6 @@
 import { Component, input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppService } from '../../app.service';
+import { ApiService } from '../../shared/services/api.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { Instrument } from '../../types';
 import { ActivatedRoute } from '@angular/router';
@@ -38,7 +38,7 @@ export class InstrumentComplexInfoComponent implements OnInit {
   complexGraphHistoryDaysCount = 30 * 6
 
   constructor(
-    private appService: AppService
+    private appService: ApiService
   ) {}
 
   ngOnInit() {
