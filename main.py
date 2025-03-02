@@ -24,7 +24,7 @@ if docker.is_docker():
 else:
     print('NOT DOCKER')
 
-    print(docker.get_df())
+    # print(docker.get_df())
     # news_db.replace_md5()
     # ta_2.generate_data()
     # predictions_save.save_predictions()

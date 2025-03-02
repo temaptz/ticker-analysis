@@ -3,6 +3,11 @@ import const
 from lib import utils, telegram
 
 
+# PRAGMA journal_mode = WAL;
+# PRAGMA cache_size = -50000;
+# PRAGMA temp_store = MEMORY;
+
+
 def optimize_db():
     connection = sqlite3.connect(utils.get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()

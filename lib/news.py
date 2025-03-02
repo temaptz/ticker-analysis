@@ -2,7 +2,7 @@ import datetime
 
 import const
 from lib.db import news_db, news_rate_db
-from lib import instruments, yandex, cache
+from lib import instruments, yandex, cache, counter
 
 
 class NewsSourceRated:
@@ -114,7 +114,7 @@ def get_news_rate(
 
     if rate_saved_db and len(rate_saved_db) and rate_saved_db[0] and rate_saved_db[0][2] is not None:
         print('RATE FROM DB', rate_saved_db[0][2])
-
+        counter.increment(counter.Counters.NEWS_RATE_DB)
         return rate_saved_db[0][2]
 
     elif not const.IS_NEWS_CLASSIFY_ENABLED:
@@ -128,7 +128,7 @@ def get_news_rate(
             text = news[0][2]
 
             subject_name = yandex.get_human_name(instrument.name)
-            gpt_rate = yandex.get_text_classify(
+            gpt_rate = yandex.get_text_classify_2(
                 title=title,
                 text=text,
                 subject_name=subject_name
@@ -138,6 +138,7 @@ def get_news_rate(
                 news_rate_db.insert_rate(news_uid=news_uid, instrument_uid=instrument_uid, rate=gpt_rate)
 
                 print('RATE FROM GPT', gpt_rate)
+                counter.increment(counter.Counters.NEWS_RATE_NEW)
 
                 return gpt_rate
 
@@ -155,6 +156,7 @@ def get_news_by_instrument_uid(
     keywords = get_keywords_by_instrument_uid(uid)
 
     print('GET NEWS BY KEYWORDS', keywords)
+    counter.increment(counter.Counters.NEWS_GET_COUNT)
 
     return news_db.get_news_by_date_keywords_fts(
         start_date=start_date,

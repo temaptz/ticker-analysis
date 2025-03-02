@@ -2,7 +2,7 @@ import numpy
 from tinkoff.invest import CandleInterval, InstrumentResponse
 import datetime
 import const
-from lib import utils, instruments, forecasts, fundamentals, news
+from lib import utils, instruments, forecasts, fundamentals, news, counter
 
 
 class Ta2LearningCard:
@@ -168,6 +168,7 @@ def generate_data():
 
                 card = Ta2LearningCard(instrument=instrument, date=date, target_date=date_target)
                 if card.is_ok:
+                    print(counter.get_stat())
                     return
                     counter_success += 1
                 counter_total += 1
@@ -175,6 +176,7 @@ def generate_data():
     print('TOTAL CARDS', counter_total)
     print('SUCCESS', counter_success)
     print('ERRORS', counter_total - counter_success)
+    print(counter.get_stat())
 
 
 def get_array_between_dates(date_from: datetime.datetime, date_to: datetime.datetime) -> list[datetime.datetime]:
