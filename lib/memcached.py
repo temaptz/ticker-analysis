@@ -34,7 +34,7 @@ def get_memcached_stats():
 
     return f'''
         Статистика Memcached: {memcached_stats}\n
-        Размер занятого кэша: {int(memcached_stats.get('bytes', 0)) / 1024:.2f} KB\n
+        Размер занятого кэша: {int(memcached_stats.get('bytes', 0)) / 1024 / 1024:.2f} MB\n
         Всего сохранено объектов: {memcached_stats.get('curr_items', 0)}\n
         Максимальный объем кэша: {int(memcached_stats.get('limit_maxbytes', 0)) / 1024 / 1024:.2f} MB\n
     '''
