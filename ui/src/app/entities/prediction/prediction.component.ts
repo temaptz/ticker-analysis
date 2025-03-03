@@ -5,7 +5,7 @@ import { ApiService } from '../../shared/services/api.service';
 import { Forecast, InstrumentInList } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { PriceRoundPipe } from '../../pipes/price-round.pipe';
+import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
 
 

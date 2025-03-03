@@ -76,7 +76,7 @@
       <th mat-header-cell *matHeaderCellDef>90 дней + прогнозы</th>
       <td mat-cell *matCellDef="let instrument">
         <complex-graph
-          width="500px"
+          width="700px"
           height="250px"
           [instrumentUid]="instrument.uid"
         ></complex-graph>
@@ -85,7 +85,7 @@
 
     <ng-container matColumnDef="price">
       <th mat-header-cell *matHeaderCellDef>Цена</th>
-      <td mat-cell *matCellDef="let instrument"></td>
+      <td mat-cell *matCellDef="let instrument">{{ instrument.uid | currentPriceByUid | async | priceRound | priceFormat }}</td>
     </ng-container>
 
     <ng-container matColumnDef="balance-main">

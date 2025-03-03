@@ -5,8 +5,8 @@ import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { PriceByQuotationPipe } from '../../pipes/price-by-quotation.pipe';
-import { PriceRoundPipe } from '../../pipes/price-round.pipe';
+import { PriceByQuotationPipe } from '../../shared/pipes/price-by-quotation.pipe';
+import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
 
 

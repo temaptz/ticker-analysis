@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { getPriceByQuotation } from '../utils';
+import { getPriceByQuotation } from '../../utils';
 
 @Pipe({
   name: 'priceByQuotation',

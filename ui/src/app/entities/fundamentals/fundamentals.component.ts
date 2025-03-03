@@ -5,7 +5,7 @@ import { ApiService } from '../../shared/services/api.service';
 import { Fundamentals, InstrumentInList } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { PriceFormatPipe } from '../../pipes/price-format.pipe';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 
 @Component({

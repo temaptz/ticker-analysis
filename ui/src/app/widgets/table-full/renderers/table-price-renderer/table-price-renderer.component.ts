@@ -3,8 +3,8 @@ import { ICellRendererAngularComp } from 'ag-grid-angular';
 import type { ICellRendererParams, } from 'ag-grid-community';
 import { InstrumentInList } from '../../../../types';
 import { CurrentPriceService } from '../../../../shared/services/current-price.service';
-import { PriceRoundPipe } from '../../../../pipes/price-round.pipe';
-import { PriceFormatPipe } from '../../../../pipes/price-format.pipe';
+import { PriceRoundPipe } from '../../../../shared/pipes/price-round.pipe';
+import { PriceFormatPipe } from '../../../../shared/pipes/price-format.pipe';
 
 
 @Component({

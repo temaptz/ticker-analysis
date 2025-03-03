@@ -18,6 +18,9 @@ import { ForecastHistoryComponent } from '../../entities/forecast-history/foreca
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { GraphComponent } from '../../entities/graph/graph.component';
 import { CandleInterval } from '../../enums';
+import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
+import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 
 @Component({
@@ -37,7 +40,10 @@ import { CandleInterval } from '../../enums';
     GraphComponent,
     MatSortModule,
     RouterModule,
-    TableVirtualScrollModule
+    TableVirtualScrollModule,
+    CurrentPriceByUidPipe,
+    PriceRoundPipe,
+    PriceFormatPipe
   ],
   providers: [],
   templateUrl: './table-full-2.component.html',
