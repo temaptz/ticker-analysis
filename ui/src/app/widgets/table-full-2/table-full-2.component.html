@@ -24,7 +24,7 @@
     </ng-container>
 
     <ng-container matColumnDef="ticker" sticky>
-      <th mat-header-cell *matHeaderCellDef>Тикер</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Тикер</th>
       <td mat-cell *matCellDef="let instrument">
         <a [routerLink]="['/instrument', instrument.uid]">{{ instrument.ticker}}</a>
       </td>
@@ -84,7 +84,7 @@
     </ng-container>
 
     <ng-container matColumnDef="price">
-      <th mat-header-cell *matHeaderCellDef>Цена</th>
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Цена</th>
       <td mat-cell *matCellDef="let instrument">{{ instrument.uid | currentPriceByUid | async | priceRound | priceFormat }}</td>
     </ng-container>
 

@@ -1,9 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { finalize } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
@@ -75,7 +75,17 @@ export class TableFull2Component implements OnInit {
 
   private appService = inject(ApiService);
 
+  @ViewChild(MatSort) sort!: MatSort;
+
   ngOnInit() {
+    setTimeout(() => {
+      this.dataSource.sort = this.sort;
+
+      console.log('SORT');
+      console.log(this.dataSource.sort);
+      console.log(this.sort);
+    }, 3000)
+
     this.appService.getInstruments()
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe(resp => {

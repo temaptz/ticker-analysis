@@ -8,7 +8,6 @@ from lib.db import gpt_requests_db
 # Функция для отправки текстового запроса к GPT и получения ответа
 def get_gpt_text(text_query: str, instruction: str = '') -> str:
     try:
-        print('GPT TEXT REQUEST', text_query, instruction)
         db_request = 'User: '+text_query+' System: '+instruction
         db_response = gpt_requests_db.get_response(request=db_request)
         if db_response:

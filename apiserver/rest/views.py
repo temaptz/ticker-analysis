@@ -2,15 +2,45 @@ import datetime
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.views.decorators.cache import cache_control
-from tinkoff.invest import CandleInterval
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals
+from tinkoff.invest import CandleInterval, Instrument
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter
 import json
+
+
+@api_view(['GET'])
+@cache_control(public=True, max_age=3600 * 24 * 7)
+def instruments_list_full(request):
+    print('START REQUEST')
+    resp = []
+
+    for instrument in instruments.get_instruments_white_list():
+        print(instrument.ticker)
+        resp.append(get_instrument_full(instrument=instrument))
+
+    print(counter.get_stat())
+
+    return HttpResponse(serializer.to_json(resp))
 
 
 @api_view(['GET'])
 @cache_control(public=True, max_age=3600 * 24 * 7)
 def instruments_list(request):
     return HttpResponse(serializer.to_json(instruments.get_instruments_white_list()))
+
+
+@api_view(['GET'])
+@cache_control(public=True, max_age=3600 * 24 * 7)
+def instrument_info_full(request):
+    resp = None
+    uid = request.GET.get('uid')
+
+    if uid:
+        instrument = instruments.get_instrument_by_uid(uid)
+
+        if instrument:
+            resp = get_instrument_full(instrument=instrument)
+
+    return HttpResponse(serializer.to_json(resp))
 
 
 @api_view(['GET'])
@@ -206,3 +236,64 @@ def instrument_brand(request):
             resp = instruments.get_instrument_by_ticker(ticker=instrument.ticker).brand
 
     return HttpResponse(serializer.to_json(resp))
+
+
+def get_instrument_full(instrument: Instrument):
+    return {
+        'instrument': instruments.get_instrument_by_uid(uid=instrument.uid),
+        'current_price': instruments.get_instrument_price_by_date(uid=instrument.uid, date=datetime.datetime.now()),
+        'history_5_years': instruments.get_instrument_history_price_by_uid(
+            uid=instrument.uid,
+            days_count=365 * 5,
+            interval=CandleInterval.CANDLE_INTERVAL_MONTH,
+            to_date=datetime.datetime.now()
+        ),
+        'history_1_year': instruments.get_instrument_history_price_by_uid(
+            uid=instrument.uid,
+            days_count=365,
+            interval=CandleInterval.CANDLE_INTERVAL_WEEK,
+            to_date=datetime.datetime.now()
+        ),
+        'history_90_days': instruments.get_instrument_history_price_by_uid(
+            uid=instrument.uid,
+            days_count=90,
+            interval=CandleInterval.CANDLE_INTERVAL_DAY,
+            to_date=datetime.datetime.now()
+        ),
+        'forecast': getattr(getattr(
+            forecasts.get_forecasts(instrument_uid=instrument.uid),
+            'consensus',
+            {}
+        ), 'consensus', None),
+        'forecast_history': forecasts.get_db_forecasts_by_uid(uid=instrument.uid),
+        'fundamentals': fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid),
+        'prediction_ta1': predictions.get_prediction_ta_1_by_uid(uid=instrument.uid),
+        'prediction_ta1_graph': predictions.get_prediction_ta_1_graph_by_uid(uid=instrument.uid),
+        'balance_main': users.get_user_instrument_balance(
+            account_name='Основной',
+            instrument_uid=instrument.uid,
+        ),
+        'balance_analytics': users.get_user_instrument_balance(
+            account_name='Аналитический',
+            instrument_uid=instrument.uid,
+        ),
+        'operations_main': users.get_user_instrument_operations(
+            account_name='Основной',
+            instrument_figi=instrument.figi,
+        ),
+        'operations_analytics': users.get_user_instrument_operations(
+            account_name='Аналитический',
+            instrument_figi=instrument.figi,
+        ),
+        'news_week_0': news.get_sorted_news_count_by_instrument_uid(
+            instrument_uid=instrument.uid,
+            start_date=datetime.datetime.now() - datetime.timedelta(days=7),
+            end_date=datetime.datetime.now()
+        ),
+        'news_week_1': news.get_sorted_news_count_by_instrument_uid(
+            instrument_uid=instrument.uid,
+            start_date=datetime.datetime.now() - datetime.timedelta(days=14),
+            end_date=datetime.datetime.now() - datetime.timedelta(days=8)
+        ),
+        'brand': instruments.get_instrument_by_ticker(ticker=instrument.ticker).brand
+    }

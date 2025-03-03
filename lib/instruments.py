@@ -73,6 +73,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
 def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            date_local = date_utils.convert_to_local(date=date)
             date_utc = date_utils.convert_to_utc(date=date)
             candles = client.market_data.get_candles(
                 instrument_id=uid,
@@ -83,20 +84,20 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or 
 
             nearest: HistoricCandle or None = None
 
-        for i in candles:
-            time_local = date_utils.convert_to_local(i.time)
+            for i in candles:
+                time_local = date_utils.convert_to_local(i.time)
+
+                if nearest:
+                    delta_sec_i = (date_local - time_local).total_seconds()
+                    delta_sec_nearest = (date_local - date_utils.convert_to_local(nearest.time)).total_seconds()
+
+                    if delta_sec_i < delta_sec_nearest:
+                        nearest = i
+                else:
+                    nearest = i
 
             if nearest:
-                delta_sec_i = (date - time_local).total_seconds()
-                delta_sec_nearest = (date - date_utils.convert_to_local(nearest.time)).total_seconds()
-
-                if delta_sec_i < delta_sec_nearest:
-                    nearest = i
-            else:
-                nearest = i
-
-        if nearest:
-            return utils.get_price_by_candle(nearest)
+                return utils.get_price_by_candle(nearest)
 
     except Exception as e:
         print('ERROR get_instrument_price_by_date', e)
