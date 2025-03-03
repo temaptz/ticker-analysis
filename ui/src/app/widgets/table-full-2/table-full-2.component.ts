@@ -1,9 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { MatSortModule } from '@angular/material/sort';
 import { finalize } from 'rxjs';
+import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
@@ -16,7 +18,6 @@ import { ForecastHistoryComponent } from '../../entities/forecast-history/foreca
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { GraphComponent } from '../../entities/graph/graph.component';
 import { CandleInterval } from '../../enums';
-import { MatSort } from '@angular/material/sort';
 
 
 @Component({
@@ -34,8 +35,9 @@ import { MatSort } from '@angular/material/sort';
     ForecastHistoryComponent,
     ComplexGraphComponent,
     GraphComponent,
-    MatSort,
-    RouterLink
+    MatSortModule,
+    RouterModule,
+    TableVirtualScrollModule
   ],
   providers: [],
   templateUrl: './table-full-2.component.html',
@@ -43,19 +45,37 @@ import { MatSort } from '@angular/material/sort';
 })
 export class TableFull2Component implements OnInit {
 
-  instruments = signal<InstrumentInList[]>([]);
   isLoaded = signal<boolean>(false);
+  dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
 
   protected readonly CandleInterval = CandleInterval;
+  protected readonly tableItemHeightPx = 265;
 
-  displayedColumns: string[] = ['logo', 'ticker', 'name', 'fundamental', '5years', 'year', 'complex', 'price', 'balance-main', 'balance-analytics', 'forecast', 'prediction', 'news'];
+  displayedColumns: string[] = [
+    'logo',
+    'ticker',
+    'name',
+    'fundamental',
+    '5years',
+    'year',
+    'complex',
+    'price',
+    'balance-main',
+    'balance-analytics',
+    'forecast',
+    'prediction',
+    'news'
+  ];
 
-  private router = inject(Router);
   private appService = inject(ApiService);
 
   ngOnInit() {
     this.appService.getInstruments()
       .pipe(finalize(() => this.isLoaded.set(true)))
-      .subscribe(resp => this.instruments.set(resp));
+      .subscribe(resp => {
+        if (resp?.length) {
+          this.dataSource.data = resp;
+        }
+      });
   }
 }

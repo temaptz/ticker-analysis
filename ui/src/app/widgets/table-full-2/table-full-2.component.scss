@@ -3,3 +3,9 @@
   height: calc(100vh - 16px);
   border: 1px solid gray;
 }
+
+table::ng-deep {
+  thead > tr > th {
+    top: 0 !important;
+  }
+}
