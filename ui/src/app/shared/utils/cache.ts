@@ -14,10 +14,12 @@ export function CacheObservable() {
       const cacheKey = JSON.stringify(args);
 
       if (cache.has(cacheKey)) {
+        console.log('[Return cached result]', cacheKey);
+
         return of(cache.get(cacheKey));
       }
 
-      console.log('Cache', cacheKey);
+      console.log('(Cache update)', cacheKey);
 
       const result$: Observable<any> = originalMethod.apply(this, args).pipe(
         tap(value => cache.set(cacheKey, value)),

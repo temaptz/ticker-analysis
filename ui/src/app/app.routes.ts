@@ -7,6 +7,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/list/list.component').then(c => c.ListComponent)
   },
   {
+    path: 'list',
+    loadComponent: () => import('./pages/list-2/list-2.component').then(c => c.List2Component)
+  },
+  {
     path: 'legacy',
     loadComponent: () => import('./pages/main/main.component').then(c => c.MainComponent)
   },

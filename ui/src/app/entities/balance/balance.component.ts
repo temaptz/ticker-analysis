@@ -1,12 +1,13 @@
-import { Component, effect, input,  signal } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { finalize, map, combineLatest } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
-import { finalize, map } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceByQuotationPipe } from '../../pipes/price-by-quotation.pipe';
 import { PriceRoundPipe } from '../../pipes/price-round.pipe';
+import { CurrentPriceService } from '../../shared/services/current-price.service';
 
 
 @Component({
@@ -21,10 +22,8 @@ export class BalanceComponent {
   accountName = input.required<string>();
   instrumentUid = input.required<InstrumentInList['uid']>();
   instrumentFigi = input.required<InstrumentInList['figi']>();
-  currentPrice = input.required<number | null>();
 
-  isLoadedBalance = signal<boolean>(false);
-  isLoadedOperations = signal<boolean>(false);
+  isLoaded = signal<boolean>(false);
   balance = signal<number | null>(null);
   operations = signal<Operation[]>([]);
   avgPrice = signal<number | null>(null);
@@ -32,21 +31,28 @@ export class BalanceComponent {
   isPlus = signal<boolean>(false);
   percentChange = signal<number | null>(null);
   willEarn = signal<number | null>(null);
+  currentPrice = signal<number | null>(null);
   getPriceByQuotation = getPriceByQuotation;
 
-  constructor(
-    private appService: ApiService,
-  ) {
-    effect(() => this.appService.getInstrumentBalance(this.accountName(), this.instrumentUid())
-      .pipe(finalize(() => this.isLoadedBalance.set(true)))
-      .subscribe((resp: number) => this.balance.set(resp)));
+  private apiService = inject(ApiService);
+  private currentPriceService = inject(CurrentPriceService);
 
-    effect(() => this.appService.getInstrumentOperations(this.accountName(), this.instrumentFigi())
-      .pipe(
-        map((resp: Operation[]): Operation[] => resp?.filter(i => ['OPERATION_TYPE_BUY', 'OPERATION_TYPE_SELL'].includes(i.operation_type._name_))),
-        finalize(() => this.isLoadedOperations.set(true)),
-      )
-      .subscribe((resp: Operation[]) => this.operations.set(resp)));
+  constructor() {
+    effect(() => combineLatest([
+      this.apiService.getInstrumentBalance(this.accountName(), this.instrumentUid()),
+      this.currentPriceService.getPriceByUid(this.instrumentUid()),
+      this.apiService.getInstrumentOperations(this.accountName(), this.instrumentFigi())
+    ])
+      .pipe(finalize(() => this.isLoaded.set(true)))
+      .subscribe(([balance, currentPrice, operations]: [number, number | null, Operation[]]) => {
+        this.balance.set(balance);
+        this.currentPrice.set(currentPrice);
+        this.operations.set(
+          operations
+            ?.filter(i => ['OPERATION_TYPE_BUY', 'OPERATION_TYPE_SELL'].includes(i.operation_type._name_))
+          ?? []
+        );
+      }));
 
     effect(() => {
       const balance = this.balance();

@@ -58,7 +58,6 @@
       accountName="Основной"
       [instrumentUid]="instrumentUid"
       [instrumentFigi]="figi"
-      [currentPrice]="instrumentLastPrice() ?? 0"
     ></balance>
   } @placeholder {
     <preloader></preloader>
@@ -72,7 +71,6 @@
       accountName="Аналитический"
       [instrumentUid]="instrumentUid"
       [instrumentFigi]="figi"
-      [currentPrice]="instrumentLastPrice() ?? 0"
     ></balance>
   } @placeholder {
     <preloader></preloader>
