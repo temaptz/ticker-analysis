@@ -30,10 +30,18 @@ def get_predictions():
     return predictions
 
 
-def get_predictions_by_uid(uid: str):
+def get_predictions_by_uid_date(uid: str, date_from: datetime.datetime, date_to: datetime.datetime):
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM Predictions_ta_1 WHERE uid = ?', (uid,))
+    cursor.execute('''
+    SELECT * FROM Predictions_ta_1 
+    WHERE uid = ?
+    AND date BETWEEN ? AND ?
+    ''', (
+        uid,
+        date_from.strftime('%Y-%m-%d 00:00:00'),
+        date_to.strftime('%Y-%m-%d 23:59:59')
+    ))
     predictions = cursor.fetchall()
     connection.close()
 

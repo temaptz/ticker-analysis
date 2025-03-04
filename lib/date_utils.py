@@ -10,8 +10,8 @@ def parse_date(date: str) -> datetime.datetime or None:
         if parsed_date:
             return parsed_date
 
-    except Exception:
-        return None
+    except Exception as e:
+        print('ERROR parse_date', e)
 
     return None
 

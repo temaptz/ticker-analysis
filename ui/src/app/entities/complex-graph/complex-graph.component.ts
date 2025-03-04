@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, ElementRef, input, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, ElementRef, input, numberAttribute, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ApexAxisChartSeries,
@@ -6,8 +6,8 @@ import {
   ApexOptions, ChartComponent
 } from 'ng-apexcharts';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentHistoryPrice, InstrumentInList, PredictionGraph } from '../../types';
-import { addDays, parseJSON } from 'date-fns';
+import { InstrumentHistoryPrice, InstrumentInList, PredictionResp } from '../../types';
+import { addDays, parseJSON, subDays } from 'date-fns';
 import { combineLatest, finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
@@ -26,7 +26,8 @@ export class ComplexGraphComponent implements AfterViewInit {
 
   instrumentUid = input.required<InstrumentInList['uid']>();
   historyInterval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_DAY);
-  historyDays = input<number>(90);
+  daysHistory = input(90, { transform: numberAttribute });
+  daysFuture = input(90, { transform: numberAttribute });
   width = input<string>('450px');
   height = input<string>('150px');
 
@@ -49,7 +50,7 @@ export class ComplexGraphComponent implements AfterViewInit {
     effect(() => {
       const nextOptions: ApexOptions = {
         chart: {
-          type: 'line',
+          type: 'candlestick',
           width: this.width(),
           height: this.height(),
           toolbar: {
@@ -74,26 +75,36 @@ export class ComplexGraphComponent implements AfterViewInit {
     });
 
     effect(() => {
+      const uid = this.instrumentUid();
+      const history = this.daysHistory();
+      const future = this.daysFuture();
+      const interval = this.historyInterval();
+
       combineLatest([
         this.appService.getInstrumentHistoryPrices(
-          this.instrumentUid(),
-          this.historyDays(),
-          this.historyInterval()
+          uid,
+          history,
+          interval
         ),
-        this.appService.getInstrumentPredictionGraph(this.instrumentUid())
+        this.appService.getInstrumentPredictionGraph(
+          uid,
+          subDays(new Date(), history),
+          addDays(new Date(), future),
+          interval,
+        )
       ])
         .pipe(
           finalize(() => this.isLoaded.set(true))
         )
-        .subscribe((resp: [InstrumentHistoryPrice[], PredictionGraph[]]) => {
-          const respHistory = resp[0];
-          const respPredictions = resp[1];
+        .subscribe((resp: [InstrumentHistoryPrice[], PredictionResp]) => {
+          const respHistory = resp?.[0];
+          const respPredictions = resp?.[1];
 
           const series = [
             {
               name: 'Фактически',
               type: 'candlestick',
-              data: resp?.[0]?.map(i => ({
+              data: respHistory?.map(i => ({
                 x: parseJSON(i.time),
                 y: [
                   getPriceByQuotation(i.open) ?? 0,
@@ -104,11 +115,11 @@ export class ComplexGraphComponent implements AfterViewInit {
               })) ?? [],
             },
             {
-              name: 'Предсказания',
+              name: 'Предсказания TA-1',
               type: 'line',
-              data: resp?.[1]?.map(i => ({
+              data: respPredictions?.ta1?.map(i => ({
                   y: getRoundPrice(i.prediction),
-                  x: addDays(parseJSON(i.date), 30),
+                  x: parseJSON(i.date),
                 }))
                 ?? [],
             }

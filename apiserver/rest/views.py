@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.views.decorators.cache import cache_control
 from tinkoff.invest import CandleInterval, Instrument
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter, date_utils
 import json
 
 
@@ -160,11 +160,19 @@ def instrument_prediction(request):
 
 @api_view(['GET'])
 def instrument_prediction_graph(request):
-    resp = None
+    resp = {}
     uid = request.GET.get('uid')
+    date_from = date_utils.parse_date(request.GET.get('date_from'))
+    date_to = date_utils.parse_date(request.GET.get('date_to'))
+    interval = request.GET.get('interval')
 
-    if uid:
-        resp = predictions.get_prediction_ta_1_graph_by_uid(uid)
+    if uid and date_from and date_to and interval:
+        resp['ta1'] = predictions.get_prediction_ta_1_graph_by_uid(
+            uid=uid,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
 
     return HttpResponse(json.dumps(resp))
 

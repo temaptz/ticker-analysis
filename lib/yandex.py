@@ -88,7 +88,7 @@ def get_text_classify(title: str, text: str, subject_name: str) -> int or None:
                 return 0
 
     except Exception as e:
-        print('ERROR get_gpt_text', e)
+        print('ERROR get_text_classify', e)
 
     return None
 
@@ -113,10 +113,9 @@ def get_text_classify_2(title: str, text: str, subject_name: str) -> int or None
         model = sdk.models.text_classifiers('yandexgpt-lite').configure(
             task_description=task_description,
             labels=['положительная', 'отрицательная', 'нейтральная'],
-            samples=get_news_rate_samples(instrument_name=subject_name)
         )
 
-        print('GPT REQUEST', task_description)
+        print('GPT REQUEST CLASSIFY', subject_name, title)
 
         counter.increment(counter.Counters.YANDEX_GPT_NEWS_CLASSIFY)
 
@@ -133,12 +132,13 @@ def get_text_classify_2(title: str, text: str, subject_name: str) -> int or None
                 return 0
 
     except Exception as e:
-        print('ERROR get_gpt_text', e)
+        print('ERROR get_text_classify_2', e)
 
     return None
 
 
 # Возвращает распространенное в обиходе название
+@cache.ttl_cache(ttl=3600 * 24 * 30)
 def get_human_name(legal_name: str) -> str:
     instruction = (
         'Ты эксперт в области бизнеса, финансов и журналистики. '
@@ -163,6 +163,7 @@ def get_human_name(legal_name: str) -> str:
 
 
 # Возвращает массив ключевых слов для поиска по названию
+@cache.ttl_cache(ttl=3600 * 24 * 30)
 def get_keywords(legal_name: str) -> list[str]:
     result = list()
     instruction = (

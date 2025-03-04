@@ -9,6 +9,9 @@ def get_bot_url() -> str:
 
 
 def send_message(message: str) -> None:
+    if not docker.is_prod():
+        return
+
     try:
         for chat_id in const.TELEGRAM_CHAT_IDS:
             requests.post(

@@ -23,7 +23,7 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
-
+    # print(docker.is_prod())
     # print(docker.get_df())
     # news_db.replace_md5()
     # ta_2.generate_data()

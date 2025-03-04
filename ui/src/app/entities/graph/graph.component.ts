@@ -68,12 +68,10 @@ export class GraphComponent implements AfterViewInit, OnDestroy {
         xaxis: {
           type: 'datetime',
         },
-        yaxis: {
-          tooltip: {
-            enabled: true,
-          },
+        legend: {
+          show: false,
         },
-      }
+      };
 
       this.graphOptions.set(nextOptions)
     });

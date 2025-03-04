@@ -2,7 +2,7 @@ import datetime
 
 import const
 from lib.db import news_db, news_rate_db
-from lib import instruments, yandex, cache, counter
+from lib import instruments, yandex, cache, counter, docker
 
 
 class NewsSourceRated:
@@ -85,11 +85,12 @@ def get_sorted_news_count_by_instrument_uid(
 
     for n in news or []:
         news_uid = n[0]
+        title = n[1]
         source = n[4]
         rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
         result_source: NewsSourceRated = result['sources'][source]
 
-        print('NEWS RATED', rate, n)
+        print('NEWS RATED', rate, title)
 
         if rate == 1:
             result_source.positive_count += 1
@@ -108,18 +109,19 @@ def get_news_rate(
         news_uid: str,
         instrument_uid: str,
 ) -> int or None:
-    print('CALL GET RATE')
-
     rate_saved_db = news_rate_db.get_rate_by_uid(news_uid=news_uid, instrument_uid=instrument_uid)
 
     if rate_saved_db and len(rate_saved_db) and rate_saved_db[0] and rate_saved_db[0][2] is not None:
-        print('RATE FROM DB', rate_saved_db[0][2])
+        print('GOT RATE FROM DB', rate_saved_db[0][2])
         counter.increment(counter.Counters.NEWS_RATE_DB)
         return rate_saved_db[0][2]
 
     elif not const.IS_NEWS_CLASSIFY_ENABLED:
         return 0
+    elif not docker.is_prod():
+        return 0
     else:
+        # Тут уже запрос GPT
         news = news_db.get_news_by_uid(news_uid)
         instrument = instruments.get_instrument_by_uid(instrument_uid)
 
@@ -134,7 +136,7 @@ def get_news_rate(
                 subject_name=subject_name
             )
 
-            if gpt_rate is not None:
+            if gpt_rate == 1 or gpt_rate == -1 or gpt_rate == 0:
                 news_rate_db.insert_rate(news_uid=news_uid, instrument_uid=instrument_uid, rate=gpt_rate)
 
                 print('RATE FROM GPT', gpt_rate)

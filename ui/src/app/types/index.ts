@@ -45,6 +45,10 @@ export interface NewsContentResponse {
   keywords: string[];
 }
 
+export interface PredictionResp {
+  ta1: PredictionGraph[];
+}
+
 export interface PredictionGraph {
   prediction: number;
   date: string;

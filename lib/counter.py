@@ -1,4 +1,5 @@
 from enum import Enum
+from lib import cache
 
 
 class Counters(Enum):
@@ -14,17 +15,22 @@ counters = dict()
 
 
 def increment(counter_name: str or Counters) -> None:
-    if counter_name not in counters:
-        counters[counter_name] = 0
+    key = str(counter_name)
 
-    counters[counter_name] += 1
+    if key not in counters:
+        counters[key] = cache.cache_get(key=key) or 0
+
+    counters[key] += 1
+    cache.cache_set(key=key, value=counters[key])
 
 
 def get(counter_name: str or Counters) -> int:
-    if counter_name not in counters:
-        return 0
+    key = str(counter_name)
 
-    return counters[counter_name]
+    if key not in counters:
+        return cache.cache_get(key=key) or 0
+
+    return counters[key]
 
 
 def get_stat() -> str:

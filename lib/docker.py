@@ -1,5 +1,6 @@
 import subprocess
 
+
 def is_docker():
     try:
         with open('/proc/self/mountinfo', 'r') as f:
@@ -7,8 +8,20 @@ def is_docker():
                 if 'docker' in line:
                     return True
 
-    except FileNotFoundError:
-        return False
+    except Exception as e:
+        print('ERROR is_docker', e)
+
+    return False
+
+
+def is_prod() -> bool:
+    try:
+        with open('/container_host_is_prod', 'r') as f:
+            if f:
+                print('Запущен на проде')
+                return True
+    except Exception as e:
+        print('Нет файла /container_host_is_prod', e)
 
     return False
 
