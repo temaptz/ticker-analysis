@@ -25,6 +25,6 @@ def get_news():
                     result.append((uid, title, text, date, source_name))
 
                 except Exception as e:
-                    print(f"ERROR PARSING NEWS FROM {source_name}: {e}", i)
+                    print(f'ERROR PARSING NEWS FROM {source_name}: ', e)
 
     return result

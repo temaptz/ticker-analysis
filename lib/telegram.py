@@ -9,24 +9,31 @@ def get_bot_url() -> str:
 
 
 def send_message(message: str) -> None:
-    for chat_id in const.TELEGRAM_CHAT_IDS:
-        requests.post(
-            get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
-        )
+    try:
+        for chat_id in const.TELEGRAM_CHAT_IDS:
+            requests.post(
+                get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
+            )
+    except Exception as e:
+        print('ERROR TELEGRAM send_message', e)
 
 
 def get_updates(offset_update_id: int = None) -> list:
-    res = requests.get(
-        get_bot_url()
-        + '/getUpdates'
-        + (('?offset=' + str(offset_update_id)) if offset_update_id else '')
-    )
+    try:
+        res = requests.get(
+            get_bot_url()
+            + '/getUpdates'
+            + (('?offset=' + str(offset_update_id)) if offset_update_id else '')
+        )
 
-    if res:
-        json = res.json()
+        if res:
+            json = res.json()
 
-        if json and json['result'] and len(json['result']):
-            return json['result']
+            if json and json['result'] and len(json['result']):
+                return json['result']
+
+    except Exception as e:
+        print('ERROR TELEGRAM get_updates', e)
 
     return []
 
@@ -38,7 +45,7 @@ def process_updates() -> None:
 
     for u in updates:
         update_id = u['update_id']
-        text = u['message']['text']
+        text = u['message']['text'].lower()
         cache.cache_set(cache_key, update_id)
 
         if update_id != offset_update_id:
