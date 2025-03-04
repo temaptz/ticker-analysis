@@ -15,8 +15,6 @@ def get_news():
 
         parsed_feed = feedparser.parse(source_link)
 
-        print(parsed_feed)
-
         if parsed_feed and parsed_feed.entries:
             for i in parsed_feed.entries:
                 try:
