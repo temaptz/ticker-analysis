@@ -22,7 +22,7 @@ def start_schedule() -> None:
         fundamentals_save.save_fundamentals,
         'cron',
         day_of_week='mon',
-        hour=15,
+        hour=14,
         minute=0,
         timezone=timezone
     )
@@ -40,6 +40,7 @@ def start_schedule() -> None:
     scheduler.add_job(
         news_save.save_news,
         'cron',
+        hour='*/3',
         minute=0,
         timezone=timezone
     )
@@ -48,9 +49,9 @@ def start_schedule() -> None:
     scheduler.add_job(
         yandex_disk.upload_db_backup,
         'cron',
-        day_of_week='fri',
-        hour=15,
-        minute=30,
+        day='*/3',
+        hour=16,
+        minute=0,
         timezone=timezone
     )
 
