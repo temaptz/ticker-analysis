@@ -83,8 +83,8 @@ def get_news_by_date_keywords_fts(
     cursor = conn.cursor()
 
     # # Форматируем даты в строковый формат
-    start_date = start_date.strftime('%Y-%m-%d')
-    end_date = end_date.strftime('%Y-%m-%d')
+    start_date = start_date.strftime('%Y-%m-%d 00:00:00')
+    end_date = end_date.strftime('%Y-%m-%d 23:59:59')
 
     # Строим полнотекстовый поиск с ключевыми словами
     keywords_query = ' OR '.join(keywords)

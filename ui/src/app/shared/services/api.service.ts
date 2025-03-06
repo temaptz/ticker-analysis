@@ -2,12 +2,16 @@ import { Injectable, isDevMode } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
-  Fundamentals, InstrumentBrandResponse,
+  Fundamentals,
+  InstrumentBrandResponse,
   InstrumentHistoryPrice,
   InstrumentInList,
-  InstrumentLastPrice, NewsContentResponse, NewsResponse, Operation,
+  InstrumentLastPrice,
+  NewsContentResponse,
+  NewsResponse,
+  Operation,
   Prediction,
-  PredictionGraph, PredictionResp
+  PredictionResp
 } from '../../types';
 import { CandleInterval } from '../../enums';
 import { CacheObservable } from '../utils/cache';

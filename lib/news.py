@@ -149,7 +149,7 @@ def get_news_rate(
     return None
 
 
-@cache.ttl_cache()
+@cache.ttl_cache(ttl=3600 * 24 * 7)
 def get_news_by_instrument_uid(
         uid: str,
         start_date: datetime.datetime,

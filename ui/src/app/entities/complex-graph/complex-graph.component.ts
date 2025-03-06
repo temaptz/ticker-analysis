@@ -7,7 +7,7 @@ import {
 } from 'ng-apexcharts';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentHistoryPrice, InstrumentInList, PredictionResp } from '../../types';
-import { addDays, parseJSON, subDays } from 'date-fns';
+import { addDays, endOfDay, parseJSON, startOfDay, subDays } from 'date-fns';
 import { combineLatest, finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
@@ -88,8 +88,8 @@ export class ComplexGraphComponent implements AfterViewInit {
         ),
         this.appService.getInstrumentPredictionGraph(
           uid,
-          subDays(new Date(), history),
-          addDays(new Date(), future),
+          startOfDay(subDays(new Date(), history)),
+          endOfDay(addDays(new Date(), future)),
           interval,
         )
       ])

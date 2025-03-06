@@ -2,6 +2,7 @@ import datetime
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.views.decorators.cache import cache_control
+from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument
 from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter, date_utils
 import json
@@ -72,14 +73,17 @@ def instrument_last_prices(request):
 
 
 @api_view(['GET'])
-@cache_control(public=True, max_age=3600 * 24 * 7)
 def instrument_price_by_date(request):
     uid = request.GET.get('uid')
     date = utils.parse_json_date(request.GET.get('date'))
 
-    return HttpResponse(
-        instruments.get_instrument_price_by_date(uid=uid, date=date) or json.dumps(None)
-    )
+    data = instruments.get_instrument_price_by_date(uid=uid, date=date)
+    response = HttpResponse(data or json.dumps(None))
+
+    if data:
+        patch_cache_control(response, public=True, max_age=3600 * 24)
+
+    return response
 
 
 @api_view(['GET'])
@@ -113,7 +117,12 @@ def instrument_consensus_forecast(request):
         if consensus:
             resp = serializer.get_dict_by_object(consensus.consensus)
 
-    return HttpResponse(json.dumps(resp))
+    response = HttpResponse(json.dumps(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
 
 
 @api_view(['GET'])
@@ -128,7 +137,12 @@ def instrument_history_forecasts(request):
 
             resp.append({'time': date, 'consensus': serializer.get_dict_by_object(forecast.consensus)})
 
-    return HttpResponse(json.dumps(resp))
+    response = HttpResponse(json.dumps(resp))
+
+    if len(resp):
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
 
 
 @api_view(['GET'])
@@ -143,11 +157,15 @@ def instrument_fundamental(request):
             for f in fundamentals_resp:
                 resp = serializer.get_dict_by_object(f)
 
-    return HttpResponse(json.dumps(resp))
+    response = HttpResponse(json.dumps(resp))
+
+    if len(resp):
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
 
 
 @api_view(['GET'])
-@cache_control(public=True, max_age=60)
 def instrument_prediction(request):
     resp = None
     uid = request.GET.get('uid')
@@ -155,7 +173,12 @@ def instrument_prediction(request):
     if uid:
         resp = predictions.get_prediction_ta_1_by_uid(uid)
 
-    return HttpResponse(json.dumps(resp))
+    response = HttpResponse(json.dumps(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600)
+
+    return response
 
 
 @api_view(['GET'])
@@ -173,12 +196,15 @@ def instrument_prediction_graph(request):
             date_to=date_to,
             interval=interval,
         )
+    response = HttpResponse(json.dumps(resp))
 
-    return HttpResponse(json.dumps(resp))
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
 
 
 @api_view(['GET'])
-@cache_control(public=True, max_age=60)
 def instrument_balance(request):
     resp = None
     account_name = request.GET.get('account_name')
@@ -187,7 +213,12 @@ def instrument_balance(request):
     if account_name and uid:
         resp = users.get_user_instrument_balance(account_name=account_name, instrument_uid=uid)
 
-    return HttpResponse(json.dumps(resp))
+    response = HttpResponse(json.dumps(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600)
+
+    return response
 
 
 @api_view(['GET'])
@@ -204,7 +235,6 @@ def instrument_operations(request):
 
 
 @api_view(['GET'])
-@cache_control(public=True, max_age=60)
 def instrument_news(request):
     resp = None
     uid = request.GET.get('uid')
@@ -214,11 +244,15 @@ def instrument_news(request):
     if uid and start_date and end_date:
         resp = news.get_sorted_news_count_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
 
-    return HttpResponse(serializer.to_json(resp))
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
 
 
 @api_view(['GET'])
-@cache_control(public=True, max_age=60)
 def instrument_news_content_rated(request):
     resp = None
     uid = request.GET.get('uid')
@@ -228,7 +262,12 @@ def instrument_news_content_rated(request):
     if uid and start_date and end_date:
         resp = news.get_sorted_rated_news_content_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
 
-    return HttpResponse(serializer.to_json(resp))
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
 
 
 @api_view(['GET'])

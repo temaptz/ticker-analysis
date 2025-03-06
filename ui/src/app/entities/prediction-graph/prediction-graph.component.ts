@@ -1,20 +1,13 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  ApexAxisChartSeries,
-  ApexChart, ApexDataLabels,
-  ApexTitleSubtitle, ApexTooltip,
-  ApexXAxis,
-  ApexYAxis,
-  NgApexchartsModule,
-  ApexOptions
-} from 'ng-apexcharts';
+import { ApexAxisChartSeries, ApexOptions, NgApexchartsModule } from 'ng-apexcharts';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList, PredictionGraph } from '../../types';
-import { addDays, parseJSON } from 'date-fns';
+import { InstrumentInList, PredictionGraph, PredictionResp } from '../../types';
+import { addDays, endOfDay, parseJSON, startOfDay, subDays } from 'date-fns';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { getRoundPrice } from '../../utils';
+import { CandleInterval } from '../../enums';
 
 
 @Component({
@@ -81,11 +74,16 @@ export class PredictionGraphComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.appService.getInstrumentPredictionGraph(this.instrumentUid)
+    this.appService.getInstrumentPredictionGraph(
+      this.instrumentUid,
+      startOfDay(subDays(new Date(), 30)),
+      endOfDay(addDays(new Date(), 30)),
+      CandleInterval.CANDLE_INTERVAL_DAY,
+    )
       .pipe(finalize(() => this.isLoaded.set(true)))
-      .subscribe((resp: PredictionGraph[]) => {
+      .subscribe((resp: PredictionResp) => {
         const series: ApexAxisChartSeries = [{
-          data: resp?.map(i => ({
+          data: resp?.ta1?.map(i => ({
               y: getRoundPrice(i.prediction),
               x: addDays(parseJSON(i.date), 30),
             }))

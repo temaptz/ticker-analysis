@@ -4,7 +4,7 @@ import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, NewsResponse } from '../../types';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { setHours, startOfDay, subDays } from 'date-fns';
+import { endOfDay, setHours, startOfDay, subDays } from 'date-fns';
 
 
 @Component({
@@ -20,8 +20,8 @@ export class NewsComponent {
 
   isLoaded = signal<boolean>(false);
   news = signal<NewsResponse | null>(null);
-  dateTo = setHours(startOfDay(new Date()), 12);
-  dateFrom = subDays(this.dateTo, 7);
+  dateFrom = startOfDay(subDays(new Date(), 6));
+  dateTo = endOfDay(new Date());
 
   constructor(
     private appService: ApiService,

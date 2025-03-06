@@ -69,7 +69,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
         print('ERROR get_instrument_history_price_by_uid', e)
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 7)
+@cache.ttl_cache(ttl=3600)
 def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:

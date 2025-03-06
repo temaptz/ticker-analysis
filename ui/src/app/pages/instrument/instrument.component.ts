@@ -4,7 +4,7 @@ import { ApiService } from '../../shared/services/api.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { NewsContentResponse } from '../../types';
 import { ActivatedRoute } from '@angular/router';
-import { subDays } from 'date-fns';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { finalize } from 'rxjs';
 import {
   InstrumentComplexInfoComponent
@@ -23,8 +23,8 @@ export class InstrumentComponent implements OnInit {
   isLoaded = signal<boolean>(false);
   instrumentUid = signal<string>('');
   news = signal<NewsContentResponse | null>(null);
-  dateFrom = subDays(new Date(), 7);
-  dateTo = new Date();
+  dateFrom = startOfDay(subDays(new Date(), 6));
+  dateTo = endOfDay(new Date());
 
   constructor(
     private appService: ApiService,
@@ -39,7 +39,7 @@ export class InstrumentComponent implements OnInit {
     this.appService.getInstrumentNewsContent(
       this.instrumentUid(),
       this.dateFrom,
-      this.dateTo
+      this.dateTo,
     )
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe(resp => this.news.set(resp));
