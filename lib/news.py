@@ -66,18 +66,20 @@ def get_sorted_news_by_instrument_uid(
 
     for source_name in result['sources']:
         source: NewsSourceRated = result['sources'][source_name]
-        source.positive_avg_percent = utils.round_float(
-            num=source.positive_sum_percent / source.total_count,
-            decimals=2,
-        )
-        source.negative_avg_percent = utils.round_float(
-            num=source.negative_sum_percent / source.total_count,
-            decimals=2,
-        )
-        source.neutral_avg_percent = utils.round_float(
-            num=source.neutral_sum_percent / source.total_count,
-            decimals=2,
-        )
+
+        if source.total_count > 0:
+            source.positive_avg_percent = utils.round_float(
+                num=source.positive_sum_percent / source.total_count,
+                decimals=1,
+            )
+            source.negative_avg_percent = utils.round_float(
+                num=source.negative_sum_percent / source.total_count,
+                decimals=1,
+            )
+            source.neutral_avg_percent = utils.round_float(
+                num=source.neutral_sum_percent / source.total_count,
+                decimals=1,
+            )
 
     return result
 

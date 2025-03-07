@@ -1,11 +1,11 @@
 import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PreloaderComponent } from '../preloader/preloader.component';
+import { MathRoundPipe } from '../../shared/pipes/math-round.pipe';
 
 
 @Component({
     selector: 'news-bar',
-    imports: [CommonModule, PreloaderComponent],
+  imports: [CommonModule, MathRoundPipe],
     providers: [],
     templateUrl: './news-bar.component.html',
     styleUrl: './news-bar.component.scss'

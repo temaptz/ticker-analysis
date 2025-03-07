@@ -2,18 +2,18 @@
   <div
     class="red"
     [style.width.%]="negativePercent()"
-    [title]="negativePercent()+'%)'"
-  >{{ negativePercent() }}</div>
+    [title]="negativePercent()+'%'"
+  >{{ negativePercent() | mathRound }}</div>
 
   <div
     class="gray"
     [style.width.%]="neutralPercent()"
-    [title]="neutralPercent()+'%)'"
-  >{{ neutralPercent() }}</div>
+    [title]="neutralPercent()+'%'"
+  >{{ neutralPercent() | mathRound }}</div>
 
   <div
     class="green"
     [style.width.%]="positivePercent()"
     [title]="positivePercent()+'%'"
-  >{{ positivePercent() }}</div>
+  >{{ positivePercent() | mathRound }}</div>
 </div>

@@ -1,7 +1,7 @@
 from functools import wraps
 from lib import utils, memcached
 
-is_local_cache_on = True
+is_local_cache_on = False
 local_cache = dict()
 
 def cache_get(key: str):
