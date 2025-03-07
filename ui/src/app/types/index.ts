@@ -20,27 +20,22 @@ export type InstrumentBrandResponse = any;
 export interface NewsResponse {
   sources: {
     [key: string]: {
-      positive_count: number;
-      positive_percent: number;
-      negative_count: number;
-      negative_percent: number;
-      neutral_count: number;
-      neutral_percent: number;
+      positive_avg_percent: number;
+      negative_avg_percent: number;
+      neutral_avg_percent: number;
       total_count: number;
+      content: {
+        uid: string;
+        title: string;
+        text: string;
+        date: string;
+        rate: {
+          positive_percent: number;
+          negative_percent: number;
+          neutral_percent: number;
+        };
+      }[]
     };
-  };
-  keywords: string[];
-}
-
-export interface NewsContentResponse {
-  sources: {
-    [key: string]: {
-      uid: string;
-      title: string;
-      text: string;
-      date: string;
-      rate: number;
-    }[];
   };
   keywords: string[];
 }

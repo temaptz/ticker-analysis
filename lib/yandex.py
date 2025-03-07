@@ -5,7 +5,14 @@ from lib import utils, cache, counter
 from lib.db import gpt_requests_db
 
 
-# Функция для отправки текстового запроса к GPT и получения ответа
+class NewsRate:
+    def __init__(self, positive_percent=0, negative_percent=0, neutral_percent=0):
+        self.positive_percent = positive_percent
+        self.negative_percent = negative_percent
+        self.neutral_percent = neutral_percent
+
+
+#  Функция для отправки текстового запроса к GPT и получения ответа
 def get_gpt_text(text_query: str, instruction: str = '') -> str:
     try:
         db_request = 'User: '+text_query+' System: '+instruction
@@ -133,6 +140,68 @@ def get_text_classify_2(title: str, text: str, subject_name: str) -> int or None
 
     except Exception as e:
         print('ERROR get_text_classify_2', e)
+
+    return None
+
+
+def get_text_classify_3(title: str, text: str, subject_name: str) -> NewsRate or None:
+    try:
+        sdk = YCloudML(
+            auth=const.Y_API_SECRET,
+            folder_id=const.Y_API_FOLDER_ID
+        )
+
+        # Объединение заголовка и текста новости
+        news_text = f'{title}\n{text}'
+
+        # Формирование описания задачи с учетом названия компании
+        task_description = (f'''
+            Я передам тебе новость, имеющую отношение к организации "{subject_name}". 
+            Твоя задача — классифицировать её на положительную, отрицательную или нейтральную 
+            в контексте этой организации. 
+            При классификации учитывай перспективы развития, повышение финансовых показателей, 
+            общую репутацию компании, рыночные тенденции и конкурентную среду. 
+            Ответ должен быть кратким и содержать только классификацию новости.
+        ''')
+
+        # Настройка модели классификации
+        model = sdk.models.text_classifiers('yandexgpt-lite').configure(
+            task_description=task_description,
+            labels=['положительная', 'отрицательная', 'нейтральная'],
+        )
+
+        counter.increment(counter.Counters.YANDEX_GPT_NEWS_CLASSIFY)
+
+        ya_resp: FewShotTextClassifiersModelResult = model.run(news_text)
+
+        if ya_resp and len(ya_resp) >= 3:
+            result = NewsRate()
+            sum_confidence = utils.round_float(
+                num=sum(utils.round_float(num=i.confidence, decimals=10) for i in ya_resp),
+                decimals=5,
+            )
+
+            for i in ya_resp:
+                round_confidence = utils.round_float(
+                    num=i.confidence,
+                    decimals=5,
+                )
+                percent = utils.round_float(
+                    num=round_confidence / sum_confidence * 100,
+                    decimals=5,
+                )
+
+                if i.label == 'положительная':
+                    result.positive_percent = percent
+                elif i.label == 'отрицательная':
+                    result.negative_percent = percent
+                elif i.label == 'нейтральная':
+                    result.neutral_percent = percent
+
+            return result
+
+    except Exception as e:
+        print('ERROR get_text_classify_3', e)
 
     return None
 

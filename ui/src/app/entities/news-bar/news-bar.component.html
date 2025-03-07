@@ -1,0 +1,19 @@
+<div class="bar">
+  <div
+    class="red"
+    [style.width.%]="negativePercent()"
+    [title]="negativePercent()+'%)'"
+  >{{ negativePercent() }}</div>
+
+  <div
+    class="gray"
+    [style.width.%]="neutralPercent()"
+    [title]="neutralPercent()+'%)'"
+  >{{ neutralPercent() }}</div>
+
+  <div
+    class="green"
+    [style.width.%]="positivePercent()"
+    [title]="positivePercent()+'%'"
+  >{{ positivePercent() }}</div>
+</div>

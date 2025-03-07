@@ -2,69 +2,26 @@ import datetime
 
 import const
 from lib.db import news_db, news_rate_db
-from lib import instruments, yandex, cache, counter, docker
+from lib import instruments, yandex, cache, counter, docker, serializer, utils
 
 
 class NewsSourceRated:
     def __init__(self):
-        self.positive_count = 0
-        self.positive_percent = 0
-        self.negative_count = 0
-        self.negative_percent = 0
-        self.neutral_count = 0
-        self.neutral_percent = 0
+        self.positive_sum_percent = 0
+        self.positive_avg_percent = 0
+        self.negative_sum_percent = 0
+        self.negative_avg_percent = 0
+        self.neutral_sum_percent = 0
+        self.neutral_avg_percent = 0
         self.total_count = 0
-
-    def update_percents(self):
-        if self.total_count > 0:
-            self.positive_percent = round((self.positive_count / self.total_count * 100), 2)
-            self.negative_percent = round((self.negative_count / self.total_count * 100), 2)
-            self.neutral_percent = round((self.neutral_count / self.total_count * 100), 2)
+        self.content = list()
 
 
-def get_sorted_rated_news_content_by_instrument_uid(
+def get_sorted_news_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
-        end_date: datetime.datetime
-):
-    result = {
-        'sources': {
-            'RBC': list(),
-            'FINAM': list(),
-            'RG': list(),
-        },
-        'keywords': get_keywords_by_instrument_uid(instrument_uid)
-    }
-
-    news = get_news_by_instrument_uid(
-        uid=instrument_uid,
-        start_date=start_date,
-        end_date=end_date
-    )
-
-    for n in news or []:
-        news_uid = n[0]
-        title = n[1]
-        text = n[2]
-        date = n[3]
-        source = n[4]
-        rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
-
-        result['sources'][source].append({
-            'uid': news_uid,
-            'title': title,
-            'text': text,
-            'date': date,
-            'rate': rate,
-        })
-
-    return result
-
-
-def get_sorted_news_count_by_instrument_uid(
-        instrument_uid: str,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime
+        end_date: datetime.datetime,
+        is_with_content=False
 ):
     result = {
         'sources': {
@@ -81,26 +38,46 @@ def get_sorted_news_count_by_instrument_uid(
         end_date=end_date
     )
 
-    print('GOT NEWS', news and len(news))
-
     for n in news or []:
         news_uid = n[0]
         title = n[1]
+        text = n[2]
+        date = n[3]
         source = n[4]
-        rate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
         result_source: NewsSourceRated = result['sources'][source]
+        rate: yandex.NewsRate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
 
-        print('NEWS RATED', rate, title)
+        print('NEWS RATED', serializer.get_dict_by_object_recursive(rate), title)
 
-        if rate == 1:
-            result_source.positive_count += 1
-        elif rate == -1:
-            result_source.negative_count += 1
-        elif rate == 0:
-            result_source.neutral_count += 1
+        if is_with_content:
+            result_source.content.append({
+                'uid': news_uid,
+                'title': title,
+                'text': text,
+                'date': date,
+                'rate': rate,
+            })
 
-        result_source.total_count += 1
-        result_source.update_percents()
+        if rate:
+            result_source.positive_sum_percent += rate.positive_percent
+            result_source.negative_sum_percent += rate.negative_percent
+            result_source.neutral_sum_percent += rate.neutral_percent
+            result_source.total_count += 1
+
+    for source_name in result['sources']:
+        source: NewsSourceRated = result['sources'][source_name]
+        source.positive_avg_percent = utils.round_float(
+            num=source.positive_sum_percent / source.total_count,
+            decimals=2,
+        )
+        source.negative_avg_percent = utils.round_float(
+            num=source.negative_sum_percent / source.total_count,
+            decimals=2,
+        )
+        source.neutral_avg_percent = utils.round_float(
+            num=source.neutral_sum_percent / source.total_count,
+            decimals=2,
+        )
 
     return result
 
@@ -108,13 +85,12 @@ def get_sorted_news_count_by_instrument_uid(
 def get_news_rate(
         news_uid: str,
         instrument_uid: str,
-) -> int or None:
+) -> yandex.NewsRate or None:
     rate_saved_db = news_rate_db.get_rate_by_uid(news_uid=news_uid, instrument_uid=instrument_uid)
 
-    if rate_saved_db and len(rate_saved_db) and rate_saved_db[0] and rate_saved_db[0][2] is not None:
-        print('GOT RATE FROM DB', rate_saved_db[0][2])
+    if rate_saved_db:
         counter.increment(counter.Counters.NEWS_RATE_DB)
-        return rate_saved_db[0][2]
+        return rate_saved_db
 
     elif not const.IS_NEWS_CLASSIFY_ENABLED:
         return 0
@@ -130,21 +106,17 @@ def get_news_rate(
             text = news[0][2]
 
             subject_name = yandex.get_human_name(instrument.name)
-            gpt_rate = yandex.get_text_classify_2(
+            gpt_rate = yandex.get_text_classify_3(
                 title=title,
                 text=text,
                 subject_name=subject_name
             )
 
-            if gpt_rate == 1 or gpt_rate == -1 or gpt_rate == 0:
+            if gpt_rate:
                 news_rate_db.insert_rate(news_uid=news_uid, instrument_uid=instrument_uid, rate=gpt_rate)
-
-                print('RATE FROM GPT', gpt_rate)
                 counter.increment(counter.Counters.NEWS_RATE_NEW)
 
                 return gpt_rate
-
-    print('RATE NONE')
 
     return None
 
@@ -177,3 +149,15 @@ def get_keywords_by_instrument_uid(uid: str) -> list[str]:
             result.append(word)
 
     return result
+
+
+# def append_percent_result_source(
+#         result_source: NewsSourceRated,
+#         positive_percent=0,
+#         negative_percent=0,
+#         neutral_percent=0
+# ):
+#     result_source.total_count += 1
+#
+#     if positive_percent > 0:
+#         result_source.neutral_avg_percent = result_source.neutral_avg_percent +

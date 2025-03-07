@@ -13,7 +13,7 @@
     <div>Ключевые слова: {{ newsResp.keywords.join('; ') }}</div>
 
     <div *ngFor="let source of Object.keys(newsResp.sources)">
-      <ng-container *ngIf="newsResp.sources[source] as sourceNews">
+      <ng-container *ngIf="newsResp.sources[source].content as sourceNews">
         <h4>Источник: {{ source }}</h4>
 
 
@@ -23,19 +23,13 @@
         >
           <div class="date">{{ n.date | date : 'yyyy-MM-dd' }}</div>
 
-          <h6>
-            @switch (n.rate) {
-              @case (1) {
-                <span class="green">Позитивная</span>
-              }
-              @case (-1) {
-                <span class="red">Негативная</span>
-              }
-              @case (0) {
-                <span class="gray">Нейтральная</span>
-              }
-            }
-          </h6>
+          <div class="bar">
+            <news-bar
+              [positivePercent]="n.rate.positive_percent"
+              [negativePercent]="n.rate.negative_percent"
+              [neutralPercent]="n.rate.neutral_percent"
+            ></news-bar>
+          </div>
 
           <h1>{{ n.title }}</h1>
 

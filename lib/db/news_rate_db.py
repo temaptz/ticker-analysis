@@ -2,18 +2,21 @@ import datetime
 import sqlite3
 import const
 from lib.utils import get_file_abspath_recursive
+from lib import yandex, serializer
+
+table_name = 'News_rate_cache'
 
 
 def init_table():
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
-    cursor.execute('''
+    cursor.execute(f'''
     CREATE TABLE IF NOT EXISTS 
-    "News_rate" 
+    "{table_name}" 
     (
     "news_uid" TEXT,
     "instrument_uid" TEXT,
-    "rate" TINYINT,
+    "rate" TEXT,
     "date" timestamp
     )
     ''')
@@ -21,22 +24,34 @@ def init_table():
     connection.close()
 
 
-def get_rate_by_uid(news_uid: str, instrument_uid: str):
+def get_rate_by_uid(news_uid: str, instrument_uid: str) -> yandex.NewsRate or None:
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM News_rate WHERE news_uid = ? AND instrument_uid = ?', (news_uid, instrument_uid))
-    news = cursor.fetchall()
+    cursor.execute(f'SELECT * FROM {table_name} WHERE news_uid = ? AND instrument_uid = ?', (news_uid, instrument_uid))
+    resp = cursor.fetchone()
     connection.close()
 
-    return news
+    if resp and len(resp) and resp[2]:
+        deserialized_dict = serializer.from_json(resp[2])
+
+        return yandex.NewsRate(
+            positive_percent=deserialized_dict.get('positive_percent', 0),
+            negative_percent=deserialized_dict.get('negative_percent', 0),
+            neutral_percent=deserialized_dict.get('neutral_percent', 0),
+        )
+
+    return None
 
 
-def insert_rate(news_uid: str, instrument_uid: str, rate: int):
-    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
-    cursor = connection.cursor()
-    cursor.execute(
-        'INSERT INTO News_rate (news_uid, instrument_uid, rate, date) VALUES (?, ?, ?, ?)',
-        (news_uid, instrument_uid, rate, datetime.datetime.now())
-    )
-    connection.commit()
-    connection.close()
+def insert_rate(news_uid: str, instrument_uid: str, rate: yandex.NewsRate):
+    rate_json = serializer.to_json(rate)
+
+    if rate_json:
+        connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+        cursor = connection.cursor()
+        cursor.execute(
+            f'INSERT INTO {table_name} (news_uid, instrument_uid, rate, date) VALUES (?, ?, ?, ?)',
+            (news_uid, instrument_uid, rate_json, datetime.datetime.now())
+        )
+        connection.commit()
+        connection.close()

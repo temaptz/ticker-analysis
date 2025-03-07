@@ -21,7 +21,7 @@ def increment(counter_name: str or Counters) -> None:
         counters[key] = cache.cache_get(key=key) or 0
 
     counters[key] += 1
-    cache.cache_set(key=key, value=counters[key])
+    cache.cache_set(key=key, value=counters[key], ttl=3600 * 24 * 365 * 10)
 
 
 def get(counter_name: str or Counters) -> int:
@@ -36,11 +36,11 @@ def get(counter_name: str or Counters) -> int:
 def get_stat() -> str:
     return f'''
         [TOTAL STAT START]
-        YANDEX_GPT_TEXT_REQUEST = {get(Counters.YANDEX_GPT_TEXT_REQUEST)}\n
-        YANDEX_GPT_NEWS_CLASSIFY = {get(Counters.YANDEX_GPT_NEWS_CLASSIFY)}\n
+        YANDEX_GPT_TEXT_REQUEST (Текстовые запросы GPT) = {get(Counters.YANDEX_GPT_TEXT_REQUEST)}\n
+        YANDEX_GPT_NEWS_CLASSIFY (Запросы на классификацию новостей) = {get(Counters.YANDEX_GPT_NEWS_CLASSIFY)}\n
         YANDEX_CACHED_REQUEST = {get(Counters.YANDEX_CACHED_REQUEST)}\n
-        NEWS_RATE_NEW = {get(Counters.NEWS_RATE_NEW)}\n
-        NEWS_RATE_DB = {get(Counters.NEWS_RATE_DB)}\n
+        NEWS_RATE_NEW (Получена оценка новости из GPT и сохранена в кэш БД) = {get(Counters.NEWS_RATE_NEW)}\n
+        NEWS_RATE_DB (Оценки новостей полученные их кэша БД) = {get(Counters.NEWS_RATE_DB)}\n
         NEWS_GET_COUNT = {get(Counters.NEWS_GET_COUNT)}\n
         [TOTAL STAT END]\n
         '''

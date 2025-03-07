@@ -68,8 +68,9 @@ def get_file_size_readable(filepath) -> str:
     return size_str
 
 
-def round_float(num: float) -> float:
-    return float(str(num)[0:10])
+def round_float(num: float, decimals: int = 10) -> float:
+    l = len(str(num).split('.')[0])
+    return float(str(num)[0:l+decimals+1])
 
 
 def get_md5(data: str) -> str:

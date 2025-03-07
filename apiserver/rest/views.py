@@ -240,9 +240,15 @@ def instrument_news(request):
     uid = request.GET.get('uid')
     start_date = utils.parse_json_date(request.GET.get('start_date'))
     end_date = utils.parse_json_date(request.GET.get('end_date'))
+    is_with_content = request.GET.get('is_with_content') == 'true'
 
     if uid and start_date and end_date:
-        resp = news.get_sorted_news_count_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
+        resp = news.get_sorted_news_by_instrument_uid(
+            instrument_uid=uid,
+            start_date=start_date,
+            end_date=end_date,
+            is_with_content=is_with_content,
+        )
 
     response = HttpResponse(serializer.to_json(resp))
 
@@ -260,7 +266,12 @@ def instrument_news_content_rated(request):
     end_date = utils.parse_json_date(request.GET.get('end_date'))
 
     if uid and start_date and end_date:
-        resp = news.get_sorted_rated_news_content_by_instrument_uid(instrument_uid=uid, start_date=start_date, end_date=end_date)
+        resp = news.get_sorted_news_by_instrument_uid(
+            instrument_uid=uid,
+            start_date=start_date,
+            end_date=end_date,
+            is_with_content=True,
+        )
 
     response = HttpResponse(serializer.to_json(resp))
 
@@ -332,12 +343,12 @@ def get_instrument_full(instrument: Instrument):
             account_name='Аналитический',
             instrument_figi=instrument.figi,
         ),
-        'news_week_0': news.get_sorted_news_count_by_instrument_uid(
+        'news_week_0': news.get_sorted_news_by_instrument_uid(
             instrument_uid=instrument.uid,
             start_date=datetime.datetime.now() - datetime.timedelta(days=7),
             end_date=datetime.datetime.now()
         ),
-        'news_week_1': news.get_sorted_news_count_by_instrument_uid(
+        'news_week_1': news.get_sorted_news_by_instrument_uid(
             instrument_uid=instrument.uid,
             start_date=datetime.datetime.now() - datetime.timedelta(days=14),
             end_date=datetime.datetime.now() - datetime.timedelta(days=8)

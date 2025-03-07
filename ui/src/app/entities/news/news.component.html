@@ -14,23 +14,11 @@
         *ngIf="newsResp.sources[source] as s"
         class="bar"
       >
-        <div
-          class="green"
-          [style.height.%]="s.positive_percent"
-          [title]="s.positive_count+' шт. ('+s.positive_percent+'%)'"
-        >{{ s.positive_count }}</div>
-
-        <div
-          class="red"
-          [style.height.%]="s.negative_percent"
-          [title]="s.negative_count+' шт. ('+s.negative_percent+'%)'"
-        >{{ s.negative_count }}</div>
-
-        <div
-          class="gray"
-          [style.height.%]="s.neutral_percent"
-          [title]="s.neutral_count+' шт. ('+s.neutral_percent+'%)'"
-        >{{ s.neutral_count }}</div>
+        <news-bar
+          [positivePercent]="s.positive_avg_percent"
+          [negativePercent]="s.negative_avg_percent"
+          [neutralPercent]="s.neutral_avg_percent"
+        ></news-bar>
       </div>
 
       <div>{{ source }} - {{ newsResp.sources[source].total_count }} Шт</div>

@@ -7,7 +7,6 @@ import {
   InstrumentHistoryPrice,
   InstrumentInList,
   InstrumentLastPrice,
-  NewsContentResponse,
   NewsResponse,
   Operation,
   Prediction,
@@ -132,22 +131,14 @@ export class ApiService {
   }
 
   @CacheObservable()
-  getInstrumentNews(uid: string, startDate: Date, endDate: Date): Observable<NewsResponse> {
+  getInstrumentNews(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsResponse> {
     let params = new HttpParams();
     params = params.set('uid', uid);
     params = params.set('start_date', startDate.toJSON());
     params = params.set('end_date', endDate.toJSON());
+    params = params.set('is_with_content', isWithContent ? 'true' : 'false');
 
     return this.http.get<NewsResponse>(`${this.apiUrl}/instrument/news`, {params: params});
-  }
-
-  getInstrumentNewsContent(uid: string, startDate: Date, endDate: Date): Observable<NewsContentResponse> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('start_date', startDate.toJSON());
-    params = params.set('end_date', endDate.toJSON());
-
-    return this.http.get<NewsContentResponse>(`${this.apiUrl}/instrument/news_content_rated`, {params: params});
   }
 
   @CacheObservable()

@@ -5,11 +5,12 @@ import { InstrumentInList, NewsResponse } from '../../types';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { endOfDay, setHours, startOfDay, subDays } from 'date-fns';
+import { NewsBarComponent } from '../news-bar/news-bar.component';
 
 
 @Component({
     selector: 'news',
-    imports: [CommonModule, PreloaderComponent],
+  imports: [CommonModule, PreloaderComponent, NewsBarComponent],
     providers: [],
     templateUrl: './news.component.html',
     styleUrl: './news.component.scss'

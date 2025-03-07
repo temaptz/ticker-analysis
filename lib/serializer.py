@@ -3,8 +3,20 @@ import tinkoff.invest
 import json
 
 
-def to_json(obj) -> str:
-    return json.dumps(get_dict_by_object_recursive(obj))
+def to_json(obj) -> str or None:
+    try:
+        return json.dumps(get_dict_by_object_recursive(obj))
+    except Exception as e:
+        print('ERROR to_json', e)
+        return None
+
+
+def from_json(json_str: str) -> dict or None:
+    try:
+        return get_dict_by_object_recursive(json.loads(json_str))
+    except Exception as e:
+        print('ERROR from_json', e)
+        return None
 
 
 def get_dict_by_object_recursive(data):

@@ -12,7 +12,7 @@ def start_schedule() -> None:
         forecasts_save.save_forecasts,
         'cron',
         day_of_week='mon',
-        hour=12,
+        hour=13,
         minute=0,
         timezone=timezone
     )
@@ -50,7 +50,7 @@ def start_schedule() -> None:
         yandex_disk.upload_db_backup,
         'cron',
         day='*/3',
-        hour=16,
+        hour=6,
         minute=0,
         timezone=timezone
     )
