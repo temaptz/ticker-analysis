@@ -21,7 +21,7 @@ def increment(counter_name: str or Counters) -> None:
         counters[key] = cache.cache_get(key=key) or 0
 
     counters[key] += 1
-    cache.cache_set(key=key, value=counters[key], ttl=3600 * 24 * 365 * 10)
+    cache.cache_set(key=key, value=counters[key], ttl=3600 * 24)
 
 
 def get(counter_name: str or Counters) -> int:
