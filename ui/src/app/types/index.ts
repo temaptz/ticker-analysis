@@ -38,6 +38,12 @@ export interface NewsResponse {
     };
   };
   keywords: string[];
+  total: {
+    positive_avg_percent: number;
+    negative_avg_percent: number;
+    neutral_avg_percent: number;
+    total_count: number;
+  };
 }
 
 export interface PredictionResp {

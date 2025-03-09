@@ -29,7 +29,8 @@ def get_sorted_news_by_instrument_uid(
             'FINAM': NewsSourceRated(),
             'RG': NewsSourceRated()
         },
-        'keywords': get_keywords_by_instrument_uid(instrument_uid)
+        'keywords': get_keywords_by_instrument_uid(instrument_uid),
+        'total': NewsSourceRated(),
     }
 
     news = get_news_by_instrument_uid(
@@ -64,22 +65,43 @@ def get_sorted_news_by_instrument_uid(
             result_source.neutral_sum_percent += rate.neutral_percent
             result_source.total_count += 1
 
+            result['total'].positive_sum_percent += rate.positive_percent
+            result['total'].negative_sum_percent += rate.negative_percent
+            result['total'].neutral_sum_percent += rate.neutral_percent
+            result['total'].total_count += 1
+
     for source_name in result['sources']:
         source: NewsSourceRated = result['sources'][source_name]
 
         if source.total_count > 0:
             source.positive_avg_percent = utils.round_float(
                 num=source.positive_sum_percent / source.total_count,
-                decimals=1,
+                decimals=0,
             )
             source.negative_avg_percent = utils.round_float(
                 num=source.negative_sum_percent / source.total_count,
-                decimals=1,
+                decimals=0,
             )
             source.neutral_avg_percent = utils.round_float(
                 num=source.neutral_sum_percent / source.total_count,
-                decimals=1,
+                decimals=0,
             )
+
+    if result['total'].total_count > 0:
+        result['total'].positive_avg_percent = utils.round_float(
+            num=result['total'].positive_sum_percent / result['total'].total_count,
+            decimals=0,
+        )
+
+        result['total'].negative_avg_percent = utils.round_float(
+            num=result['total'].negative_sum_percent / result['total'].total_count,
+            decimals=0,
+        )
+
+        result['total'].neutral_avg_percent = utils.round_float(
+            num=result['total'].neutral_sum_percent / result['total'].total_count,
+            decimals=0,
+        )
 
     return result
 
