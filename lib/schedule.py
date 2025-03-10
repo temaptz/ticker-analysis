@@ -50,7 +50,7 @@ def start_schedule() -> None:
         yandex_disk.upload_db_backup,
         'cron',
         day='*/3',
-        hour=6,
+        hour=5,
         minute=0,
         timezone=timezone
     )
