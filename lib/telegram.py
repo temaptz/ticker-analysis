@@ -88,3 +88,7 @@ def process_single_update(text: str = None) -> None:
         send_message('Статистика memcached')
         send_message(memcached.get_memcached_stats())
 
+    elif text == 'cleancache' or text == 'clean':
+        send_message('Очистка кэша')
+        cache.clean()
+

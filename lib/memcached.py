@@ -25,6 +25,10 @@ def cache_delete(key):
     mc.delete(key)
 
 
+def cache_clean():
+    return mc.flush_all()
+
+
 def get_memcached_stats():
     """Возвращает статистику Memcached"""
     memcached_stats = {}

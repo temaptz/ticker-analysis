@@ -24,6 +24,13 @@ def cache_set(key: str, value: any, ttl: int = 3600) -> None:
         print('ERROR cache_set', e)
 
 
+def clean():
+    try:
+        memcached.cache_clean()
+    except Exception as e:
+        print('ERROR cache clean', e)
+
+
 def ttl_cache(ttl: int = 3600, maxsize: int = 1024):
     """Декоратор кэширования с временем жизни (ttl) и ограничением по размеру."""
     def decorator(func):
