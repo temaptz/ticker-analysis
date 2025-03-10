@@ -66,7 +66,6 @@ TICKER_LIST: list[str] = [
     'GTRK',
     'SFIN',
     'FESH',
-    'IRKT',
     'UWGN',
     'EUTR',
     'LEAS',
@@ -80,4 +79,4 @@ TICKER_LIST: list[str] = [
     'KROT',
     'RKKE',
 ]
-IS_NEWS_CLASSIFY_ENABLED = False
+IS_NEWS_CLASSIFY_ENABLED = True

@@ -98,9 +98,8 @@ def get_sorted_news_by_instrument_uid(
             decimals=0,
         )
 
-        result['total'].neutral_avg_percent = utils.round_float(
-            num=result['total'].neutral_sum_percent / result['total'].total_count,
-            decimals=0,
+        result['total'].neutral_avg_percent = (
+                100 - result['total'].positive_avg_percent - result['total'].negative_avg_percent
         )
 
     return result
