@@ -4,44 +4,16 @@ from django.http import HttpResponse
 from django.views.decorators.cache import cache_control
 from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter, date_utils
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter, date_utils, sort
 import json
 
 
 @api_view(['GET'])
 @cache_control(public=True, max_age=3600 * 24 * 7)
-def instruments_list_full(request):
-    print('START REQUEST')
-    resp = []
-
-    for instrument in instruments.get_instruments_white_list():
-        print(instrument.ticker)
-        resp.append(get_instrument_full(instrument=instrument))
-
-    print(counter.get_stat())
-
-    return HttpResponse(serializer.to_json(resp))
-
-
-@api_view(['GET'])
-@cache_control(public=True, max_age=3600 * 24 * 7)
 def instruments_list(request):
-    return HttpResponse(serializer.to_json(instruments.get_instruments_white_list()))
+    skip_cache = True if request.GET.get('skip_cache') else False
 
-
-@api_view(['GET'])
-@cache_control(public=True, max_age=3600 * 24 * 7)
-def instrument_info_full(request):
-    resp = None
-    uid = request.GET.get('uid')
-
-    if uid:
-        instrument = instruments.get_instrument_by_uid(uid)
-
-        if instrument:
-            resp = get_instrument_full(instrument=instrument)
-
-    return HttpResponse(serializer.to_json(resp))
+    return HttpResponse(serializer.to_json(instruments.get_instruments_white_list(skip_cache=skip_cache)))
 
 
 @api_view(['GET'])
@@ -294,6 +266,17 @@ def instrument_brand(request):
             resp = instruments.get_instrument_by_ticker(ticker=instrument.ticker).brand
 
     return HttpResponse(serializer.to_json(resp))
+
+
+@api_view(['PUT'])
+def instrument_set_sort(request):
+    uid = request.data['uid']
+    index = request.data['index']
+
+    if uid and (index or index == 0):
+        sort.set_instrument_sort(instrument_uid=uid, sort=index)
+
+    return HttpResponse()
 
 
 def get_instrument_full(instrument: Instrument):

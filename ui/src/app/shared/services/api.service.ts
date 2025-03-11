@@ -30,8 +30,13 @@ export class ApiService {
     private http: HttpClient,
   ) {}
 
-  getInstruments(): Observable<InstrumentInList[]> {
-    return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`);
+  getInstruments(isSkipCache = false): Observable<InstrumentInList[]> {
+    let params = new HttpParams();
+    if (isSkipCache) {
+      params = params.append('skip_cache', (new Date()).getTime());
+    }
+
+    return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`, {params});
   }
 
   @CacheObservable()
@@ -147,6 +152,13 @@ export class ApiService {
     params = params.set('uid', uid);
 
     return this.http.get<InstrumentBrandResponse>(`${this.apiUrl}/instrument/brand`, {params: params});
+  }
+
+  setInstrumentSort(uid: string, index: number): Observable<unknown> {
+    return this.http.put<unknown>(`${this.apiUrl}/instrument/set_sort`, {
+      uid,
+      index,
+    });
   }
 
 }

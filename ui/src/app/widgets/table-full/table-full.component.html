@@ -1,13 +1,160 @@
-<ag-grid-angular
-  style="width: 100%; height: calc(100vh - 16px);"
-  [rowData]="instruments()"
-  [rowHeight]="260"
-  [columnDefs]="colDefs()"
-  [gridOptions]="gridOptions"
-  (gridReady)="onGridReady($event)"
-/>
+<cdk-virtual-scroll-viewport
+  *ngIf="dataSource"
+  headerHeight="50"
+  class="table-container"
+  appendOnly
+  [tvsItemSize]="tableItemHeightPx"
+  [headerEnabled]="true"
+>
+  <table
+    mat-table
+    matSort
+    cdkDropList
+    cdkDropListData="dataSource"
+    [dataSource]="dataSource"
+    (cdkDropListDropped)="handleDrop($event)"
+  >
 
-<column-visibility-switch
-  [colDefs]="colDefs()"
-  (onChangeHiddenFields)="handleChangeHiddenFields($event)"
-></column-visibility-switch>
+    <ng-container matColumnDef="logo" sticky>
+      <th mat-header-cell *matHeaderCellDef>Логотип</th>
+      <td mat-cell *matCellDef="let instrument">
+        <a [routerLink]="['/instrument', instrument.uid]">
+          <instrument-logo
+            [instrumentUid]="instrument.uid"
+          ></instrument-logo>
+        </a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="ticker" sticky>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Тикер</th>
+      <td mat-cell *matCellDef="let instrument">
+        <a [routerLink]="['/instrument', instrument.uid]">{{ instrument.ticker}}</a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Название</th>
+      <td mat-cell *matCellDef="let instrument">
+        <a [routerLink]="['/instrument', instrument.uid]">{{ instrument.name }}</a>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="fundamental">
+      <th mat-header-cell *matHeaderCellDef>Фундаментальные показатели</th>
+      <td mat-cell *matCellDef="let instrument">
+        <fundamentals
+          [instrumentAssetUid]="instrument.asset_uid"
+        ></fundamentals>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="5years">
+      <th mat-header-cell *matHeaderCellDef>5 лет</th>
+      <td mat-cell *matCellDef="let instrument">
+        <graph
+          width="400px"
+          height="250px"
+          [instrumentUid]="instrument.uid"
+          [days]="365 * 5"
+          [interval]="CandleInterval.CANDLE_INTERVAL_MONTH"
+        ></graph>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="year">
+      <th mat-header-cell *matHeaderCellDef>Год</th>
+      <td mat-cell *matCellDef="let instrument">
+        <graph
+          width="400px"
+          height="250px"
+          [instrumentUid]="instrument.uid"
+          [days]="365"
+          [interval]="CandleInterval.CANDLE_INTERVAL_WEEK"
+        ></graph>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="complex">
+      <th mat-header-cell *matHeaderCellDef>90 дней + прогнозы</th>
+      <td mat-cell *matCellDef="let instrument">
+        <complex-graph
+          width="700px"
+          height="250px"
+          [instrumentUid]="instrument.uid"
+        ></complex-graph>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="price">
+      <th mat-header-cell mat-sort-header *matHeaderCellDef>Цена</th>
+      <td mat-cell *matCellDef="let instrument">{{ instrument.uid | currentPriceByUid | async | priceRound | priceFormat }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="balance-main">
+      <th mat-header-cell *matHeaderCellDef>Баланс Основной</th>
+      <td mat-cell *matCellDef="let instrument">
+        <balance
+          accountName="Основной"
+          [instrumentUid]="instrument.uid"
+          [instrumentFigi]="instrument.figi"
+        ></balance>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="balance-analytics">
+      <th mat-header-cell *matHeaderCellDef>Баланс аналитический</th>
+      <td mat-cell *matCellDef="let instrument">
+        <balance
+          accountName="Аналитический"
+          [instrumentUid]="instrument.uid"
+          [instrumentFigi]="instrument.figi"
+        ></balance>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="forecast">
+      <th mat-header-cell *matHeaderCellDef>Прогноз аналитиков</th>
+      <td mat-cell *matCellDef="let instrument">
+        <forecast
+          [instrumentUid]="instrument.uid"
+        ></forecast>
+        <br>
+        <br>
+        <forecast-history
+          [instrumentUid]="instrument.uid"
+        ></forecast-history>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="prediction">
+      <th mat-header-cell *matHeaderCellDef>Прогноз на месяц</th>
+      <td mat-cell *matCellDef="let instrument">
+        <prediction
+          [instrumentUid]="instrument.uid"
+        ></prediction>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="news">
+      <th mat-header-cell *matHeaderCellDef>Новости</th>
+      <td mat-cell *matCellDef="let instrument">
+        <news
+          [instrumentUid]="instrument.uid"
+        ></news>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+
+    <tr
+      *matRowDef="let row; columns: displayedColumns;"
+      mat-row
+      cdkDrag
+      [cdkDragData]="row"
+      [style.height.px]="tableItemHeightPx"
+    ></tr>
+
+
+  </table>
+</cdk-virtual-scroll-viewport>

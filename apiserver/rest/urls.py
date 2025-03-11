@@ -7,9 +7,7 @@ from . import views
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path('instruments_full', views.instruments_list_full),
     path('instruments', views.instruments_list),
-    path('instrument_full', views.instrument_info_full),
     path('instrument', views.instrument_info),
     path('instrument/last_prices', views.instrument_last_prices),
     path('instrument/price_by_date', views.instrument_price_by_date),
@@ -23,4 +21,5 @@ urlpatterns = [
     path('instrument/operations', views.instrument_operations),
     path('instrument/news', views.instrument_news),
     path('instrument/brand', views.instrument_brand),
+    path('instrument/set_sort', views.instrument_set_sort),
 ]

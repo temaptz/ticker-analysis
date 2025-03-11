@@ -39,7 +39,9 @@ def ttl_cache(ttl: int = 3600, maxsize: int = 1024):
             try:
                 key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}')
                 saved_cache = cache_get(key=key_md5)
-                if saved_cache:
+                is_skip_cache = 'skip_cache' in kwargs and kwargs['skip_cache']
+
+                if saved_cache and not is_skip_cache:
                     return saved_cache  # Возвращаем из кэша, если есть
 
                 result = func(*args, **kwargs)  # Вычисляем функцию
