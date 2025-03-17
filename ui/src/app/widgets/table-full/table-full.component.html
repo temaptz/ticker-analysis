@@ -9,12 +9,8 @@
   <table
     mat-table
     matSort
-    cdkDropList
-    cdkDropListData="dataSource"
     [dataSource]="dataSource"
-    (cdkDropListDropped)="handleDrop($event)"
   >
-
     <ng-container matColumnDef="logo" sticky>
       <th mat-header-cell *matHeaderCellDef>Логотип</th>
       <td mat-cell *matCellDef="let instrument">
@@ -150,11 +146,8 @@
     <tr
       *matRowDef="let row; columns: displayedColumns;"
       mat-row
-      cdkDrag
-      [cdkDragData]="row"
       [style.height.px]="tableItemHeightPx"
     ></tr>
-
 
   </table>
 </cdk-virtual-scroll-viewport>

@@ -5,7 +5,6 @@ import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { finalize } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
@@ -47,8 +46,6 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
     PriceRoundPipe,
     PriceFormatPipe,
     MatIconModule,
-    CdkDropList,
-    CdkDrag,
   ],
   providers: [],
   templateUrl: './table-full.component.html',
@@ -86,13 +83,8 @@ export class TableFullComponent implements OnInit {
     this.loadInstrument();
   }
 
-  handleDrop(event: CdkDragDrop<string>) {
-    this.appService.setInstrumentSort(event.item.data.uid, event.currentIndex)
-      .subscribe(() => this.loadInstrument(true));
-  }
-
-  private loadInstrument(is_skip_cache = false): void {
-    this.appService.getInstruments(is_skip_cache)
+  private loadInstrument(): void {
+    this.appService.getInstruments()
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe(resp => {
         if (resp?.length) {
