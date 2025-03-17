@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import cache_control
 from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, counter, date_utils, sort
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils
 import json
 
 
@@ -266,17 +266,6 @@ def instrument_brand(request):
             resp = instruments.get_instrument_by_ticker(ticker=instrument.ticker).brand
 
     return HttpResponse(serializer.to_json(resp))
-
-
-@api_view(['PUT'])
-def instrument_set_sort(request):
-    uid = request.data['uid']
-    index = request.data['index']
-
-    if uid and (index or index == 0):
-        sort.set_instrument_sort(instrument_uid=uid, sort=index)
-
-    return HttpResponse()
 
 
 def get_instrument_full(instrument: Instrument):

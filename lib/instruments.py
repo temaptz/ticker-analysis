@@ -1,10 +1,10 @@
 from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse, HistoricCandle
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils, sort
+from lib import cache, utils, date_utils
 
 
-@cache.ttl_cache()
+@cache.ttl_cache(ttl=3600 * 24)
 def get_instruments_white_list(skip_cache=None) -> list[InstrumentResponse.instrument]:
     result = list()
 
@@ -12,11 +12,7 @@ def get_instruments_white_list(skip_cache=None) -> list[InstrumentResponse.instr
         instrument = get_instrument_by_ticker(ticker=ticker)
 
         if instrument:
-            instrument_sort = sort.get_instrument_sort(instrument_uid=instrument.uid)
-            instrument.sort = instrument_sort if (instrument_sort or instrument_sort == 0) else None
             result.append(instrument)
-
-    result = sorted(result, key=lambda x: (x.sort is None, x.sort))
 
     return result
 

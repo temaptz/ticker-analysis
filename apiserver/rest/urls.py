@@ -21,5 +21,4 @@ urlpatterns = [
     path('instrument/operations', views.instrument_operations),
     path('instrument/news', views.instrument_news),
     path('instrument/brand', views.instrument_brand),
-    path('instrument/set_sort', views.instrument_set_sort),
 ]
