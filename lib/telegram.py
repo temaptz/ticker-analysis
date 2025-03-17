@@ -68,7 +68,7 @@ def process_single_update(text: str = None) -> None:
         fundamentals_save.save_fundamentals()
 
     elif text == 'predictions':
-        predictions_save.save_predictions()
+        predictions_save.save_predictions_ta_1()
 
     elif text == 'news':
         news_save.save_news()

@@ -2,8 +2,8 @@ from lib import predictions, telegram, instruments
 from lib.db import predictions_ta_1_db
 
 
-def save_predictions():
-    telegram.send_message('Начато сохранение предсказаний нейросети')
+def save_predictions_ta_1():
+    telegram.send_message('Начато сохранение предсказаний модели ta-1')
 
     counter = 0
 
@@ -14,7 +14,7 @@ def save_predictions():
         prediction = predictions.get_prediction_ta_1_by_uid(uid=instrument.uid)
 
         if prediction:
-            print('PREDICTION: ', prediction)
+            print('PREDICTION TA-1: ', prediction)
 
             predictions_ta_1_db.insert_prediction(
                 uid=instrument.uid,
@@ -23,4 +23,4 @@ def save_predictions():
 
             counter += 1
 
-    telegram.send_message('Всего сохранено '+str(counter)+' предсказаний нейросети')
+    telegram.send_message('Всего сохранено '+str(counter)+' предсказаний модели ta-1')
