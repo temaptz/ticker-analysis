@@ -139,11 +139,12 @@ def instrument_fundamental(request):
 
 @api_view(['GET'])
 def instrument_prediction(request):
-    resp = None
+    resp = {}
     uid = request.GET.get('uid')
 
     if uid:
-        resp = predictions.get_prediction_ta_1_by_uid(uid)
+        resp['ta-1'] = predictions.get_prediction_ta_1_by_uid(uid)
+        resp['ta-1_1'] = predictions.get_prediction_ta_1_1_by_uid(uid)
 
     response = HttpResponse(json.dumps(resp))
 
@@ -162,7 +163,13 @@ def instrument_prediction_graph(request):
     interval = request.GET.get('interval')
 
     if uid and date_from and date_to and interval:
-        resp['ta1'] = predictions.get_prediction_ta_1_graph_by_uid(
+        resp['ta-1'] = predictions.get_prediction_ta_1_graph_by_uid(
+            uid=uid,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
+        resp['ta-1_1'] = predictions.get_prediction_ta_1_1_graph_by_uid(
             uid=uid,
             date_from=date_from,
             date_to=date_to,

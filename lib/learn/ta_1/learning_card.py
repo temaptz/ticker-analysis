@@ -1,6 +1,6 @@
 import json
 import numpy
-from tinkoff.invest import CandleInterval
+from tinkoff.invest import CandleInterval, HistoricCandle
 import datetime
 from lib import utils, instruments, forecasts, serializer, fundamentals
 
@@ -85,22 +85,22 @@ class LearningCard:
             )[0])
             self.forecast_price = self.get_forecast()
 
-            fundamentals = instruments.get_instrument_fundamentals_by_asset_uid(self.asset_uid)[0]
-            self.revenue_ttm = fundamentals.revenue_ttm
-            self.ebitda_ttm = fundamentals.ebitda_ttm
-            self.market_capitalization = fundamentals.market_capitalization
-            self.total_debt_mrq = fundamentals.total_debt_mrq
-            self.eps_ttm = fundamentals.eps_ttm
-            self.pe_ratio_ttm = fundamentals.pe_ratio_ttm
-            self.ev_to_ebitda_mrq = fundamentals.ev_to_ebitda_mrq
-            self.dividend_payout_ratio_fy = fundamentals.dividend_payout_ratio_fy
+            f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.asset_uid, date=self.date)[1]
+            self.revenue_ttm = f.revenue_ttm
+            self.ebitda_ttm = f.ebitda_ttm
+            self.market_capitalization = f.market_capitalization
+            self.total_debt_mrq = f.total_debt_mrq
+            self.eps_ttm = f.eps_ttm
+            self.pe_ratio_ttm = f.pe_ratio_ttm
+            self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
+            self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
 
-        except Exception:
-            print('ERROR loading LearningCard')
+        except Exception as e:
+            print('ERROR loading LearningCard', e)
             self.is_ok = False
 
     # Вернет цены за последние 52 недели (год) в хронологическом порядке
-    def get_history(self, candles: CandleInterval) -> list:
+    def get_history(self, candles: list[HistoricCandle]) -> list:
         result = []
 
         for i in candles[:52]:
@@ -124,7 +124,7 @@ class LearningCard:
         print('HISTORY', self.history)
         print('PRICE', self.price)
         print('PRICE TARGET', self.target_price)
-        print('PRICE CONSENSUS FORECAST', self.forecast_price)
+        print('FORECAST PRICE CONSENSUS ', self.forecast_price)
         print('Выручка', self.revenue_ttm)
         print('EBITDA', self.ebitda_ttm)
         print('Капитализация', self.market_capitalization)
@@ -160,8 +160,8 @@ class LearningCard:
             self.ev_to_ebitda_mrq = data['ev_to_ebitda_mrq']
             self.dividend_payout_ratio_fy = data['dividend_payout_ratio_fy']
 
-        except Exception:
-            print('ERROR restore_from_json_db LearningCard')
+        except Exception as e:
+            print('ERROR restore_from_json_db LearningCard', e)
             self.is_ok = False
 
     # Входные данные для обучения

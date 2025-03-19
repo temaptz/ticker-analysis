@@ -13,6 +13,8 @@ from lib import (
 )
 from lib.db import init, news_db, db_utils
 from lib.learn import ta_2
+from lib.learn import ta_1_1
+from lib.learn.ta_1 import prepare_data
 
 init.init_db()
 db_utils.optimize_db()
@@ -23,6 +25,9 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
+    predictions_save.save_predictions_ta_1_1()
+    # ta_1_1.learn()
+    # prepare_data.prepare_cards()
     # print(docker.is_prod())
     # print(docker.get_df())
     # news_db.replace_md5()

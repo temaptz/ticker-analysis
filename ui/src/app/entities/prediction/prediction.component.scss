@@ -17,3 +17,13 @@ span {
     content: '-';
   }
 }
+
+div {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+h5 {
+  margin-right: 3px;
+}

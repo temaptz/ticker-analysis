@@ -1,8 +1,19 @@
 @defer (when isLoaded()) {
-  <span
-    [class.plus]="isPlus()"
-    [class.minus]="!isPlus()"
-  >{{ percent() }}% -> <b>{{ prediction() | priceRound }}</b></span>
+  <div>
+    <h5>TA-1:</h5>
+    <span
+      [class.plus]="isPlus_ta_1()"
+      [class.minus]="!isPlus_ta_1()"
+    >{{ percent_ta_1() }}% -> <b>{{ prediction_ta_1() | priceRound | priceFormat }}</b></span>
+  </div>
+
+  <div>
+    <h5>TA-1_1:</h5>
+    <span
+      [class.plus]="isPlus_ta_1_1()"
+      [class.minus]="!isPlus_ta_1_1()"
+    >{{ percent_ta_1_1() }}% -> <b>{{ prediction_ta_1_1() | priceRound | priceFormat }}</b></span>
+  </div>
 } @placeholder {
   <preloader></preloader>
 }

@@ -9,8 +9,8 @@ import {
   InstrumentLastPrice,
   NewsResponse,
   Operation,
-  Prediction,
-  PredictionResp
+  PredictionResp,
+  PredictionGraphResp
 } from '../../types';
 import { CandleInterval } from '../../enums';
 import { CacheObservable } from '../utils/cache';
@@ -95,7 +95,7 @@ export class ApiService {
   }
 
   @CacheObservable()
-  getInstrumentPrediction(uid: string): Observable<Prediction> {
+  getInstrumentPrediction(uid: string): Observable<PredictionResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
@@ -103,14 +103,14 @@ export class ApiService {
   }
 
   @CacheObservable()
-  getInstrumentPredictionGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionResp> {
+  getInstrumentPredictionGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionGraphResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
     params = params.set('date_from', from.toJSON());
     params = params.set('date_to', to.toJSON());
     params = params.set('interval', interval);
 
-    return this.http.get<PredictionResp>(`${this.apiUrl}/instrument/prediction/graph`, {params: params});
+    return this.http.get<PredictionGraphResp>(`${this.apiUrl}/instrument/prediction/graph`, {params: params});
   }
 
   @CacheObservable()

@@ -13,7 +13,6 @@ export type Candle = any;
 export type Quotation = any;
 export type Forecast = any;
 export type Fundamentals = any;
-export type Prediction = any;
 export type Operation = any;
 export type InstrumentBrandResponse = any;
 
@@ -46,8 +45,15 @@ export interface NewsResponse {
   };
 }
 
+
 export interface PredictionResp {
-  ta1: PredictionGraph[];
+  'ta-1': number;
+  'ta-1_1': number;
+}
+
+export interface PredictionGraphResp {
+  'ta-1': PredictionGraph[];
+  'ta-1_1': PredictionGraph[];
 }
 
 export interface PredictionGraph {

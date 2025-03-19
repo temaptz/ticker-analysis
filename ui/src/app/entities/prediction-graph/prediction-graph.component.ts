@@ -2,7 +2,7 @@ import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApexAxisChartSeries, ApexOptions, NgApexchartsModule } from 'ng-apexcharts';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList, PredictionGraph, PredictionResp } from '../../types';
+import { InstrumentInList, PredictionGraph, PredictionGraphResp } from '../../types';
 import { addDays, endOfDay, parseJSON, startOfDay, subDays } from 'date-fns';
 import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
@@ -81,7 +81,7 @@ export class PredictionGraphComponent implements OnInit {
       CandleInterval.CANDLE_INTERVAL_DAY,
     )
       .pipe(finalize(() => this.isLoaded.set(true)))
-      .subscribe((resp: PredictionResp) => {
+      .subscribe((resp: PredictionGraphResp) => {
         const series: ApexAxisChartSeries = [{
           data: resp?.ta1?.map(i => ({
               y: getRoundPrice(i.prediction),

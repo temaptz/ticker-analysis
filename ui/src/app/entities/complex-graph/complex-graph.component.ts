@@ -6,7 +6,7 @@ import {
   ApexOptions, ChartComponent
 } from 'ng-apexcharts';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentHistoryPrice, InstrumentInList, PredictionResp } from '../../types';
+import { InstrumentHistoryPrice, InstrumentInList, PredictionGraphResp } from '../../types';
 import { addDays, endOfDay, parseJSON, startOfDay, subDays } from 'date-fns';
 import { combineLatest, finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
@@ -96,7 +96,7 @@ export class ComplexGraphComponent implements AfterViewInit {
         .pipe(
           finalize(() => this.isLoaded.set(true))
         )
-        .subscribe((resp: [InstrumentHistoryPrice[], PredictionResp]) => {
+        .subscribe((resp: [InstrumentHistoryPrice[], PredictionGraphResp]) => {
           const respHistory = resp?.[0];
           const respPredictions = resp?.[1];
 
@@ -117,12 +117,21 @@ export class ComplexGraphComponent implements AfterViewInit {
             {
               name: 'Предсказания TA-1',
               type: 'line',
-              data: respPredictions?.ta1?.map(i => ({
+              data: respPredictions?.['ta-1']?.map(i => ({
                   y: getRoundPrice(i.prediction),
                   x: parseJSON(i.date),
                 }))
                 ?? [],
-            }
+            },
+            {
+              name: 'Предсказания TA-1_1',
+              type: 'line',
+              data: respPredictions?.['ta-1_1']?.map(i => ({
+                  y: getRoundPrice(i.prediction),
+                  x: parseJSON(i.date),
+                }))
+                ?? [],
+            },
           ];
 
           this.series.set(series);

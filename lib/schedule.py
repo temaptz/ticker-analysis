@@ -29,7 +29,7 @@ def start_schedule() -> None:
 
     # Сбор предсказаний нейросети
     scheduler.add_job(
-        predictions_save.save_predictions_ta_1,
+        predictions_save.save_predictions,
         'cron',
         hour=11,
         minute=0,

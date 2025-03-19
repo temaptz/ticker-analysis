@@ -1,20 +1,19 @@
 import datetime
-import time
-from lib import instruments
+from lib import instruments, memcached
 from lib.db import learning_db
 from lib.learn.ta_1.learning_card import LearningCard
 import numpy
 
 
 def prepare_cards():
-    # learning_db.init_table()
     forecast_days = 30
-    i = 0
-    j = 0
+    total_processed_count = 0
+    is_ok_count = 0
+    already_existing_count = 0
+    saved_db_count = 0
 
     for uid in get_uids():
-        for day in get_days(days=365, offset_days=forecast_days):
-            print(i, uid, day)
+        for day in get_days(days=500, offset_days=forecast_days):
             c = LearningCard()
             c.load(
                 uid=uid,
@@ -30,18 +29,25 @@ def prepare_cards():
                 if len(learning_exists) == 0:
                     json_str = c.get_json_db()
                     learning_db.insert_learning(uid=c.uid, date=c.date, json=json_str)
-                j += 1
+                    saved_db_count += 1
+                else:
+                    already_existing_count += 1
+                is_ok_count += 1
 
-            i += 1
+            total_processed_count += 1
 
-            print('(total: '+str(i)+', is_ok: '+str(j)+')')
+            db_count = learning_db.get_record_count()
 
-    # c = LearningCard(
-    #     uid='ca845f68-6c43-44bc-b584-330d2a1e5eb7',
-    #     date=(datetime.datetime.now() - datetime.timedelta(days=30)),
-    #     target_forecast_days=forecast_days
-    # )
-    # c.print_card()
+            print(
+                '(' +
+                'total: ' + str(total_processed_count) +
+                ', is_ok: ' + str(is_ok_count) +
+                ', already_existing_db: ' + str(already_existing_count) +
+                ', saved_db: ' + str(saved_db_count) +
+                ', total_db: ' + str(db_count) +
+                ', memcache_MB: ' + str(memcached.get_memcached_size_mb()) + '/' + str(memcached.get_memcached_max_size_mb()) +
+                ')'
+            )
 
 
 def get_saved() -> list[LearningCard]:
@@ -96,7 +102,10 @@ def get_uids() -> list[str]:
 
 def get_days(days: int, offset_days: int) -> list[datetime.datetime]:
     result = list[datetime.datetime]()
-    end_date = datetime.datetime.now().replace(hour=12, minute=0, second=0, microsecond=0) - datetime.timedelta(days=offset_days)
+    end_date = (
+            datetime.datetime.now().replace(hour=12, minute=0, second=0, microsecond=0)
+            - datetime.timedelta(days=offset_days)
+    )
 
     for i in range(0, days):
         date = end_date - datetime.timedelta(days=i)

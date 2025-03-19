@@ -46,3 +46,16 @@ def insert_learning(uid: str, date: datetime.datetime, json: str):
     cursor.execute('INSERT INTO Learning (uid, date, json) VALUES (?, ?, ?)', (uid, date, json))
     connection.commit()
     connection.close()
+
+
+def get_record_count():
+    """
+    Функция возвращает количество записей в таблице Learning.
+    Возвращаемое значение — целое число (int).
+    """
+    connection = sqlite3.connect(const.DB_FILENAME)
+    cursor = connection.cursor()
+    cursor.execute("SELECT COUNT(*) FROM Learning")
+    count = cursor.fetchone()[0]
+    connection.close()
+    return count
