@@ -7,7 +7,7 @@
       [class.minus]="priceChangeRel < 0"
     >{{ priceChangeRel }}% -> {{ getPriceByQuotation(h.consensus.consensus) }}</span>
 
-    <span>({{ h.time | date }})</span>
+    <span>({{ h.date | date }})</span>
   </div>
 } @placeholder {
   <preloader></preloader>

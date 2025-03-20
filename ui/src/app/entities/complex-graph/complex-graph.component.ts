@@ -1,26 +1,27 @@
 import { AfterViewInit, Component, effect, ElementRef, input, numberAttribute, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { combineLatest, finalize } from 'rxjs';
 import {
   ApexAxisChartSeries,
   NgApexchartsModule,
   ApexOptions, ChartComponent
 } from 'ng-apexcharts';
-import { ApiService } from '../../shared/services/api.service';
-import { InstrumentHistoryPrice, InstrumentInList, PredictionGraphResp } from '../../types';
 import { addDays, endOfDay, parseJSON, startOfDay, subDays } from 'date-fns';
-import { combineLatest, finalize } from 'rxjs';
-import { PreloaderComponent } from '../preloader/preloader.component';
+import { ApiService } from '../../shared/services/api.service';
+import { debounce } from '../../shared/utils';
+import { GRAPH_COLORS } from '../../shared/const';
+import { InstrumentHistoryPrice, InstrumentInList, PredictionGraphResp } from '../../types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval } from '../../enums';
-import { debounce } from '../../shared/utils';
+import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-    selector: 'complex-graph',
-    imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
-    providers: [],
-    templateUrl: './complex-graph.component.html',
-    styleUrl: './complex-graph.component.scss'
+  selector: 'complex-graph',
+  imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
+  providers: [],
+  templateUrl: './complex-graph.component.html',
+  styleUrl: './complex-graph.component.scss'
 })
 export class ComplexGraphComponent implements AfterViewInit {
 
@@ -117,6 +118,7 @@ export class ComplexGraphComponent implements AfterViewInit {
             {
               name: 'Предсказания TA-1',
               type: 'line',
+              color: GRAPH_COLORS.ta_1,
               data: respPredictions?.['ta-1']?.map(i => ({
                   y: getRoundPrice(i.prediction),
                   x: parseJSON(i.date),
@@ -126,6 +128,7 @@ export class ComplexGraphComponent implements AfterViewInit {
             {
               name: 'Предсказания TA-1_1',
               type: 'line',
+              color: GRAPH_COLORS.ta_1_1,
               data: respPredictions?.['ta-1_1']?.map(i => ({
                   y: getRoundPrice(i.prediction),
                   x: parseJSON(i.date),
@@ -171,3 +174,4 @@ export class ComplexGraphComponent implements AfterViewInit {
   }, 300);
 
 }
+

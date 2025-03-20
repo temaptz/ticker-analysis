@@ -60,3 +60,8 @@ export interface PredictionGraph {
   prediction: number;
   date: string;
 }
+
+export interface InstrumentForecastsHistory {
+  date: string;
+  consensus: any;
+}

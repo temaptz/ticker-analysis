@@ -103,15 +103,11 @@ def instrument_history_forecasts(request):
     uid = request.GET.get('uid')
 
     if uid:
-        for f in forecasts.get_db_forecasts_by_uid(uid=uid):
-            forecast = f[1]
-            date = f[2]
+        resp = forecasts.get_db_forecasts_history_by_uid(uid=uid)
 
-            resp.append({'time': date, 'consensus': serializer.get_dict_by_object(forecast.consensus)})
+    response = HttpResponse(serializer.to_json(resp))
 
-    response = HttpResponse(json.dumps(resp))
-
-    if len(resp):
+    if len(resp) > 0:
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
 
     return response

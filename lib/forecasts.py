@@ -1,9 +1,10 @@
 import datetime
+from collections import defaultdict
 from tinkoff.invest import Client, constants
 from tinkoff.invest.schemas import GetForecastResponse, GetForecastRequest
 from lib.db import forecasts_db
 from const import TINKOFF_INVEST_TOKEN
-from lib import cache
+from lib import cache, utils
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 3)
@@ -20,7 +21,6 @@ def get_forecasts(instrument_uid: str) -> GetForecastResponse:
         print('ERROR GETTING FORECASTS OF: ', instrument_uid, e)
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 3)
 def get_db_forecasts_by_uid(uid: str) -> (str, GetForecastResponse, str):
     result = list()
 
@@ -42,3 +42,63 @@ def get_db_forecast_by_uid_date(uid: str, date: datetime.datetime) -> (str, GetF
     forecast = forecasts_db.deserialize(db_resp[1])
 
     return uid, forecast, date
+
+
+@cache.ttl_cache(ttl=3600 * 24 * 3)
+def get_db_forecasts_history_by_uid(uid: str) -> (str, GetForecastResponse, str):
+    result = list()
+
+    try:
+        for f in get_db_forecasts_by_uid(uid=uid):
+            forecast = f[1]
+            date = utils.parse_json_date(f[2])
+
+            result.append({'date': date, 'consensus': forecast.consensus})
+
+        result = filter_monthly(result)
+    except Exception as e:
+        print('ERROR get_db_forecasts_history_by_uid', e)
+
+    return result
+
+
+def filter_monthly(resp):
+    # Проверяем, не пуст ли входной список
+    if not resp:
+        return []
+
+    # Определяем текущие год и месяц по системному времени
+    now = datetime.datetime.now()
+    current_year_month = (now.year, now.month)
+
+    # Готовим структуру для группировки: ключ – (год, месяц), значение – список записей
+    groups = defaultdict(list)
+    for item in resp:
+        d = item['date']
+        # Убеждаемся, что дата имеет тип datetime.datetime
+        if not isinstance(d, datetime.datetime):
+            raise ValueError('item[\'date\'] must be a datetime.datetime')
+        # Добавляем текущую запись в соответствующую группу
+        groups[(d.year, d.month)].append(item)
+
+    filtered = []
+    # Проходим по сгруппированным записям помесячно
+    for (year, month), items in groups.items():
+        # Сортируем записи внутри месяца по дате возрастанию
+        items_sorted = sorted(items, key=lambda x: x['date'])
+        # Если это текущий (последний) месяц
+        if (year, month) == current_year_month:
+            # Берем первую (самую раннюю) и, при необходимости, последнюю
+            earliest = items_sorted[0]
+            latest = items_sorted[-1]
+            filtered.append(earliest)
+            # Если первая и последняя отличаются
+            if earliest['date'] != latest['date']:
+                filtered.append(latest)
+        else:
+            # Для остальных месяцев берем только самую раннюю запись
+            filtered.append(items_sorted[0])
+
+    # Сортируем все отфильтрованные записи в порядке убывания дат (сначала самые свежие)
+    filtered.sort(key=lambda x: x['date'], reverse=True)
+    return filtered

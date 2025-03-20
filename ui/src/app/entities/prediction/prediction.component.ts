@@ -2,12 +2,13 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize, combineLatest } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
-import { Forecast, InstrumentInList } from '../../types';
-import { getPriceByQuotation } from '../../utils';
-import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
+import { PreloaderComponent } from '../preloader/preloader.component';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { GRAPH_COLORS } from '../../shared/const';
+import { Forecast, InstrumentInList } from '../../types';
+import { getPriceByQuotation } from '../../utils';
 
 
 @Component({
@@ -29,6 +30,7 @@ export class PredictionComponent {
   prediction_ta_1 = signal<number | null>(null);
   prediction_ta_1_1 = signal<number | null>(null);
   getPriceByQuotation = getPriceByQuotation;
+  colors = GRAPH_COLORS;
 
   private apiService = inject(ApiService);
   private currentPriceService = inject(CurrentPriceService);

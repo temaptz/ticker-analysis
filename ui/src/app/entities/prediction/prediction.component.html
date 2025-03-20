@@ -1,6 +1,6 @@
 @defer (when isLoaded()) {
   <div>
-    <h5>TA-1:</h5>
+    <h5 [style.color]="colors.ta_1">TA-1:</h5>
     <span
       [class.plus]="isPlus_ta_1()"
       [class.minus]="!isPlus_ta_1()"
@@ -8,7 +8,7 @@
   </div>
 
   <div>
-    <h5>TA-1_1:</h5>
+    <h5 [style.color]="colors.ta_1_1">TA-1_1:</h5>
     <span
       [class.plus]="isPlus_ta_1_1()"
       [class.minus]="!isPlus_ta_1_1()"
