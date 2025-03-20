@@ -25,7 +25,7 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
-    predictions_save.save_predictions_ta_1_1()
+    # predictions_save.save_predictions_ta_1_1()
     # ta_1_1.learn()
     # prepare_data.prepare_cards()
     # print(docker.is_prod())
