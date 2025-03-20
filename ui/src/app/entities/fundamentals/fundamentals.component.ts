@@ -1,36 +1,36 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, effect, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { Fundamentals, InstrumentInList } from '../../types';
-import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { FundamentalsCardComponent } from '../fundamentals-card/fundamentals-card.component';
 
 
 @Component({
   selector: 'fundamentals',
-  imports: [CommonModule, PreloaderComponent, PriceFormatPipe],
+  imports: [CommonModule, PreloaderComponent, RouterLink, FundamentalsCardComponent],
   providers: [],
   templateUrl: './fundamentals.component.html',
   styleUrl: './fundamentals.component.scss'
 })
-export class FundamentalsComponent implements OnInit {
+export class FundamentalsComponent {
 
-  @Input({required: true}) instrumentAssetUid!: InstrumentInList['asset_uid'];
+  instrumentAssetUid = input.required<InstrumentInList['asset_uid']>();
+  instrumentUid = input<InstrumentInList['uid']>();
 
   isLoaded = signal<boolean>(false);
   fundamentals = signal<Fundamentals>(null);
-  getPriceByQuotation = getPriceByQuotation;
 
   constructor(
     private appService: ApiService,
-  ) {}
-
-  ngOnInit() {
-    this.appService.getInstrumentFundamentals(this.instrumentAssetUid)
-      .pipe(finalize(() => this.isLoaded.set(true)))
-      .subscribe((resp: Fundamentals) => this.fundamentals.set(resp));
+  ) {
+    effect(() => {
+      this.appService.getInstrumentFundamentals(this.instrumentAssetUid())
+        .pipe(finalize(() => this.isLoaded.set(true)))
+        .subscribe((resp: Fundamentals) => this.fundamentals.set(resp));
+    });
   }
 
 }

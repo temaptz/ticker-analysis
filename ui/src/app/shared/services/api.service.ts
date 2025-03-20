@@ -10,7 +10,7 @@ import {
   NewsResponse,
   Operation,
   PredictionResp,
-  PredictionGraphResp, InstrumentForecastsHistory
+  PredictionGraphResp, InstrumentForecastsHistory, FundamentalsHistory
 } from '../../types';
 import { CandleInterval } from '../../enums';
 import { CacheObservable } from '../utils/cache';
@@ -91,7 +91,15 @@ export class ApiService {
     let params = new HttpParams();
     params = params.set('asset_uid', assetUid);
 
-    return this.http.get<Fundamentals>(`${this.apiUrl}/instrument/fundamental`, {params: params});
+    return this.http.get<Fundamentals>(`${this.apiUrl}/instrument/fundamentals`, {params: params});
+  }
+
+  @CacheObservable()
+  getInstrumentFundamentalsHistory(assetUid: string): Observable<FundamentalsHistory[]> {
+    let params = new HttpParams();
+    params = params.set('asset_uid', assetUid);
+
+    return this.http.get<FundamentalsHistory[]>(`${this.apiUrl}/instrument/fundamentals/history`, {params: params});
   }
 
   @CacheObservable()

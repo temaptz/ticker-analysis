@@ -14,6 +14,7 @@
   @defer (when isLoadedInstrument()) {
     <fundamentals
       *ngIf="instrument()?.asset_uid as asset_uid"
+      [instrumentUid]="instrumentUid"
       [instrumentAssetUid]="asset_uid"
     ></fundamentals>
   } @placeholder {

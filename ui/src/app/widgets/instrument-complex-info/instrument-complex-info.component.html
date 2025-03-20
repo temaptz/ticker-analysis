@@ -17,6 +17,7 @@
 
             <fundamentals
               *ngIf="instr.asset_uid as asset_uid"
+              [instrumentUid]="instr.uid"
               [instrumentAssetUid]="asset_uid"
             ></fundamentals>
           </td>

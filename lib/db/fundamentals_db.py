@@ -31,7 +31,17 @@ def get_fundamentals():
     return fundamentals
 
 
-def get_fundamentals_by_asset_uid(asset_uid: str, date: datetime.datetime):
+def get_fundamentals_by_asset_uid(asset_uid: str):
+    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+    cursor = connection.cursor()
+    cursor.execute('''SELECT * FROM Fundamentals WHERE asset_uid = ? ''', (asset_uid,))
+    fundamental = cursor.fetchall()
+    connection.close()
+
+    return fundamental
+
+
+def get_fundamentals_by_asset_uid_date(asset_uid: str, date: datetime.datetime):
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()
     cursor.execute('''

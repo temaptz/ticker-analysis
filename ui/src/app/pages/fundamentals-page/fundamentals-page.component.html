@@ -1,0 +1,38 @@
+<div class="page">
+  @defer (when isLoadedInstrument()) {
+    <ng-container>
+      <div class="logo">
+        <instrument-logo [instrumentUid]="instrument().uid"></instrument-logo>
+
+        <h3>{{ instrument().name }}</h3>
+      </div>
+
+      <div class="current">
+        <h6>Текущие</h6>
+
+        <fundamentals
+          [instrumentAssetUid]="instrument().asset_uid"
+        ></fundamentals>
+      </div>
+    </ng-container>
+  }
+  @placeholder {
+    <preloader></preloader>
+  }
+
+  @defer (when isLoadedHistory()) {
+    <div
+      *ngFor="let f of history()"
+      class="history"
+    >
+      <h6>{{ f.date | date }}</h6>
+
+      <fundamentals-card
+        [fundamentals]="f.fundamentals"
+      ></fundamentals-card>
+    </div>
+  }
+  @placeholder {
+    <preloader></preloader>
+  }
+</div>

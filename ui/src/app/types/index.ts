@@ -65,3 +65,8 @@ export interface InstrumentForecastsHistory {
   date: string;
   consensus: any;
 }
+
+export interface FundamentalsHistory {
+  date: string;
+  fundamentals: any;
+}

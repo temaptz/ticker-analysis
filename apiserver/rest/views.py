@@ -114,18 +114,34 @@ def instrument_history_forecasts(request):
 
 
 @api_view(['GET'])
-def instrument_fundamental(request):
-    resp = list()
-    uid = request.GET.get('asset_uid')
+def instrument_fundamentals(request):
+    resp = None
+    asset_uid = request.GET.get('asset_uid')
 
-    if uid:
-        fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(uid)
+    if asset_uid:
+        fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(asset_uid=asset_uid)
 
         if fundamentals_resp:
             for f in fundamentals_resp:
                 resp = serializer.get_dict_by_object(f)
 
     response = HttpResponse(json.dumps(resp))
+
+    if len(resp):
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
+
+
+@api_view(['GET'])
+def instrument_fundamentals_history(request):
+    resp = list()
+    asset_uid = request.GET.get('asset_uid')
+
+    if asset_uid:
+        resp = fundamentals.get_db_fundamentals_history_by_uid(asset_uid=asset_uid)
+
+    response = HttpResponse(serializer.to_json(resp))
 
     if len(resp):
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
