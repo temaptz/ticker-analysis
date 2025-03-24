@@ -14,6 +14,9 @@ def save_predictions_ta_1():
     counter = 0
 
     for instrument in instruments.get_instruments_white_list():
+        print(instrument.ticker)
+        print(instrument.name)
+
         prediction = predictions.get_prediction_ta_1_by_uid(uid=instrument.uid)
 
         if prediction:
@@ -35,6 +38,9 @@ def save_predictions_ta_1_1():
     counter = 0
 
     for instrument in instruments.get_instruments_white_list():
+        print(instrument.ticker)
+        print(instrument.name)
+
         prediction = predictions.get_prediction_ta_1_1_by_uid(uid=instrument.uid)
 
         if prediction:
