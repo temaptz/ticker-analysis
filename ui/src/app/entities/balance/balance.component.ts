@@ -1,6 +1,6 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { finalize, map, combineLatest } from 'rxjs';
+import { finalize, combineLatest } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
@@ -24,13 +24,11 @@ export class BalanceComponent {
   instrumentFigi = input.required<InstrumentInList['figi']>();
 
   isLoaded = signal<boolean>(false);
-  balance = signal<number | null>(null);
+  balanceQty = signal<number | null>(null);
   operations = signal<Operation[]>([]);
-  avgPrice = signal<number | null>(null);
-  totalCost = signal<number | null>(null);
   isPlus = signal<boolean>(false);
   percentChange = signal<number | null>(null);
-  willEarn = signal<number | null>(null);
+  potentialProfit = signal<number | null>(null);
   currentPrice = signal<number | null>(null);
   getPriceByQuotation = getPriceByQuotation;
 
@@ -45,42 +43,107 @@ export class BalanceComponent {
     ])
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe(([balance, currentPrice, operations]: [number, number | null, Operation[]]) => {
-        this.balance.set(balance);
+        this.balanceQty.set(balance);
         this.currentPrice.set(currentPrice);
-        this.operations.set(
-          operations
-            ?.filter(i => ['OPERATION_TYPE_BUY', 'OPERATION_TYPE_SELL'].includes(i.operation_type._name_))
-          ?? []
-        );
+        this.operations.set(operations);
       }));
 
     effect(() => {
-      const balance = this.balance();
-      const currentPrice = this.currentPrice() ?? 0;
+      const balanceQty = this.balanceQty() ?? 0;
 
-      let avgPrice = 0;
-      let totalCost = 0;
+      if (balanceQty) {
+        const currentPrice = this.currentPrice() ?? 0;
+        const operations = this.operations();
+        const potentialProfit = this.getProfit(operations, currentPrice, balanceQty);
 
-      this.operations()
-        ?.filter(i => i.operation_type._name_ === 'OPERATION_TYPE_BUY')
-        ?.forEach(i => {
-          const c = getPriceByQuotation(i.payment, true);
-
-          if (c) {
-            totalCost += c;
-          }
-        });
-
-      if (balance) {
-        avgPrice = totalCost / balance;
-
-        this.avgPrice.set(avgPrice ? avgPrice : null);
-        this.totalCost.set(totalCost ? totalCost : null);
-        this.isPlus.set(avgPrice < currentPrice);
-        this.percentChange.set(Math.round(currentPrice / avgPrice * 100));
-        this.willEarn.set(Math.abs((balance * currentPrice) - totalCost));
+        this.isPlus.set(potentialProfit > 0);
+        this.potentialProfit.set(potentialProfit);
       }
     });
+  }
+
+  /**
+   * Возвращает среднюю цену покупки (Average Price) для текущего остатка бумаг.
+   * Если после всех операций бумаг не осталось, вернёт 0.
+   */
+  private getAveragePrice(operations: Operation[]): number {
+    // Храним "открытые лоты" (позиции), которые ещё не были полностью проданы.
+    // Каждый элемент массива: {quantity, costPerShare}
+    // - количество бумаг в данном лоте
+    // - цена покупки за бумагу (при BUY).
+    const openPositions: { quantity: number; costPerShare: number }[] = [];
+
+    for (const o of operations) {
+      if (o.operation_type._name_ === 'OPERATION_TYPE_BUY') {
+        // При покупке добавляем новый лот.
+        openPositions.push({
+          quantity: o.quantity,
+          costPerShare: getPriceByQuotation(o.price) ?? 0
+        });
+      } else if (o.operation_type === 'OPERATION_TYPE_SELL') {
+        // При продаже уменьшаем лоты с начала (FIFO)
+        let remainToSell = o.quantity;
+
+        // Пока нужно что-то "продать" и есть открытые лоты
+        while (remainToSell > 0 && openPositions.length > 0) {
+          const firstPos = openPositions[0];
+
+          // Если первый лот целиком "закрывается" продажей
+          if (firstPos.quantity <= remainToSell) {
+            remainToSell -= firstPos.quantity;
+            // Удаляем лот из списка
+            openPositions.shift();
+          } else {
+            // Продаём часть лота
+            firstPos.quantity -= remainToSell;
+            remainToSell = 0;
+          }
+        }
+      }
+    }
+
+    // Подсчитаем, сколько всего бумаг осталось и какова их суммарная стоимость
+    let totalQty = 0;
+    let totalCost = 0;
+
+    for (const pos of openPositions) {
+      totalQty += pos.quantity;
+      totalCost += pos.quantity * pos.costPerShare;
+    }
+
+    // Средняя цена покупки = Общая стоимость / Количество
+    return totalQty > 0 ? totalCost / totalQty : 0;
+  }
+
+  /**
+   * Возвращает текущую рыночную стоимость всех оставшихся бумаг
+   * = (остаток бумаг) * (текущая цена)
+   */
+  private getMarketValue(currentPrice: number, balanceQty: number): number {
+    return balanceQty * currentPrice; // 10 * 3717 = 37170
+  }
+
+  /**
+   * Абсолютная прибыль (или убыток) в рублях
+   */
+  private getProfit(operations: Operation[], currentPrice: number, balanceQty: number): number {
+    const avgPrice = this.getAveragePrice(operations); // 1324.5
+    const costBasis = avgPrice * balanceQty;    // 13245
+    const marketValue = currentPrice * balanceQty; // 37170
+    return marketValue - costBasis;      // 23925
+  }
+
+  /**
+   * Доходность в процентах
+   */
+  private getProfitPercentage(operations: Operation[], currentPrice: number, balanceQty: number): number {
+    const profit = this.getProfit(operations, currentPrice, balanceQty); // 23925
+    // Себестоимость (сколько потрачено на покупку)
+    const avgPrice = this.getAveragePrice(operations); // 1324.5
+    const costBasis = avgPrice * balanceQty; // 13245
+
+    // (прибыль / себестоимость) * 100%
+    return (profit / costBasis) * 100;
   }
 
 }

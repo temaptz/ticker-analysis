@@ -20,8 +20,6 @@ import { CacheObservable } from '../utils/cache';
 })
 export class ApiService {
 
-  predictionPercentByUidMap = new Map<string, number>();
-
   private apiUrl = isDevMode()
     ? 'http://localhost:8000'
     : '/api';

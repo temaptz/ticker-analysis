@@ -1,8 +1,8 @@
 @defer (when isLoaded()) {
-  <ng-container *ngIf="balance() as b">
+  <ng-container *ngIf="balanceQty() as b">
     <label>Баланс:</label>
 
-    <div>{{ b }} Шт. * {{ avgPrice() | priceRound }} = {{ totalCost() | priceRound }}</div>
+    <div>{{ b }} Шт.</div>
 
     <label>История:</label>
 
@@ -20,25 +20,16 @@
       <span>({{ operation.date | date : 'yyyy-MM-dd' }})</span>
     </div>
 
-    <label>Изменение цены:</label>
-
-    <div
-      [class.plus]="isPlus()"
-      [class.minus]="!isPlus()"
-    >
-      {{ avgPrice() | priceRound }} -> {{ currentPrice() | priceRound }}
-      (<span
-        [class.plus]="isPlus()"
-        [class.minus]="!isPlus()"
-      >{{ percentChange() }}%</span>)
-    </div>
-
     <label>Если продам сейчас, то заработаю:</label>
 
-    <span
-      [class.plus]="isPlus()"
-      [class.minus]="!isPlus()"
-    ><b>{{ willEarn() | priceRound }}</b></span>
+    @if (potentialProfit()) {
+      <span
+        [class.plus]="potentialProfit()! > 0"
+        [class.minus]="potentialProfit()! < 0"
+      ><b>{{ potentialProfit() | priceRound }}</b></span>
+    } @else {
+      <b>-</b>
+    }
   </ng-container>
 } @placeholder {
   <preloader></preloader>
