@@ -5,7 +5,7 @@
       class="small"
       [class.plus]="priceChangeRel > 0"
       [class.minus]="priceChangeRel < 0"
-    >{{ priceChangeRel }}% -> {{ getPriceByQuotation(h.consensus.consensus) }}</span>
+    >{{ priceChangeRel }}% -> {{ getPriceByQuotation(h.consensus.consensus) | priceFormat }}</span>
 
     <span>({{ h.date | date }})</span>
   </div>

@@ -1,0 +1,9 @@
+@if (!isLoaded()) {
+  <preloader></preloader>
+}
+
+<div
+  #chart
+  [style.width]="width()"
+  [style.height]="height()"
+></div>

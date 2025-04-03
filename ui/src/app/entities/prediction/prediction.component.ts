@@ -47,8 +47,8 @@ export class PredictionComponent {
           const current = currentPrice ?? 0;
           const prediction_ta_1 = predictions['ta-1'] ?? 0;
           const prediction_ta_1_1 = predictions['ta-1_1'] ?? 0;
-          const absPercentChange_ta_1 = Math.round(Math.abs(prediction_ta_1 - current) / current * 100) / 100;
-          const absPercentChange_ta_1_1 = Math.round(Math.abs(prediction_ta_1_1 - current) / current * 100) / 100;
+          const absPercentChange_ta_1 = Math.round(Math.abs(prediction_ta_1 - current) / current * 10000) / 100;
+          const absPercentChange_ta_1_1 = Math.round(Math.abs(prediction_ta_1_1 - current) / current * 10000) / 100;
           const isPlus_ta_1 = prediction_ta_1 - current >= 0;
           const isPlus_ta_1_1 = prediction_ta_1_1 - current >= 0;
 

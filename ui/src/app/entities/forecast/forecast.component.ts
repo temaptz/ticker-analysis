@@ -1,15 +1,16 @@
 import { Component, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../../shared/services/api.service';
-import { Forecast, InstrumentHistoryPrice, InstrumentInList } from '../../types';
-import { getPriceByQuotation } from '../../utils';
 import { finalize } from 'rxjs';
+import { ApiService } from '../../shared/services/api.service';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { Forecast, InstrumentInList } from '../../types';
+import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
     selector: 'forecast',
-    imports: [CommonModule, PreloaderComponent],
+  imports: [CommonModule, PreloaderComponent, PriceFormatPipe],
     providers: [],
     templateUrl: './forecast.component.html',
     styleUrl: './forecast.component.scss'

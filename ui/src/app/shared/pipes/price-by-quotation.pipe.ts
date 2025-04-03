@@ -7,13 +7,13 @@ import { getPriceByQuotation } from '../../utils';
 })
 export class PriceByQuotationPipe implements PipeTransform {
 
-  transform(value: unknown, isAbsolute = false): unknown {
+  transform(value: unknown, isAbsolute = false): number | null {
     try {
       return getPriceByQuotation(value, isAbsolute);
     } catch (e) {
       console.error('Error CurrencyPipeByQuotation transform', (e as any)?.message ?? e);
 
-      return value;
+      return null;
     }
   }
 

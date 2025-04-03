@@ -6,13 +6,13 @@ import { InstrumentInList, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceByQuotationPipe } from '../../shared/pipes/price-by-quotation.pipe';
-import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 
 @Component({
     selector: 'balance',
-    imports: [CommonModule, PreloaderComponent, PriceByQuotationPipe, PriceRoundPipe],
+  imports: [CommonModule, PreloaderComponent, PriceByQuotationPipe, PriceFormatPipe],
     providers: [],
     templateUrl: './balance.component.html',
     styleUrl: './balance.component.scss'
@@ -24,11 +24,12 @@ export class BalanceComponent {
   instrumentFigi = input.required<InstrumentInList['figi']>();
 
   isLoaded = signal<boolean>(false);
-  balanceQty = signal<number | null>(null);
   operations = signal<Operation[]>([]);
-  isPlus = signal<boolean>(false);
-  percentChange = signal<number | null>(null);
+  balanceQty = signal<number | null>(null);
+  marketValue = signal<number | null>(null);
   potentialProfit = signal<number | null>(null);
+  potentialProfitPercent = signal<number | null>(null);
+  avgPrice = signal<number | null>(null);
   currentPrice = signal<number | null>(null);
   getPriceByQuotation = getPriceByQuotation;
 
@@ -54,10 +55,11 @@ export class BalanceComponent {
       if (balanceQty) {
         const currentPrice = this.currentPrice() ?? 0;
         const operations = this.operations();
-        const potentialProfit = this.getProfit(operations, currentPrice, balanceQty);
 
-        this.isPlus.set(potentialProfit > 0);
-        this.potentialProfit.set(potentialProfit);
+        this.marketValue.set(this.getMarketValue(currentPrice, balanceQty));
+        this.potentialProfit.set(this.getProfit(operations, currentPrice, balanceQty));
+        this.potentialProfitPercent.set(this.getProfitPercentage(operations, currentPrice, balanceQty));
+        this.avgPrice.set(this.getAveragePrice(operations));
       }
     });
   }
@@ -146,4 +148,5 @@ export class BalanceComponent {
     return (profit / costBasis) * 100;
   }
 
+  protected readonly Infinity = Infinity;
 }

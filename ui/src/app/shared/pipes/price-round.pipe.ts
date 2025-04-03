@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+// @DEPRECATED use priceFormatPipe
 @Pipe({
   name: 'priceRound',
   standalone: true

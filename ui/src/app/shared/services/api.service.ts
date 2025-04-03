@@ -10,7 +10,7 @@ import {
   NewsResponse,
   Operation,
   PredictionResp,
-  PredictionGraphResp, InstrumentForecastsHistory, FundamentalsHistory
+  PredictionGraphResp, InstrumentForecastsHistory, FundamentalsHistory, Instrument
 } from '../../types';
 import { CandleInterval } from '../../enums';
 import { CacheObservable } from '../utils/cache';
@@ -34,7 +34,7 @@ export class ApiService {
   }
 
   @CacheObservable()
-  getInstrument(uid: string): Observable<InstrumentInList[]> {
+  getInstrument(uid: string): Observable<Instrument[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 

@@ -16,12 +16,12 @@ import { NewsComponent } from '../../entities/news/news.component';
 import { PredictionComponent } from '../../entities/prediction/prediction.component';
 import { ForecastComponent } from '../../entities/forecast/forecast.component';
 import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
-import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { GraphComponent } from '../../entities/graph/graph.component';
 import { CandleInterval } from '../../enums';
 import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
 import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { ComplexGraph2Component } from '../../entities/complex-graph-2/complex-graph-2.component';
 
 
 @Component({
@@ -37,7 +37,7 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
     PredictionComponent,
     ForecastComponent,
     ForecastHistoryComponent,
-    ComplexGraphComponent,
+    ComplexGraph2Component,
     GraphComponent,
     MatSortModule,
     RouterModule,

@@ -1,6 +1,6 @@
 @defer (when isLoaded()) {
   <ng-container *ngIf="balanceQty() as b">
-    <label>Баланс:</label>
+    <label>Количество:</label>
 
     <div>{{ b }} Шт.</div>
 
@@ -14,22 +14,31 @@
       [class.plus]="operation.operation_type._name_ === 'OPERATION_TYPE_BUY'"
       [class.minus]="operation.operation_type._name_ === 'OPERATION_TYPE_SELL'"
     >
-      {{ operation.quantity }} * {{ operation.price | priceByQuotation }} = {{ operation.payment | priceByQuotation : true }}
+      {{ operation.quantity }} * {{ operation.price | priceByQuotation | priceFormat }} = {{ operation.payment | priceByQuotation : true | priceFormat }}
     </span>
 
       <span>({{ operation.date | date : 'yyyy-MM-dd' }})</span>
     </div>
 
-    <label>Если продам сейчас, то заработаю:</label>
+    <label>Стоимость бумаг:</label>
 
-    @if (potentialProfit()) {
-      <span
-        [class.plus]="potentialProfit()! > 0"
-        [class.minus]="potentialProfit()! < 0"
-      ><b>{{ potentialProfit() | priceRound }}</b></span>
-    } @else {
-      <b>-</b>
-    }
+    <span class="market-value">{{ marketValue() | priceFormat }}</span>
+    <span
+      class="profit"
+      [class.plus]="potentialProfit()! > 0"
+      [class.minus]="potentialProfit()! < 0"
+    >
+      <b>{{ potentialProfit() | priceFormat : 2 : true : true : true }}</b>
+
+      @if (potentialProfitPercent() !== Infinity) {
+        ({{ potentialProfitPercent() | priceFormat : 2 : false : false }}%)
+      }
+
+    </span>
+
+    <label>Цена за бумагу:</label>
+
+    <span>{{ avgPrice() | priceFormat }} → {{ currentPrice() | priceFormat }}</span>
   </ng-container>
 } @placeholder {
   <preloader></preloader>
