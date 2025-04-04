@@ -1,17 +1,13 @@
-<div #container>
-  @defer (when isLoaded()) {
-    <ng-container *ngIf="chartOptions() as options">
-      <apx-chart
-        #chartComponent
-        *ngIf="series() as s"
-        [series]="s"
-        [chart]="options.chart!"
-        [xaxis]="options.xaxis!"
-        [yaxis]="options.yaxis!"
-        [legend]="options.legend!"
-      ></apx-chart>
-    </ng-container>
-  } @placeholder {
-    <preloader></preloader>
+@defer (when isLoaded()) {
+  @let opt = option();
+
+  @if (opt) {
+    <echarts-graph
+      [option]="opt"
+      [width]="width()"
+      [height]="height()"
+    ></echarts-graph>
   }
-</div>
+} @placeholder {
+  <preloader></preloader>
+}

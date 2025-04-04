@@ -15,12 +15,12 @@ import { ForecastHistoryComponent } from '../../entities/forecast-history/foreca
 import { PredictionComponent } from '../../entities/prediction/prediction.component';
 import { NewsComponent } from '../../entities/news/news.component';
 import { CurrentPriceComponent } from '../../entities/current-price/current-price.component';
-import { ComplexGraph2Component } from '../../entities/complex-graph-2/complex-graph-2.component';
+import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 
 
 @Component({
   selector: 'instrument-complex-info',
-  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, GraphComponent, BalanceComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, NewsComponent, CurrentPriceComponent, FormsModule, ComplexGraph2Component],
+  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, GraphComponent, BalanceComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, NewsComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent],
   providers: [],
   templateUrl: './instrument-complex-info.component.html',
   styleUrl: './instrument-complex-info.component.scss'

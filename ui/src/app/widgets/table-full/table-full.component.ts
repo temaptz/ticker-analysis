@@ -21,7 +21,7 @@ import { CandleInterval } from '../../enums';
 import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
 import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
-import { ComplexGraph2Component } from '../../entities/complex-graph-2/complex-graph-2.component';
+import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 
 
 @Component({
@@ -37,7 +37,7 @@ import { ComplexGraph2Component } from '../../entities/complex-graph-2/complex-g
     PredictionComponent,
     ForecastComponent,
     ForecastHistoryComponent,
-    ComplexGraph2Component,
+    ComplexGraphComponent,
     GraphComponent,
     MatSortModule,
     RouterModule,

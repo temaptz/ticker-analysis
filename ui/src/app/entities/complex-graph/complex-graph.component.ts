@@ -1,29 +1,34 @@
-import { AfterViewInit, Component, effect, ElementRef, input, numberAttribute, signal, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { combineLatest, finalize } from 'rxjs';
 import {
-  ApexAxisChartSeries,
-  NgApexchartsModule,
-  ApexOptions, ChartComponent
-} from 'ng-apexcharts';
-import { addDays, endOfDay, parseJSON, startOfDay, subDays } from 'date-fns';
+  Component,
+  effect,
+  ElementRef,
+  input,
+  numberAttribute,
+  signal,
+  ViewChild
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { combineLatest, finalize, map, Observable, of, switchMap } from 'rxjs';
+import { addDays, endOfDay, isAfter, parseJSON, startOfDay, subDays } from 'date-fns';
+import * as echarts from 'echarts';
 import { ApiService } from '../../shared/services/api.service';
-import { debounce } from '../../shared/utils';
 import { GRAPH_COLORS } from '../../shared/const';
-import { InstrumentHistoryPrice, InstrumentInList, PredictionGraphResp } from '../../types';
+import { Instrument, InstrumentHistoryPrice, InstrumentInList, Operation, PredictionGraphResp } from '../../types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval } from '../../enums';
 import { PreloaderComponent } from '../preloader/preloader.component';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 
 
 @Component({
   selector: 'complex-graph',
-  imports: [CommonModule, NgApexchartsModule, PreloaderComponent],
-  providers: [],
+  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent],
+  providers: [PriceFormatPipe],
   templateUrl: './complex-graph.component.html',
   styleUrl: './complex-graph.component.scss'
 })
-export class ComplexGraphComponent implements AfterViewInit {
+export class ComplexGraphComponent {
 
   instrumentUid = input.required<InstrumentInList['uid']>();
   historyInterval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_DAY);
@@ -31,55 +36,24 @@ export class ComplexGraphComponent implements AfterViewInit {
   daysFuture = input(90, { transform: numberAttribute });
   width = input<string>('450px');
   height = input<string>('150px');
+  isShowOperations = input<boolean>(false);
 
   isLoaded = signal<boolean>(false);
-  series = signal<ApexAxisChartSeries | null>(null);
+  option = signal<echarts.EChartsOption | null>(null);
 
-  chartOptions = signal<ApexOptions>({});
-
-  private resizeObserver?: ResizeObserver;
-
-  @ViewChild('chartComponent')
-  private chartComponent?: ChartComponent;
-
-  @ViewChild('container')
-  private containerElRef?: ElementRef<HTMLDivElement>;
+  @ViewChild('chart')
+  private chartElRef?: ElementRef<HTMLDivElement>;
 
   constructor(
     private appService: ApiService,
+    private priceFormatPipe: PriceFormatPipe,
   ) {
-    effect(() => {
-      const nextOptions: ApexOptions = {
-        chart: {
-          type: 'candlestick',
-          width: this.width(),
-          height: this.height(),
-          toolbar: {
-            show: false,
-          },
-          animations: {
-            enabled: false,
-          },
-          zoom: {
-            enabled: false,
-          },
-        },
-        xaxis: {
-          type: 'datetime',
-        },
-        legend: {
-          show: false,
-        },
-      };
-
-      this.chartOptions.set(nextOptions);
-    });
-
     effect(() => {
       const uid = this.instrumentUid();
       const history = this.daysHistory();
       const future = this.daysFuture();
       const interval = this.historyInterval();
+      const isShowOperations = this.isShowOperations();
 
       combineLatest([
         this.appService.getInstrumentHistoryPrices(
@@ -92,86 +66,173 @@ export class ComplexGraphComponent implements AfterViewInit {
           startOfDay(subDays(new Date(), history)),
           endOfDay(addDays(new Date(), future)),
           interval,
-        )
+        ),
+        isShowOperations
+          ? this.getOperations()
+          : of([])
       ])
         .pipe(
           finalize(() => this.isLoaded.set(true))
         )
-        .subscribe((resp: [InstrumentHistoryPrice[], PredictionGraphResp]) => {
+        .subscribe((resp: [InstrumentHistoryPrice[], PredictionGraphResp, Operation[]]) => {
           const respHistory = resp?.[0];
           const respPredictions = resp?.[1];
-
-          const series = [
-            {
-              name: 'Фактически',
-              type: 'candlestick',
-              data: respHistory?.map(i => ({
-                x: parseJSON(i.time),
-                y: [
-                  getPriceByQuotation(i.open) ?? 0,
-                  getPriceByQuotation(i.high) ?? 0,
-                  getPriceByQuotation(i.low) ?? 0,
-                  getPriceByQuotation(i.close) ?? 0
-                ],
-              })) ?? [],
-            },
-            {
-              name: 'Предсказания TA-1',
-              type: 'line',
-              color: GRAPH_COLORS.ta_1,
-              data: respPredictions?.['ta-1']?.map(i => ({
-                  y: getRoundPrice(i.prediction),
-                  x: parseJSON(i.date),
-                }))
-                ?? [],
-            },
-            {
-              name: 'Предсказания TA-1_1',
-              type: 'line',
-              color: GRAPH_COLORS.ta_1_1,
-              data: respPredictions?.['ta-1_1']?.map(i => ({
-                  y: getRoundPrice(i.prediction),
-                  x: parseJSON(i.date),
-                }))
-                ?? [],
-            },
-          ];
-
-          this.series.set(series);
+          const respOperations = resp?.[2];
+          this.initOption(respHistory, respPredictions, respOperations);
         });
     });
   }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      if (this.width() === '100%') {
-        const container = this.containerElRef?.nativeElement;
+  private getOperations(): Observable<Operation[]> {
+    return this.appService.getInstrument(this.instrumentUid())
+      .pipe(
+        switchMap((instrument: Instrument) => combineLatest([
+          this.appService.getInstrumentOperations('Основной', instrument.figi),
+          this.appService.getInstrumentOperations('Аналитический', instrument.figi),
+        ])),
+        map(([main, analytics]: [Operation[], Operation[]]) => {
+          const allOperations = [...(main ?? []), ...(analytics ?? [])];
+          const from = subDays(new Date(), this.daysHistory());
 
-        if (container) {
-          // Инициализируем ResizeObserver и определяем колбэк-функцию
-          this.resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-              if (entry.target === container) {
-                this.redrawChart();
-              }
-            }
-          });
+          return allOperations.filter(i => isAfter(parseJSON(i.date), from));
+        }),
+      )
+  }
 
-          // Начинаем наблюдение за изменениями размера контейнера
-          this.resizeObserver.observe(container);
+  private initOption(
+    history: InstrumentHistoryPrice[],
+    predictions: PredictionGraphResp,
+    operations: Operation[],
+  ): void {
+    const option: echarts.EChartsOption = {
+      grid: {
+        top: 10,
+        bottom: 10,
+        left: 10,
+        right: 10,
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'time',
+        axisLabel: {
+          formatter: function (value) {
+            const date = new Date(value);
+            return new Intl.DateTimeFormat('ru-RU', {
+              day: '2-digit',
+              month: 'short',
+              year: '2-digit'
+            }).format(date);
+          }
         }
-      }
-    });
-  }
+      },
+      yAxis: {
+        scale: true
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross'
+        },
+      },
+      series: [
+        {
+          name: 'Фактически',
+          type: 'candlestick',
+          barWidth: 1.5,
+          itemStyle: {
+            color: '#00b050',
+            color0: '#ff0000',
+            borderColor: '#00b050',
+            borderColor0: '#ff0000',
+          },
+          encode: {
+            x: 0,
+            y: [1, 2, 3, 4]
+          },
+          data: history?.map(i => [
+            parseJSON(i.time),                 // x
+            getPriceByQuotation(i.open) ?? 0,  // open
+            getPriceByQuotation(i.close) ?? 0, // close
+            getPriceByQuotation(i.low) ?? 0,   // low
+            getPriceByQuotation(i.high) ?? 0   // high
+          ]) ?? [],
+        },
+        {
+          name: 'Предсказания TA-1',
+          type: 'line',
+          showSymbol: true,
+          symbol: 'circle',
+          symbolSize: 2.5,
+          itemStyle: {
+            color: GRAPH_COLORS.ta_1
+          },
+          lineStyle: {
+            width: 1,
+          },
+          encode: {
+            x: 0,
+            y: 1
+          },
+          data: predictions?.['ta-1']?.map(i => [
+            parseJSON(i.date),
+            getRoundPrice(i.prediction
+            )]) ?? []
+        },
+        {
+          name: 'Предсказания TA-1_1',
+          type: 'line',
+          showSymbol: true,
+          symbol: 'circle',
+          symbolSize: 2.5,
+          itemStyle: {
+            color: GRAPH_COLORS.ta_1_1
+          },
+          lineStyle: {
+            width: 1,
+          },
+          encode: {
+            x: 0,
+            y: 1
+          },
+          data: predictions?.['ta-1_1']?.map(i => [
+            parseJSON(i.date),
+            getRoundPrice(i.prediction)
+          ]) ?? []
+        },
+        {
+          name: 'Операции',
+          type: 'scatter',
+          symbol: 'pin',
+          symbolSize: 25,
+          encode: {
+            x: 0,
+            y: 1,
+            tooltip: 2,
+          },
+          data: operations?.map(i => {
+            const isBuy = i.operation_type._name_ === 'OPERATION_TYPE_BUY'
+            const tooltip =
+              `${isBuy ? 'Покупка' : 'Продажа'} ${i.quantity}шт. `
+              + `По цене ${this.priceFormatPipe.transform(getPriceByQuotation(i.price))}. `
+              + `Всего на ${this.priceFormatPipe.transform(getPriceByQuotation(i.payment))}`;
 
-  ngOnDestroy(): void {
-    this.resizeObserver?.disconnect();
-  }
+            return {
+              value: [
+                parseJSON(i.date),
+                getPriceByQuotation(i.price),
+                tooltip,
+              ],
+              itemStyle: {
+                color: isBuy ? '#00ff00' : '#ff0000',
+              }
+            };
+          }) ?? []
+        }
+      ]
+    };
 
-  redrawChart= debounce(() => {
-    console.log('redrawChart');
-    this.chartComponent?.updateOptions(this.chartOptions());
-  }, 300);
+    this.option.set(option);
+  }
 
 }
 

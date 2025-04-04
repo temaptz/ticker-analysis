@@ -97,7 +97,7 @@
             <h5>История за {{ complexGraphHistoryDaysCount }} дней + история прогнозов TA-1</h5>
 
             <div class="graph-container">
-              <complex-graph-2
+              <complex-graph
                 width="100%"
                 height="600px"
                 [instrumentUid]="instr.uid"
@@ -105,7 +105,7 @@
                 [daysFuture]="complexGraphFutureDaysCount"
                 [historyInterval]="complexGraphHistoryInterval"
                 [isShowOperations]="true"
-              ></complex-graph-2>
+              ></complex-graph>
 
               <label>
                 История

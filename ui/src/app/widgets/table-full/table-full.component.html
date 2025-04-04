@@ -75,11 +75,11 @@
     <ng-container matColumnDef="complex">
       <th mat-header-cell *matHeaderCellDef>90 дней + прогнозы</th>
       <td mat-cell *matCellDef="let instrument">
-        <complex-graph-2
+        <complex-graph
           width="700px"
           height="250px"
           [instrumentUid]="instrument.uid"
-        ></complex-graph-2>
+        ></complex-graph>
       </td>
     </ng-container>
 
