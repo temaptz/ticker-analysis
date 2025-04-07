@@ -1,9 +1,6 @@
 import datetime
 import os
-from tinkoff.invest.schemas import (
-    Quotation,
-    HistoricCandle,
-)
+from tinkoff.invest import MoneyValue, Quotation, HistoricCandle
 import dateutil.parser
 import hashlib
 
@@ -18,12 +15,12 @@ def get_price_by_candle(candle: HistoricCandle) -> float or None:
         return None
 
 
-def get_price_by_quotation(price: Quotation) -> float or None:
+def get_price_by_quotation(price: Quotation or MoneyValue) -> float or None:
     try:
         return float(str(price.units)+'.'+str(price.nano))
 
     except Exception as e:
-        print('ERROR get_price_by_candle', e, price)
+        print('ERROR get_price_by_quotation', e, price)
 
         return None
 

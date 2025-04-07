@@ -1,7 +1,7 @@
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
-from lib import utils, cache, counter
+from lib import utils, cache, counter, logger
 from lib.db import gpt_requests_db
 
 
@@ -52,96 +52,9 @@ def get_gpt_text(text_query: str, instruction: str = '') -> str:
         return result
 
     except Exception as e:
-        print('ERROR get_gpt_text', e)
-        return ''
+        logger.log_error(method_name='get_gpt_text', error=e)
 
-
-def get_text_classify(title: str, text: str, subject_name: str) -> int or None:
-    try:
-        sdk = YCloudML(
-            auth=const.Y_API_SECRET,
-            folder_id=const.Y_API_FOLDER_ID
-        )
-
-        # Объединение заголовка и текста новости
-        news_text = f"{title}\n\n{text}"
-
-        # Формирование описания задачи с учетом названия компании
-        task_description = (
-            f"Оцени экономическое влияние следующей новости на компанию {subject_name}:"
-        )
-
-        # Настройка модели классификации
-        model = sdk.models.text_classifiers('yandexgpt').configure(
-            task_description=task_description,
-            labels=['положительное влияние', 'отрицательное влияние', 'нейтральное влияние'],
-            samples=get_news_rate_samples(instrument_name=subject_name)
-        )
-
-        print('GPT REQUEST', task_description)
-
-        counter.increment(counter.Counters.YANDEX_GPT_NEWS_CLASSIFY)
-
-        result: FewShotTextClassifiersModelResult = model.run(news_text)
-
-        if result and len(result) >= 3:
-            largest = sorted(result, key=lambda item: utils.round_float(item.confidence))[-1]
-
-            if 'положительное' in largest.label:
-                return 1
-            elif 'отрицательное' in largest.label:
-                return -1
-            elif 'нейтральное' in largest.label:
-                return 0
-
-    except Exception as e:
-        print('ERROR get_text_classify', e)
-
-    return None
-
-
-def get_text_classify_2(title: str, text: str, subject_name: str) -> int or None:
-    try:
-        sdk = YCloudML(
-            auth=const.Y_API_SECRET,
-            folder_id=const.Y_API_FOLDER_ID
-        )
-
-        # Объединение заголовка и текста новости
-        news_text = f"{title}\n\n{text}"
-
-        # Формирование описания задачи с учетом названия компании
-        task_description = (
-            f'Я передам тебе новость имеющую отношение к организации {subject_name}. '
-            f'Классифицируй ее, в контексте этой организации, на: положительную, отрицательную, нейтральную'
-        )
-
-        # Настройка модели классификации
-        model = sdk.models.text_classifiers('yandexgpt-lite').configure(
-            task_description=task_description,
-            labels=['положительная', 'отрицательная', 'нейтральная'],
-        )
-
-        print('GPT REQUEST CLASSIFY', subject_name, title)
-
-        counter.increment(counter.Counters.YANDEX_GPT_NEWS_CLASSIFY)
-
-        result: FewShotTextClassifiersModelResult = model.run(news_text)
-
-        if result and len(result) >= 3:
-            largest = sorted(result, key=lambda item: utils.round_float(item.confidence))[-1]
-
-            if 'положительная' in largest.label:
-                return 1
-            elif 'отрицательная' in largest.label:
-                return -1
-            elif 'нейтральная' in largest.label:
-                return 0
-
-    except Exception as e:
-        print('ERROR get_text_classify_2', e)
-
-    return None
+    return ''
 
 
 def get_text_classify_3(title: str, text: str, subject_name: str) -> NewsRate or None:
@@ -201,7 +114,7 @@ def get_text_classify_3(title: str, text: str, subject_name: str) -> NewsRate or
             return result
 
     except Exception as e:
-        print('ERROR get_text_classify_3', e)
+        logger.log_error(method_name='get_text_classify_3', error=e)
 
     return None
 

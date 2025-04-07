@@ -6,16 +6,16 @@ services:
     volumes:
       - ./db.sqlite:/app/db.sqlite
       - /etc/is_my_prod:/container_host_is_prod:ro
-#    ports:
-#      - "8000:8000"
+    ports:
+      - "8000:8000"
     command:
       - python
       - apiserver/manage.py
       - runserver
       - 0.0.0.0:8000
     depends_on:
-      - memcached
-    restart: always
+      - redis
+    restart: unless-stopped
 
   ui:
     build:
@@ -25,7 +25,7 @@ services:
       - "80:80"
     depends_on:
       - apiserver
-    restart: always
+    restart: unless-stopped
 
   tasks:
     build:
@@ -38,22 +38,24 @@ services:
       - python
       - main.py
     depends_on:
-      - memcached
-    restart: always
+      - redis
+    restart: unless-stopped
 
-  phpliteadmin:
-    hostname: phpliteadmin
-    build:
-      context: ./phpliteadmin
-      dockerfile: Dockerfile
+#  phpliteadmin:
+#    hostname: phpliteadmin
+#    build:
+#      context: ./phpliteadmin
+#      dockerfile: Dockerfile
+#    volumes:
+#      - ./db.sqlite:/var/www/html/db.sqlite
+#    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
-      - ./db.sqlite:/var/www/html/db.sqlite
-    restart: always
-
-  memcached:
-    image: memcached:alpine
-    container_name: memcached
-    command: [ "-m", "256" ]
+      - ./redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "11211:11211"
-    restart: always
+      - "6379:6379"
+    restart: unless-stopped

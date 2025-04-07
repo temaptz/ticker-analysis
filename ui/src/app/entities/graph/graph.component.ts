@@ -9,6 +9,7 @@ import { CandleInterval } from '../../enums';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
+import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
 
 
 @Component({
@@ -41,38 +42,9 @@ export class GraphComponent {
 
   private initOption(history: InstrumentHistoryPrice[]): void {
     const option: echarts.EChartsOption = {
-      grid: {
-        top: 10,
-        bottom: 10,
-        left: 10,
-        right: 10,
-        containLabel: true,
-      },
-      xAxis: {
-        type: 'time',
-        axisLabel: {
-          formatter: function (value) {
-            const date = new Date(value);
-            return new Intl.DateTimeFormat('ru-RU', {
-              day: '2-digit',
-              month: 'short',
-              year: '2-digit'
-            }).format(date);
-          }
-        }
-      },
-      yAxis: {
-        scale: true
-      },
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'cross'
-        },
-      },
+      ...ECHARTS_MAIN_OPTIONS,
       series: [
         {
-          name: 'Фактически',
           type: 'candlestick',
           barWidth: 1.5,
           itemStyle: {

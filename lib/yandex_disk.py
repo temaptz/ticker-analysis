@@ -3,7 +3,7 @@ import datetime
 import requests
 import urllib.parse
 import const
-from lib import telegram, utils
+from lib import telegram, utils, logger
 from lib.db import db_utils
 
 
@@ -43,5 +43,4 @@ def upload_db_backup() -> None:
                 telegram.send_message('Резервное копирование успешно завершено с кодом: '+str(response_upload.status_code)+'. Создан файл: '+file_path_on_disk+' Размер: '+file_size)
 
     except Exception as e:
-        print('ERROR YANDEX DISK BACKUP', e)
-        telegram.send_message('Ошибка резервного копирования: '+str(e))
+        logger.log_error(method_name='upload_db_backup', error=e)

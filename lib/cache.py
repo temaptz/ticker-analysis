@@ -1,5 +1,5 @@
 from functools import wraps
-from lib import utils, memcached
+from lib import utils, redis_utils
 
 is_local_cache_on = False
 local_cache = dict()
@@ -8,7 +8,7 @@ def cache_get(key: str):
     try:
         if is_local_cache_on:
             return local_cache.get(key, None)
-        return memcached.cache_get(key=key)
+        return redis_utils.cache_get(key=key)
     except Exception as e:
         print('ERROR cache_get', e)
 
@@ -19,14 +19,14 @@ def cache_set(key: str, value: any, ttl: int = 3600) -> None:
     try:
         if is_local_cache_on:
             local_cache[key] = value
-        memcached.cache_set(key=key, value=value, ttl_sec=ttl)
+        redis_utils.cache_set(key=key, value=value, ttl_sec=ttl)
     except Exception as e:
         print('ERROR cache_set', e)
 
 
 def clean():
     try:
-        memcached.cache_clean()
+        redis_utils.cache_clean()
     except Exception as e:
         print('ERROR cache clean', e)
 

@@ -1,6 +1,6 @@
 import sqlite3
 import const
-from lib import utils, telegram
+from lib import utils, logger
 
 
 # PRAGMA journal_mode = WAL;
@@ -15,20 +15,17 @@ def optimize_db():
     try:
         cursor.execute('VACUUM')
     except Exception as e:
-        print('ERROR optimize_db VACUUM', e)
-        telegram.send_message(f'ERROR optimize_db VACUUM: {e}')
+        logger.log_error(method_name='optimize_db VACUUM', error=e)
 
     try:
         cursor.execute('REINDEX')
     except Exception as e:
-        print('ERROR optimize_db REINDEX', e)
-        telegram.send_message(f'ERROR optimize_db REINDEX: {e}')
+        logger.log_error(method_name='optimize_db REINDEX', error=e)
 
     try:
         cursor.execute('PRAGMA optimize')
     except Exception as e:
-        print('ERROR optimize_db PRAGMA optimize', e)
-        telegram.send_message(f'ERROR optimize_db PRAGMA optimize: {e}')
+        logger.log_error(method_name='optimize_db PRAGMA optimize', error=e)
 
     connection.commit()
     connection.close()

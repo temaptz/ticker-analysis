@@ -1,6 +1,6 @@
 import requests
 import const
-from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker, counter, memcached
+from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker, counter, redis_utils
 from lib.db import db_utils
 
 
@@ -85,8 +85,8 @@ def process_single_update(text: str = None) -> None:
         send_message(docker.get_df())
         send_message('Счетчики')
         send_message(counter.get_stat())
-        send_message('Статистика memcached')
-        send_message(memcached.get_memcached_stats())
+        send_message('Статистика redis')
+        send_message(redis_utils.get_redis_stats())
 
     elif text == 'cleancache' or text == 'clean':
         send_message('Очистка кэша')

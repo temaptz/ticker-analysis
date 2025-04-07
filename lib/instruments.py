@@ -1,11 +1,11 @@
-from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse, HistoricCandle
+from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse, HistoricCandle, LastPrice
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
 from lib import cache, utils, date_utils
 
 
 @cache.ttl_cache(ttl=3600 * 24)
-def get_instruments_white_list(skip_cache=None) -> list[InstrumentResponse.instrument]:
+def get_instruments_white_list() -> list[InstrumentResponse.instrument]:
     result = list()
 
     for ticker in TICKER_LIST:
@@ -43,15 +43,15 @@ def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_last_price_by_uid(uid: str):
+def get_instrument_last_price_by_uid(uid: str) -> list[LastPrice] or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.market_data.get_last_prices(
                 instrument_id=[uid]
             ).last_prices
 
-    except Exception:
-        print('ERROR get_instrument_last_price_by_uid')
+    except Exception as e:
+        print('ERROR get_instrument_last_price_by_uid', e)
 
 
 @cache.ttl_cache(ttl=3600 * 4)

@@ -1,6 +1,7 @@
 import datetime
 import tinkoff.invest
 import json
+import pickle
 
 
 def to_json(obj) -> str or None:
@@ -55,3 +56,24 @@ def get_dict_by_object(input) -> dict:
                 result.update({property_name: property_value})
 
     return result
+
+
+def serialize_for_cache(data: any) -> bytes:
+    """
+    Стабильная сериализация объекта в байты для хранения в Redis.
+    Использует pickle (Python built-in).
+    """
+    try:
+        return pickle.dumps(data)
+    except Exception as e:
+        raise ValueError(f'Ошибка сериализации объекта serialize_for_cache: {e}')
+
+
+def deserialize_from_cache(data: bytes):
+    """
+    Стабильная десериализация байтов из Redis обратно в объект Python.
+    """
+    try:
+        return pickle.loads(data)
+    except Exception as e:
+        raise ValueError(f'Ошибка десериализации объекта deserialize_from_cache: {e}')

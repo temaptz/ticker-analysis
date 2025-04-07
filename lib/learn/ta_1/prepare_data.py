@@ -1,5 +1,5 @@
 import datetime
-from lib import instruments, memcached
+from lib import instruments, redis_utils
 from lib.db import learning_db
 from lib.learn.ta_1.learning_card import LearningCard
 import numpy
@@ -45,7 +45,7 @@ def prepare_cards():
                 ', already_existing_db: ' + str(already_existing_count) +
                 ', saved_db: ' + str(saved_db_count) +
                 ', total_db: ' + str(db_count) +
-                ', memcache_MB: ' + str(memcached.get_memcached_size_mb()) + '/' + str(memcached.get_memcached_max_size_mb()) +
+                ', memcache_MB: ' + str(redis_utils.get_redis_size_mb()) + '/' + str(redis_utils.get_redis_max_size_mb()) +
                 ')'
             )
 

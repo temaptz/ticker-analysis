@@ -70,3 +70,13 @@ export interface FundamentalsHistory {
   date: string;
   fundamentals: any;
 }
+
+export interface InvestCalc {
+  balance: number,
+  current_price: number,
+  market_value: number,
+  potential_profit: number,
+  potential_profit_percent: number,
+  avg_price: number,
+  operations: Operation[],
+}

@@ -2,7 +2,7 @@ import { Component, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize, combineLatest } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList, Operation } from '../../types';
+import { InstrumentInList, InvestCalc, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceByQuotationPipe } from '../../shared/pipes/price-by-quotation.pipe';
@@ -34,34 +34,39 @@ export class BalanceComponent {
   getPriceByQuotation = getPriceByQuotation;
 
   private apiService = inject(ApiService);
-  private currentPriceService = inject(CurrentPriceService);
 
   constructor() {
-    effect(() => combineLatest([
-      this.apiService.getInstrumentBalance(this.accountName(), this.instrumentUid()),
-      this.currentPriceService.getPriceByUid(this.instrumentUid()),
-      this.apiService.getInstrumentOperations(this.accountName(), this.instrumentFigi())
-    ])
+    effect(() => this.apiService.getInvestCalc(this.accountName(), this.instrumentUid())
       .pipe(finalize(() => this.isLoaded.set(true)))
-      .subscribe(([balance, currentPrice, operations]: [number, number | null, Operation[]]) => {
-        this.balanceQty.set(balance);
-        this.currentPrice.set(currentPrice);
-        this.operations.set(operations);
+      .subscribe((investCalc: InvestCalc) => {
+        if (investCalc?.balance) {
+          this.balanceQty.set(investCalc.balance);
+        }
+
+        if (investCalc?.current_price) {
+          this.currentPrice.set(investCalc.current_price);
+        }
+
+        if (investCalc?.market_value) {
+          this.marketValue.set(investCalc.market_value);
+        }
+
+        if (investCalc?.potential_profit) {
+          this.potentialProfit.set(investCalc.potential_profit);
+        }
+
+        if (investCalc?.potential_profit_percent) {
+          this.potentialProfitPercent.set(investCalc.potential_profit_percent);
+        }
+
+        if (investCalc?.avg_price) {
+          this.avgPrice.set(investCalc.avg_price);
+        }
+
+        if (investCalc?.operations) {
+          this.operations.set(investCalc.operations);
+        }
       }));
-
-    effect(() => {
-      const balanceQty = this.balanceQty() ?? 0;
-
-      if (balanceQty) {
-        const currentPrice = this.currentPrice() ?? 0;
-        const operations = this.operations();
-
-        this.marketValue.set(this.getMarketValue(currentPrice, balanceQty));
-        this.potentialProfit.set(this.getProfit(operations, currentPrice, balanceQty));
-        this.potentialProfitPercent.set(this.getProfitPercentage(operations, currentPrice, balanceQty));
-        this.avgPrice.set(this.getAveragePrice(operations));
-      }
-    });
   }
 
   /**
