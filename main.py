@@ -64,7 +64,3 @@ else:
     #
     # print('GOT NEWS', len(news))
     # news_save.save_news()
-
-
-if sys.argv[1:] and sys.argv[1] == 'cache_clean':
-    cache.clean()

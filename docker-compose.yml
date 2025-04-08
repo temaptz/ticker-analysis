@@ -52,8 +52,8 @@ services:
     container_name: postgres
     volumes:
       - pg_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"   # проброс порта для локального доступа (необязательно)
+#    ports:
+#      - "5432:5432"   # проброс порта для локального доступа (необязательно)
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -65,23 +65,11 @@ services:
       retries: 5
     restart: unless-stopped
 
-#  cache_clean:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile-python-services
-#    command:
-#      - python
-#      - main.py
-#      - cache_clean
-#    depends_on:
-#      - postgres
-#    restart: no
-
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
-    ports:
-      - "5050:80"  # Внешний порт 5050, внутренний 80 (PgAdmin)
+#    ports:
+#      - "5050:80"  # Внешний порт 5050, внутренний 80 (PgAdmin)
     environment:
       PGADMIN_DEFAULT_EMAIL: temaptz@gmail.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -96,8 +84,8 @@ services:
     volumes:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-    ports:
-      - "6379:6379"
+#    ports:
+#      - "6379:6379"
     restart: unless-stopped
 
 volumes:
