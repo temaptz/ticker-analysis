@@ -17,3 +17,5 @@ redis
 ipywidgets
 ipython
 traitlets
+psycopg2-binary
+sqlalchemy

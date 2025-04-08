@@ -28,7 +28,7 @@ export interface NewsResponse {
         title: string;
         text: string;
         date: string;
-        rate: {
+        rate?: {
           positive_percent: number;
           negative_percent: number;
           neutral_percent: number;

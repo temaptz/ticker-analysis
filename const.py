@@ -1,5 +1,9 @@
 TINKOFF_INVEST_TOKEN = ''
 DB_FILENAME = 'db.sqlite'
+DB_HOST = 'postgres'
+DB_NAME = 'main_db'
+DB_USERNAME = 'main_db_user'
+DB_PASSWORD = 'main_db_password'
 TELEGRAM_BOT_API_KEY = ''
 TELEGRAM_CHAT_IDS: list[int] = []
 Y_DISK_TOKEN = ''

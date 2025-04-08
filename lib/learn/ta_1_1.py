@@ -3,19 +3,18 @@ import pandas
 import numpy
 from sklearn.metrics import mean_squared_error
 from lib import utils
-from lib.db import learning_db
 from lib.learn.ta_1.learning_card import LearningCard
 
 
 def get_saved() -> list[LearningCard]:
     result: list[LearningCard] = []
 
-    for i in learning_db.get_learning():
-        c = LearningCard()
-        c.restore_from_json_db(json_data=i[2])
-
-        if c.is_ok and len(c.get_x()) == 61:
-            result.append(c)
+    # for i in learning_db.get_learning():
+    #     c = LearningCard()
+    #     c.restore_from_json_db(json_data=i[2])
+    #
+    #     if c.is_ok and len(c.get_x()) == 61:
+    #         result.append(c)
 
     return result
 

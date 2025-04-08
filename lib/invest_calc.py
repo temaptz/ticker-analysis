@@ -68,6 +68,7 @@ class InvestCalc:
         return (profit / cost_basis) * 100 if cost_basis != 0 else 0
 
 
+@logger.error_logger
 def get_invest_calc_by_instrument_uid_account(instrument_uid: str, account_name: str):
     result = {
         'balance': None,
@@ -79,36 +80,32 @@ def get_invest_calc_by_instrument_uid_account(instrument_uid: str, account_name:
         'operations': None,
     }
 
-    try:
-        current_price = None
-        instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
-        last_prices = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
+    current_price = None
+    instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
+    last_prices = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
 
-        if last_prices and last_prices[0]:
-            current_price = utils.get_price_by_quotation(last_prices[0].price)
+    if last_prices and last_prices[0]:
+        current_price = utils.get_price_by_quotation(last_prices[0].price)
 
-        if instrument and current_price:
-            balance_qty = users.get_user_instrument_balance(account_name=account_name, instrument_uid=instrument_uid)
+    if instrument and current_price:
+        balance_qty = users.get_user_instrument_balance(account_name=account_name, instrument_uid=instrument_uid)
 
-            if balance_qty:
-                operations = users.get_user_instrument_operations(account_name=account_name, instrument_figi=instrument.figi)
+        if balance_qty:
+            operations = users.get_user_instrument_operations(account_name=account_name, instrument_figi=instrument.figi)
 
-                if operations and len(operations):
-                    calc = InvestCalc(
-                        operations=operations,
-                        current_price=current_price,
-                        balance_qty=balance_qty,
-                    )
+            if operations and len(operations):
+                calc = InvestCalc(
+                    operations=operations,
+                    current_price=current_price,
+                    balance_qty=balance_qty,
+                )
 
-                    result['balance'] = balance_qty
-                    result['current_price'] = current_price
-                    result['market_value'] = calc.get_market_value()
-                    result['potential_profit'] = calc.get_profit()
-                    result['potential_profit_percent'] = calc.get_profit_percentage()
-                    result['avg_price'] = calc.get_average_price()
-                    result['operations'] = operations
-
-    except Exception as e:
-        logger.log_error(method_name='get_invest_calc_by_instrument_uid_account', error=e)
+                result['balance'] = balance_qty
+                result['current_price'] = current_price
+                result['market_value'] = calc.get_market_value()
+                result['potential_profit'] = calc.get_profit()
+                result['potential_profit_percent'] = calc.get_profit_percentage()
+                result['avg_price'] = calc.get_average_price()
+                result['operations'] = operations
 
     return result

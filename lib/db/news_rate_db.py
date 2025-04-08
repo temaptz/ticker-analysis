@@ -24,6 +24,15 @@ def init_table():
     connection.close()
 
 
+def get_all():
+    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+    cursor = connection.cursor()
+    cursor.execute(f'SELECT * FROM {table_name}')
+    resp = cursor.fetchall()
+    connection.close()
+    return resp
+
+
 def get_rate_by_uid(news_uid: str, instrument_uid: str) -> yandex.NewsRate or None:
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()

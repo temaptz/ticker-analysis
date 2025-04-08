@@ -1,6 +1,6 @@
 from lib import predictions, telegram, instruments
-from lib.db import predictions_ta_1_db
-from lib.db import predictions_ta_1_1_db
+from lib.db_2 import predictions_ta_1_db
+from lib.db_2 import predictions_ta_1_1_db
 
 
 def save_predictions():

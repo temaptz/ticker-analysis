@@ -34,9 +34,9 @@
 
           <div class="bar">
             <news-bar
-              [positivePercent]="n.rate.positive_percent"
-              [negativePercent]="n.rate.negative_percent"
-              [neutralPercent]="n.rate.neutral_percent"
+              [positivePercent]="n.rate?.positive_percent ?? 0"
+              [negativePercent]="n.rate?.negative_percent ?? 0"
+              [neutralPercent]="n.rate?.neutral_percent ?? 100"
             ></news-bar>
           </div>
 

@@ -20,6 +20,15 @@ def init_table():
     connection.close()
 
 
+def get_all():
+    connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM Gpt_requests')
+    resp = cursor.fetchall()
+    connection.close()
+    return resp
+
+
 def get_response(request: str) -> str or None:
     connection = sqlite3.connect(get_file_abspath_recursive(const.DB_FILENAME))
     cursor = connection.cursor()

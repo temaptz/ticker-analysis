@@ -1,9 +1,8 @@
 import datetime
-from collections import defaultdict
 from tinkoff.invest import Client,constants
 from tinkoff.invest.schemas import GetAssetFundamentalsResponse, GetAssetFundamentalsRequest
-from lib import cache, utils
-from lib.db import fundamentals_db
+from lib import cache, utils, serializer
+from lib.db_2 import fundamentals_db
 from const import TINKOFF_INVEST_TOKEN
 
 
@@ -25,21 +24,21 @@ def get_db_fundamentals_by_asset_uid_date(
         date: datetime.datetime
 ) -> (str, GetAssetFundamentalsResponse.fundamentals, str):
     db_data = fundamentals_db.get_fundamentals_by_asset_uid_date(asset_uid, date=date)
-    asset_uid = db_data[0]
-    date = db_data[2]
-    fundamentals = fundamentals_db.deserialize(db_data[1])
+    asset_uid = db_data.asset_uid
+    date = db_data.date
+    fundamentals = serializer.db_deserialize(db_data.fundamentals)
 
     return asset_uid, fundamentals, date
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 7)
+# @cache.ttl_cache(ttl=3600 * 24 * 7)
 def get_db_fundamentals_history_by_uid(asset_uid: str):
     result = list()
 
     try:
         for f in fundamentals_db.get_fundamentals_by_asset_uid(asset_uid=asset_uid):
-            fundamentals = fundamentals_db.deserialize(f[1])
-            date = utils.parse_json_date(f[2])
+            fundamentals = serializer.db_deserialize(data=f.fundamentals)
+            date = utils.parse_json_date(f.date)
 
             result.append({'date': date, 'fundamentals': fundamentals})
 

@@ -1,5 +1,5 @@
-from lib.db import forecasts_db
-from lib import telegram, instruments, forecasts
+from lib.db_2 import forecasts_db
+from lib import telegram, instruments, forecasts, serializer
 
 
 def save_forecasts():
@@ -21,8 +21,8 @@ def save_forecasts():
             print(f.consensus)
 
             forecasts_db.insert_forecast(
-                uid=instrument.uid,
-                forecast=forecasts_db.serialize(f)
+                instrument_uid=instrument.uid,
+                forecast=f
             )
 
             counter += 1
@@ -32,9 +32,9 @@ def save_forecasts():
 
 def show_saved_forecasts():
     for f in forecasts_db.get_forecasts():
-        uid = f[0]
-        date = f[2]
-        data = forecasts_db.deserialize(f[1])
+        uid = f.instrument_uid
+        date = f.date
+        data = serializer.db_deserialize(f.forecasts)
         print(uid)
         print(date)
         print(data)

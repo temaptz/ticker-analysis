@@ -2,7 +2,7 @@ from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
 from lib import utils, cache, counter, logger
-from lib.db import gpt_requests_db
+from lib.db_2 import gpt_requests_db
 
 
 class NewsRate:

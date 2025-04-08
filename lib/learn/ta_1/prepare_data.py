@@ -1,6 +1,5 @@
 import datetime
 from lib import instruments, redis_utils
-from lib.db import learning_db
 from lib.learn.ta_1.learning_card import LearningCard
 import numpy
 
@@ -12,53 +11,53 @@ def prepare_cards():
     already_existing_count = 0
     saved_db_count = 0
 
-    for uid in get_uids():
-        for day in get_days(days=500, offset_days=forecast_days):
-            c = LearningCard()
-            c.load(
-                uid=uid,
-                date=day,
-                target_forecast_days=forecast_days
-            )
-
-            # c.print_card()
-
-            if c.is_ok:
-                learning_exists = learning_db.get_learning_by_uid_date(uid=c.uid, date=c.date)
-
-                if len(learning_exists) == 0:
-                    json_str = c.get_json_db()
-                    learning_db.insert_learning(uid=c.uid, date=c.date, json=json_str)
-                    saved_db_count += 1
-                else:
-                    already_existing_count += 1
-                is_ok_count += 1
-
-            total_processed_count += 1
-
-            db_count = learning_db.get_record_count()
-
-            print(
-                '(' +
-                'total: ' + str(total_processed_count) +
-                ', is_ok: ' + str(is_ok_count) +
-                ', already_existing_db: ' + str(already_existing_count) +
-                ', saved_db: ' + str(saved_db_count) +
-                ', total_db: ' + str(db_count) +
-                ', memcache_MB: ' + str(redis_utils.get_redis_size_mb()) + '/' + str(redis_utils.get_redis_max_size_mb()) +
-                ')'
-            )
+    # for uid in get_uids():
+    #     for day in get_days(days=500, offset_days=forecast_days):
+    #         c = LearningCard()
+    #         c.load(
+    #             uid=uid,
+    #             date=day,
+    #             target_forecast_days=forecast_days
+    #         )
+    #
+    #         # c.print_card()
+    #
+    #         if c.is_ok:
+    #             learning_exists = learning_db.get_learning_by_uid_date(uid=c.uid, date=c.date)
+    #
+    #             if len(learning_exists) == 0:
+    #                 json_str = c.get_json_db()
+    #                 learning_db.insert_learning(uid=c.uid, date=c.date, json=json_str)
+    #                 saved_db_count += 1
+    #             else:
+    #                 already_existing_count += 1
+    #             is_ok_count += 1
+    #
+    #         total_processed_count += 1
+    #
+    #         db_count = learning_db.get_record_count()
+    #
+    #         print(
+    #             '(' +
+    #             'total: ' + str(total_processed_count) +
+    #             ', is_ok: ' + str(is_ok_count) +
+    #             ', already_existing_db: ' + str(already_existing_count) +
+    #             ', saved_db: ' + str(saved_db_count) +
+    #             ', total_db: ' + str(db_count) +
+    #             ', memcache_MB: ' + str(redis_utils.get_redis_size_mb()) + '/' + str(redis_utils.get_redis_max_size_mb()) +
+    #             ')'
+    #         )
 
 
 def get_saved() -> list[LearningCard]:
     result: list[LearningCard] = []
 
-    for i in learning_db.get_learning():
-        c = LearningCard()
-        c.restore_from_json_db(json_data=i[2])
-
-        if c.is_ok:
-            result.append(c)
+    # for i in learning_db.get_learning():
+    #     c = LearningCard()
+    #     c.restore_from_json_db(json_data=i[2])
+    #
+    #     if c.is_ok:
+    #         result.append(c)
 
     return result
 

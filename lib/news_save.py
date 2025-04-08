@@ -1,4 +1,4 @@
-from lib.db import news_db, db_utils
+from lib.db_2 import news_db, db_utils
 from lib.news_parsers import (rbc, rg, finam)
 from lib import telegram, types
 
@@ -23,24 +23,16 @@ def save_news_from_source_to_db(source_name: str, news: list):
     if len(news):
         print('GOT '+str(len(news))+' NEWS FROM '+source_name)
 
-        news_batch: list[types.NewsDbRecord] = []
-
         for i in news:
-            if len(news_db.get_news_by_uid(i[0])) == 0:
-                record = types.NewsDbRecord(
-                    uid=i[0],
-                    title=i[1],
-                    text=i[2],
+            if news_db.get_news_by_uid(i[0]) is None:
+                news_db.insert_news(record=news_db.News(
+                    news_uid=i[0],
                     date=i[3],
                     source_name=i[4],
-                )
-
-                news_batch.append(record)
+                    title=i[1],
+                    text=i[2],
+                ))
                 saved_news_counter += 1
-
-        if len(news_batch) > 0:
-            news_db.insert_news_batch(news_batch)
-            db_utils.optimize_db()
 
     else:
         print('NO NEWS FROM '+source_name)

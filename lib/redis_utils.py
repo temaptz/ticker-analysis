@@ -14,7 +14,7 @@ def cache_set(key: str, value: any, ttl_sec=600) -> None:
     Записывает значение в Redis с TTL в секундах (по умолчанию 600 = 10 минут).
     """
     try:
-        r.set(name=key, value=serializer.serialize_for_cache(data=value), ex=ttl_sec)
+        r.set(name=key, value=serializer.db_serialize(data=value), ex=ttl_sec)
     except Exception as e:
         print('ERROR CACHE cache_set', e)
 
@@ -26,7 +26,7 @@ def cache_get(key: str) -> any:
     try:
         raw = r.get(key)
         if raw:
-            return serializer.deserialize_from_cache(data=raw)
+            return serializer.db_deserialize(data=raw)
     except Exception as e:
         print('ERROR CACHE cache_get', e)
 
@@ -43,7 +43,7 @@ def cache_delete(key: str) -> None:
         print('ERROR CACHE cache_delete', e)
 
 
-def cache_clean() -> None:
+def flush_all() -> None:
     """
     Полная очистка всех данных в текущей базе Redis.
     """

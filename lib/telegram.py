@@ -1,7 +1,6 @@
 import requests
 import const
-from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker, counter, redis_utils
-from lib.db import db_utils
+from lib import docker
 
 
 def get_bot_url() -> str:
@@ -17,6 +16,7 @@ def send_message(message: str) -> None:
             requests.post(
                 get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
             )
+            print('TELEGRAM SENT MESSAGE', message)
     except Exception as e:
         print('ERROR TELEGRAM send_message', e)
 
@@ -39,56 +39,3 @@ def get_updates(offset_update_id: int = None) -> list:
         print('ERROR TELEGRAM get_updates', e)
 
     return []
-
-
-def process_updates() -> None:
-    cache_key = 'telegram_offset_update_id'
-    offset_update_id = cache.cache_get(cache_key)
-    updates = get_updates(offset_update_id=offset_update_id)
-
-    for u in updates:
-        update_id = u['update_id']
-        text = u['message']['text'].lower()
-        cache.cache_set(cache_key, update_id)
-
-        if update_id != offset_update_id:
-            process_single_update(text)
-
-
-def process_single_update(text: str = None) -> None:
-    print('PROCESS TELEGRAM TASK', text)
-
-    if text == 'backup':
-        yandex_disk.upload_db_backup()
-
-    elif text == 'forecasts':
-        forecasts_save.save_forecasts()
-
-    elif text == 'fundamentals':
-        fundamentals_save.save_fundamentals()
-
-    elif text == 'predictions':
-        predictions_save.save_predictions()
-
-    elif text == 'news':
-        news_save.save_news()
-
-    elif text == 'optimize':
-        send_message('Начало оптимизации БД')
-        db_utils.optimize_db()
-
-    elif text == 'stat' or text == 'info':
-        send_message('Сбор статистики')
-        send_message('uptime')
-        send_message(docker.get_uptime())
-        send_message('df -h')
-        send_message(docker.get_df())
-        send_message('Счетчики')
-        send_message(counter.get_stat())
-        send_message('Статистика redis')
-        send_message(redis_utils.get_redis_stats())
-
-    elif text == 'cleancache' or text == 'clean':
-        send_message('Очистка кэша')
-        cache.clean()
-

@@ -1,8 +1,8 @@
 import datetime
 import os
 from tinkoff.invest import MoneyValue, Quotation, HistoricCandle
-import dateutil.parser
 import hashlib
+from lib import date_utils
 
 
 def get_price_by_candle(candle: HistoricCandle) -> float or None:
@@ -38,14 +38,15 @@ def get_file_abspath_recursive(file_name: str, dir_name: str = '') -> str or Non
     return None
 
 
+def is_file_exists(file_path: str) -> bool:
+    if file_path:
+        return os.path.exists(file_path)
+
+    return False
+
+
 def parse_json_date(date: str or None) -> datetime.datetime or None:
-    try:
-        return dateutil.parser.parse(date)
-
-    except Exception as e:
-        print('ERROR parse_json_date', date, e)
-
-        return None
+    return date_utils.parse_date(date=date)
 
 
 def get_file_size_readable(filepath) -> str:

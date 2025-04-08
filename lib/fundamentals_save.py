@@ -1,5 +1,5 @@
 import datetime
-from lib.db import fundamentals_db
+from lib.db_2 import fundamentals_db
 from lib import telegram, instruments, fundamentals
 
 
@@ -12,12 +12,12 @@ def save_fundamentals():
         print(instrument.ticker)
         print(instrument.name)
 
-        for f in fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid):
+        for f in fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid) or []:
             print('FUNDAMENTALS SAVE', f)
 
             fundamentals_db.insert_fundamentals(
                 asset_uid=instrument.asset_uid,
-                fundamental=fundamentals_db.serialize(f)
+                fundamental=f
             )
 
             counter += 1

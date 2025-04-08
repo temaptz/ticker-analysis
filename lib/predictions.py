@@ -3,7 +3,7 @@ from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1_1
 from lib import date_utils
-from lib.db import predictions_ta_1_db, predictions_ta_1_1_db
+from lib.db_2 import predictions_ta_1_db, predictions_ta_1_1_db
 from tinkoff.invest import CandleInterval
 
 
@@ -44,8 +44,8 @@ def get_prediction_ta_1_graph_by_uid(uid: str, date_from: datetime.datetime, dat
             date_to=date_to - timedelta,
         ):
             result.append({
-                'prediction': i[1],
-                'date': (date_utils.parse_date(i[2]) + timedelta).isoformat(),
+                'prediction': i.prediction,
+                'date': (date_utils.parse_date(i.date) + timedelta).isoformat(),
             })
 
         return result
@@ -67,8 +67,8 @@ def get_prediction_ta_1_1_graph_by_uid(uid: str, date_from: datetime.datetime, d
                 date_to=date_to - timedelta,
         ):
             result.append({
-                'prediction': i[1],
-                'date': (date_utils.parse_date(i[2]) + timedelta).isoformat(),
+                'prediction': i.prediction,
+                'date': (date_utils.parse_date(i.date) + timedelta).isoformat(),
             })
 
         return result

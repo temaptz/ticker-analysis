@@ -2,9 +2,9 @@ import datetime
 from collections import defaultdict
 from tinkoff.invest import Client, constants
 from tinkoff.invest.schemas import GetForecastResponse, GetForecastRequest
-from lib.db import forecasts_db
+from lib.db_2 import forecasts_db
 from const import TINKOFF_INVEST_TOKEN
-from lib import cache, utils
+from lib import cache, utils, serializer
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 3)
@@ -21,25 +21,12 @@ def get_forecasts(instrument_uid: str) -> GetForecastResponse:
         print('ERROR GETTING FORECASTS OF: ', instrument_uid, e)
 
 
-def get_db_forecasts_by_uid(uid: str) -> (str, GetForecastResponse, str):
-    result = list()
-
-    for f in forecasts_db.get_forecasts_by_uid(uid):
-        uid = f[0]
-        date = f[2]
-        forecast = forecasts_db.deserialize(f[1])
-
-        result.append((uid, forecast, date))
-
-    return result
-
-
 @cache.ttl_cache(ttl=3600 * 24 * 3)
 def get_db_forecast_by_uid_date(uid: str, date: datetime.datetime) -> (str, GetForecastResponse, str):
     db_resp = forecasts_db.get_forecast_by_uid_date(uid=uid, date=date)
-    uid = db_resp[0]
-    date = db_resp[2]
-    forecast = forecasts_db.deserialize(db_resp[1])
+    uid = db_resp.instrument_uid
+    date = db_resp.date
+    forecast = serializer.db_deserialize(db_resp.forecasts)
 
     return uid, forecast, date
 
@@ -49,11 +36,11 @@ def get_db_forecasts_history_by_uid(uid: str) -> (str, GetForecastResponse, str)
     result = list()
 
     try:
-        for f in get_db_forecasts_by_uid(uid=uid):
-            forecast = f[1]
-            date = utils.parse_json_date(f[2])
-
-            result.append({'date': date, 'consensus': forecast.consensus})
+        for f in forecasts_db.get_forecasts_by_uid(uid=uid):
+            result.append({
+                'date': utils.parse_json_date(f.date),
+                'consensus': serializer.db_deserialize(f.forecasts).consensus
+            })
 
         result = filter_monthly(result)
     except Exception as e:

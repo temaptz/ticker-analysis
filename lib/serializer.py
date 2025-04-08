@@ -58,7 +58,7 @@ def get_dict_by_object(input) -> dict:
     return result
 
 
-def serialize_for_cache(data: any) -> bytes:
+def db_serialize(data: any) -> bytes:
     """
     Стабильная сериализация объекта в байты для хранения в Redis.
     Использует pickle (Python built-in).
@@ -66,14 +66,21 @@ def serialize_for_cache(data: any) -> bytes:
     try:
         return pickle.dumps(data)
     except Exception as e:
-        raise ValueError(f'Ошибка сериализации объекта serialize_for_cache: {e}')
+        print(f'Ошибка сериализации объекта db_serialize: {e}')
+
+    return data
 
 
-def deserialize_from_cache(data: bytes):
+def db_deserialize(data: bytes or str)-> any:
     """
     Стабильная десериализация байтов из Redis обратно в объект Python.
     """
     try:
+        if isinstance(data, str):
+            # Иногда postgres автоматически декодирует BYTEA в str (например, в ORM)
+            data = data.encode('utf-8')
         return pickle.loads(data)
     except Exception as e:
-        raise ValueError(f'Ошибка десериализации объекта deserialize_from_cache: {e}')
+        print(f'Ошибка десериализации объекта db_deserialize: {e}')
+
+    return data

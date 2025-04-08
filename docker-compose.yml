@@ -1,36 +1,9 @@
 services:
-  apiserver:
-    build:
-      context: .
-      dockerfile: Dockerfile-python-services
-    volumes:
-      - ./db.sqlite:/app/db.sqlite
-      - /etc/is_my_prod:/container_host_is_prod:ro
-    ports:
-      - "8000:8000"
-    command:
-      - python
-      - apiserver/manage.py
-      - runserver
-      - 0.0.0.0:8000
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  ui:
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - apiserver
-    restart: unless-stopped
-
   tasks:
     build:
       context: .
       dockerfile: Dockerfile-python-services
+    container_name: tasks
     volumes:
       - ./db.sqlite:/app/db.sqlite
       - /etc/is_my_prod:/container_host_is_prod:ro
@@ -39,23 +12,95 @@ services:
       - main.py
     depends_on:
       - redis
+      - postgres
+      - apiserver
     restart: unless-stopped
 
-#  phpliteadmin:
-#    hostname: phpliteadmin
+  apiserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    container_name: apiserver
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+      - /etc/is_my_prod:/container_host_is_prod:ro
+#    ports:
+#      - "8000:8000"
+    command:
+      - python
+      - apiserver/manage.py
+      - runserver
+      - 0.0.0.0:8000
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: ui
+    ports:
+      - "80:80"
+    depends_on:
+      - apiserver
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:alpine  # или другая стабильная версия PostgreSQL
+    container_name: postgres
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # проброс порта для локального доступа (необязательно)
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+#  cache_clean:
 #    build:
-#      context: ./phpliteadmin
-#      dockerfile: Dockerfile
-#    volumes:
-#      - ./db.sqlite:/var/www/html/db.sqlite
-#    restart: unless-stopped
+#      context: .
+#      dockerfile: Dockerfile-python-services
+#    command:
+#      - python
+#      - main.py
+#      - cache_clean
+#    depends_on:
+#      - postgres
+#    restart: no
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    ports:
+      - "5050:80"  # Внешний порт 5050, внутренний 80 (PgAdmin)
+    environment:
+      PGADMIN_DEFAULT_EMAIL: temaptz@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
 
   redis:
     image: redis:alpine
+    container_name: redis
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
-      - ./redis-data:/data
+      - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
     restart: unless-stopped
+
+volumes:
+  pg_data:
+  pgadmin_data:
+  redis_data:

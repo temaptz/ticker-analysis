@@ -1,6 +1,6 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 import pytz
-from lib import forecasts_save, predictions_save, news_save, yandex_disk, telegram, fundamentals_save
+from lib import forecasts_save, predictions_save, news_save, yandex_disk, process_task, fundamentals_save
 
 
 def start_schedule() -> None:
@@ -56,7 +56,7 @@ def start_schedule() -> None:
 
     # Проверка сообщений в телеге
     scheduler.add_job(
-        telegram.process_updates,
+        process_task.process_updates,
         'interval',
         seconds=30
     )

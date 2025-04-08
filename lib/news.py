@@ -1,7 +1,7 @@
 import datetime
 
 import const
-from lib.db import news_db, news_rate_db
+from lib.db_2 import news_db, news_rate_db
 from lib import instruments, yandex, cache, counter, docker, serializer, utils
 
 
@@ -40,17 +40,16 @@ def get_sorted_news_by_instrument_uid(
     )
 
     for n in news or []:
-        news_uid = n[0]
-        title = n[1]
-        text = n[2]
-        date = n[3]
-        source = n[4]
+        news_uid = n.news_uid
+        title = n.title
+        text = n.text
+        date = n.date
+        source = n.source_name
         result_source: NewsSourceRated = result['sources'][source]
         rate: yandex.NewsRate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
 
-        print('NEWS RATED', serializer.get_dict_by_object_recursive(rate), title)
-
         if is_with_content:
+            print('RATED 1')
             result_source.content.append({
                 'uid': news_uid,
                 'title': title,
@@ -63,12 +62,13 @@ def get_sorted_news_by_instrument_uid(
             result_source.positive_sum_percent += rate.positive_percent
             result_source.negative_sum_percent += rate.negative_percent
             result_source.neutral_sum_percent += rate.neutral_percent
-            result_source.total_count += 1
 
             result['total'].positive_sum_percent += rate.positive_percent
             result['total'].negative_sum_percent += rate.negative_percent
             result['total'].neutral_sum_percent += rate.neutral_percent
-            result['total'].total_count += 1
+
+        result_source.total_count += 1
+        result['total'].total_count += 1
 
     for source_name in result['sources']:
         source: NewsSourceRated = result['sources'][source_name]
@@ -116,22 +116,19 @@ def get_news_rate(
         return rate_saved_db
 
     elif not const.IS_NEWS_CLASSIFY_ENABLED:
-        return 0
+        return None
     elif not docker.is_prod():
-        return 0
+        return None
     else:
         # Тут уже запрос GPT
         news = news_db.get_news_by_uid(news_uid)
         instrument = instruments.get_instrument_by_uid(instrument_uid)
 
-        if news and len(news) > 0 and news[0] and instrument:
-            title = news[0][1]
-            text = news[0][2]
-
+        if news and instrument:
             subject_name = yandex.get_human_name(instrument.name)
             gpt_rate = yandex.get_text_classify_3(
-                title=title,
-                text=text,
+                title=news.title,
+                text=news.text,
                 subject_name=subject_name
             )
 
@@ -172,15 +169,3 @@ def get_keywords_by_instrument_uid(uid: str) -> list[str]:
             result.append(word)
 
     return result
-
-
-# def append_percent_result_source(
-#         result_source: NewsSourceRated,
-#         positive_percent=0,
-#         negative_percent=0,
-#         neutral_percent=0
-# ):
-#     result_source.total_count += 1
-#
-#     if positive_percent > 0:
-#         result_source.neutral_avg_percent = result_source.neutral_avg_percent +
