@@ -88,6 +88,19 @@ services:
 #      - "6379:6379"
     restart: unless-stopped
 
+  gpt:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    container_name: gpt
+#    ports:
+#      - "8080:8080"
+    environment:
+      - MODEL_ID=mistralai/Mistral-7B-Instruct
+      - MAX_INPUT_LENGTH=1024
+      - MAX_TOTAL_TOKENS=2048
+    volumes:
+      - ./gpt_learn_models:/data
+    restart: unless-stopped
+
 volumes:
   pg_data:
   pgadmin_data:

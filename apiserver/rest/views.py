@@ -41,17 +41,19 @@ def instrument_info(request):
 
 
 @api_view(['GET'])
-def instrument_last_prices(request):
-    resp = list()
+def instrument_last_price(request):
+    resp = None
     uid = request.GET.get('uid')
 
     if uid:
-        for i in instruments.get_instrument_last_price_by_uid(uid):
-            resp.append(serializer.get_dict_by_object(i))
+        last_prices = instruments.get_instrument_last_price_by_uid(uid)
+
+        if last_prices and len(last_prices) >= 1 and last_prices[0] and last_prices[0].price:
+            resp = utils.get_price_by_quotation(last_prices[0].price)
 
     response = HttpResponse(json.dumps(resp))
 
-    if len(resp):
+    if resp:
         patch_cache_control(response, public=True, max_age=3600)
 
     return response

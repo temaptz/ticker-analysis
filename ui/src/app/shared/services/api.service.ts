@@ -6,7 +6,7 @@ import {
   InstrumentBrandResponse,
   InstrumentHistoryPrice,
   InstrumentInList,
-  InstrumentLastPrice,
+  InstrumentLastPriceResp,
   NewsResponse,
   Operation,
   PredictionResp,
@@ -42,11 +42,11 @@ export class ApiService {
     return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instrument`, {params: params});
   }
 
-  getInstrumentLastPrices(uid: string): Observable<InstrumentLastPrice[]> {
+  getInstrumentLastPrice(uid: string): Observable<InstrumentLastPriceResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
-    return this.http.get<InstrumentLastPrice[]>(`${this.apiUrl}/instrument/last_prices`, {params: params});
+    return this.http.get<InstrumentLastPriceResp>(`${this.apiUrl}/instrument/last_price`, {params: params});
   }
 
   getInstrumentPriceByDate(uid: string, date: Date): Observable<number> {

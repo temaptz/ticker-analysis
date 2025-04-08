@@ -7,7 +7,7 @@ export interface InstrumentInList {
 }
 
 export type Instrument = any;
-export type InstrumentLastPrice = any;
+export type InstrumentLastPriceResp = number;
 export type InstrumentHistoryPrice = any;
 export type Candle = any;
 export type Quotation = any;

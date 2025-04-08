@@ -25,7 +25,7 @@ export class CurrentPriceComponent {
     private appService: ApiService,
   ) {
     effect(() => {
-      this.appService.getInstrumentLastPrices(this.instrumentUid())
+      this.appService.getInstrumentLastPrice(this.instrumentUid())
         .pipe(finalize(() => this.isLoaded.set(true)))
         .subscribe(resp => {
           const price = resp
