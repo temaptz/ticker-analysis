@@ -206,6 +206,12 @@ def instrument_prediction_graph(request):
             date_to=date_to,
             interval=interval,
         )
+        resp['ta-1_2'] = predictions.get_prediction_ta_1_2_graph_by_uid(
+            uid=uid,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
     response = HttpResponse(json.dumps(resp))
 
     if resp:
@@ -217,16 +223,14 @@ def instrument_prediction_graph(request):
 @api_view(['GET'])
 def instrument_balance(request):
     resp = None
-    account_name = request.GET.get('account_name')
     uid = request.GET.get('uid')
 
-    if account_name and uid:
-        resp = users.get_user_instrument_balance(account_name=account_name, instrument_uid=uid)
+    if uid:
+        resp = users.get_user_instrument_balance(instrument_uid=uid)
 
     response = HttpResponse(json.dumps(resp))
 
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600)
+    patch_cache_control(response, public=True, max_age=3600)
 
     return response
 
@@ -234,11 +238,10 @@ def instrument_balance(request):
 @api_view(['GET'])
 def instrument_operations(request):
     resp = None
-    account_name = request.GET.get('account_name')
     figi = request.GET.get('figi')
 
-    if account_name and figi:
-        resp = users.get_user_instrument_operations(account_name=account_name, instrument_figi=figi)
+    if figi:
+        resp = users.get_user_instrument_operations(instrument_figi=figi)
 
     response = HttpResponse(serializer.to_json(resp))
 
@@ -252,13 +255,9 @@ def instrument_operations(request):
 def instrument_invest_calc(request):
     resp = None
     uid = request.GET.get('uid')
-    account_name = request.GET.get('account_name')
 
-    if uid and account_name:
-        resp = invest_calc.get_invest_calc_by_instrument_uid_account(
-            instrument_uid=uid,
-            account_name=account_name,
-        )
+    if uid:
+        resp = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid)
 
     response = HttpResponse(serializer.to_json(resp))
 
