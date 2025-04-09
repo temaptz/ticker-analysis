@@ -44,30 +44,15 @@
 
         <tr>
           <td>
-            <h5>Баланс Аналитический</h5>
+            <h5>Баланс</h5>
 
-            <ng-container *ngIf="priceComponent.price() as currentPrice">
-              <balance
-                *ngIf="instrument()?.figi as figi"
-                accountName="Аналитический"
-                [instrumentUid]="instr.uid"
-                [instrumentFigi]="figi"
-              ></balance>
-            </ng-container>
+            <balance
+              *ngIf="instrument()?.figi as figi"
+              [instrumentUid]="instr.uid"
+              [instrumentFigi]="figi"
+            ></balance>
           </td>
-          <td>
-            <h5>Баланс Основной</h5>
-
-            <ng-container *ngIf="priceComponent.price() as currentPrice">
-              <balance
-                *ngIf="instrument()?.figi as figi"
-                accountName="Основной"
-                [instrumentUid]="instr.uid"
-                [instrumentFigi]="figi"
-              ></balance>
-            </ng-container>
-          </td>
-          <td>
+          <td colspan="2">
             <h5>Новости</h5>
 
             <news

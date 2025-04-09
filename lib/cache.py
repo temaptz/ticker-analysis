@@ -1,13 +1,9 @@
 from functools import wraps
 from lib import utils, redis_utils
 
-is_local_cache_on = False
-local_cache = dict()
 
 def cache_get(key: str):
     try:
-        if is_local_cache_on:
-            return local_cache.get(key, None)
         return redis_utils.cache_get(key=key)
     except Exception as e:
         print('ERROR cache_get', e)
@@ -17,8 +13,6 @@ def cache_get(key: str):
 
 def cache_set(key: str, value: any, ttl: int = 3600) -> None:
     try:
-        if is_local_cache_on:
-            local_cache[key] = value
         redis_utils.cache_set(key=key, value=value, ttl_sec=ttl)
     except Exception as e:
         print('ERROR cache_set', e)

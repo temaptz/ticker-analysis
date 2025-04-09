@@ -111,26 +111,16 @@ export class ApiService {
     return this.http.get<PredictionGraphResp>(`${this.apiUrl}/instrument/prediction/graph`, {params: params});
   }
 
-  getInstrumentBalance(account_name: string, uid: string): Observable<number> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('account_name', account_name);
-
-    return this.http.get<number>(`${this.apiUrl}/instrument/balance`, {params: params});
-  }
-
-  getInstrumentOperations(account_name: string, figi: string): Observable<Operation[]> {
+  getInstrumentOperations(figi: string): Observable<Operation[]> {
     let params = new HttpParams();
     params = params.set('figi', figi);
-    params = params.set('account_name', account_name);
 
     return this.http.get<Operation[]>(`${this.apiUrl}/instrument/operations`, {params: params});
   }
 
-  getInvestCalc(account_name: string, uid: string): Observable<InvestCalc> {
+  getInvestCalc(uid: string): Observable<InvestCalc> {
     let params = new HttpParams();
     params = params.set('uid', uid);
-    params = params.set('account_name', account_name);
 
     return this.http.get<InvestCalc>(`${this.apiUrl}/instrument/invest_calc`, {params: params});
   }

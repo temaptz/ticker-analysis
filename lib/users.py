@@ -13,30 +13,36 @@ from lib import cache, instruments, utils, logger
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_balance(account_name: str, instrument_uid: str) -> int:
+def get_user_instrument_balance(instrument_uid: str) -> int:
+    result = 0
+
     try:
         for account in get_accounts():
-            if account.name == account_name:
-                positions = get_positions(account_id=account.id)
-                for instrument in positions.securities:
-                    if instrument.instrument_uid == instrument_uid:
-                        return instrument.balance
+            positions = get_positions(account_id=account.id)
+            for instrument in positions.securities:
+                if instrument.instrument_uid == instrument_uid:
+                    result += instrument.balance
 
     except Exception as e:
         logger.log_error(method_name='get_user_instrument_balance', error=e)
 
-    return 0
+    return result
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_operations(account_name: str, instrument_figi: str) -> list[Operation]:
+def get_user_instrument_operations(instrument_figi: str) -> list[Operation]:
+    result = []
+
     try:
         for account in get_accounts():
-            if account.name == account_name:
-                return get_operations(account_id=account.id, figi=instrument_figi)
+            operations = get_operations(account_id=account.id, figi=instrument_figi)
+            if operations and len(operations) > 0:
+                result.extend(operations)
 
     except Exception as e:
         logger.log_error(method_name='get_user_instrument_operations', error=e)
+
+    return result
 
 
 @cache.ttl_cache(ttl=3600)
@@ -99,9 +105,7 @@ def sort_instruments_by_balance(instruments_list: list[Instrument]) -> list[Inst
 
 def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
     try:
-        main_balance = get_user_instrument_balance(account_name='Основной', instrument_uid=instrument.uid)
-        analytics_balance = get_user_instrument_balance(account_name='Аналитический', instrument_uid=instrument.uid)
-        total_balance = main_balance + analytics_balance
+        total_balance = get_user_instrument_balance(instrument_uid=instrument.uid)
 
         if total_balance > 0:
             last_prices = instruments.get_instrument_last_price_by_uid(uid=instrument.uid)

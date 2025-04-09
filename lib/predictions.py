@@ -1,7 +1,7 @@
 import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
-from lib.learn import ta_1_1
+from lib.learn import ta_1_1, ta_1_2
 from lib import date_utils
 from lib.db_2 import predictions_ta_1_db, predictions_ta_1_1_db
 from tinkoff.invest import CandleInterval
@@ -74,4 +74,30 @@ def get_prediction_ta_1_1_graph_by_uid(uid: str, date_from: datetime.datetime, d
         return result
     except Exception as e:
         print('ERROR get_prediction_ta_1_1_graph_by_uid', e)
+        return []
+
+
+def get_prediction_ta_1_2_graph_by_uid(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
+    try:
+        result = list()
+
+        for date in date_utils.get_dates_interval_list(
+                date_from=date_from,
+                date_to=date_to,
+                interval_seconds=date_utils.get_interval_sec_by_candle(interval)
+        ):
+            prediction = ta_1_2.predict_future(
+                instrument_uid=uid,
+                date_target=date,
+            )
+
+            if prediction is not None:
+                result.append({
+                    'prediction': prediction,
+                    'date': date,
+                })
+
+        return result
+    except Exception as e:
+        print('ERROR get_prediction_ta_1_2_graph_by_uid', e)
         return []

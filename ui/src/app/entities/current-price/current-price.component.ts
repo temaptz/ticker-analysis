@@ -1,10 +1,8 @@
 import { Component, effect, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
-import { parseJSON } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
-import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 
 
@@ -27,15 +25,7 @@ export class CurrentPriceComponent {
     effect(() => {
       this.appService.getInstrumentLastPrice(this.instrumentUid())
         .pipe(finalize(() => this.isLoaded.set(true)))
-        .subscribe(resp => {
-          const price = resp
-            ?.sort((a, b) => parseJSON(a.time).getTime() - parseJSON(b.time).getTime())
-            ?.[0];
-
-          const nextPrice = getPriceByQuotation(price.price);
-
-          this.price.set(nextPrice);
-        });
+        .subscribe(price => this.price.set(price));
     });
   }
 

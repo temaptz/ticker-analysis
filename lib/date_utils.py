@@ -2,6 +2,7 @@ from dateutil import parser
 import datetime
 from pytz import timezone
 from lib import logger
+from tinkoff.invest import CandleInterval
 
 
 @logger.error_logger
@@ -36,3 +37,28 @@ def convert_to_utc(date: datetime.datetime) -> datetime.datetime:
     utc_datetime = date.astimezone(datetime.timezone.utc)
 
     return utc_datetime
+
+
+def get_dates_interval_list(date_from: datetime.datetime, date_to: datetime.datetime, interval_seconds=24*3600) -> list[datetime.datetime]:
+    result = []
+
+    if date_from < date_to:
+        result.append(date_from)
+
+    while len(result) > 0 and result[-1] < date_to - datetime.timedelta(seconds=interval_seconds):
+        result.append(result[-1] + datetime.timedelta(seconds=interval_seconds))
+
+    return result
+
+
+def get_interval_sec_by_candle(interval: CandleInterval) -> int:
+    if interval == CandleInterval.CANDLE_INTERVAL_DAY:
+        return 24 * 3600
+
+    if interval == CandleInterval.CANDLE_INTERVAL_WEEK:
+        return 7 * 24 * 3600
+
+    if interval == CandleInterval.CANDLE_INTERVAL_MONTH:
+        return 30 * 24 * 3600
+
+    return 24 * 3600

@@ -87,15 +87,12 @@ export class ComplexGraphComponent {
   private getOperations(): Observable<Operation[]> {
     return this.appService.getInstrument(this.instrumentUid())
       .pipe(
-        switchMap((instrument: Instrument) => combineLatest([
-          this.appService.getInstrumentOperations('Основной', instrument.figi),
-          this.appService.getInstrumentOperations('Аналитический', instrument.figi),
-        ])),
-        map(([main, analytics]: [Operation[], Operation[]]) => {
-          const allOperations = [...(main ?? []), ...(analytics ?? [])];
+        switchMap((instrument: Instrument) =>
+          this.appService.getInstrumentOperations(instrument.figi)
+        ),
+        map((operations: Operation[]) => {
           const from = subDays(new Date(), this.daysHistory());
-
-          return allOperations.filter(i => isAfter(parseJSON(i.date), from));
+          return operations.filter(i => isAfter(parseJSON(i.date), from));
         }),
       )
   }

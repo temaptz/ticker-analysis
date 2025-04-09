@@ -69,7 +69,7 @@ class InvestCalc:
 
 
 @logger.error_logger
-def get_invest_calc_by_instrument_uid_account(instrument_uid: str, account_name: str):
+def get_invest_calc_by_instrument_uid(instrument_uid: str):
     result = {
         'balance': None,
         'current_price': None,
@@ -88,10 +88,10 @@ def get_invest_calc_by_instrument_uid_account(instrument_uid: str, account_name:
         current_price = utils.get_price_by_quotation(last_prices[0].price)
 
     if instrument and current_price:
-        balance_qty = users.get_user_instrument_balance(account_name=account_name, instrument_uid=instrument_uid)
+        balance_qty = users.get_user_instrument_balance(instrument_uid=instrument_uid)
 
         if balance_qty:
-            operations = users.get_user_instrument_operations(account_name=account_name, instrument_figi=instrument.figi)
+            operations = users.get_user_instrument_operations(instrument_figi=instrument.figi)
 
             if operations and len(operations):
                 calc = InvestCalc(
@@ -109,3 +109,7 @@ def get_invest_calc_by_instrument_uid_account(instrument_uid: str, account_name:
                 result['operations'] = operations
 
     return result
+
+
+def get_report() -> None:
+    print('REPORT')

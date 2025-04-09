@@ -68,8 +68,7 @@ export class TableFullComponent implements OnInit {
     'year',
     'complex',
     'price',
-    'balance-main',
-    'balance-analytics',
+    'balance',
     'forecast',
     'prediction',
     'news'

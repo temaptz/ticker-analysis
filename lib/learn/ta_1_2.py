@@ -4,7 +4,7 @@ import numpy
 import datetime
 from tinkoff.invest import CandleInterval, InstrumentResponse
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache
+from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils
 
 
 class LearningCard:
@@ -197,12 +197,28 @@ def learn():
     print('Test MSE:', mse_test)
 
 
-def predict(data: list):
-    model = catboost.CatBoostRegressor()
-    model.load_model(get_model_file_path())
+def predict(data: list) -> float or None:
+    try:
+        model = catboost.CatBoostRegressor()
+        model.load_model(get_model_file_path())
 
-    return model.predict(data=data)
+        return model.predict(data=data)
+    except Exception as e:
+        print('ERROR predict ta_1_2', e)
 
+
+def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    card = LearningCard(
+        instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
+        date=datetime.datetime.now(),
+        target_date=date_target,
+    )
+
+    if card.is_ok:
+        data = card.get_x()
+        return predict(data=data)
+
+    return None
 
 def prepare_data():
     print('PREPARE DATA TA-1_2')
@@ -211,36 +227,29 @@ def prepare_data():
     date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(12))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
-    counter_success = 0
     counter_added = 0
-    counter_exists = 0
+    counter_error = 0
     counter_cached = 0
     instrument_index = 0
-
-    print('DATE START', date_start)
-    print('DATE END', date_end)
 
     for instrument in instruments_list:
         instrument_index += 1
         print('INSTRUMENT', instrument.ticker)
 
-        for date in get_days_between_dates(date_from=date_start, date_to=date_end):
+        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end):
             print('DATE', date)
 
-            days_until_today = len(get_days_between_dates(date, date_end))
+            days_until_today = len(date_utils.get_dates_interval_list(date, date_end))
 
             for target_days_count in range(1, days_until_today):
                 target_date = (date + datetime.timedelta(days=target_days_count))
-
-                if is_record_cached_success(
-                        ticker=instrument.ticker,
-                        date=date,
-                        target_date=target_date,
-                ) or is_record_cached_error(
+                cached_record = get_record_cache(
                     ticker=instrument.ticker,
                     date=date,
                     target_date=target_date,
-                ):
+                )
+
+                if cached_record:
                     counter_cached += 1
                 else:
                     card = LearningCard(
@@ -250,27 +259,8 @@ def prepare_data():
                     )
 
                     if card.is_ok and card.get_y():
-                        existing_record = csv.find_existing_record(
-                            filename=get_data_frame_csv_file_path(),
-                            record=get_csv_record_by_learning_card(card=card),
-                        )
-
-                        if existing_record is None:
-                            csv.add_record(
-                                filename=get_data_frame_csv_file_path(),
-                                record=get_csv_record_by_learning_card(card=card),
-                            )
-                            counter_added += 1
-                        else:
-                            counter_exists += 1
-
-                        cache_record(
-                            ticker=instrument.ticker,
-                            date=date,
-                            target_date=target_date,
-                        )
-
-                        counter_success += 1
+                        cache_record(card=card)
+                        counter_added += 1
 
                     else:
                         cache_error(
@@ -278,25 +268,13 @@ def prepare_data():
                             date=date,
                             target_date=target_date,
                         )
+                        counter_error += 1
 
                 counter_total += 1
 
-                print(f'(TOTAL: {counter_total}; SUCCESS: {counter_success}; ERROR: {counter_total - counter_success - counter_cached}; EXISTS: {counter_exists}; CACHED: {counter_cached}; ADDED: {counter_added}; redis: {redis_utils.get_redis_size_mb()}MB/{redis_utils.get_redis_max_size_mb()}MB; CURRENT_TICKER: {instrument.ticker}({instrument_index}/{len(instruments_list)}))')
+                print(f'(TOTAL: {counter_total}; ERROR: {counter_error}; CACHED: {counter_cached}; ADDED: {counter_added}; redis: {redis_utils.get_redis_size_mb()}MB/{redis_utils.get_redis_max_size_mb()}MB; CURRENT_TICKER: {instrument.ticker}({instrument_index}/{len(instruments_list)}))')
 
     print('TOTAL COUNT', counter_total)
-
-
-def get_days_between_dates(date_from: datetime.datetime, date_to: datetime.datetime) -> list[datetime.datetime]:
-    result = []
-    delta_hours = 24
-
-    if date_from < date_to:
-        result.append(date_from)
-
-    while len(result) > 0 and result[-1] < date_to - datetime.timedelta(hours=delta_hours):
-        result.append(result[-1] + datetime.timedelta(hours=delta_hours))
-
-    return result
 
 
 def get_csv_record_by_learning_card(card: LearningCard) -> dict:
@@ -370,39 +348,42 @@ def get_csv_record_by_learning_card(card: LearningCard) -> dict:
     }
 
 
-def cache_record(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
-    cache_key = utils.get_md5(serializer.to_json({
-        'ticker': ticker,
-        'date': date,
-        'target_date': target_date,
-    }))
-    cache.cache_set(key=cache_key, value='success', ttl=3600 * 24 * 30)
+def cache_record(card: LearningCard) -> None:
+    cache_key = get_record_cache_key(
+        ticker=card.instrument.ticker,
+        date=card.date,
+        target_date=card.target_date,
+    )
+    cache.cache_set(key=cache_key, value=card, ttl=3600 * 24 * 365)
 
 
 def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
-    cache_key = utils.get_md5(serializer.to_json({
+    cache_key = get_record_cache_key(
+        ticker=ticker,
+        date=date,
+        target_date=target_date,
+    )
+    cache.cache_set(key=cache_key, value='error', ttl=3600 * 24 * 7)
+
+
+def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> LearningCard or None:
+    resp = None
+    cache_key = get_record_cache_key(
+        ticker=ticker,
+        date=date,
+        target_date=target_date,
+    )
+    value = cache.cache_get(key=cache_key)
+
+    if value and value != 'error':
+        resp = value
+
+    return resp
+
+
+def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
+    return utils.get_md5(serializer.to_json({
         'ticker': ticker,
         'date': date,
         'target_date': target_date,
     }))
-    cache.cache_set(key=cache_key, value='error', ttl=3600 * 24 * 30)
-
-
-def is_record_cached_success(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> bool:
-    cache_key = utils.get_md5(serializer.to_json({
-        'ticker': ticker,
-        'date': date,
-        'target_date': target_date,
-    }))
-
-    return cache.cache_get(key=cache_key) == 'success'
-
-
-def is_record_cached_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> bool:
-    cache_key = utils.get_md5(serializer.to_json({
-        'ticker': ticker,
-        'date': date,
-        'target_date': target_date,
-    }))
-
-    return cache.cache_get(key=cache_key) == 'error'

@@ -1,7 +1,7 @@
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
-from lib import utils, cache, counter, logger, gpt_client
+from lib import utils, cache, counter, logger
 from lib.db_2 import gpt_requests_db
 
 
@@ -14,7 +14,6 @@ class NewsRate:
 
 #  Функция для отправки текстового запроса к GPT и получения ответа
 def get_gpt_text(text_query: str, instruction: str = '') -> str:
-    gpt_client.try_request(request=text_query)
     try:
         db_request = 'User: '+text_query+' System: '+instruction
         db_response = gpt_requests_db.get_response(request=db_request)

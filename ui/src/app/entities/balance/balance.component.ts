@@ -1,12 +1,11 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { finalize, combineLatest } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, InvestCalc, Operation } from '../../types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceByQuotationPipe } from '../../shared/pipes/price-by-quotation.pipe';
-import { CurrentPriceService } from '../../shared/services/current-price.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 
@@ -19,7 +18,6 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 })
 export class BalanceComponent {
 
-  accountName = input.required<string>();
   instrumentUid = input.required<InstrumentInList['uid']>();
   instrumentFigi = input.required<InstrumentInList['figi']>();
 
@@ -31,12 +29,11 @@ export class BalanceComponent {
   potentialProfitPercent = signal<number | null>(null);
   avgPrice = signal<number | null>(null);
   currentPrice = signal<number | null>(null);
-  getPriceByQuotation = getPriceByQuotation;
 
   private apiService = inject(ApiService);
 
   constructor() {
-    effect(() => this.apiService.getInvestCalc(this.accountName(), this.instrumentUid())
+    effect(() => this.apiService.getInvestCalc(this.instrumentUid())
       .pipe(finalize(() => this.isLoaded.set(true)))
       .subscribe((investCalc: InvestCalc) => {
         if (investCalc?.balance) {
