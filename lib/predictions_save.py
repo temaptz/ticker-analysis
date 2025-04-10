@@ -59,7 +59,7 @@ def save_predictions_ta_1_1():
 
 def save_predictions_ta_1_2():
     telegram.send_message('Начато сохранение предсказаний модели ta-1_2')
-    date_today = datetime.datetime.now(datetime.timezone.utc).replace(hour=9, minute=0, second=0, microsecond=0)
+    date_today = datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)
     date_to = date_today + datetime.timedelta(days=365)
 
     counter = 0
