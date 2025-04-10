@@ -5,6 +5,7 @@ import datetime
 from tinkoff.invest import CandleInterval, InstrumentResponse
 from sklearn.metrics import mean_squared_error
 from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils
+from lib.learn import learn_utils
 
 
 class LearningCard:
@@ -32,6 +33,10 @@ class LearningCard:
             date: datetime.datetime,
             target_date: datetime.datetime
     ):
+        if date > target_date:
+            self.is_ok = False
+            return
+
         self.instrument = instrument
         self.date = date
         self.target_date = target_date
@@ -88,7 +93,7 @@ class LearningCard:
         return result
 
     def get_target_price(self) -> float or None:
-        if self.target_date < datetime.datetime.now():
+        if self.target_date < datetime.datetime.now(datetime.timezone.utc):
             return instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date)
 
         return None
@@ -156,8 +161,8 @@ def learn():
     x_array = x_array[random_indexes]
     y_array = y_array[random_indexes]
 
-    # Рассчитаем точку разделения (split) на 75%, 20%, 5%
-    train_end = int(0.75 * count_samples)  # после train_end заканчивается обучающая часть
+    # Рассчитаем точку разделения (split) на 80%, 15%, 5%
+    train_end = int(0.8 * count_samples)  # после train_end заканчивается обучающая часть
     val_end = int(0.95 * count_samples)  # после val_end заканчивается валидационная часть
     # (оставшиеся 5% идут на тест)
 
@@ -178,10 +183,15 @@ def learn():
 
     model = catboost.CatBoostRegressor(
         task_type='CPU',
-        iterations=5000,
+        iterations=10000,
         learning_rate=0.03,
         random_seed=42,
-        verbose=100
+        verbose=100,
+        early_stopping_rounds=300,
+        depth=8,
+        l2_leaf_reg=5,
+        eval_metric='RMSE',
+        loss_function='RMSE',
     )
 
     model.fit(
@@ -195,6 +205,16 @@ def learn():
     y_pred_test = model.predict(test_pool)
     mse_test = mean_squared_error(y_test, y_pred_test)
     print('Test MSE:', mse_test)
+    mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
+    print('Test MAPE:', mape_test)
+
+    learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
+
+
+def mean_absolute_percentage_error(y_true, y_pred):
+    y_true, y_pred = numpy.array(y_true), numpy.array(y_pred)
+    nonzero_mask = y_true != 0
+    return numpy.mean(numpy.abs((y_true[nonzero_mask] - y_pred[nonzero_mask]) / y_true[nonzero_mask])) * 100
 
 
 def predict(data: list) -> float or None:
@@ -207,16 +227,16 @@ def predict(data: list) -> float or None:
         print('ERROR predict ta_1_2', e)
 
 
+@cache.ttl_cache(ttl=3600)
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     card = LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
-        date=datetime.datetime.now(),
+        date=datetime.datetime.now(datetime.timezone.utc),
         target_date=date_target,
     )
 
     if card.is_ok:
-        data = card.get_x()
-        return predict(data=data)
+        return predict(data=card.get_x())
 
     return None
 
@@ -224,13 +244,14 @@ def prepare_data():
     print('PREPARE DATA TA-1_2')
 
     date_start = datetime.datetime(year=2025, month=1, day=10, hour=12)
-    date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(12))
+    date_end = datetime.datetime.combine(datetime.datetime.now(datetime.timezone.utc), datetime.time(12))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
     counter_added = 0
     counter_error = 0
     counter_cached = 0
     instrument_index = 0
+    records = []
 
     for instrument in instruments_list:
         instrument_index += 1
@@ -251,6 +272,8 @@ def prepare_data():
 
                 if cached_record:
                     counter_cached += 1
+                    if cached_record != 'error':
+                        records.append(get_csv_record_by_learning_card(card=cached_record))
                 else:
                     card = LearningCard(
                         instrument=instrument,
@@ -261,6 +284,7 @@ def prepare_data():
                     if card.is_ok and card.get_y():
                         cache_record(card=card)
                         counter_added += 1
+                        records.append(get_csv_record_by_learning_card(card=card))
 
                     else:
                         cache_error(
@@ -275,6 +299,22 @@ def prepare_data():
                 print(f'(TOTAL: {counter_total}; ERROR: {counter_error}; CACHED: {counter_cached}; ADDED: {counter_added}; redis: {redis_utils.get_redis_size_mb()}MB/{redis_utils.get_redis_max_size_mb()}MB; CURRENT_TICKER: {instrument.ticker}({instrument_index}/{len(instruments_list)}))')
 
     print('TOTAL COUNT', counter_total)
+    print('TOTAL RECORDS PREPARED', len(records))
+
+    records_filtered = []
+
+    for r in records_filtered:
+        if r.get_y() > 0:
+            records_filtered.append(r)
+
+    data_frame = csv.initialize_df_by_records(records=records)
+
+    print(data_frame)
+
+    csv.save_df_to_csv(data_frame=data_frame, filename=get_data_frame_csv_file_path())
+
+    print('DATA FRAME FILE SAVED')
+
 
 
 def get_csv_record_by_learning_card(card: LearningCard) -> dict:
@@ -366,19 +406,12 @@ def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.date
     cache.cache_set(key=cache_key, value='error', ttl=3600 * 24 * 7)
 
 
-def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> LearningCard or None:
-    resp = None
-    cache_key = get_record_cache_key(
+def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> LearningCard or str or None:
+    return cache.cache_get(key=get_record_cache_key(
         ticker=ticker,
         date=date,
         target_date=target_date,
-    )
-    value = cache.cache_get(key=cache_key)
-
-    if value and value != 'error':
-        resp = value
-
-    return resp
+    ))
 
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:

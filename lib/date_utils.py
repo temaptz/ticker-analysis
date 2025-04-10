@@ -32,11 +32,10 @@ def convert_to_local(date: datetime.datetime) -> datetime.datetime:
 @logger.error_logger
 def convert_to_utc(date: datetime.datetime) -> datetime.datetime:
     if date.tzinfo is None:
-        date = date.replace(tzinfo=timezone('Europe/Moscow'))
+        moscow = timezone('Europe/Moscow')
+        date = moscow.localize(date)
 
-    utc_datetime = date.astimezone(datetime.timezone.utc)
-
-    return utc_datetime
+    return date.astimezone(datetime.timezone.utc)
 
 
 def get_dates_interval_list(date_from: datetime.datetime, date_to: datetime.datetime, interval_seconds=24*3600) -> list[datetime.datetime]:

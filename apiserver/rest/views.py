@@ -208,11 +208,11 @@ def instrument_prediction_graph(request):
         )
         resp['ta-1_2'] = predictions.get_prediction_ta_1_2_graph_by_uid(
             uid=uid,
-            date_from=date_from,
+            date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,
             interval=interval,
         )
-    response = HttpResponse(json.dumps(resp))
+    response = HttpResponse(serializer.to_json(resp))
 
     if resp:
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)

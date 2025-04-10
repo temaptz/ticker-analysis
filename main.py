@@ -27,18 +27,12 @@ print('IS DOCKER', docker.is_docker())
 
 if docker.is_docker():
     telegram.send_message('Скрипт ticker-analysis main запущен')
-
-    db_init_backup_path = utils.get_file_abspath_recursive('db_init_backup.sql')
-
-    if utils.is_file_exists(file_path=db_init_backup_path):
-        db_2.backup.drop_database()
-        db_2.backup.restore_database(dump_file_path=db_init_backup_path)
-
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
 
     # ta_1_2.prepare_data()
+    # ta_1_2.learn()
 
     # db_2.migrate_sqlite.drop_tables()
     # init.init_db()

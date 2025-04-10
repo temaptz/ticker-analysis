@@ -19,3 +19,4 @@ ipython
 traitlets
 psycopg2-binary
 sqlalchemy
+matplotlib
