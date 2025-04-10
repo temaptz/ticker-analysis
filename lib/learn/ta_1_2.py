@@ -227,16 +227,30 @@ def predict(data: list) -> float or None:
         print('ERROR predict ta_1_2', e)
 
 
-@cache.ttl_cache(ttl=3600)
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
+    cache_key = utils.get_md5(serializer.to_json({
+        'instrument_uid': instrument_uid,
+        'prediction_target_date': prediction_target_date,
+    }))
+    cached = cache.cache_get(key=cache_key)
+
+    if cached:
+        return cached
+
     card = LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
         date=datetime.datetime.now(datetime.timezone.utc),
-        target_date=date_target,
+        target_date=prediction_target_date,
     )
 
     if card.is_ok:
-        return predict(data=card.get_x())
+        prediction = predict(data=card.get_x())
+
+        if prediction:
+            cache.cache_set(key=cache_key, value=prediction, ttl=3600 * 24 * 30)
+
+        return prediction
 
     return None
 

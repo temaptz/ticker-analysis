@@ -47,12 +47,18 @@ def get_user_instrument_operations(instrument_figi: str) -> list[Operation]:
 
 @cache.ttl_cache(ttl=3600)
 def get_accounts() -> GetAccountsResponse.accounts:
+    result = []
+
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            return client.users.get_accounts().accounts
+            for a in client.users.get_accounts().accounts:
+                if a.name in ['Основной', 'Аналитический']:
+                    result.append(a)
 
     except Exception as e:
         logger.log_error(method_name='get_accounts', error=e)
+
+    return result
 
 
 @cache.ttl_cache(ttl=3600)

@@ -82,7 +82,7 @@ def get_prediction_ta_1_2_graph_by_uid(uid: str, date_from: datetime.datetime, d
         result = list()
 
         for date in date_utils.get_dates_interval_list(
-                date_from=date_from.replace(minute=0, second=0, microsecond=0),
+                date_from=date_from,
                 date_to=date_to,
                 interval_seconds=date_utils.get_interval_sec_by_candle(interval)
         ):

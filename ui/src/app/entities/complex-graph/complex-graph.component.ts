@@ -32,7 +32,7 @@ import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
 export class ComplexGraphComponent {
 
   instrumentUid = input.required<InstrumentInList['uid']>();
-  historyInterval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_DAY);
+  historyInterval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
   daysHistory = input(90, { transform: numberAttribute });
   daysFuture = input(90, { transform: numberAttribute });
   width = input<string>('450px');
@@ -165,6 +165,27 @@ export class ComplexGraphComponent {
             y: 1
           },
           data: predictions?.['ta-1_1']?.map(i => [
+            parseJSON(i.date),
+            getRoundPrice(i.prediction)
+          ]) ?? []
+        },
+        {
+          name: 'Предсказания TA-1_2',
+          type: 'line',
+          showSymbol: true,
+          symbol: 'circle',
+          symbolSize: 2.5,
+          itemStyle: {
+            color: GRAPH_COLORS.ta_1_2
+          },
+          lineStyle: {
+            width: 1,
+          },
+          encode: {
+            x: 0,
+            y: 1
+          },
+          data: predictions?.['ta-1_2']?.map(i => [
             parseJSON(i.date),
             getRoundPrice(i.prediction)
           ]) ?? []

@@ -191,7 +191,7 @@ def instrument_prediction_graph(request):
     uid = request.GET.get('uid')
     date_from = date_utils.parse_date(request.GET.get('date_from'))
     date_to = date_utils.parse_date(request.GET.get('date_to'))
-    interval = request.GET.get('interval')
+    interval = int(request.GET.get('interval'))
 
     if uid and date_from and date_to and interval:
         resp['ta-1'] = predictions.get_prediction_ta_1_graph_by_uid(

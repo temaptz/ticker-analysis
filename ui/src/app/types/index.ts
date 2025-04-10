@@ -54,6 +54,7 @@ export interface PredictionResp {
 export interface PredictionGraphResp {
   'ta-1': PredictionGraph[];
   'ta-1_1': PredictionGraph[];
+  'ta-1_2': PredictionGraph[];
 }
 
 export interface PredictionGraph {
