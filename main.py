@@ -1,4 +1,5 @@
 import sys
+import datetime
 from lib import (
     telegram,
     docker,
@@ -15,6 +16,7 @@ from lib import (
     db_2,
     yandex_disk,
     cache,
+    instruments,
 )
 from lib.db import forecasts_db, fundamentals_db, gpt_requests_db, news_db, news_rate_db, predictions_ta_1_db, predictions_ta_1_1_db
 from lib.db_2 import init, db_utils

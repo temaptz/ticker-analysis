@@ -7,22 +7,22 @@ def start_schedule() -> None:
     timezone = pytz.timezone('Europe/Moscow')
     scheduler = BlockingScheduler()
 
-    # Сбор прогнозов аналитиков
-    scheduler.add_job(
-        forecasts_save.save_forecasts,
-        'cron',
-        day_of_week='mon',
-        hour=13,
-        minute=0,
-        timezone=timezone
-    )
-
     # Сбор фундаментальных показателей
     scheduler.add_job(
         fundamentals_save.save_fundamentals,
         'cron',
         day_of_week='mon',
-        hour=14,
+        hour=10,
+        minute=0,
+        timezone=timezone
+    )
+
+    # Сбор прогнозов аналитиков
+    scheduler.add_job(
+        forecasts_save.save_forecasts,
+        'cron',
+        day_of_week='mon',
+        hour=11,
         minute=0,
         timezone=timezone
     )
@@ -31,7 +31,7 @@ def start_schedule() -> None:
     scheduler.add_job(
         predictions_save.save_predictions,
         'cron',
-        hour=11,
+        hour=13,
         minute=0,
         timezone=timezone
     )

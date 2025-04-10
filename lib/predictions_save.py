@@ -1,6 +1,7 @@
-from lib import predictions, telegram, instruments
-from lib.db_2 import predictions_ta_1_db
-from lib.db_2 import predictions_ta_1_1_db
+import datetime
+from lib import predictions, telegram, instruments, date_utils
+from lib.db_2 import predictions_ta_1_db, predictions_ta_1_1_db, predictions_ta_1_2_db
+from lib.learn import ta_1_2
 
 
 def save_predictions():
@@ -54,3 +55,34 @@ def save_predictions_ta_1_1():
             counter += 1
 
     telegram.send_message('Всего сохранено '+str(counter)+' предсказаний модели ta-1_1')
+
+
+def save_predictions_ta_1_2():
+    telegram.send_message('Начато сохранение предсказаний модели ta-1_2')
+    date_today = datetime.datetime.now(datetime.timezone.utc).replace(hour=9, minute=0, second=0, microsecond=0)
+    date_to = date_today + datetime.timedelta(days=365)
+
+    counter = 0
+
+    for instrument in instruments.get_instruments_white_list():
+        print(instrument.ticker)
+
+        for date in date_utils.get_dates_interval_list(
+            date_from=date_today,
+            date_to=date_to,
+            interval_seconds=3600 * 24 * 7
+        ):
+            prediction = ta_1_2.predict_future(instrument_uid=instrument.uid, date_target=date)
+
+            if prediction is not None:
+                print('PREDICTION TA-1_2: ', prediction, date)
+
+                predictions_ta_1_2_db.insert_prediction(
+                    uid=instrument.uid,
+                    prediction=prediction,
+                    target_date=date_today,
+                )
+
+                counter += 1
+
+    telegram.send_message('Всего сохранено '+str(counter)+' предсказаний модели ta-1_2')
