@@ -34,7 +34,7 @@ if docker.is_docker():
 else:
     print('NOT DOCKER')
 
-    ta_2.generate_data()
+    # ta_2.generate_data()
     # ta_2.learn()
 
     # invest_calc.get_report()
