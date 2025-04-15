@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument
 from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc
+from lib.learn import ta_1_2, ta_2
 import json
 
 
@@ -174,8 +175,12 @@ def instrument_prediction(request):
     uid = request.GET.get('uid')
 
     if uid:
+        next_month = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
         resp['ta-1'] = predictions.get_prediction_ta_1_by_uid(uid)
         resp['ta-1_1'] = predictions.get_prediction_ta_1_1_by_uid(uid)
+        resp['ta-1_2'] = ta_1_2.predict_future(instrument_uid=uid, date_target=next_month)
+        resp['ta-2'] = ta_2.predict_future(instrument_uid=uid, date_target=next_month)
+        resp['consensus'] = predictions.get_predictions_consensus(instrument_uid=uid, date_target=next_month)
 
     response = HttpResponse(json.dumps(resp))
 
@@ -207,6 +212,12 @@ def instrument_prediction_graph(request):
             interval=interval,
         )
         resp['ta-1_2'] = predictions.get_prediction_ta_1_2_graph(
+            uid=uid,
+            date_from=datetime.datetime.now(datetime.timezone.utc),
+            date_to=date_to,
+            interval=interval,
+        )
+        resp['ta-2'] = predictions.get_prediction_ta_2_graph(
             uid=uid,
             date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,

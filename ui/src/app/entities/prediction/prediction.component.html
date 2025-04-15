@@ -14,6 +14,30 @@
       [class.minus]="!isPlus_ta_1_1()"
     >{{ percent_ta_1_1() }}% -> <b>{{ prediction_ta_1_1() | priceRound | priceFormat }}</b></span>
   </div>
+
+  <div>
+    <h5 [style.color]="colors.ta_1_2">TA-1_2:</h5>
+    <span
+      [class.plus]="isPlus_ta_1_2()"
+      [class.minus]="!isPlus_ta_1_2()"
+    >{{ percent_ta_1_2() }}% -> <b>{{ prediction_ta_1_2() | priceRound | priceFormat }}</b></span>
+  </div>
+
+  <div>
+    <h5 [style.color]="colors.ta_2">TA-2:</h5>
+    <span
+      [class.plus]="isPlus_ta_2()"
+      [class.minus]="!isPlus_ta_2()"
+    >{{ percent_ta_2() }}% -> <b>{{ prediction_ta_2() | priceRound | priceFormat }}</b></span>
+  </div>
+
+  <div>
+    <h5 [style.color]="colors.consensus">CONSENSUS:</h5>
+    <span
+      [class.plus]="isPlus_consensus()"
+      [class.minus]="!isPlus_consensus()"
+    >{{ percent_consensus() }}% -> <b>{{ prediction_consensus() | priceRound | priceFormat }}</b></span>
+  </div>
 } @placeholder {
   <preloader></preloader>
 }

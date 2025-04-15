@@ -49,12 +49,16 @@ export interface NewsResponse {
 export interface PredictionResp {
   'ta-1': number;
   'ta-1_1': number;
+  'ta-1_2': number;
+  'ta-2': number;
+  'consensus': number;
 }
 
 export interface PredictionGraphResp {
   'ta-1': PredictionGraph[];
   'ta-1_1': PredictionGraph[];
   'ta-1_2': PredictionGraph[];
+  'ta-2': PredictionGraph[];
 }
 
 export interface PredictionGraph {
