@@ -114,13 +114,11 @@ def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
         total_balance = get_user_instrument_balance(instrument_uid=instrument.uid)
 
         if total_balance > 0:
-            last_prices = instruments.get_instrument_last_price_by_uid(uid=instrument.uid)
+            last_price = instruments.get_instrument_last_price_by_uid(uid=instrument.uid)
 
-            if last_prices and last_prices[0]:
-                current_price = utils.get_price_by_quotation(last_prices[0].price)
+            if last_price is not None and last_price > 0:
+                return total_balance * last_price
 
-                if current_price and current_price > 0:
-                    return total_balance * current_price
 
     except Exception as e:
         logger.log_error(method_name='get_instrument_total_balance_for_sort', error=e)

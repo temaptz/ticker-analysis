@@ -2,7 +2,7 @@ import datetime
 
 import const
 from lib.db_2 import news_db, news_rate_db
-from lib import instruments, yandex, cache, counter, docker, serializer, utils
+from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger
 
 
 class NewsSourceRated:
@@ -117,8 +117,6 @@ def get_news_rate(
 
     elif not const.IS_NEWS_CLASSIFY_ENABLED:
         return None
-    elif not docker.is_prod():
-        return None
     else:
         # Тут уже запрос GPT
         news = news_db.get_news_by_uid(news_uid)
@@ -132,6 +130,8 @@ def get_news_rate(
                 subject_name=subject_name
             )
 
+            logger.log_info(message='NEWS RATED', output=serializer.to_json(gpt_rate))
+
             if gpt_rate:
                 news_rate_db.insert_rate(news_uid=news_uid, instrument_uid=instrument_uid, rate=gpt_rate)
                 counter.increment(counter.Counters.NEWS_RATE_NEW)
@@ -141,22 +141,40 @@ def get_news_rate(
     return None
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 7)
+@logger.error_logger
 def get_news_by_instrument_uid(
         uid: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime
 ):
+    start_date_beginning_day = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_date_end_day = start_date.replace(hour=23, minute=59, second=59, microsecond=999)
+    cache_key = utils.get_md5(serializer.to_json({
+        'method': 'get_news_by_instrument_uid',
+        'uid': uid,
+        'start_date': start_date_beginning_day,
+        'end_date': end_date_end_day,
+    }))
+    cached = cache.cache_get(cache_key)
+
+    if cached:
+        return cached
+
     keywords = get_keywords_by_instrument_uid(uid)
 
     print('GET NEWS BY KEYWORDS', keywords)
     counter.increment(counter.Counters.NEWS_GET_COUNT)
 
-    return news_db.get_news_by_date_keywords_fts(
+    result = news_db.get_news_by_date_keywords_fts(
         start_date=start_date,
         end_date=end_date,
         keywords=keywords
     )
+
+    if result:
+        cache.cache_set(key=cache_key, value=result, ttl=3600*24*14)
+
+    return result
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 365)

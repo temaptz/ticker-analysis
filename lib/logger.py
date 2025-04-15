@@ -22,3 +22,8 @@ def log_error(method_name: str, error: Exception = None) -> None:
 
     if docker.is_prod():
         telegram.send_message(error_str)
+
+
+def log_info(message: str, output: any) -> None:
+    date_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    print(f'\033[94m[{date_str}] {message}\033[0m', output)

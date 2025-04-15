@@ -1,8 +1,9 @@
 import datetime
 import os
+import re
 from tinkoff.invest import MoneyValue, Quotation, HistoricCandle
 import hashlib
-from lib import date_utils
+from lib import date_utils, logger
 
 
 def get_price_by_candle(candle: HistoricCandle) -> float or None:
@@ -67,8 +68,13 @@ def get_file_size_readable(filepath) -> str:
 
 
 def round_float(num: float, decimals: int = 10) -> float:
-    intLen = len(str(num).split('.')[0])
-    return round(float(str(num)[0:intLen+decimals+5]), decimals)
+    try:
+        int_len = len(str(num).split('.')[0])
+        float_str = str(num)[0:int_len+decimals+5]
+        float_only_digits_str = re.sub(r'[^0-9\.,]', '', float_str)
+        return round(float(float_only_digits_str), decimals)
+    except Exception as e:
+        logger.log_error(method_name='round_float', error=e)
 
 
 def get_md5(data: str) -> str:

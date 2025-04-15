@@ -46,12 +46,12 @@ def instrument_last_price(request):
     uid = request.GET.get('uid')
 
     if uid:
-        last_prices = instruments.get_instrument_last_price_by_uid(uid)
+        last_price = instruments.get_instrument_last_price_by_uid(uid)
 
-        if last_prices and len(last_prices) >= 1 and last_prices[0] and last_prices[0].price:
-            resp = utils.get_price_by_quotation(last_prices[0].price)
+        if last_price is not None:
+            resp = last_price
 
-    response = HttpResponse(json.dumps(resp))
+    response = HttpResponse(serializer.to_json(resp))
 
     if resp:
         patch_cache_control(response, public=True, max_age=3600)
@@ -194,19 +194,19 @@ def instrument_prediction_graph(request):
     interval = int(request.GET.get('interval'))
 
     if uid and date_from and date_to and interval:
-        resp['ta-1'] = predictions.get_prediction_ta_1_graph_by_uid(
+        resp['ta-1'] = predictions.get_prediction_ta_1_graph(
             uid=uid,
             date_from=date_from,
             date_to=date_to,
             interval=interval,
         )
-        resp['ta-1_1'] = predictions.get_prediction_ta_1_1_graph_by_uid(
+        resp['ta-1_1'] = predictions.get_prediction_ta_1_1_graph(
             uid=uid,
             date_from=date_from,
             date_to=date_to,
             interval=interval,
         )
-        resp['ta-1_2'] = predictions.get_prediction_ta_1_2_graph_by_uid(
+        resp['ta-1_2'] = predictions.get_prediction_ta_1_2_graph(
             uid=uid,
             date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,

@@ -1,7 +1,7 @@
 from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse, HistoricCandle, LastPrice
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils
+from lib import cache, utils, date_utils, logger
 
 
 @cache.ttl_cache(ttl=3600 * 24)
@@ -43,7 +43,7 @@ def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_last_price_by_uid(uid: str) -> list[LastPrice] or None:
+def get_instrument_last_prices_by_uid(uid: str) -> list[LastPrice] or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.market_data.get_last_prices(
@@ -71,6 +71,9 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
 
 @cache.ttl_cache(ttl=3600)
 def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or None:
+    if date.date() == datetime.datetime.now().date():
+        return get_instrument_last_price_by_uid(uid=uid)
+
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             date_local = date_utils.convert_to_local(date=date)
@@ -101,5 +104,15 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or 
 
     except Exception as e:
         print('ERROR get_instrument_price_by_date', e)
+
+    return None
+
+
+@logger.error_logger
+def get_instrument_last_price_by_uid(uid: str) -> float or None:
+    last_prices = get_instrument_last_prices_by_uid(uid=uid)
+
+    if last_prices and last_prices[0]:
+        return utils.get_price_by_quotation(last_prices[0].price)
 
     return None

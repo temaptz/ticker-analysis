@@ -88,30 +88,32 @@ def get_text_classify_3(title: str, text: str, subject_name: str) -> NewsRate or
         ya_resp: FewShotTextClassifiersModelResult = model.run(news_text)
 
         if ya_resp and len(ya_resp) >= 3:
-            result = NewsRate()
             sum_confidence = utils.round_float(
                 num=sum(utils.round_float(num=i.confidence, decimals=10) for i in ya_resp),
                 decimals=5,
             )
 
-            for i in ya_resp:
-                round_confidence = utils.round_float(
-                    num=i.confidence,
-                    decimals=5,
-                )
-                percent = utils.round_float(
-                    num=round_confidence / sum_confidence * 100,
-                    decimals=5,
-                )
+            if sum_confidence > 0:
+                result = NewsRate(0, 0, 0)
 
-                if i.label == 'положительная':
-                    result.positive_percent = percent
-                elif i.label == 'отрицательная':
-                    result.negative_percent = percent
-                elif i.label == 'нейтральная':
-                    result.neutral_percent = percent
+                for i in ya_resp:
+                    round_confidence = utils.round_float(
+                        num=i.confidence,
+                        decimals=5,
+                    )
+                    percent = utils.round_float(
+                        num=round_confidence / sum_confidence * 100,
+                        decimals=5,
+                    )
 
-            return result
+                    if i.label == 'положительная':
+                        result.positive_percent = percent
+                    elif i.label == 'отрицательная':
+                        result.negative_percent = percent
+                    elif i.label == 'нейтральная':
+                        result.neutral_percent = percent
+
+                return result
 
     except Exception as e:
         logger.log_error(method_name='get_text_classify_3', error=e)

@@ -230,6 +230,7 @@ def predict(data: list) -> float or None:
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
     cache_key = utils.get_md5(serializer.to_json({
+        'method': 'ta-1_2_predict_future',
         'instrument_uid': instrument_uid,
         'prediction_target_date': prediction_target_date,
     }))
@@ -314,12 +315,6 @@ def prepare_data():
 
     print('TOTAL COUNT', counter_total)
     print('TOTAL RECORDS PREPARED', len(records))
-
-    records_filtered = []
-
-    for r in records_filtered:
-        if r.get_y() > 0:
-            records_filtered.append(r)
 
     data_frame = csv.initialize_df_by_records(records=records)
 
@@ -430,6 +425,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
+        'method': 'ta_1_2_get_record_cache_key',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

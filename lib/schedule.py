@@ -27,12 +27,22 @@ def start_schedule() -> None:
         timezone=timezone
     )
 
-    # Сбор предсказаний нейросети
+    # Ежедневный сбор предсказаний нейросети
     scheduler.add_job(
-        predictions_save.save_predictions,
+        predictions_save.save_daily_predictions,
         'cron',
         hour=13,
         minute=0,
+        timezone=timezone
+    )
+
+    # Еженедельный сбор предсказаний нейросети
+    scheduler.add_job(
+        predictions_save.save_weekly_predictions,
+        'cron',
+        day_of_week='mon',
+        hour=13,
+        minute=30,
         timezone=timezone
     )
 
