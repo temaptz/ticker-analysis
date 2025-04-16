@@ -46,6 +46,23 @@ export interface NewsResponse {
 }
 
 
+export interface NewsRateResponse {
+  yandex_absolute: {
+    positive_total: number;
+    negative_total: number;
+    neutral_total: number;
+  };
+  yandex_percent: {
+    positive_percent: number;
+    negative_percent: number;
+    neutral_percent: number;
+  };
+  keywords: string[];
+  start_date: string;
+  end_date: string;
+}
+
+
 export interface PredictionResp {
   'ta-1': number;
   'ta-1_1': number;

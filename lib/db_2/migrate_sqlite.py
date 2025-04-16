@@ -61,13 +61,6 @@ def copy_data_from_sqlite():
         print('TEXT', record.text)
         db_2.news_db.insert_news(record=record)
 
-    for r in news_rate_db.get_all():
-        print(r)
-        print('NEWS UID', r[0])
-        print('INSTRUMENT UID', r[1])
-        print('RATE', serializer.from_json(r[2]))
-        print('DATE', date_utils.parse_date(r[3]))
-        db_2.news_rate_db.insert_rate(news_uid=r[0], instrument_uid=r[1], rate=serializer.from_json(r[2]), date=date_utils.parse_date(r[3]))
 
     for p in predictions_ta_1_db.get_predictions():
         print(p)

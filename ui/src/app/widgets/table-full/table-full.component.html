@@ -124,9 +124,9 @@
     <ng-container matColumnDef="news">
       <th mat-header-cell *matHeaderCellDef>Новости</th>
       <td mat-cell *matCellDef="let instrument">
-        <news
+        <news-complex
           [instrumentUid]="instrument.uid"
-        ></news>
+        ></news-complex>
       </td>
     </ng-container>
 

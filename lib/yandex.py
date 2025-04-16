@@ -1,19 +1,12 @@
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
-from lib import utils, cache, counter, logger
-from lib.db_2 import gpt_requests_db
-
-
-class NewsRate:
-    def __init__(self, positive_percent=0, negative_percent=0, neutral_percent=0):
-        self.positive_percent = positive_percent
-        self.negative_percent = negative_percent
-        self.neutral_percent = neutral_percent
+from lib import utils, cache, counter, logger, serializer, types
+from lib.db_2 import gpt_requests_db, news_classify_requests
 
 
 #  Функция для отправки текстового запроса к GPT и получения ответа
-def get_gpt_text(text_query: str, instruction: str = '') -> str:
+def get_gpt_text(text_query: str, instruction: str = '') -> str or None:
     try:
         db_request = 'User: '+text_query+' System: '+instruction
         db_response = gpt_requests_db.get_response(request=db_request)
@@ -47,17 +40,31 @@ def get_gpt_text(text_query: str, instruction: str = '') -> str:
         if result:
             gpt_requests_db.insert_response(request=db_request, response=result)
 
-        print('GPT TEXT RESPONSE', result)
-
-        return result
+            return result
 
     except Exception as e:
         logger.log_error(method_name='get_gpt_text', error=e)
 
-    return ''
+    return None
 
 
-def get_text_classify_3(title: str, text: str, subject_name: str) -> NewsRate or None:
+def get_text_classify_db_cache(title: str, text: str, subject_name: str) -> FewShotTextClassifiersModelResult or None:
+    try:
+        cached = news_classify_requests.get_model_result_by_record(
+            record=news_classify_requests.get_classify(
+                news_hash=news_classify_requests.get_news_hash(
+                    news_title=title,
+                    news_text=text,
+                ),
+                subject_name=subject_name,
+            )
+        )
+
+        if cached:
+            return cached
+    except Exception as e:
+        logger.log_error(method_name='get_text_classify_db_cache_[GETTING CACHE]', error=e)
+
     try:
         sdk = YCloudML(
             auth=const.Y_API_SECRET,
@@ -66,57 +73,56 @@ def get_text_classify_3(title: str, text: str, subject_name: str) -> NewsRate or
 
         # Объединение заголовка и текста новости
         news_text = f'{title}\n{text}'
+        labels = ['положительная', 'отрицательная', 'нейтральная']
+        labels_str = ', '.join([f'"{label}"' for label in labels])
 
         # Формирование описания задачи с учетом названия компании
         task_description = (f'''
-            Я передам тебе новость, имеющую отношение к организации "{subject_name}". 
-            Твоя задача — классифицировать её на положительную, отрицательную или нейтральную 
-            в контексте этой организации. 
-            При классификации учитывай перспективы развития, повышение финансовых показателей, 
-            общую репутацию компании, рыночные тенденции и конкурентную среду. 
-            Ответ должен быть кратким и содержать только классификацию новости.
+            Я передам тебе новость, которая связана с организацией "{subject_name}". 
+            Твоя задача — классифицировать эту новость как {labels_str} 
+            в контексте того, как она может отразиться на стоимости ценных бумаг организации. 
+            
+            При классификации учитывай, как новость:
+            — влияет на финансовые показатели и рыночную капитализацию;
+            — изменяет общее восприятие и репутацию организации среди инвесторов;
+            — соотносится с текущими рыночными тенденциями и конкурентной средой;
+            — может повлиять на спрос и предложение на рынке акций.
         ''')
 
         # Настройка модели классификации
-        model = sdk.models.text_classifiers('yandexgpt-lite').configure(
+        model = sdk.models.text_classifiers(model_name='yandexgpt-lite', model_version='latest').configure(
             task_description=task_description,
             labels=['положительная', 'отрицательная', 'нейтральная'],
         )
 
-        counter.increment(counter.Counters.YANDEX_GPT_NEWS_CLASSIFY)
-
         ya_resp: FewShotTextClassifiersModelResult = model.run(news_text)
 
         if ya_resp and len(ya_resp) >= 3:
-            sum_confidence = utils.round_float(
-                num=sum(utils.round_float(num=i.confidence, decimals=10) for i in ya_resp),
-                decimals=5,
+            result = serializer.get_dict_by_object_recursive(ya_resp)
+
+            news_classify_requests.insert_classify(
+                news_hash=news_classify_requests.get_news_hash(
+                    news_title=title,
+                    news_text=text,
+                ),
+                subject_name=subject_name,
+                classify=ya_resp,
             )
 
-            if sum_confidence > 0:
-                result = NewsRate(0, 0, 0)
+            logger.log_info(
+                message='NEWS RATED BY YANDEX',
+                output={
+                    'rate': serializer.get_dict_by_object_recursive(
+                        data=get_news_rate_by_ya_classify(result)
+                    ),
+                    'source': result,
+                },
+            )
 
-                for i in ya_resp:
-                    round_confidence = utils.round_float(
-                        num=i.confidence,
-                        decimals=5,
-                    )
-                    percent = utils.round_float(
-                        num=round_confidence / sum_confidence * 100,
-                        decimals=5,
-                    )
-
-                    if i.label == 'положительная':
-                        result.positive_percent = percent
-                    elif i.label == 'отрицательная':
-                        result.negative_percent = percent
-                    elif i.label == 'нейтральная':
-                        result.neutral_percent = percent
-
-                return result
+            return result
 
     except Exception as e:
-        logger.log_error(method_name='get_text_classify_3', error=e)
+        logger.log_error(method_name='get_text_classify_db_cache', error=e)
 
     return None
 
@@ -218,3 +224,47 @@ def get_news_rate_samples(instrument_name: str):
             "label": "нейтральное влияние"
         },
     ]
+
+
+def get_news_rate_by_ya_classify(classify: dict) -> types.NewsRate or None:
+    abs_classify: types.NewsRateAbsoluteYandex = get_news_rate_absolute_by_ya_classify(classify=classify)
+
+    if abs_classify:
+        result = types.NewsRate(0, 0, 0)
+        total_sum = abs_classify.positive_total + abs_classify.negative_total + abs_classify.neutral_total
+
+        result.positive_percent = utils.round_float(num=abs_classify.positive_total / total_sum * 100, decimals=5)
+        result.negative_percent = utils.round_float(num=abs_classify.negative_total / total_sum * 100, decimals=5)
+        result.neutral_percent = utils.round_float(num=abs_classify.neutral_total / total_sum * 100, decimals=5)
+
+        return result
+
+    return None
+
+
+def get_news_rate_absolute_by_ya_classify(classify: dict) -> types.NewsRateAbsoluteYandex or None:
+    if classify and 'predictions' in classify:
+        sum_confidence = utils.round_float(
+            num=sum(utils.round_float(num=i['confidence'], decimals=10) for i in classify['predictions']),
+            decimals=5,
+        )
+
+        if sum_confidence > 0:
+            result = types.NewsRateAbsoluteYandex(0, 0, 0)
+
+            for i in classify['predictions']:
+                value = utils.round_float(
+                    num=i['confidence'],
+                    decimals=5,
+                )
+
+                if i['label'] == 'положительная':
+                    result.positive_total = value
+                elif i['label'] == 'отрицательная':
+                    result.negative_total = value
+                elif i['label'] == 'нейтральная':
+                    result.neutral_total = value
+
+            return result
+
+    return None

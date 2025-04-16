@@ -5,7 +5,7 @@ import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
 import const
-from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils
+from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types
 from lib.learn import learn_utils
 
 
@@ -120,8 +120,8 @@ class Ta2LearningCard:
 
         return result
 
-    def get_news_rated(self, days_from: int, days_to: int) -> yandex.NewsRate:
-        result = yandex.NewsRate(0, 0, 0)
+    def get_news_rated(self, days_from: int, days_to: int) -> types.NewsRate:
+        result = types.NewsRate(0, 0, 0)
         start_date = self.date - datetime.timedelta(days=days_to)
         end_date = self.date - datetime.timedelta(days=days_from)
 
@@ -132,7 +132,7 @@ class Ta2LearningCard:
         )
 
         for n in news_list:
-            rate = news.get_news_rate(news_uid=n.news_uid, instrument_uid=self.instrument.uid)
+            rate = news.get_news_rate(news_uid_list=[n.news_uid], instrument_uid=self.instrument.uid)
 
             if rate:
                 result.positive_percent += rate.positive_percent
@@ -142,7 +142,7 @@ class Ta2LearningCard:
         return result
 
     def get_target_price(self) -> float or None:
-        if self.target_date < datetime.datetime.now():
+        if self.target_date < datetime.datetime.now(datetime.timezone.utc):
             return instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date)
 
         return None
@@ -353,6 +353,8 @@ def predict(data: list) -> float or None:
     except Exception as e:
         print('ERROR predict ta_2', e)
 
+    return None
+
 
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
@@ -368,7 +370,7 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
 
     card = Ta2LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
-        date=datetime.datetime.now(datetime.timezone.utc),
+        date=datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0),
         target_date=prediction_target_date,
     )
 

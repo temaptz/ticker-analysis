@@ -20,7 +20,8 @@ def is_prod() -> bool:
             if f:
                 return True
     except Exception as e:
-        print('Нет файла /container_host_is_prod. Не прод', e)
+        if e:
+            return False
 
     return False
 

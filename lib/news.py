@@ -1,8 +1,10 @@
 import datetime
 
+from django.db.models.expressions import result
+
 import const
-from lib.db_2 import news_db, news_rate_db
-from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger
+from lib.db_2 import news_db
+from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types
 
 
 class NewsSourceRated:
@@ -46,10 +48,9 @@ def get_sorted_news_by_instrument_uid(
         date = n.date
         source = n.source_name
         result_source: NewsSourceRated = result['sources'][source]
-        rate: yandex.NewsRate = get_news_rate(news_uid=news_uid, instrument_uid=instrument_uid)
+        rate: types.NewsRate = get_news_rate(news_uid_list=[news_uid], instrument_uid=instrument_uid)
 
         if is_with_content:
-            print('RATED 1')
             result_source.content.append({
                 'uid': news_uid,
                 'title': title,
@@ -105,38 +106,113 @@ def get_sorted_news_by_instrument_uid(
     return result
 
 
-def get_news_rate(
-        news_uid: str,
+def get_news_rate_by_instrument_uid(
         instrument_uid: str,
-) -> yandex.NewsRate or None:
-    rate_saved_db = news_rate_db.get_rate_by_uid(news_uid=news_uid, instrument_uid=instrument_uid)
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+):
+    response = None
+    news = get_news_by_instrument_uid(
+        uid=instrument_uid,
+        start_date=start_date,
+        end_date=end_date
+    )
+    news_uid_list = [n.news_uid for n in news]
 
-    if rate_saved_db:
-        counter.increment(counter.Counters.NEWS_RATE_DB)
-        return rate_saved_db
+    yandex_absolute_rate: types.NewsRateAbsoluteYandex = get_news_rate_absolute(
+        news_uid_list=news_uid_list,
+        instrument_uid=instrument_uid,
+    )
 
-    elif not const.IS_NEWS_CLASSIFY_ENABLED:
-        return None
-    else:
-        # Тут уже запрос GPT
-        news = news_db.get_news_by_uid(news_uid)
-        instrument = instruments.get_instrument_by_uid(instrument_uid)
+    yandex_percent_rate: types.NewsRateAbsoluteYandex = get_news_rate(
+        news_uid_list=news_uid_list,
+        instrument_uid=instrument_uid,
+    )
 
-        if news and instrument:
-            subject_name = yandex.get_human_name(instrument.name)
-            gpt_rate = yandex.get_text_classify_3(
-                title=news.title,
-                text=news.text,
-                subject_name=subject_name
-            )
+    if yandex_absolute_rate or yandex_percent_rate:
+        response = {
+            'yandex_absolute': yandex_absolute_rate,
+            'yandex_percent': yandex_percent_rate,
+            'keywords': get_keywords_by_instrument_uid(instrument_uid),
+            'start_date': start_date,
+            'end_date': end_date,
+        }
 
-            logger.log_info(message='NEWS RATED', output=serializer.to_json(gpt_rate))
+    return response
 
-            if gpt_rate:
-                news_rate_db.insert_rate(news_uid=news_uid, instrument_uid=instrument_uid, rate=gpt_rate)
-                counter.increment(counter.Counters.NEWS_RATE_NEW)
 
-                return gpt_rate
+def get_news_rate(
+        news_uid_list: [str],
+        instrument_uid: str,
+) -> types.NewsRate or None:
+    abs_rate = get_news_rate_absolute(news_uid_list=news_uid_list, instrument_uid=instrument_uid)
+
+    if abs_rate:
+        total_sum = abs_rate.positive_total + abs_rate.negative_total + abs_rate.neutral_total
+        rate = types.NewsRate(0, 0, 0)
+
+        rate.positive_percent = utils.round_float(
+            num=(abs_rate.positive_total / total_sum * 100),
+            decimals=5,
+        )
+
+        rate.negative_percent = utils.round_float(
+            num=(abs_rate.negative_total / total_sum * 100),
+            decimals=5,
+        )
+
+        rate.neutral_percent = utils.round_float(
+            num=(abs_rate.neutral_total / total_sum * 100),
+            decimals=5,
+        )
+
+        return rate
+
+    return None
+
+
+@cache.ttl_cache(ttl=3600)
+def get_news_rate_absolute(
+        news_uid_list: [str],
+        instrument_uid: str,
+) -> types.NewsRateAbsoluteYandex or None:
+    if const.IS_NEWS_CLASSIFY_ENABLED: # and docker.is_prod():
+        news = []
+        for news_uid in news_uid_list:
+            n = news_db.get_news_by_uid(news_uid=news_uid)
+
+            if n:
+                news.append(n)
+
+        instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
+
+        if news and len(news) > 0 and instrument:
+            subject_name = yandex.get_human_name(legal_name=instrument.name)
+            total_rate_positive = 0
+            total_rate_negative = 0
+            total_rate_neutral = 0
+
+            for n in news:
+                c = yandex.get_text_classify_db_cache(
+                    title=n.title,
+                    text=n.text,
+                    subject_name=subject_name,
+                )
+
+                if c:
+                    abs_rate: types.NewsRateAbsoluteYandex = yandex.get_news_rate_absolute_by_ya_classify(classify=c)
+
+                    if abs_rate:
+                        total_rate_positive += abs_rate.positive_total
+                        total_rate_negative += abs_rate.negative_total
+                        total_rate_neutral += abs_rate.neutral_total
+
+            if total_rate_positive > 0 or total_rate_negative > 0 or total_rate_neutral > 0:
+                return types.NewsRateAbsoluteYandex(
+                    positive_total=total_rate_positive,
+                    negative_total=total_rate_negative,
+                    neutral_total=total_rate_neutral,
+                )
 
     return None
 
@@ -180,10 +256,10 @@ def get_news_by_instrument_uid(
 @cache.ttl_cache(ttl=3600 * 24 * 365)
 def get_keywords_by_instrument_uid(uid: str) -> list[str]:
     i = instruments.get_instrument_by_uid(uid)
-    result = []
+    response = []
 
     for word in yandex.get_keywords(legal_name=i.name):
-        if word not in result:
-            result.append(word)
+        if word not in response:
+            response.append(word)
 
-    return result
+    return response

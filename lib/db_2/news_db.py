@@ -46,9 +46,9 @@ def get_news() -> list[Type[News]]:
 
 
 @logger.error_logger
-def get_news_by_uid(uid: str) -> Type[News]:
+def get_news_by_uid(news_uid: str) -> Type[News]:
     with Session(engine) as session:
-        return session.query(News).filter(News.news_uid == uid).one_or_none()
+        return session.query(News).filter(News.news_uid == news_uid).one_or_none()
 
 
 @logger.error_logger

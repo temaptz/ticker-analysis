@@ -10,7 +10,7 @@ Base = declarative_base()
 engine = get_engine()
 
 
-class PredictionTa11(Base):
+class PredictionTa2(Base):
     __tablename__ = 'predictions_ta_2'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -26,19 +26,19 @@ def init_table() -> None:
 
 
 @logger.error_logger
-def get_predictions() -> list[Type[PredictionTa11]]:
+def get_predictions() -> list[Type[PredictionTa2]]:
     with Session(engine) as session:
-        return session.query(PredictionTa11).all()
+        return session.query(PredictionTa2).all()
 
 
 @logger.error_logger
 def get_predictions_by_uid_date(uid: str, date_from: datetime.datetime, date_to: datetime.datetime) -> list[
-    Type[PredictionTa11]]:
+    Type[PredictionTa2]]:
     with Session(engine) as session:
-        return session.query(PredictionTa11).filter(
+        return session.query(PredictionTa2).filter(
             and_(
-                PredictionTa11.instrument_uid == uid,
-                PredictionTa11.date.between(date_from, date_to)
+                PredictionTa2.instrument_uid == uid,
+                PredictionTa2.date.between(date_from, date_to)
             )
         ).all()
 
@@ -46,6 +46,6 @@ def get_predictions_by_uid_date(uid: str, date_from: datetime.datetime, date_to:
 @logger.error_logger
 def insert_prediction(uid: str, prediction: float, target_date: datetime.datetime, date=datetime.datetime.now(datetime.UTC)) -> None:
     with Session(engine) as session:
-        record = PredictionTa11(instrument_uid=uid, prediction=prediction, date=date, target_date=target_date)
+        record = PredictionTa2(instrument_uid=uid, prediction=prediction, date=date, target_date=target_date)
         session.add(record)
         session.commit()

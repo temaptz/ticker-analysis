@@ -22,6 +22,7 @@ import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.p
 import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
+import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 
 
 @Component({
@@ -46,6 +47,7 @@ import { ComplexGraphComponent } from '../../entities/complex-graph/complex-grap
     PriceRoundPipe,
     PriceFormatPipe,
     MatIconModule,
+    NewsComplexComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',

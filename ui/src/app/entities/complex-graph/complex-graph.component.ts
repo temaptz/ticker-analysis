@@ -191,6 +191,27 @@ export class ComplexGraphComponent {
           ]) ?? []
         },
         {
+          name: 'Предсказания TA-2',
+          type: 'line',
+          showSymbol: true,
+          symbol: 'circle',
+          symbolSize: 2.5,
+          itemStyle: {
+            color: GRAPH_COLORS.ta_2
+          },
+          lineStyle: {
+            width: 1,
+          },
+          encode: {
+            x: 0,
+            y: 1
+          },
+          data: predictions?.['ta-2']?.map(i => [
+            parseJSON(i.date),
+            getRoundPrice(i.prediction)
+          ]) ?? []
+        },
+        {
           name: 'Операции',
           type: 'scatter',
           symbol: 'pin',
