@@ -121,7 +121,7 @@ class Ta2LearningCard:
         return result
 
     def get_news_rated(self, days_from: int, days_to: int) -> types.NewsRate:
-        result = types.NewsRate(0, 0, 0)
+        result = None
         start_date = self.date - datetime.timedelta(days=days_to)
         end_date = self.date - datetime.timedelta(days=days_from)
 
@@ -130,14 +130,15 @@ class Ta2LearningCard:
             start_date=start_date,
             end_date=end_date,
         )
+        news_ids = [n.news_uid for n in news_list]
+        rate = news.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
 
-        for n in news_list:
-            rate = news.get_news_rate(news_uid_list=[n.news_uid], instrument_uid=self.instrument.uid)
-
-            if rate:
-                result.positive_percent += rate.positive_percent
-                result.negative_percent += rate.negative_percent
-                result.neutral_percent += rate.neutral_percent
+        if rate:
+            result = types.NewsRate(
+                positive_percent=rate.positive_percent,
+                negative_percent=rate.negative_percent,
+                neutral_percent=rate.neutral_percent,
+            )
 
         return result
 

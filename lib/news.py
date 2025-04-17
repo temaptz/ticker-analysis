@@ -149,24 +149,26 @@ def get_news_rate(
 
     if abs_rate:
         total_sum = abs_rate.positive_total + abs_rate.negative_total + abs_rate.neutral_total
-        rate = types.NewsRate(0, 0, 0)
 
-        rate.positive_percent = utils.round_float(
-            num=(abs_rate.positive_total / total_sum * 100),
-            decimals=5,
-        )
+        if total_sum > 0:
+            rate = types.NewsRate(0, 0, 0)
 
-        rate.negative_percent = utils.round_float(
-            num=(abs_rate.negative_total / total_sum * 100),
-            decimals=5,
-        )
+            rate.positive_percent = utils.round_float(
+                num=(abs_rate.positive_total / total_sum * 100),
+                decimals=5,
+            )
 
-        rate.neutral_percent = utils.round_float(
-            num=(abs_rate.neutral_total / total_sum * 100),
-            decimals=5,
-        )
+            rate.negative_percent = utils.round_float(
+                num=(abs_rate.negative_total / total_sum * 100),
+                decimals=5,
+            )
 
-        return rate
+            rate.neutral_percent = utils.round_float(
+                num=(abs_rate.neutral_total / total_sum * 100),
+                decimals=5,
+            )
+
+            return rate
 
     return None
 
@@ -176,7 +178,7 @@ def get_news_rate_absolute(
         news_uid_list: [str],
         instrument_uid: str,
 ) -> types.NewsRateAbsoluteYandex or None:
-    if const.IS_NEWS_CLASSIFY_ENABLED: # and docker.is_prod():
+    if const.IS_NEWS_CLASSIFY_ENABLED and docker.is_prod():
         news = []
         for news_uid in news_uid_list:
             n = news_db.get_news_by_uid(news_uid=news_uid)

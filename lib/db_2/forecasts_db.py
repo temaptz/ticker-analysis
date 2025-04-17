@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import sqlalchemy
 from typing import Type
 from sqlalchemy import Column, DateTime, LargeBinary, String, func, UUID
 from sqlalchemy.orm import declarative_base, Session
@@ -36,6 +37,21 @@ def get_forecasts() -> list[Type[Forecast]]:
 def get_forecasts_by_uid(uid: str) -> list[Type[Forecast]]:
     with Session(engine) as session:
         return session.query(Forecast).filter(Forecast.instrument_uid == uid).all()
+
+
+@logger.error_logger
+def get_forecasts_by_uid_date(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+) -> list[Type[Forecast]]:
+    with (Session(engine) as session):
+        return session.query(Forecast).filter(
+            sqlalchemy.and_(
+                Forecast.instrument_uid == instrument_uid,
+                Forecast.date.between(start_date, end_date)
+            )
+        ).all()
 
 
 @logger.error_logger

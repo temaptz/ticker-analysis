@@ -13,7 +13,14 @@ import { addDays, endOfDay, isAfter, parseJSON, startOfDay, subDays } from 'date
 import * as echarts from 'echarts';
 import { ApiService } from '../../shared/services/api.service';
 import { GRAPH_COLORS } from '../../shared/const';
-import { Instrument, InstrumentHistoryPrice, InstrumentInList, Operation, PredictionGraphResp } from '../../types';
+import {
+  Forecast,
+  Instrument, InstrumentForecastsGraphItem,
+  InstrumentHistoryPrice,
+  InstrumentInList,
+  Operation,
+  PredictionGraphResp
+} from '../../types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval } from '../../enums';
 import { PreloaderComponent } from '../preloader/preloader.component';
@@ -38,6 +45,7 @@ export class ComplexGraphComponent {
   width = input<string>('450px');
   height = input<string>('150px');
   isShowOperations = input<boolean>(false);
+  isShowForecasts = input<boolean>(false);
 
   isLoaded = signal<boolean>(false);
   option = signal<echarts.EChartsOption | null>(null);
@@ -51,35 +59,40 @@ export class ComplexGraphComponent {
   ) {
     effect(() => {
       const uid = this.instrumentUid();
-      const history = this.daysHistory();
-      const future = this.daysFuture();
+      const historyDays = this.daysHistory();
+      const futureDays = this.daysFuture();
       const interval = this.historyInterval();
       const isShowOperations = this.isShowOperations();
+      const isShowForecasts = this.isShowForecasts();
 
       combineLatest([
         this.appService.getInstrumentHistoryPrices(
           uid,
-          history,
+          historyDays,
           interval
         ),
         this.appService.getInstrumentPredictionGraph(
           uid,
-          startOfDay(subDays(new Date(), history)),
-          endOfDay(addDays(new Date(), future)),
+          startOfDay(subDays(new Date(), historyDays)),
+          endOfDay(addDays(new Date(), futureDays)),
           interval,
         ),
         isShowOperations
           ? this.getOperations()
-          : of([])
+          : of([]),
+        isShowForecasts
+          ? this.getForecasts(historyDays, futureDays)
+          : of([]),
       ])
         .pipe(
           finalize(() => this.isLoaded.set(true))
         )
-        .subscribe((resp: [InstrumentHistoryPrice[], PredictionGraphResp, Operation[]]) => {
+        .subscribe((resp: [InstrumentHistoryPrice[], PredictionGraphResp, Operation[], InstrumentForecastsGraphItem[]]) => {
           const respHistory = resp?.[0];
           const respPredictions = resp?.[1];
           const respOperations = resp?.[2];
-          this.initOption(respHistory, respPredictions, respOperations);
+          const respForecasts = resp?.[3];
+          this.initOption(respHistory, respPredictions, respOperations, respForecasts);
         });
     });
   }
@@ -97,10 +110,19 @@ export class ComplexGraphComponent {
       )
   }
 
+  private getForecasts(historyDays: number, futureDays: number): Observable<InstrumentForecastsGraphItem[]> {
+    return this.appService.getInstrumentForecastsGraph(
+      this.instrumentUid(),
+      startOfDay(subDays(new Date(), historyDays)),
+      endOfDay(addDays(new Date(), futureDays))
+    );
+  }
+
   private initOption(
     history: InstrumentHistoryPrice[],
     predictions: PredictionGraphResp,
     operations: Operation[],
+    forecasts: InstrumentForecastsGraphItem[],
   ): void {
     const option: echarts.EChartsOption = {
       ...ECHARTS_MAIN_OPTIONS,
@@ -239,6 +261,27 @@ export class ComplexGraphComponent {
               }
             };
           }) ?? []
+        },
+        {
+          name: 'Прогнозы аналитиков',
+          type: 'line',
+          showSymbol: true,
+          symbol: 'circle',
+          symbolSize: 2.5,
+          itemStyle: {
+            color: GRAPH_COLORS.forecasts
+          },
+          lineStyle: {
+            width: 1,
+          },
+          encode: {
+            x: 0,
+            y: 1
+          },
+          data: forecasts?.map(i => [
+            parseJSON(i.date),
+            getRoundPrice(i.consensus)
+          ]) ?? []
         }
       ]
     };

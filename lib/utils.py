@@ -47,7 +47,14 @@ def is_file_exists(file_path: str) -> bool:
 
 
 def parse_json_date(date: str or None) -> datetime.datetime or None:
-    return date_utils.parse_date(date=date)
+    try:
+        if date:
+            return date_utils.parse_date(date=date)
+
+    except Exception as e:
+        logger.log_error(method_name='parse_json_date', error=e)
+
+    return None
 
 
 def get_file_size_readable(filepath) -> str:

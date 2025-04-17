@@ -134,6 +134,28 @@ def instrument_history_forecasts(request):
 
 
 @api_view(['GET'])
+def instrument_history_forecasts_graph(request):
+    resp = list()
+    uid = request.GET.get('uid')
+    start_date = utils.parse_json_date(request.GET.get('start_date'))
+    end_date = utils.parse_json_date(request.GET.get('end_date'))
+
+    if uid and start_date and end_date:
+        resp = forecasts.get_db_forecasts_graph(
+            instrument_uid=uid,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp and len(resp) > 0:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
+
+
+@api_view(['GET'])
 def instrument_fundamentals(request):
     resp = None
     asset_uid = request.GET.get('asset_uid')

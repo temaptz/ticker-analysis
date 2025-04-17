@@ -88,6 +88,11 @@ export interface InstrumentForecastsHistory {
   consensus: any;
 }
 
+export interface InstrumentForecastsGraphItem {
+  date: string;
+  consensus: number;
+}
+
 export interface FundamentalsHistory {
   date: string;
   fundamentals: any;

@@ -32,6 +32,32 @@ def get_db_forecast_by_uid_date(uid: str, date: datetime.datetime) -> (str, GetF
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 3)
+def get_db_forecasts_graph(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+):
+    result = list()
+
+    try:
+        for f in forecasts_db.get_forecasts_by_uid_date(
+                instrument_uid=instrument_uid,
+                start_date=start_date,
+                end_date=end_date,
+        ):
+            result.append({
+                'date': utils.parse_json_date(f.date),
+                'consensus': utils.get_price_by_quotation(serializer.db_deserialize(f.forecasts).consensus.consensus)
+            })
+
+        result = filter_monthly(result)
+    except Exception as e:
+        print('ERROR get_db_forecasts_graph', e)
+
+    return result
+
+
+@cache.ttl_cache(ttl=3600 * 24 * 3)
 def get_db_forecasts_history_by_uid(uid: str) -> (str, GetForecastResponse, str):
     result = list()
 
