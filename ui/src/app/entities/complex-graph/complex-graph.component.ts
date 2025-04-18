@@ -168,7 +168,7 @@ export class ComplexGraphComponent {
     const predictions = this.predictionResp()?.['ta-2'] ?? [];
 
     return {
-      name: 'Предсказания TA-1_2',
+      name: 'Предсказания TA-2',
       type: 'line',
       showSymbol: true,
       symbol: 'circle',
