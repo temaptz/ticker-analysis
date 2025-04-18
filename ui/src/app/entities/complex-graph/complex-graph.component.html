@@ -1,13 +1,11 @@
-@defer (when isLoaded()) {
-  @let opt = option();
+<echarts-graph
+  [option]="option()"
+  [width]="width()"
+  [height]="height()"
+></echarts-graph>
 
-  @if (opt) {
-    <echarts-graph
-      [option]="opt"
-      [width]="width()"
-      [height]="height()"
-    ></echarts-graph>
-  }
-} @placeholder {
-  <preloader></preloader>
+@if (!isLoaded()) {
+  <div class="preloader">
+    <preloader></preloader>
+  </div>
 }

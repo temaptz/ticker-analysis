@@ -27,18 +27,18 @@ class Ta2LearningCard:
     pe_ratio_ttm: float = None  # P/E — цена/прибыль
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
-    news_positive_percent_0: int = 0  # Количество упоминаний в новостях 0-7 дней до даты
-    news_negative_percent_0: int = 0  # Количество упоминаний в новостях 0-7 дней до даты
-    news_neutral_percent_0: int = 0  # Количество упоминаний в новостях 0-7 дней до даты
-    news_positive_percent_1: int = 0  # Количество упоминаний в новостях 8-14 дней до даты
-    news_negative_percent_1: int = 0  # Количество упоминаний в новостях 8-14 дней до даты
-    news_neutral_percent_1: int = 0  # Количество упоминаний в новостях 8-14 дней до даты
-    news_positive_percent_2: int = 0  # Количество упоминаний в новостях 15-21 дней до даты
-    news_negative_percent_2: int = 0  # Количество упоминаний в новостях 15-21 дней до даты
-    news_neutral_percent_2: int = 0  # Количество упоминаний в новостях 15-21 дней до даты
-    news_positive_percent_3: int = 0  # Количество упоминаний в новостях 22-28 дней до даты
-    news_negative_percent_3: int = 0  # Количество упоминаний в новостях 22-28 дней до даты
-    news_neutral_percent_3: int = 0  # Количество упоминаний в новостях 22-28 дней до даты
+    news_positive_percent_0: int = None  # Количество упоминаний в новостях 0-7 дней до даты
+    news_negative_percent_0: int = None  # Количество упоминаний в новостях 0-7 дней до даты
+    news_neutral_percent_0: int = None  # Количество упоминаний в новостях 0-7 дней до даты
+    news_positive_percent_1: int = None  # Количество упоминаний в новостях 8-14 дней до даты
+    news_negative_percent_1: int = None  # Количество упоминаний в новостях 8-14 дней до даты
+    news_neutral_percent_1: int = None  # Количество упоминаний в новостях 8-14 дней до даты
+    news_positive_percent_2: int = None  # Количество упоминаний в новостях 15-21 дней до даты
+    news_negative_percent_2: int = None  # Количество упоминаний в новостях 15-21 дней до даты
+    news_neutral_percent_2: int = None  # Количество упоминаний в новостях 15-21 дней до даты
+    news_positive_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
+    news_negative_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
+    news_neutral_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
 
     def __init__(self, instrument: InstrumentResponse.instrument, date: datetime.datetime, target_date: datetime.datetime):
         if date > target_date:
@@ -83,26 +83,55 @@ class Ta2LearningCard:
         news_rated_2 = self.get_news_rated(days_from=15, days_to=21)
         news_rated_3 = self.get_news_rated(days_from=22, days_to=28)
 
-        self.news_positive_percent_0 = news_rated_0.positive_percent
-        self.news_negative_percent_0 = news_rated_0.negative_percent
-        self.news_neutral_percent_0 = news_rated_0.neutral_percent
+        if news_rated_0:
+            self.news_positive_percent_0 = news_rated_0.positive_percent
+            self.news_negative_percent_0 = news_rated_0.negative_percent
+            self.news_neutral_percent_0 = news_rated_0.neutral_percent
 
-        self.news_positive_percent_1 = news_rated_1.positive_percent
-        self.news_negative_percent_1 = news_rated_1.negative_percent
-        self.news_neutral_percent_1 = news_rated_1.neutral_percent
+        if news_rated_1:
+            self.news_positive_percent_1 = news_rated_1.positive_percent
+            self.news_negative_percent_1 = news_rated_1.negative_percent
+            self.news_neutral_percent_1 = news_rated_1.neutral_percent
 
-        self.news_positive_percent_2 = news_rated_2.positive_percent
-        self.news_negative_percent_2 = news_rated_2.negative_percent
-        self.news_neutral_percent_2 = news_rated_2.neutral_percent
+        if news_rated_2:
+            self.news_positive_percent_2 = news_rated_2.positive_percent
+            self.news_negative_percent_2 = news_rated_2.negative_percent
+            self.news_neutral_percent_2 = news_rated_2.neutral_percent
 
-        self.news_positive_percent_3 = news_rated_3.positive_percent
-        self.news_negative_percent_3 = news_rated_3.negative_percent
-        self.news_neutral_percent_3 = news_rated_3.neutral_percent
+        if news_rated_3:
+            self.news_positive_percent_3 = news_rated_3.positive_percent
+            self.news_negative_percent_3 = news_rated_3.negative_percent
+            self.news_neutral_percent_3 = news_rated_3.neutral_percent
 
     # Проверка карточки
     def check_x(self):
-        if self.price is None or len(self.get_x()) != 74:
+        if self.price is None:
+            print('CARD IS NOT OK BY PRICE')
             self.is_ok = False
+            return
+
+        if len(self.get_x()) != 74:
+            print('CARD IS NOT OK BY X SIZE')
+            self.is_ok = False
+            return
+
+        if (
+                self.news_positive_percent_0 is None
+                or self.news_negative_percent_0 is None
+                or self.news_neutral_percent_0 is None
+                or self.news_positive_percent_1 is None
+                or self.news_negative_percent_1 is None
+                or self.news_neutral_percent_1 is None
+                or self.news_positive_percent_2 is None
+                or self.news_negative_percent_2 is None
+                or self.news_neutral_percent_2 is None
+                or self.news_positive_percent_3 is None
+                or self.news_negative_percent_3 is None
+                or self.news_neutral_percent_3 is None
+        ):
+            print('CARD IS NOT OK BY EMPTY NEWS')
+            self.is_ok = False
+            return
 
     # Вернет цены за последние 52 недели (год) в хронологическом порядке
     def get_history(self) -> list:
@@ -120,7 +149,7 @@ class Ta2LearningCard:
 
         return result
 
-    def get_news_rated(self, days_from: int, days_to: int) -> types.NewsRate:
+    def get_news_rated(self, days_from: int, days_to: int) -> types.NewsRate or None:
         result = None
         start_date = self.date - datetime.timedelta(days=days_to)
         end_date = self.date - datetime.timedelta(days=days_from)
@@ -130,10 +159,10 @@ class Ta2LearningCard:
             start_date=start_date,
             end_date=end_date,
         )
-        news_ids = [n.news_uid for n in news_list]
+        news_ids = [n.news_uid for n in news_list or []]
         rate = news.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
 
-        if rate:
+        if rate and (rate.positive_percent + rate.negative_percent + rate.neutral_percent) > 0:
             result = types.NewsRate(
                 positive_percent=rate.positive_percent,
                 negative_percent=rate.negative_percent,

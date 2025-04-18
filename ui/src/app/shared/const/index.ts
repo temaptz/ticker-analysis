@@ -5,6 +5,7 @@ export const GRAPH_COLORS = {
   ta_2: '#FF9800',
   ta_3: '#00E5FF',
   ta_4: '#D500F9',
-  consensus: '#C6FF00',
+  ta_5: '#00FF6A',
+  consensus: '#AEEA00',
   forecasts: '#B0BEC5',
 };

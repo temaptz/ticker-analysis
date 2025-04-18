@@ -178,43 +178,42 @@ def get_news_rate_absolute(
         news_uid_list: [str],
         instrument_uid: str,
 ) -> types.NewsRateAbsoluteYandex or None:
-    if const.IS_NEWS_CLASSIFY_ENABLED and docker.is_prod():
-        news = []
-        for news_uid in news_uid_list:
-            n = news_db.get_news_by_uid(news_uid=news_uid)
+    news = []
+    for news_uid in news_uid_list:
+        n = news_db.get_news_by_uid(news_uid=news_uid)
 
-            if n:
-                news.append(n)
+        if n:
+            news.append(n)
 
-        instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
+    instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
 
-        if news and len(news) > 0 and instrument:
-            subject_name = yandex.get_human_name(legal_name=instrument.name)
-            total_rate_positive = 0
-            total_rate_negative = 0
-            total_rate_neutral = 0
+    if news and len(news) > 0 and instrument:
+        subject_name = yandex.get_human_name(legal_name=instrument.name)
+        total_rate_positive = 0
+        total_rate_negative = 0
+        total_rate_neutral = 0
 
-            for n in news:
-                c = yandex.get_text_classify_db_cache(
-                    title=n.title,
-                    text=n.text,
-                    subject_name=subject_name,
-                )
+        for n in news:
+            c = yandex.get_text_classify_db_cache(
+                title=n.title,
+                text=n.text,
+                subject_name=subject_name,
+            )
 
-                if c:
-                    abs_rate: types.NewsRateAbsoluteYandex = yandex.get_news_rate_absolute_by_ya_classify(classify=c)
+            if c:
+                abs_rate: types.NewsRateAbsoluteYandex = yandex.get_news_rate_absolute_by_ya_classify(classify=c)
 
-                    if abs_rate:
-                        total_rate_positive += abs_rate.positive_total
-                        total_rate_negative += abs_rate.negative_total
-                        total_rate_neutral += abs_rate.neutral_total
+                if abs_rate:
+                    total_rate_positive += abs_rate.positive_total
+                    total_rate_negative += abs_rate.negative_total
+                    total_rate_neutral += abs_rate.neutral_total
 
-            if total_rate_positive > 0 or total_rate_negative > 0 or total_rate_neutral > 0:
-                return types.NewsRateAbsoluteYandex(
-                    positive_total=total_rate_positive,
-                    negative_total=total_rate_negative,
-                    neutral_total=total_rate_neutral,
-                )
+        if total_rate_positive > 0 or total_rate_negative > 0 or total_rate_neutral > 0:
+            return types.NewsRateAbsoluteYandex(
+                positive_total=total_rate_positive,
+                negative_total=total_rate_negative,
+                neutral_total=total_rate_neutral,
+            )
 
     return None
 
