@@ -1,6 +1,6 @@
 import { Component, effect, input,  signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { combineLatest, finalize } from 'rxjs';
+import { finalize, forkJoin, of } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, NewsRateResponse } from '../../types';
@@ -32,12 +32,26 @@ export class NewsComplexComponent {
   constructor(
     private appService: ApiService,
   ) {
-    effect(() => combineLatest([
-      ...this.weeks.map(([from, to]) =>
-        this.appService.getInstrumentNewsRate(this.instrumentUid(), from, to))
+    effect(() => forkJoin([
+      ...this.weeks.map(([from, to]) => forkJoin([
+          this.appService.getInstrumentNewsRate(this.instrumentUid(), from, to),
+          of<[Date, Date]>([from, to]),
+        ])
+      )
     ])
       .pipe(finalize(() => this.isLoaded.set(true)))
-      .subscribe((resp: NewsRateResponse[]) => this.weeksResponse.set(resp?.filter(_ => !!_))));
+      .subscribe((resp: [NewsRateResponse | null, [Date, Date]][]) => {
+        this.weeksResponse.set(resp.map(i => {
+          const keywords = resp?.find(j => j?.[0]?.keywords?.length)?.[0]?.keywords ?? [];
+
+          return {
+            ...(i[0] ?? {}),
+            start_date: i[1][0],
+            end_date: i[1][1],
+            keywords,
+          } as NewsRateResponse;
+        }));
+      }));
   }
 
   protected readonly Object = Object;

@@ -28,11 +28,7 @@ export interface NewsResponse {
         title: string;
         text: string;
         date: string;
-        rate?: {
-          positive_percent: number;
-          negative_percent: number;
-          neutral_percent: number;
-        };
+        rate?: NewsPercentRate;
       }[]
     };
   };
@@ -46,20 +42,42 @@ export interface NewsResponse {
 }
 
 
-export interface NewsRateResponse {
-  yandex_absolute: {
-    positive_total: number;
-    negative_total: number;
-    neutral_total: number;
-  };
-  yandex_percent: {
-    positive_percent: number;
-    negative_percent: number;
-    neutral_percent: number;
-  };
+export interface NewsListRatedResponse {
+  list: {
+    news_uid: string;
+    date: string;
+    title: string;
+    text: string;
+    source: string;
+    rate_absolute: NewsAbsoluteRate;
+    rate_percent: NewsPercentRate;
+  }[];
   keywords: string[];
-  start_date: string;
-  end_date: string;
+  total_absolute: NewsAbsoluteRate;
+  total_percent: NewsPercentRate;
+}
+
+
+export interface NewsAbsoluteRate {
+  positive_total: number;
+  negative_total: number;
+  neutral_total: number;
+}
+
+
+export interface NewsPercentRate {
+  positive_percent: number;
+  negative_percent: number;
+  neutral_percent: number;
+}
+
+
+export interface NewsRateResponse {
+  yandex_absolute: NewsAbsoluteRate;
+  yandex_percent: NewsPercentRate;
+  keywords: string[];
+  start_date: string | Date;
+  end_date: string | Date;
 }
 
 

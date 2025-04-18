@@ -1,0 +1,48 @@
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { ApiService } from '../../shared/services/api.service';
+import { NewsListRatedResponse } from '../../types';
+import { InstrumentComplexInfoComponent } from '../../widgets/instrument-complex-info/instrument-complex-info.component';
+import { PreloaderComponent } from '../../entities/preloader/preloader.component';
+import { NewsBarComponent } from '../../entities/news-bar/news-bar.component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { HighlightWordsPipe } from '../../shared/pipes/highlight-words.pipe';
+
+
+@Component({
+  selector: 'news-list-accordion',
+  imports: [CommonModule, PreloaderComponent, MatExpansionModule, NewsBarComponent, HighlightWordsPipe],
+  providers: [],
+  templateUrl: './news-list-accordion.component.html',
+  styleUrl: './news-list-accordion.component.scss'
+})
+export class NewsListAccordionComponent {
+
+  instrumentUid = input.required<string>();
+
+  isLoaded = signal<boolean>(false);
+  news = signal<NewsListRatedResponse | null>(null);
+  dateFrom = startOfDay(subDays(new Date(), 30));
+  dateTo = endOfDay(new Date());
+
+  keywords = computed<string[]>(() => this.news()?.keywords ?? []);
+
+  private appService = inject(ApiService);
+
+  constructor() {
+    effect(() => {
+      const instrumentUid = this.instrumentUid();
+
+      this.appService.getInstrumentNewsListRated(
+        instrumentUid,
+        this.dateFrom,
+        this.dateTo,
+      )
+        .pipe(finalize(() => this.isLoaded.set(true)))
+        .subscribe(resp => this.news.set(resp));
+    });
+  }
+
+}

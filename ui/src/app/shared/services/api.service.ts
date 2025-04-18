@@ -13,7 +13,7 @@ import {
   PredictionGraphResp,
   InstrumentForecastsHistory,
   FundamentalsHistory,
-  Instrument, InvestCalc, NewsRateResponse, InstrumentForecastsGraphItem,
+  Instrument, InvestCalc, NewsRateResponse, InstrumentForecastsGraphItem, NewsListRatedResponse,
 } from '../../types';
 import { CandleInterval } from '../../enums';
 
@@ -145,6 +145,15 @@ export class ApiService {
     params = params.set('is_with_content', isWithContent ? 'true' : 'false');
 
     return this.http.get<NewsResponse>(`${this.apiUrl}/instrument/news`, {params: params});
+  }
+
+  getInstrumentNewsListRated(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsListRatedResponse> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('start_date', startDate.toJSON());
+    params = params.set('end_date', endDate.toJSON());
+
+    return this.http.get<NewsListRatedResponse>(`${this.apiUrl}/instrument/news/list_rated`, {params: params});
   }
 
   getInstrumentNewsRate(uid: string, startDate: Date, endDate: Date): Observable<NewsRateResponse> {

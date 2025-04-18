@@ -1,0 +1,64 @@
+@defer (when isLoaded()) {
+  <div>Период: {{ dateFrom | date: 'yyyy-MM-dd HH:mm' }} - {{ dateTo | date: 'yyyy-MM-dd HH:mm' }}</div>
+  <div>Ключевые слова: {{ keywords().join('; ') }}</div>
+
+  @let newsResp = news();
+
+  @if (newsResp) {
+    @if (newsResp.total_percent) {
+      <div class="total-news">
+        <div>Общий новостной фон:</div>
+        <news-bar
+          [positivePercent]="newsResp.total_percent.positive_percent"
+          [negativePercent]="newsResp.total_percent.negative_percent"
+          [neutralPercent]="newsResp.total_percent.neutral_percent"
+          [absolute]="newsResp.total_absolute"
+        ></news-bar>
+      </div>
+    }
+
+    <mat-accordion>
+      @for (n of newsResp.list; track n.news_uid) {
+        <mat-expansion-panel hideToggle>
+          <mat-expansion-panel-header>
+            <div class="header">
+              <span>{{ n.date | date: 'yyyy-MM-dd HH:mm' }}</span>
+              <span>{{ n.source }}</span>
+              @if (n.rate_percent) {
+                <div class="rate">
+                  <news-bar
+                    [positivePercent]="n.rate_percent.positive_percent"
+                    [negativePercent]="n.rate_percent.negative_percent"
+                    [neutralPercent]="n.rate_percent.neutral_percent"
+                    [absolute]="n.rate_absolute"
+                  ></news-bar>
+                </div>
+              }
+              <span
+                [innerHTML]="n.title | highlightWords : keywords()"
+                [title]="n.title"
+              ></span>
+            </div>
+          </mat-expansion-panel-header>
+          <div>
+            @if (n.rate_percent) {
+              <div class="bar">
+                <news-bar
+                  [positivePercent]="n.rate_percent.positive_percent"
+                  [negativePercent]="n.rate_percent.negative_percent"
+                  [neutralPercent]="n.rate_percent.neutral_percent"
+                  [absolute]="n.rate_absolute"
+                ></news-bar>
+              </div>
+            }
+
+            <p [innerHTML]="n.text | highlightWords : keywords()"></p>
+          </div>
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  }
+}
+@placeholder {
+  <preloader></preloader>
+}

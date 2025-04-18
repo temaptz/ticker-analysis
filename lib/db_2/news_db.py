@@ -62,7 +62,7 @@ def get_news_by_date_keywords_fts(start_date: datetime.datetime, end_date: datet
                 News.date.between(start_date, end_date),
                 News.search_vector.op('@@')(ts_query)
             )
-        ).all()
+        ).order_by(desc(News.date)).all()
 
 
 @logger.error_logger

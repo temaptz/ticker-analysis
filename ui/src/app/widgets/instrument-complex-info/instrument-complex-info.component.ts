@@ -8,12 +8,10 @@ import { CandleInterval } from '../../enums';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
-import { GraphComponent } from '../../entities/graph/graph.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
 import { ForecastComponent } from '../../entities/forecast/forecast.component';
 import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
 import { PredictionComponent } from '../../entities/prediction/prediction.component';
-import { NewsComponent } from '../../entities/news/news.component';
 import { CurrentPriceComponent } from '../../entities/current-price/current-price.component';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
@@ -21,7 +19,7 @@ import { NewsComplexComponent } from '../../entities/news-complex/news-complex.c
 
 @Component({
   selector: 'instrument-complex-info',
-  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, GraphComponent, BalanceComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, NewsComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent],
+  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, BalanceComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent],
   providers: [],
   templateUrl: './instrument-complex-info.component.html',
   styleUrl: './instrument-complex-info.component.scss'

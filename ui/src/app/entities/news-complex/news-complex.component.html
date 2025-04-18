@@ -1,21 +1,35 @@
 @defer (when isLoaded()) {
-  @if (weeksResponse().length > 0) {
-    <div class="keywords">Ключевые слова: {{ weeksResponse()[0].keywords?.join('; ') }}</div>
+  @let weeksResp = weeksResponse();
+
+  @if (weeksResp && weeksResp.length > 0) {
+    <div class="keywords">Ключевые слова: {{ weeksResp[0].keywords.join('; ') }}</div>
   }
 
-  @for (week of weeksResponse(); track week.start_date) {
+  @for (week of weeksResp; track week?.start_date) {
     <div class="week">
       <div
         class="date"
       >{{ week.start_date | date : 'yyyy-MM-dd' }} - {{ week.end_date | date : 'yyyy-MM-dd' }}</div>
 
-      <div class="bar">
-        <news-bar
-          [positivePercent]="week.yandex_percent.positive_percent"
-          [negativePercent]="week.yandex_percent.negative_percent"
-          [neutralPercent]="week.yandex_percent.neutral_percent"
-        ></news-bar>
-      </div>
+      @if (week?.yandex_percent) {
+        <div class="bar">
+          <news-bar
+            [positivePercent]="week.yandex_percent.positive_percent"
+            [negativePercent]="week.yandex_percent.negative_percent"
+            [neutralPercent]="week.yandex_percent.neutral_percent"
+            [absolute]="week.yandex_absolute"
+          ></news-bar>
+        </div>
+      } @else {
+        <div class="bar">
+          <p>-</p>
+          <news-bar
+            [positivePercent]="0"
+            [negativePercent]="0"
+            [neutralPercent]="100"
+          ></news-bar>
+        </div>
+      }
     </div>
   }
 } @placeholder {

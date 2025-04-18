@@ -8,46 +8,6 @@
 
 <h3>Новости</h3>
 
-@defer (when isLoaded()) {
-  <ng-container *ngIf="news() as newsResp">
-    <div>Ключевые слова: {{ newsResp.keywords.join('; ') }}</div>
-
-    <div class="total-news">
-      <div>Общий новостной фон:</div>
-      <news-bar
-        [positivePercent]="newsResp.total.positive_avg_percent"
-        [negativePercent]="newsResp.total.negative_avg_percent"
-        [neutralPercent]="newsResp.total.neutral_avg_percent"
-      ></news-bar>
-    </div>
-
-    <div *ngFor="let source of Object.keys(newsResp.sources)">
-      <ng-container *ngIf="newsResp.sources[source].content as sourceNews">
-        <h4>Источник: {{ source }}</h4>
-
-
-        <div
-          *ngFor="let n of sourceNews"
-          class="news"
-        >
-          <div class="date">{{ n.date | date : 'yyyy-MM-dd' }}</div>
-
-          <div class="bar">
-            <news-bar
-              [positivePercent]="n.rate?.positive_percent ?? 0"
-              [negativePercent]="n.rate?.negative_percent ?? 0"
-              [neutralPercent]="n.rate?.neutral_percent ?? 100"
-            ></news-bar>
-          </div>
-
-          <h1>{{ n.title }}</h1>
-
-          <p [innerHTML]="n.text"></p>
-        </div>
-      </ng-container>
-    </div>
-  </ng-container>
-}
-@placeholder {
-  <preloader></preloader>
-}
+<news-list-accordion
+  [instrumentUid]="instrumentUid()"
+></news-list-accordion>

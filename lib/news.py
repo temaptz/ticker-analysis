@@ -19,7 +19,7 @@ class NewsSourceRated:
         self.content = list()
 
 
-def get_sorted_news_by_instrument_uid(
+def get_sorted_rated_news_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
@@ -104,6 +104,52 @@ def get_sorted_news_by_instrument_uid(
         )
 
     return result
+
+
+@logger.error_logger
+def get_rated_news_by_instrument_uid(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+):
+    news = get_news_by_instrument_uid(
+        uid=instrument_uid,
+        start_date=start_date,
+        end_date=end_date
+    )
+    news_ids_list = [n.news_uid for n in news or []]
+
+    response = {
+        'list': [],
+        'keywords': get_keywords_by_instrument_uid(instrument_uid),
+        'total_absolute': get_news_rate_absolute(
+            news_uid_list=news_ids_list,
+            instrument_uid=instrument_uid,
+        ),
+        'total_percent': get_news_rate(
+            news_uid_list=news_ids_list,
+            instrument_uid=instrument_uid,
+        )
+    }
+
+    for n in news or []:
+        response['list'].append({
+            'news_uid': n.news_uid,
+            'title': n.title,
+            'text': n.text,
+            'date': n.date,
+            'source': n.source_name,
+            'rate_absolute': get_news_rate_absolute(
+                news_uid_list=[n.news_uid],
+                instrument_uid=instrument_uid,
+            ),
+            'rate_percent': get_news_rate(
+                news_uid_list=[n.news_uid],
+                instrument_uid=instrument_uid,
+            ),
+        })
+
+    return response
 
 
 def get_news_rate_by_instrument_uid(
@@ -239,19 +285,16 @@ def get_news_by_instrument_uid(
 
     keywords = get_keywords_by_instrument_uid(uid)
 
-    print('GET NEWS BY KEYWORDS', keywords)
-    counter.increment(counter.Counters.NEWS_GET_COUNT)
-
-    result = news_db.get_news_by_date_keywords_fts(
+    response = news_db.get_news_by_date_keywords_fts(
         start_date=start_date,
         end_date=end_date,
         keywords=keywords
     )
 
-    if result:
-        cache.cache_set(key=cache_key, value=result, ttl=3600*24*14)
+    if response:
+        cache.cache_set(key=cache_key, value=response, ttl=3600*24*14)
 
-    return result
+    return response
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 365)

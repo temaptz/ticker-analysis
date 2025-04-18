@@ -309,11 +309,33 @@ def instrument_news(request):
     is_with_content = request.GET.get('is_with_content') == 'true'
 
     if uid and start_date and end_date:
-        resp = news.get_sorted_news_by_instrument_uid(
+        resp = news.get_sorted_rated_news_by_instrument_uid(
             instrument_uid=uid,
             start_date=start_date,
             end_date=end_date,
             is_with_content=is_with_content,
+        )
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
+
+
+@api_view(['GET'])
+def instrument_news_list_rated(request):
+    resp = None
+    uid = request.GET.get('uid')
+    start_date = utils.parse_json_date(request.GET.get('start_date'))
+    end_date = utils.parse_json_date(request.GET.get('end_date'))
+
+    if uid and start_date and end_date:
+        resp = news.get_rated_news_by_instrument_uid(
+            instrument_uid=uid,
+            start_date=start_date,
+            end_date=end_date,
         )
 
     response = HttpResponse(serializer.to_json(resp))
@@ -354,7 +376,7 @@ def instrument_news_content_rated(request):
     end_date = utils.parse_json_date(request.GET.get('end_date'))
 
     if uid and start_date and end_date:
-        resp = news.get_sorted_news_by_instrument_uid(
+        resp = news.get_sorted_rated_news_by_instrument_uid(
             instrument_uid=uid,
             start_date=start_date,
             end_date=end_date,
