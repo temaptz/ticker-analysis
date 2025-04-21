@@ -23,6 +23,7 @@ import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
+import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 
 
 @Component({
@@ -47,6 +48,7 @@ import { NewsComplexComponent } from '../../entities/news-complex/news-complex.c
     PriceFormatPipe,
     MatIconModule,
     NewsComplexComponent,
+    PreloaderComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',

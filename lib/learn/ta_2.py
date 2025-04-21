@@ -40,7 +40,7 @@ class Ta2LearningCard:
     news_negative_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
     news_neutral_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
 
-    def __init__(self, instrument: InstrumentResponse.instrument, date: datetime.datetime, target_date: datetime.datetime):
+    def __init__(self, instrument: InstrumentResponse.instrument, date: datetime.datetime, target_date: datetime.datetime, fill_empty=False):
         if date > target_date:
             self.is_ok = False
             return
@@ -50,15 +50,15 @@ class Ta2LearningCard:
         self.target_date = target_date
 
         try:
-            self.fill_card()
+            self.fill_card(fill_empty=fill_empty)
             self.check_x()
         except Exception as e:
             print('ERROR INIT Ta2LearningCard', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def fill_card(self):
-        self.history = self.get_history()
+    def fill_card(self, fill_empty=False):
+        self.history = self.get_history(fill_empty=fill_empty)
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price = self.get_target_price()
         self.consensus_forecast_price = utils.get_price_by_quotation(
@@ -134,7 +134,7 @@ class Ta2LearningCard:
             return
 
     # Вернет цены за последние 52 недели (год) в хронологическом порядке
-    def get_history(self) -> list:
+    def get_history(self, fill_empty=False) -> list:
         result = []
 
         candles = instruments.get_instrument_history_price_by_uid(
@@ -146,6 +146,10 @@ class Ta2LearningCard:
 
         for i in candles[:52]:
             result.append(utils.get_price_by_candle(candle=i))
+
+        if fill_empty and len(result) < 52:
+            padding = [0] * (52 - len(result))
+            result = padding + result
 
         return result
 
@@ -402,6 +406,7 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
         date=datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0),
         target_date=prediction_target_date,
+        fill_empty=True,
     )
 
     if card.is_ok:

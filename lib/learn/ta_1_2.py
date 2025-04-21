@@ -31,7 +31,8 @@ class LearningCard:
             self,
             instrument: InstrumentResponse.instrument,
             date: datetime.datetime,
-            target_date: datetime.datetime
+            target_date: datetime.datetime,
+            fill_empty=False
     ):
         if date > target_date:
             self.is_ok = False
@@ -42,16 +43,16 @@ class LearningCard:
         self.target_date = target_date
 
         try:
-            self.fill_card()
+            self.fill_card(fill_empty=fill_empty)
             self.check_self()
         except Exception as e:
             print('ERROR INIT TA-1_2 LearningCard', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def fill_card(self):
+    def fill_card(self, fill_empty=False):
         self.target_date_days = (self.target_date - self.date).days
-        self.history = self.get_history()
+        self.history = self.get_history(fill_empty=fill_empty)
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price = self.get_target_price()
         self.consensus_forecast_price = utils.get_price_by_quotation(
@@ -77,7 +78,7 @@ class LearningCard:
             self.is_ok = False
 
     # Вернет цены за последние 52 недели (год) в хронологическом порядке
-    def get_history(self) -> list:
+    def get_history(self, fill_empty=False) -> list:
         result = []
 
         candles = instruments.get_instrument_history_price_by_uid(
@@ -89,6 +90,10 @@ class LearningCard:
 
         for i in candles[:52]:
             result.append(utils.get_price_by_candle(candle=i))
+
+        if fill_empty and len(result) < 52:
+            padding = [0] * (52 - len(result))
+            result = padding + result
 
         return result
 
@@ -243,6 +248,7 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
         date=datetime.datetime.now(datetime.timezone.utc),
         target_date=prediction_target_date,
+        fill_empty=True,
     )
 
     if card.is_ok:

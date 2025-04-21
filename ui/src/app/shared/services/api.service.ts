@@ -80,13 +80,17 @@ export class ApiService {
     return this.http.get<InstrumentForecastsHistory[]>(`${this.apiUrl}/instrument/history_forecasts`, {params: params});
   }
 
-  getInstrumentForecastsGraph(uid: string, startDate?: Date, endDate?: Date): Observable<InstrumentForecastsGraphItem[]> {
+  getInstrumentForecastsGraph(uid: string, startDate?: Date, endDate?: Date, interval?: CandleInterval): Observable<InstrumentForecastsGraphItem[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
     if (startDate && endDate) {
       params = params.set('start_date', startDate.toJSON());
       params = params.set('end_date', endDate.toJSON());
+    }
+
+    if (interval) {
+      params = params.set('interval', interval.toString());
     }
 
     return this.http.get<InstrumentForecastsGraphItem[]>(`${this.apiUrl}/instrument/history_forecasts/graph`, {params: params});

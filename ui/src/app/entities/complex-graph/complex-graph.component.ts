@@ -351,6 +351,7 @@ export class ComplexGraphComponent {
     effect(() => {
       const historyDays = this.daysHistory();
       const futureDays = this.daysFuture();
+      const interval = this.historyInterval();
       const isShowForecasts = this.isShowForecasts();
 
       of(undefined)
@@ -360,7 +361,8 @@ export class ComplexGraphComponent {
             ? this.appService.getInstrumentForecastsGraph(
               this.instrumentUid(),
               startOfDay(subDays(new Date(), historyDays)),
-              endOfDay(addDays(new Date(), futureDays))
+              endOfDay(addDays(new Date(), futureDays)),
+              interval,
             )
             : of([])
           ),

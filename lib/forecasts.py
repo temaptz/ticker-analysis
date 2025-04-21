@@ -1,6 +1,6 @@
 import datetime
 from collections import defaultdict
-from tinkoff.invest import Client, constants
+from tinkoff.invest import Client, constants, CandleInterval
 from tinkoff.invest.schemas import GetForecastResponse, GetForecastRequest
 from lib.db_2 import forecasts_db
 from const import TINKOFF_INVEST_TOKEN
@@ -36,6 +36,7 @@ def get_db_forecasts_graph(
         instrument_uid: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
+        interval: CandleInterval = CandleInterval.CANDLE_INTERVAL_DAY
 ):
     result = list()
 
@@ -50,11 +51,10 @@ def get_db_forecasts_graph(
                 'consensus': utils.get_price_by_quotation(serializer.db_deserialize(f.forecasts).consensus.consensus)
             })
 
-        result = filter_monthly(result)
     except Exception as e:
         print('ERROR get_db_forecasts_graph', e)
 
-    return result
+    return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 3)

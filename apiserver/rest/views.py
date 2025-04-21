@@ -139,12 +139,14 @@ def instrument_history_forecasts_graph(request):
     uid = request.GET.get('uid')
     start_date = utils.parse_json_date(request.GET.get('start_date'))
     end_date = utils.parse_json_date(request.GET.get('end_date'))
+    interval = CandleInterval(int(request.GET.get('interval')))
 
-    if uid and start_date and end_date:
+    if uid and start_date and end_date and interval:
         resp = forecasts.get_db_forecasts_graph(
             instrument_uid=uid,
             start_date=start_date,
             end_date=end_date,
+            interval=interval,
         )
 
     response = HttpResponse(serializer.to_json(resp))
@@ -218,7 +220,7 @@ def instrument_prediction_graph(request):
     uid = request.GET.get('uid')
     date_from = date_utils.parse_date(request.GET.get('date_from'))
     date_to = date_utils.parse_date(request.GET.get('date_to'))
-    interval = int(request.GET.get('interval'))
+    interval = CandleInterval(int(request.GET.get('interval')))
 
     if uid and date_from and date_to and interval:
         resp['ta-1'] = predictions.get_prediction_ta_1_graph(

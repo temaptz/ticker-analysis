@@ -1,7 +1,7 @@
 import datetime
 import os
 import re
-from tinkoff.invest import MoneyValue, Quotation, HistoricCandle
+from tinkoff.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
 import hashlib
 from lib import date_utils, logger
 
@@ -87,3 +87,18 @@ def round_float(num: float, decimals: int = 10) -> float:
 def get_md5(data: str) -> str:
     return hashlib.md5(data.encode()).hexdigest()
 
+
+@logger.error_logger
+def filter_array_by_date_interval(source: list, date_field: str, interval: CandleInterval) -> list:
+    filtered = []
+    last_date = None
+    min_interval = datetime.timedelta(seconds=date_utils.get_interval_sec_by_candle(interval=interval))
+
+    for item in source:
+        item_date = date_utils.parse_date(item[date_field])
+
+        if last_date is None or (item_date - last_date) >= min_interval:
+            filtered.append(item)
+            last_date = item_date
+
+    return filtered

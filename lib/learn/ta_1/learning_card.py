@@ -29,15 +29,15 @@ class LearningCard:
     def __init__(self):
         return
 
-    def load_by_uid(self, uid: str):
+    def load_by_uid(self, uid: str, fill_empty=False):
         try:
-            return self._load_by_uid(uid=uid)
+            return self._load_by_uid(uid=uid, fill_empty=fill_empty)
         except Exception as e:
             print('ERROR TA-1 LearningCard load_by_uid', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def _load_by_uid(self, uid: str):
+    def _load_by_uid(self, uid: str, fill_empty=False):
         self.uid = uid
         self.asset_uid = instruments.get_instrument_by_uid(uid).asset_uid
         self.date = datetime.datetime.now()
@@ -61,6 +61,10 @@ class LearningCard:
         self.pe_ratio_ttm = fundamentals_res.pe_ratio_ttm
         self.ev_to_ebitda_mrq = fundamentals_res.ev_to_ebitda_mrq
         self.dividend_payout_ratio_fy = fundamentals_res.dividend_payout_ratio_fy
+
+        if fill_empty and len(self.history) < 52:
+            padding = [0] * (52 - len(self.history))
+            self.history = padding + self.history
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
     def load(self, uid: str, date: datetime.datetime, target_forecast_days: int):

@@ -1,15 +1,18 @@
 import datetime
+
+from numpy.lib.utils import source
+
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1_1, ta_1_2, ta_2
-from lib import date_utils, logger
+from lib import date_utils, logger, utils
 from lib.db_2 import predictions_ta_1_db, predictions_ta_1_1_db
 from tinkoff.invest import CandleInterval
 
 
 def get_prediction_ta_1_by_uid(uid: str) -> float or None:
     c = LearningCard()
-    c.load_by_uid(uid=uid)
+    c.load_by_uid(uid=uid, fill_empty=True)
     x = c.get_x()
 
     try:
@@ -21,7 +24,7 @@ def get_prediction_ta_1_by_uid(uid: str) -> float or None:
 
 def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     c = ta_1_1.LearningCard()
-    c.load_by_uid(uid=uid)
+    c.load_by_uid(uid=uid, fill_empty=True)
     x = c.get_x()
 
     try:
@@ -31,7 +34,6 @@ def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
         return None
 
 
-# @TODO interval
 def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     timedelta = datetime.timedelta(days=30)
 
@@ -48,13 +50,12 @@ def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: d
                 'date': (date_utils.parse_date(i.date) + timedelta).isoformat(),
             })
 
-        return result
+        return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
     except Exception as e:
         print('ERROR get_prediction_ta_1_graph_by_uid', e)
         return []
 
 
-# @TODO interval
 def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     timedelta = datetime.timedelta(days=30)
 
@@ -71,7 +72,7 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
                 'date': (date_utils.parse_date(i.date) + timedelta).isoformat(),
             })
 
-        return result
+        return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
     except Exception as e:
         print('ERROR get_prediction_ta_1_1_graph_by_uid', e)
         return []
