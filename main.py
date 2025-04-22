@@ -31,6 +31,7 @@ init.init_db()
 db_utils.optimize_db()
 
 print('IS DOCKER', docker.is_docker())
+print('IS PROD', docker.is_prod())
 
 if docker.is_docker():
     telegram.send_message('Скрипт ticker-analysis main запущен')

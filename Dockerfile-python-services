@@ -21,6 +21,7 @@ FROM requirements
 COPY ./apiserver /app/apiserver
 COPY ./lib /app/lib
 COPY ./main.py /app/main.py
+COPY ./learn.py /app/learn.py
 COPY ./const.py /app/const.py
 COPY ./learn_models /app/learn_models
 

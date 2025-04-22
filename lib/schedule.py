@@ -41,8 +41,8 @@ def start_schedule() -> None:
         predictions_save.save_weekly_predictions,
         'cron',
         day_of_week='mon',
-        hour=13,
-        minute=30,
+        hour=14,
+        minute=0,
         timezone=timezone
     )
 
