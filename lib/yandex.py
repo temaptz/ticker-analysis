@@ -101,26 +101,27 @@ def get_text_classify_db_cache(title: str, text: str, subject_name: str) -> FewS
             if ya_resp and len(ya_resp) >= 3:
                 result = serializer.get_dict_by_object_recursive(ya_resp)
 
-                news_classify_requests.insert_classify(
-                    news_hash=news_classify_requests.get_news_hash(
-                        news_title=title,
-                        news_text=text,
-                    ),
-                    subject_name=subject_name,
-                    classify=ya_resp,
-                )
-
-                logger.log_info(
-                    message='NEWS RATED BY YANDEX',
-                    output={
-                        'rate': serializer.get_dict_by_object_recursive(
-                            data=get_news_rate_absolute_by_ya_classify(result)
+                if result and get_news_rate_absolute_by_ya_classify(result) is not None:
+                    news_classify_requests.insert_classify(
+                        news_hash=news_classify_requests.get_news_hash(
+                            news_title=title,
+                            news_text=text,
                         ),
-                        'source': result,
-                    },
-                )
+                        subject_name=subject_name,
+                        classify=ya_resp,
+                    )
 
-                return result
+                    logger.log_info(
+                        message='NEWS RATED BY YANDEX',
+                        output={
+                            'rate': serializer.get_dict_by_object_recursive(
+                                data=get_news_rate_absolute_by_ya_classify(result)
+                            ),
+                            'source': result,
+                        },
+                    )
+
+                    return result
 
         except Exception as e:
             logger.log_error(method_name='get_text_classify_db_cache', error=e)
@@ -250,7 +251,7 @@ def get_news_rate_absolute_by_ya_classify(classify: dict) -> types.NewsRateAbsol
             decimals=5,
         )
 
-        if sum_confidence > 0:
+        if sum_confidence > 0 and len(classify['predictions']) == 3:
             result = types.NewsRateAbsoluteYandex(0, 0, 0)
 
             for i in classify['predictions']:

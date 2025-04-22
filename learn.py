@@ -23,5 +23,8 @@ from lib.db import forecasts_db, fundamentals_db, gpt_requests_db, news_db, news
 from lib.db_2 import init, db_utils
 from lib.learn import ta_1_2, ta_2
 
+print('IS DOCKER', docker.is_docker())
+print('IS PROD', docker.is_prod())
+
 ta_2.generate_data()
 # ta_2.learn()
