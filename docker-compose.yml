@@ -16,6 +16,22 @@ services:
       - apiserver
     restart: unless-stopped
 
+  learn:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    container_name: learn
+    volumes:
+      - ./db.sqlite:/app/db.sqlite
+      - /etc/is_my_prod:/container_host_is_prod:ro
+    command:
+      - python
+      - learn.py
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
   apiserver:
     build:
       context: .

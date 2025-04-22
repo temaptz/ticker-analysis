@@ -5,7 +5,7 @@ import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
 import const
-from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types
+from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types, yandex_disk
 from lib.learn import learn_utils
 
 
@@ -306,6 +306,12 @@ def generate_data():
     csv.save_df_to_csv(data_frame=data_frame, filename=get_data_frame_csv_file_path())
 
     print('DATA FRAME FILE SAVED')
+
+    file_name = f'data_frame_ta_2_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv'
+
+    yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
+
+    print('DATA FRAME FILE UPLOADED')
 
 
 def learn():
