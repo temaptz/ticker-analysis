@@ -268,10 +268,9 @@ def generate_data():
                     target_date=target_date,
                 )
 
-                if cached_record:
+                if cached_record and cached_record != 'error':
                     counter_cached += 1
-                    if cached_record != 'error':
-                        records.append(get_csv_record_by_learning_card(card=cached_record))
+                    records.append(get_csv_record_by_learning_card(card=cached_record))
                 else:
                     card = Ta2LearningCard(
                         instrument=instrument,
