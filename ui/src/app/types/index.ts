@@ -111,6 +111,21 @@ export interface InstrumentForecastsGraphItem {
   consensus: number;
 }
 
+export interface TechAnalysisResp {
+  RSI: TechAnalysisGraphItem[];
+  BB: TechAnalysisGraphItem[];
+  EMA: TechAnalysisGraphItem[];
+  SMA: TechAnalysisGraphItem[];
+  MACD: TechAnalysisGraphItem[];
+}
+
+export interface TechAnalysisGraphItem {
+  date: string;
+  signal?: number;
+  macd?: number;
+  middle_band?: number;
+}
+
 export interface FundamentalsHistory {
   date: string;
   fundamentals: any;

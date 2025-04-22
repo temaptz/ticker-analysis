@@ -13,7 +13,7 @@ import {
   PredictionGraphResp,
   InstrumentForecastsHistory,
   FundamentalsHistory,
-  Instrument, InvestCalc, NewsRateResponse, InstrumentForecastsGraphItem, NewsListRatedResponse,
+  Instrument, InvestCalc, NewsRateResponse, InstrumentForecastsGraphItem, NewsListRatedResponse, TechAnalysisResp,
 } from '../../types';
 import { CandleInterval } from '../../enums';
 
@@ -139,6 +139,22 @@ export class ApiService {
     params = params.set('uid', uid);
 
     return this.http.get<InvestCalc>(`${this.apiUrl}/instrument/invest_calc`, {params: params});
+  }
+
+  getInstrumentTechGraph(uid: string, startDate?: Date, endDate?: Date, interval?: CandleInterval): Observable<TechAnalysisResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+
+    if (startDate && endDate) {
+      params = params.set('start_date', startDate.toJSON());
+      params = params.set('end_date', endDate.toJSON());
+    }
+
+    if (interval) {
+      params = params.set('interval', interval.toString());
+    }
+
+    return this.http.get<TechAnalysisResp>(`${this.apiUrl}/instrument/tech_analysis/graph`, {params: params});
   }
 
   getInstrumentNews(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsResponse> {

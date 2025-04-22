@@ -1,5 +1,8 @@
 import sys
 import datetime
+
+from tinkoff.invest.schemas import IndicatorType
+
 from lib import (
     telegram,
     docker,
@@ -18,6 +21,7 @@ from lib import (
     cache,
     instruments,
     invest_calc,
+    tech_analysis,
 )
 from lib.db import forecasts_db, fundamentals_db, gpt_requests_db, news_db, news_rate_db, predictions_ta_1_db, predictions_ta_1_1_db
 from lib.db_2 import init, db_utils
@@ -33,6 +37,14 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
+
+    # for i in instruments.get_instruments_white_list():
+    #     print(tech_analysis.get_tech_analysis(
+    #         instrument_uid=i.uid,
+    #         indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
+    #         date_from=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7),
+    #         date_to=datetime.datetime.now(datetime.timezone.utc),
+    #     ))
 
     # ta_2.generate_data()
     # ta_2.learn()

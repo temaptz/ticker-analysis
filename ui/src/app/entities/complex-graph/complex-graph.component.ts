@@ -17,7 +17,7 @@ import {
   InstrumentHistoryPrice,
   InstrumentInList,
   Operation,
-  PredictionGraphResp
+  PredictionGraphResp, TechAnalysisResp
 } from '../../types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval } from '../../enums';
@@ -44,17 +44,20 @@ export class ComplexGraphComponent {
   height = input<string>('150px');
   isShowOperations = input<boolean>(false);
   isShowForecasts = input<boolean>(false);
+  isShowTechAnalysis = input<boolean>(false);
 
   isLoadedHistoryPrice = signal<boolean>(true);
   isLoadedPredictions = signal<boolean>(true);
   isLoadedOperations = signal<boolean>(true);
   isLoadedForecasts = signal<boolean>(true);
-  isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts()));
+  isLoadedTechAnalysis = signal<boolean>(true);
+  isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis()));
 
   historyPrices = signal<InstrumentHistoryPrice[]>([]);
   predictionResp = signal<PredictionGraphResp | null>(null);
   operations = signal<Operation[]>([]);
   forecasts = signal<InstrumentForecastsGraphItem[]>([]);
+  techAnalysis = signal<TechAnalysisResp | null>(null);
 
   seriesHistoryPrice = computed<echarts.SeriesOption>(() => {
     const history = this.historyPrices();
@@ -251,6 +254,118 @@ export class ComplexGraphComponent {
     };
   });
 
+  seriesTechAnalysis = computed<echarts.SeriesOption[]>(() => {
+    const techAnalysis = this.techAnalysis();
+
+    return [
+      // {
+      //   name: 'Тех. анализ RSI',
+      //   type: 'line',
+      //   showSymbol: true,
+      //   symbol: 'circle',
+      //   symbolSize: 2.5,
+      //   itemStyle: {
+      //     color: GRAPH_COLORS.tech_rsi
+      //   },
+      //   lineStyle: {
+      //     width: 1,
+      //   },
+      //   encode: {
+      //     x: 0,
+      //     y: 1
+      //   },
+      //   data: techAnalysis?.RSI?.map(i => [
+      //     parseJSON(i.date),
+      //     i.signal,
+      //   ]) ?? []
+      // },
+      {
+        name: 'Тех. анализ BB',
+        type: 'line',
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 2.5,
+        itemStyle: {
+          color: GRAPH_COLORS.tech_bb
+        },
+        lineStyle: {
+          width: 1,
+        },
+        encode: {
+          x: 0,
+          y: 1
+        },
+        data: techAnalysis?.BB?.map(i => [
+          parseJSON(i.date),
+          i.middle_band,
+        ]) ?? []
+      },
+      {
+        name: 'Тех. анализ EMA',
+        type: 'line',
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 2.5,
+        itemStyle: {
+          color: GRAPH_COLORS.tech_ema
+        },
+        lineStyle: {
+          width: 1,
+        },
+        encode: {
+          x: 0,
+          y: 1
+        },
+        data: techAnalysis?.EMA?.map(i => [
+          parseJSON(i.date),
+          i.signal,
+        ]) ?? []
+      },
+      {
+        name: 'Тех. анализ SMA',
+        type: 'line',
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 2.5,
+        itemStyle: {
+          color: GRAPH_COLORS.tech_sma
+        },
+        lineStyle: {
+          width: 1,
+        },
+        encode: {
+          x: 0,
+          y: 1
+        },
+        data: techAnalysis?.SMA?.map(i => [
+          parseJSON(i.date),
+          i.signal,
+        ]) ?? []
+      },
+      // {
+      //   name: 'Тех. анализ MACD',
+      //   type: 'line',
+      //   showSymbol: true,
+      //   symbol: 'circle',
+      //   symbolSize: 2.5,
+      //   itemStyle: {
+      //     color: GRAPH_COLORS.tech_macd
+      //   },
+      //   lineStyle: {
+      //     width: 1,
+      //   },
+      //   encode: {
+      //     x: 0,
+      //     y: 1
+      //   },
+      //   data: techAnalysis?.MACD?.map(i => [
+      //     parseJSON(i.date),
+      //     i.macd,
+      //   ]) ?? []
+      // }
+    ];
+  });
+
   option = computed<echarts.EChartsOption>(() => {
     const series: echarts.SeriesOption[] = [];
 
@@ -275,8 +390,15 @@ export class ComplexGraphComponent {
       series.push(this.seriesForecasts());
     }
 
+    if (this.isLoadedTechAnalysis()) {
+      series.push(...this.seriesTechAnalysis());
+    }
+
     return {
       ...ECHARTS_MAIN_OPTIONS,
+      legend: {
+        show: true,
+      },
       series,
     }
   });
@@ -369,6 +491,26 @@ export class ComplexGraphComponent {
           tap(() => this.isLoadedForecasts.set(true)),
         )
         .subscribe((resp: InstrumentForecastsGraphItem[]) => this.forecasts.set(resp));
+    });
+
+    effect(() => {
+      const uid = this.instrumentUid();
+      const historyDays = this.daysHistory();
+      const futureDays = this.daysFuture();
+      const interval = this.historyInterval();
+
+      of(undefined)
+        .pipe(
+          tap(() => this.isLoadedTechAnalysis.set(false)),
+          switchMap(() => this.appService.getInstrumentTechGraph(
+            uid,
+            startOfDay(subDays(new Date(), historyDays)),
+            endOfDay(addDays(new Date(), futureDays)),
+            interval
+          )),
+          tap(() => this.isLoadedTechAnalysis.set(true)),
+        )
+        .subscribe((resp: TechAnalysisResp) => this.techAnalysis.set(resp));
     });
   }
 

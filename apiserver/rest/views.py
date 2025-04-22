@@ -2,8 +2,10 @@ import datetime
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.utils.cache import patch_cache_control
-from tinkoff.invest import CandleInterval, Instrument
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc
+from tinkoff.invest import CandleInterval, Instrument, Quotation
+from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
+
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
 from lib.learn import ta_1_2, ta_2
 import json
 
@@ -293,6 +295,69 @@ def instrument_invest_calc(request):
 
     if uid:
         resp = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid)
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 3)
+
+    return response
+
+
+@api_view(['GET'])
+def tech_analysis_graph(request):
+    resp = {}
+    uid = request.GET.get('uid')
+    date_from = date_utils.parse_date(request.GET.get('start_date'))
+    date_to = date_utils.parse_date(request.GET.get('end_date'))
+    interval = IndicatorInterval(int(request.GET.get('interval')))
+
+    if uid and date_from and date_to and interval:
+        resp['RSI'] = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
+
+        resp['BB'] = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_BB,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+            deviation=Deviation(deviation_multiplier=Quotation(units=2, nano=0)),
+        )
+
+        resp['EMA'] = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_EMA,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
+
+        resp['SMA'] = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
+
+        resp['MACD'] = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+            smoothing=Smoothing(
+                fast_length=12,
+                slow_length=26,
+                signal_smoothing=9,
+            )
+        )
 
     response = HttpResponse(serializer.to_json(resp))
 
