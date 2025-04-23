@@ -106,12 +106,12 @@ class Ta2LearningCard:
     # Проверка карточки
     def check_x(self):
         if self.price is None:
-            print('CARD IS NOT OK BY PRICE')
+            print('CARD IS NOT OK BY PRICE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
         if len(self.get_x()) != 74:
-            print('CARD IS NOT OK BY X SIZE')
+            print('CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
@@ -129,7 +129,7 @@ class Ta2LearningCard:
                 or self.news_negative_percent_3 is None
                 or self.news_neutral_percent_3 is None
         ):
-            print('CARD IS NOT OK BY EMPTY NEWS')
+            print('CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
