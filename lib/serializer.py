@@ -4,9 +4,9 @@ import json
 import pickle
 
 
-def to_json(obj) -> str or None:
+def to_json(obj, ensure_ascii=True) -> str or None:
     try:
-        return json.dumps(get_dict_by_object_recursive(obj))
+        return json.dumps(get_dict_by_object_recursive(obj), ensure_ascii=ensure_ascii)
     except Exception as e:
         print('ERROR to_json', e)
         return None

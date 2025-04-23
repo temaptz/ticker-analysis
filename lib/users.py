@@ -20,7 +20,7 @@ def get_user_instrument_balance(instrument_uid: str) -> int:
         for account in get_accounts():
             positions = get_positions(account_id=account.id)
             for instrument in positions.securities:
-                if instrument.instrument_uid == instrument_uid:
+                if instrument and instrument.instrument_uid == instrument_uid:
                     result += instrument.balance
 
     except Exception as e:

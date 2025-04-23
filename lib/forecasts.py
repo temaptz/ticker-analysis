@@ -22,13 +22,17 @@ def get_forecasts(instrument_uid: str) -> GetForecastResponse:
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 3)
-def get_db_forecast_by_uid_date(uid: str, date: datetime.datetime) -> (str, GetForecastResponse, str):
+def get_db_forecast_by_uid_date(uid: str, date: datetime.datetime) -> (str, GetForecastResponse, str) or None:
     db_resp = forecasts_db.get_forecast_by_uid_date(uid=uid, date=date)
-    uid = db_resp.instrument_uid
-    date = db_resp.date
-    forecast = serializer.db_deserialize(db_resp.forecasts)
 
-    return uid, forecast, date
+    if db_resp:
+        uid = db_resp.instrument_uid
+        date = db_resp.date
+        forecast = serializer.db_deserialize(db_resp.forecasts)
+
+        return uid, forecast, date
+
+    return None
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 3)

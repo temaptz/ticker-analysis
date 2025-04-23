@@ -64,7 +64,8 @@ def get_forecast_by_uid_date(uid: str, date: datetime.datetime) -> Type[Forecast
 
         if results and results[0]:
             return results[0]
-        return None
+
+    return None
 
 
 @logger.error_logger

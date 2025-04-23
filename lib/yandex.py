@@ -134,10 +134,10 @@ def get_text_classify(title: str, text: str, subject_name: str) -> FewShotTextCl
 
     except Exception as e:
         logger.log_error(method_name='get_text_classify', error=e, debug_info=serializer.to_json({
-            'title_cat_100': title[:100],
-            'text_cat_100': text[:100],
+            'title_cat_50': title[:50],
+            'text_cat_50': text[:50],
             'subject_name': subject_name,
-        }))
+        }, ensure_ascii=False))
 
     return None
 
