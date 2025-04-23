@@ -36,7 +36,6 @@ def upload_file(file_path: str, file_name: str) -> requests.Response or None:
 
     telegram.send_message(message='Начата загрузка файла: '+serializer.to_json({
         'file_path': file_path,
-        'file_name': file_name,
         'file_path_on_ya_disk': file_path_on_ya_disk,
         'file_size': file_size,
     }))
