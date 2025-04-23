@@ -14,10 +14,13 @@ def error_logger(func):
 
 def log_error(method_name: str, error: Exception = None, debug_info: str = None) -> None:
     date_str = get_local_time_log_str()
-    error_str = f'[{date_str}] ERROR: {method_name}; DEBUG INFO: {debug_info}'
+    error_str = f'[{date_str}] ERROR: {method_name}'
 
     if error:
         error_str += f' -> {error}'
+
+    if debug_info:
+        error_str += f'; DEBUG INFO: {debug_info}'
 
     print(error_str)
 

@@ -1,3 +1,5 @@
+import re
+from html import unescape
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
@@ -104,7 +106,7 @@ def get_text_classify(title: str, text: str, subject_name: str) -> FewShotTextCl
         )
 
         # Объединение заголовка и текста новости
-        news_text = f'{title}\n{text}'
+        news_text = clean_news_text(text=f'{title}\n{text}')
         labels = ['положительная', 'отрицательная', 'нейтральная']
         labels_str = ', '.join([f'"{label}"' for label in labels])
 
@@ -283,3 +285,26 @@ def get_news_rate_absolute_by_ya_classify(classify: dict) -> types.NewsRateAbsol
             return result
 
     return None
+
+
+def clean_news_text(text: str, max_chars: int = 28000) -> str or None:
+    if not isinstance(text, str):
+        return None
+
+    # Удаление base64 inline изображений
+    text = re.sub(r'<img[^>]+src=["\']data:image/[^"\']+["\'][^>]*>', '', text, flags=re.IGNORECASE)
+
+    # Удаление всех остальных HTML-тегов
+    text = re.sub(r'<[^>]+>', '', text)
+
+    # Преобразование HTML-сущностей в нормальные символы
+    text = unescape(text)
+
+    # Удаление лишних пробелов и переносов строк
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    # Усечём текст до лимита символов (ориентировочно <8000 токенов)
+    if len(text) > max_chars:
+        text = text[:max_chars].rsplit(' ', 1)[0]  # чтобы не обрывать слово посередине
+
+    return text

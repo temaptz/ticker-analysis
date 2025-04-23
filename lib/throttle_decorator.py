@@ -14,7 +14,7 @@ def throttle_once_per_second(func):
             now = time.time()
             wait_time = max(0, 1 - (now - _last_call_time))
             if wait_time > 0:
-                logger.log_info(message=f'WILL THROTTLE TIME: {time} BEFORE CALL METHOD: {func.__name__}')
+                logger.log_info(message=f'WILL THROTTLE TIME: {wait_time} BEFORE CALL METHOD: {func.__name__}')
                 time.sleep(wait_time)
             _last_call_time = time.time()
         return func(*args, **kwargs)
