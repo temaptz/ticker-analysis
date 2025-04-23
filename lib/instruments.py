@@ -80,8 +80,8 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or 
             date_utc = date_utils.convert_to_utc(date=date)
             candles = client.market_data.get_candles(
                 instrument_id=uid,
-                from_=date_utc - datetime.timedelta(minutes=30),
-                to=date_utc + datetime.timedelta(minutes=30),
+                from_=date_utc - datetime.timedelta(hours=14),
+                to=date_utc + datetime.timedelta(hours=14),
                 interval=CandleInterval.CANDLE_INTERVAL_HOUR
             ).candles
 
