@@ -23,7 +23,6 @@ from lib import (
     invest_calc,
     tech_analysis,
 )
-from lib.db import forecasts_db, fundamentals_db, gpt_requests_db, news_db, news_rate_db, predictions_ta_1_db, predictions_ta_1_1_db
 from lib.db_2 import init, db_utils
 from lib.learn import ta_1_2, ta_2
 
