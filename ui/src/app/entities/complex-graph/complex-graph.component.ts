@@ -505,20 +505,24 @@ export class ComplexGraphComponent {
       const historyDays = this.daysHistory();
       const futureDays = this.daysFuture();
       const interval = this.historyInterval();
+      const isShowTechAnalysis = this.isShowTechAnalysis();
 
       of(undefined)
         .pipe(
           tap(() => this.isLoadedTechAnalysis.set(false)),
-          switchMap(() => this.appService.getInstrumentTechGraph(
-            uid,
-            startOfDay(subDays(new Date(), historyDays)),
-            endOfDay(addDays(new Date(), futureDays)),
-            interval
-          )),
+          switchMap(() => isShowTechAnalysis
+            ? this.appService.getInstrumentTechGraph(
+              uid,
+              startOfDay(subDays(new Date(), historyDays)),
+              endOfDay(addDays(new Date(), futureDays)),
+              interval
+            )
+            : of(null)
+          ),
           tap(() => this.isLoadedTechAnalysis.set(true)),
           takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe((resp: TechAnalysisResp) => this.techAnalysis.set(resp));
+        .subscribe((resp: TechAnalysisResp | null) => this.techAnalysis.set(resp));
     });
   }
 
