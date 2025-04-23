@@ -1,13 +1,19 @@
-<instrument-complex-info
-  [instrumentUid]="instrumentUid()"
-></instrument-complex-info>
+@let uid = ticker() | uidByTicker | async;
 
-<br>
-<br>
-<br>
+@if (uid) {
+  <instrument-complex-info
+    [instrumentUid]="uid"
+  ></instrument-complex-info>
 
-<h3>Новости</h3>
+  <br>
+  <br>
+  <br>
 
-<news-list-accordion
-  [instrumentUid]="instrumentUid()"
-></news-list-accordion>
+  <h3>Новости</h3>
+
+  <news-list-accordion
+    [instrumentUid]="uid"
+  ></news-list-accordion>
+} @else {
+  <preloader></preloader>
+}

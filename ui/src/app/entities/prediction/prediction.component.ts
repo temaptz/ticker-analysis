@@ -1,5 +1,6 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, combineLatest } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
@@ -8,7 +9,6 @@ import { CurrentPriceService } from '../../shared/services/current-price.service
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { GRAPH_COLORS } from '../../shared/const';
 import { Forecast, InstrumentInList } from '../../types';
-import { getPriceByQuotation } from '../../utils';
 
 
 @Component({
@@ -42,6 +42,7 @@ export class PredictionComponent {
 
   private apiService = inject(ApiService);
   private currentPriceService = inject(CurrentPriceService);
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
     effect(() => {
@@ -50,7 +51,10 @@ export class PredictionComponent {
         this.apiService.getInstrumentPrediction(uid),
         this.currentPriceService.getPriceByUid(uid),
       ])
-        .pipe(finalize(() => this.isLoaded.set(true)))
+        .pipe(
+          finalize(() => this.isLoaded.set(true)),
+          takeUntilDestroyed(this.destroyRef),
+        )
         .subscribe(([predictions, currentPrice]: [Forecast, number | null]) => {
           const current = currentPrice ?? 0;
           const prediction_ta_1 = predictions['ta-1'] ?? 0;

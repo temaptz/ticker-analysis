@@ -6,7 +6,6 @@
   <preloader></preloader>
 }
 
-<a
-  *ngIf="instrumentUid()"
-  [routerLink]="['/instrument', instrumentUid(), 'fundamentals']"
->История</a>
+@if (ticker()) {
+  <a [routerLink]="['/ticker', ticker(), 'fundamentals']">История</a>
+}

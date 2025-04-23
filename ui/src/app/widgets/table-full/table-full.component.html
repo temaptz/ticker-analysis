@@ -14,7 +14,7 @@
     <ng-container matColumnDef="logo" sticky>
       <th mat-header-cell *matHeaderCellDef>Логотип</th>
       <td mat-cell *matCellDef="let instrument">
-        <a [routerLink]="['/instrument', instrument.uid]">
+        <a [routerLink]="['/ticker', instrument.ticker]">
           <instrument-logo
             [instrumentUid]="instrument.uid"
           ></instrument-logo>
@@ -25,14 +25,14 @@
     <ng-container matColumnDef="ticker" sticky>
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Тикер</th>
       <td mat-cell *matCellDef="let instrument">
-        <a [routerLink]="['/instrument', instrument.uid]">{{ instrument.ticker}}</a>
+        <a [routerLink]="['/ticker', instrument.ticker]">{{ instrument.ticker}}</a>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef>Название</th>
       <td mat-cell *matCellDef="let instrument">
-        <a [routerLink]="['/instrument', instrument.uid]">{{ instrument.name }}</a>
+        <a [routerLink]="['/ticker', instrument.ticker]">{{ instrument.name }}</a>
       </td>
     </ng-container>
 
@@ -40,7 +40,7 @@
       <th mat-header-cell *matHeaderCellDef>Фундаментальные показатели</th>
       <td mat-cell *matCellDef="let instrument">
         <fundamentals
-          [instrumentUid]="instrument.uid"
+          [ticker]="instrument.ticker"
           [instrumentAssetUid]="instrument.asset_uid"
         ></fundamentals>
       </td>

@@ -1,10 +1,11 @@
-import { Component, effect, input,  signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, NewsResponse } from '../../types';
-import { finalize } from 'rxjs';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { endOfDay, setHours, startOfDay, subDays } from 'date-fns';
 import { NewsBarComponent } from '../news-bar/news-bar.component';
 
 
@@ -24,15 +25,19 @@ export class NewsComponent {
   dateFrom = startOfDay(subDays(new Date(), 6));
   dateTo = endOfDay(new Date());
 
-  constructor(
-    private appService: ApiService,
-  ) {
-    effect(() => this.appService.getInstrumentNews(
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    effect(() => this.apiService.getInstrumentNews(
       this.instrumentUid(),
       this.dateFrom,
       this.dateTo,
     )
-      .pipe(finalize(() => this.isLoaded.set(true)))
+      .pipe(
+        finalize(() => this.isLoaded.set(true)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((resp: NewsResponse) => this.news.set(resp)));
   }
 

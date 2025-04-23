@@ -1,5 +1,6 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { InstrumentBrandResponse } from '../../types';
 import { ApiService } from '../../shared/services/api.service';
 
@@ -17,11 +18,13 @@ export class InstrumentLogoComponent {
 
   logoUrl = signal<InstrumentBrandResponse>(null);
 
-  constructor(
-    private appService: ApiService,
-  ) {
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
     effect(() => {
-      this.appService.getInstrumentBrand(this.instrumentUid())
+      this.apiService.getInstrumentBrand(this.instrumentUid())
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((brand) => {
           if (!brand?.logo_name) {
             return;

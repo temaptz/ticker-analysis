@@ -1,6 +1,7 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { Instrument } from '../../types';
@@ -28,7 +29,7 @@ export class InstrumentComplexInfoComponent {
 
   instrumentUid = input.required<string>();
 
-  instrument = signal<Instrument>(false);
+  instrument = signal<Instrument | null>(null);
   isLoaded = signal<boolean>(false);
 
   complexGraphHistoryDaysCount = 180
@@ -36,14 +37,18 @@ export class InstrumentComplexInfoComponent {
   complexGraphHistoryInterval: CandleInterval = CandleInterval.CANDLE_INTERVAL_DAY;
   protected readonly candleInterval = CandleInterval;
 
-  constructor(
-    private appService: ApiService
-  ) {
+  private appService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
     effect(() => {
       const instrumentUid = this.instrumentUid();
 
       this.appService.getInstrument(instrumentUid)
-        .pipe(finalize(() => this.isLoaded.set(true)))
+        .pipe(
+          finalize(() => this.isLoaded.set(true)),
+          takeUntilDestroyed(this.destroyRef),
+        )
         .subscribe(resp => this.instrument.set(resp));
     });
   }

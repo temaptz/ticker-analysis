@@ -1,5 +1,6 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, InvestCalc, Operation } from '../../types';
@@ -31,10 +32,14 @@ export class BalanceComponent {
   currentPrice = signal<number | null>(null);
 
   private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
     effect(() => this.apiService.getInvestCalc(this.instrumentUid())
-      .pipe(finalize(() => this.isLoaded.set(true)))
+      .pipe(
+        finalize(() => this.isLoaded.set(true)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((investCalc: InvestCalc) => {
         if (investCalc?.balance) {
           this.balanceQty.set(investCalc.balance);

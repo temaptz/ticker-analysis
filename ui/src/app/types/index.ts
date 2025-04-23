@@ -1,12 +1,14 @@
-export interface InstrumentInList {
+export interface InstrumentInList extends Instrument {}
+
+export interface Instrument {
   uid: string;
   asset_uid: string;
   figi: string;
   ticker: string;
+  name: string;
   [key: string]: unknown;
 }
 
-export type Instrument = any;
 export type InstrumentLastPriceResp = number;
 export type InstrumentHistoryPrice = any;
 export type Candle = any;

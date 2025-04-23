@@ -1,6 +1,6 @@
 import {
-  Component, computed,
-  effect,
+  Component, computed, DestroyRef,
+  effect, inject,
   input,
   numberAttribute,
   signal,
@@ -25,6 +25,7 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Component({
@@ -403,6 +404,8 @@ export class ComplexGraphComponent {
     }
   });
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     private appService: ApiService,
     private priceFormatPipe: PriceFormatPipe,
@@ -421,6 +424,7 @@ export class ComplexGraphComponent {
             interval
           )),
           tap(() => this.isLoadedHistoryPrice.set(true)),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((resp: InstrumentHistoryPrice[]) => this.historyPrices.set(resp));
     });
@@ -441,6 +445,7 @@ export class ComplexGraphComponent {
             interval,
           )),
           tap(() => this.isLoadedPredictions.set(true)),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((resp: PredictionGraphResp) => this.predictionResp.set(resp));
     });
@@ -466,6 +471,7 @@ export class ComplexGraphComponent {
             : of([])
           ),
           tap(() => this.isLoadedOperations.set(true)),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((resp: Operation[]) => this.operations.set(resp));
     });
@@ -489,6 +495,7 @@ export class ComplexGraphComponent {
             : of([])
           ),
           tap(() => this.isLoadedForecasts.set(true)),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((resp: InstrumentForecastsGraphItem[]) => this.forecasts.set(resp));
     });
@@ -509,6 +516,7 @@ export class ComplexGraphComponent {
             interval
           )),
           tap(() => this.isLoadedTechAnalysis.set(true)),
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe((resp: TechAnalysisResp) => this.techAnalysis.set(resp));
     });

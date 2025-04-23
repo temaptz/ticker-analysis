@@ -1,5 +1,6 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
@@ -23,13 +24,15 @@ export class ForecastComponent implements OnInit {
   forecast = signal<Forecast>(null);
   getPriceByQuotation = getPriceByQuotation;
 
-  constructor(
-    private appService: ApiService,
-  ) {}
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.appService.getInstrumentConsensusForecast(this.instrumentUid)
-      .pipe(finalize(() => this.isLoaded.set(true)))
+    this.apiService.getInstrumentConsensusForecast(this.instrumentUid)
+      .pipe(
+        finalize(() => this.isLoaded.set(true)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((resp: Forecast) => this.forecast.set(resp));
   }
 

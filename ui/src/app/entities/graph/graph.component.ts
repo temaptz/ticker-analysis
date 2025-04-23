@@ -1,5 +1,6 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import * as echarts from 'echarts';
 import { parseJSON } from 'date-fns';
@@ -30,12 +31,16 @@ export class GraphComponent {
   isLoaded = signal<boolean>(false);
   option = signal<echarts.EChartsOption>({});
 
-  constructor(
-    private appService: ApiService,
-  ) {
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
     effect(() => {
-      this.appService.getInstrumentHistoryPrices(this.instrumentUid(), this.days(), this.interval())
-        .pipe(finalize(() => this.isLoaded.set(true)))
+      this.apiService.getInstrumentHistoryPrices(this.instrumentUid(), this.days(), this.interval())
+        .pipe(
+          finalize(() => this.isLoaded.set(true)),
+          takeUntilDestroyed(this.destroyRef),
+        )
         .subscribe((resp: InstrumentHistoryPrice[]) => this.initOption(resp));
     });
   }

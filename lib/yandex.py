@@ -1,7 +1,7 @@
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
-from lib import utils, cache, counter, logger, serializer, types, docker
+from lib import utils, cache, counter, logger, serializer, types, docker, throttle_decorator
 from lib.db_2 import gpt_requests_db, news_classify_requests
 
 
@@ -66,19 +66,50 @@ def get_text_classify_db_cache(title: str, text: str, subject_name: str) -> FewS
         logger.log_error(method_name='get_text_classify_db_cache_[GETTING CACHE]', error=e)
 
     if const.IS_NEWS_CLASSIFY_ENABLED and docker.is_prod():
-        try:
-            sdk = YCloudML(
-                auth=const.Y_API_SECRET,
-                folder_id=const.Y_API_FOLDER_ID
+        ya_classify = get_text_classify(title=title, text=text, subject_name=subject_name)
+
+        if ya_classify is not None:
+            result = serializer.get_dict_by_object_recursive(ya_classify)
+
+            news_classify_requests.insert_classify(
+                news_hash=news_classify_requests.get_news_hash(
+                    news_title=title,
+                    news_text=text,
+                ),
+                subject_name=subject_name,
+                classify=result,
             )
 
-            # Объединение заголовка и текста новости
-            news_text = f'{title}\n{text}'
-            labels = ['положительная', 'отрицательная', 'нейтральная']
-            labels_str = ', '.join([f'"{label}"' for label in labels])
+            logger.log_info(
+                message='NEWS RATED BY YANDEX',
+                output={
+                    'rate': serializer.get_dict_by_object_recursive(
+                        data=get_news_rate_absolute_by_ya_classify(result)
+                    ),
+                    'result': result,
+                },
+            )
 
-            # Формирование описания задачи с учетом названия компании
-            task_description = (f'''
+            return result
+
+    return None
+
+
+@throttle_decorator.throttle_once_per_second
+def get_text_classify(title: str, text: str, subject_name: str) -> FewShotTextClassifiersModelResult or None:
+    try:
+        sdk = YCloudML(
+            auth=const.Y_API_SECRET,
+            folder_id=const.Y_API_FOLDER_ID
+        )
+
+        # Объединение заголовка и текста новости
+        news_text = f'{title}\n{text}'
+        labels = ['положительная', 'отрицательная', 'нейтральная']
+        labels_str = ', '.join([f'"{label}"' for label in labels])
+
+        # Формирование описания задачи с учетом названия компании
+        task_description = (f'''
                 Я передам тебе новость, которая связана с организацией "{subject_name}". 
                 Твоя задача — классифицировать эту новость как {labels_str} 
                 в контексте того, как она может отразиться на стоимости ценных бумаг организации. 
@@ -90,41 +121,23 @@ def get_text_classify_db_cache(title: str, text: str, subject_name: str) -> FewS
                 — может повлиять на спрос и предложение на рынке акций.
             ''')
 
-            # Настройка модели классификации
-            model = sdk.models.text_classifiers(model_name='yandexgpt-lite', model_version='latest').configure(
-                task_description=task_description,
-                labels=['положительная', 'отрицательная', 'нейтральная'],
-            )
+        # Настройка модели классификации
+        model = sdk.models.text_classifiers(model_name='yandexgpt-lite', model_version='latest').configure(
+            task_description=task_description,
+            labels=['положительная', 'отрицательная', 'нейтральная'],
+        )
 
-            ya_resp: FewShotTextClassifiersModelResult = model.run(news_text)
+        ya_resp: FewShotTextClassifiersModelResult = model.run(news_text)
 
-            if ya_resp and len(ya_resp) >= 3:
-                result = serializer.get_dict_by_object_recursive(ya_resp)
+        if ya_resp and len(ya_resp) >= 3 and get_news_rate_absolute_by_ya_classify(classify=serializer.get_dict_by_object_recursive(ya_resp)) is not None:
+            return ya_resp
 
-                if result and get_news_rate_absolute_by_ya_classify(result) is not None:
-                    news_classify_requests.insert_classify(
-                        news_hash=news_classify_requests.get_news_hash(
-                            news_title=title,
-                            news_text=text,
-                        ),
-                        subject_name=subject_name,
-                        classify=ya_resp,
-                    )
-
-                    logger.log_info(
-                        message='NEWS RATED BY YANDEX',
-                        output={
-                            'rate': serializer.get_dict_by_object_recursive(
-                                data=get_news_rate_absolute_by_ya_classify(result)
-                            ),
-                            'source': result,
-                        },
-                    )
-
-                    return result
-
-        except Exception as e:
-            logger.log_error(method_name='get_text_classify_db_cache', error=e)
+    except Exception as e:
+        logger.log_error(method_name='get_text_classify', error=e, debug_info=serializer.to_json({
+            'title_cat_100': title[:100],
+            'text_cat_100': text[:100],
+            'subject_name': subject_name,
+        }))
 
     return None
 

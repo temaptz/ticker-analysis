@@ -61,3 +61,7 @@ def get_interval_sec_by_candle(interval: CandleInterval) -> int:
         return 30 * 24 * 3600
 
     return 24 * 3600
+
+
+def get_local_time_log_str() -> str:
+    return datetime.datetime.now(timezone('Europe/Moscow')).strftime('%Y-%m-%d_%H-%M-%S')

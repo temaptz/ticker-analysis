@@ -1,4 +1,5 @@
 import datetime
+from pytz import timezone
 from lib import docker, telegram
 
 def error_logger(func):
@@ -11,9 +12,9 @@ def error_logger(func):
     return wrapper
 
 
-def log_error(method_name: str, error: Exception = None) -> None:
-    date_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    error_str = f'[{date_str}] ERROR: {method_name}'
+def log_error(method_name: str, error: Exception = None, debug_info: str = None) -> None:
+    date_str = get_local_time_log_str()
+    error_str = f'[{date_str}] ERROR: {method_name}; DEBUG INFO: {debug_info}'
 
     if error:
         error_str += f' -> {error}'
@@ -25,5 +26,9 @@ def log_error(method_name: str, error: Exception = None) -> None:
 
 
 def log_info(message: str, output: any = None) -> None:
-    date_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    date_str = get_local_time_log_str()
     print(f'\033[94m[{date_str}] {message}\033[0m', output)
+
+
+def get_local_time_log_str() -> str:
+    return datetime.datetime.now(timezone('Europe/Moscow')).strftime('%Y-%m-%d_%H-%M-%S')

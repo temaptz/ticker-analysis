@@ -28,11 +28,16 @@ def instruments_list(request):
 def instrument_info(request):
     resp = None
     uid = request.GET.get('uid')
+    ticker = request.GET.get('ticker')
+    instrument = None
 
     if uid:
         instrument = instruments.get_instrument_by_uid(uid)
 
-        if instrument:
+    elif ticker:
+        instrument = instruments.get_instrument_by_ticker(ticker)
+
+    if instrument:
             resp = serializer.get_dict_by_object(instrument)
 
     response = HttpResponse(json.dumps(resp))

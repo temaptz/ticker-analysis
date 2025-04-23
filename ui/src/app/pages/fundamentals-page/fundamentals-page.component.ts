@@ -1,6 +1,7 @@
-import { Component, effect, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
@@ -21,23 +22,25 @@ export class FundamentalsPageComponent {
 
   isLoadedInstrument = signal<boolean>(false);
   isLoadedHistory = signal<boolean>(false);
-  instrumentUid = signal<string>('');
+  ticker = signal<string>('');
   instrument = signal<Instrument | null>(null);
   history = signal<FundamentalsHistory[]>([]);
 
-  constructor(
-    private appService: ApiService,
-    private activatedRoute: ActivatedRoute
-  ) {
-    this.instrumentUid.set(
-      this.activatedRoute.snapshot.params['instrumentUid']
+  private apiService = inject(ApiService);
+  private activatedRoute = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    this.ticker.set(
+      this.activatedRoute.snapshot.params['ticker']
     );
 
     effect(() => {
-      this.appService.getInstrument(
-        this.instrumentUid(),
-      )
-        .pipe(finalize(() => this.isLoadedInstrument.set(true)))
+      this.apiService.getInstrument(undefined, this.ticker())
+        .pipe(
+          finalize(() => this.isLoadedInstrument.set(true)),
+          takeUntilDestroyed(this.destroyRef),
+        )
         .subscribe(resp => this.instrument.set(resp));
     });
 
@@ -45,8 +48,11 @@ export class FundamentalsPageComponent {
       const assetUid = this.instrument()?.asset_uid
 
       if (assetUid) {
-        this.appService.getInstrumentFundamentalsHistory(assetUid)
-          .pipe(finalize(() => this.isLoadedHistory.set(true)))
+        this.apiService.getInstrumentFundamentalsHistory(assetUid)
+          .pipe(
+            finalize(() => this.isLoadedHistory.set(true)),
+            takeUntilDestroyed(this.destroyRef),
+          )
           .subscribe(resp => this.history.set(resp));
       }
     });

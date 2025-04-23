@@ -1,5 +1,6 @@
-import { Component, effect, input,  signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, forkJoin, of } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
@@ -29,17 +30,21 @@ export class NewsComplexComponent {
     [startOfDay(subDays(new Date(), 27)), endOfDay(subDays(new Date(), 21))],
   ];
 
-  constructor(
-    private appService: ApiService,
-  ) {
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
     effect(() => forkJoin([
       ...this.weeks.map(([from, to]) => forkJoin([
-          this.appService.getInstrumentNewsRate(this.instrumentUid(), from, to),
+          this.apiService.getInstrumentNewsRate(this.instrumentUid(), from, to),
           of<[Date, Date]>([from, to]),
         ])
       )
     ])
-      .pipe(finalize(() => this.isLoaded.set(true)))
+      .pipe(
+        finalize(() => this.isLoaded.set(true)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((resp: [NewsRateResponse | null, [Date, Date]][]) => {
         this.weeksResponse.set(resp.map(i => {
           const keywords = resp?.find(j => j?.[0]?.keywords?.length)?.[0]?.keywords ?? [];

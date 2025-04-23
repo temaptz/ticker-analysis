@@ -1,10 +1,9 @@
 import os
-import datetime
 import requests
 import json
 import urllib.parse
 import const
-from lib import telegram, utils, logger
+from lib import telegram, utils, logger, serializer, date_utils
 from lib.db_2 import db_utils, backup
 
 
@@ -15,7 +14,7 @@ def upload_db_backup() -> None:
 
     db_utils.optimize_db()
 
-    db_dump_file_name = f'db_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.dump'
+    db_dump_file_name = f'db_{date_utils.get_local_time_log_str()}.dump'
     db_dump_file_path = db_dump_file_name
 
     backup.backup_database(dump_file_path=db_dump_file_path)
@@ -33,6 +32,14 @@ def upload_db_backup() -> None:
 def upload_file(file_path: str, file_name: str) -> requests.Response or None:
     print('BEFORE UPLOAD BACKUP')
     file_path_on_ya_disk = f'/ticker-analysis-backup/{file_name}'
+    file_size = utils.get_file_size_readable(filepath=file_path)
+
+    telegram.send_message(message='Начата загрузка файла: '+serializer.to_json({
+        'file_path': file_path,
+        'file_name': file_name,
+        'file_path_on_ya_disk': file_path_on_ya_disk,
+        'file_size': file_size,
+    }))
 
     url_resource = 'https://cloud-api.yandex.net/v1/disk/resources/upload?%s' % urllib.parse.urlencode({
         'path': file_path_on_ya_disk
@@ -44,7 +51,6 @@ def upload_file(file_path: str, file_name: str) -> requests.Response or None:
     ).json()
 
     with open(file_path, 'rb') as file:
-        file_size = utils.get_file_size_readable(filepath=file_path)
         print('FILE CREATED, BEFORE BACKUP UPLOAD', file_size)
         response_upload = requests.put(response_resource['href'], files={'file': file})
 

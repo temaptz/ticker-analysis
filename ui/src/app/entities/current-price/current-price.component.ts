@@ -1,5 +1,6 @@
-import { Component, effect, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
@@ -19,12 +20,16 @@ export class CurrentPriceComponent {
   isLoaded = signal<boolean>(false);
   price = signal<number | null>(null);
 
-  constructor(
-    private appService: ApiService,
-  ) {
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
     effect(() => {
-      this.appService.getInstrumentLastPrice(this.instrumentUid())
-        .pipe(finalize(() => this.isLoaded.set(true)))
+      this.apiService.getInstrumentLastPrice(this.instrumentUid())
+        .pipe(
+          finalize(() => this.isLoaded.set(true)),
+          takeUntilDestroyed(this.destroyRef),
+        )
         .subscribe(price => this.price.set(price));
     });
   }

@@ -35,11 +35,18 @@ export class ApiService {
     return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`);
   }
 
-  getInstrument(uid: string): Observable<Instrument[]> {
+  getInstrument(uid?: string, ticker?: string): Observable<Instrument> {
     let params = new HttpParams();
-    params = params.set('uid', uid);
 
-    return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instrument`, {params: params});
+    if (uid) {
+      params = params.set('uid', uid);
+    }
+
+    if (ticker) {
+      params = params.set('ticker', ticker);
+    }
+
+    return this.http.get<Instrument>(`${this.apiUrl}/instrument`, {params: params});
   }
 
   getInstrumentLastPrice(uid: string): Observable<InstrumentLastPriceResp> {
@@ -47,14 +54,6 @@ export class ApiService {
     params = params.set('uid', uid);
 
     return this.http.get<InstrumentLastPriceResp>(`${this.apiUrl}/instrument/last_price`, {params: params});
-  }
-
-  getInstrumentPriceByDate(uid: string, date: Date): Observable<number> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('date', date.toJSON());
-
-    return this.http.get<number>(`${this.apiUrl}/instrument/price_by_date`, {params: params});
   }
 
   getInstrumentHistoryPrices(uid: string, days: number, interval: CandleInterval): Observable<InstrumentHistoryPrice[]> {

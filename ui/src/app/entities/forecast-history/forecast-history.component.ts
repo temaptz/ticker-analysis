@@ -1,5 +1,6 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, Input, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
@@ -9,11 +10,11 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 
 
 @Component({
-    selector: 'forecast-history',
+  selector: 'forecast-history',
   imports: [CommonModule, PreloaderComponent, PriceFormatPipe],
-    providers: [],
-    templateUrl: './forecast-history.component.html',
-    styleUrl: './forecast-history.component.scss'
+  providers: [],
+  templateUrl: './forecast-history.component.html',
+  styleUrl: './forecast-history.component.scss'
 })
 export class ForecastHistoryComponent implements OnInit {
 
@@ -23,13 +24,15 @@ export class ForecastHistoryComponent implements OnInit {
   history = signal<InstrumentForecastsHistory[]>([]);
   getPriceByQuotation = getPriceByQuotation;
 
-  constructor(
-    private appService: ApiService,
-  ) {}
+  private apiService = inject(ApiService);
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.appService.getInstrumentHistoryForecasts(this.instrumentUid)
-      .pipe(finalize(() => this.isLoaded.set(true)))
+    this.apiService.getInstrumentHistoryForecasts(this.instrumentUid)
+      .pipe(
+        finalize(() => this.isLoaded.set(true)),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((resp: InstrumentForecastsHistory[]) => this.history.set(resp));
   }
 

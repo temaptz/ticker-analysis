@@ -1,6 +1,7 @@
 @defer (when isLoaded()) {
-  <ng-container *ngIf="instrument() as instr">
+  @let instr = instrument();
 
+  @if (instr) {
     <div class="flex align-items-center">
       <instrument-logo [instrumentUid]="instr.uid"></instrument-logo>
 
@@ -17,7 +18,7 @@
 
             <fundamentals
               *ngIf="instr.asset_uid as asset_uid"
-              [instrumentUid]="instr.uid"
+              [ticker]="instr.ticker"
               [instrumentAssetUid]="asset_uid"
             ></fundamentals>
           </td>
@@ -61,21 +62,21 @@
           </td>
         </tr>
 
-<!--        <tr>-->
-<!--          <td colspan="3">-->
-<!--            <h5>История за 3 года</h5>-->
+        <!--        <tr>-->
+        <!--          <td colspan="3">-->
+        <!--            <h5>История за 3 года</h5>-->
 
-<!--            <div class="graph-container">-->
-<!--              <graph-->
-<!--                width="100%"-->
-<!--                height="600px"-->
-<!--                [instrumentUid]="instr.uid"-->
-<!--                [days]="365 * 3"-->
-<!--                [interval]="candleInterval.CANDLE_INTERVAL_WEEK"-->
-<!--              ></graph>-->
-<!--            </div>-->
-<!--          </td>-->
-<!--        </tr>-->
+        <!--            <div class="graph-container">-->
+        <!--              <graph-->
+        <!--                width="100%"-->
+        <!--                height="600px"-->
+        <!--                [instrumentUid]="instr.uid"-->
+        <!--                [days]="365 * 3"-->
+        <!--                [interval]="candleInterval.CANDLE_INTERVAL_WEEK"-->
+        <!--              ></graph>-->
+        <!--            </div>-->
+        <!--          </td>-->
+        <!--        </tr>-->
 
         <tr>
           <td colspan="3">
@@ -124,7 +125,7 @@
         </tr>
       </tbody>
     </table>
-  </ng-container>
+  }
 }
 @placeholder {
   <preloader></preloader>

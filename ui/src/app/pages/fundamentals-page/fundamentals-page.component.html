@@ -1,20 +1,22 @@
 <div class="page">
   @defer (when isLoadedInstrument()) {
-    <ng-container>
-      <div class="logo">
-        <instrument-logo [instrumentUid]="instrument().uid"></instrument-logo>
+    @let instr = instrument();
 
-        <h3>{{ instrument().name }}</h3>
+    @if (instr) {
+      <div class="logo">
+        <instrument-logo [instrumentUid]="instr.uid"></instrument-logo>
+
+        <h3>{{ instr.name }}</h3>
       </div>
 
       <div class="current">
         <h6>Текущие</h6>
 
         <fundamentals
-          [instrumentAssetUid]="instrument().asset_uid"
+          [instrumentAssetUid]="instr.asset_uid"
         ></fundamentals>
       </div>
-    </ng-container>
+    }
   }
   @placeholder {
     <preloader></preloader>
