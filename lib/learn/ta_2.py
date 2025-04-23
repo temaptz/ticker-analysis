@@ -5,7 +5,7 @@ import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
 import const
-from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types, yandex_disk
+from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types, yandex_disk, docker
 from lib.learn import learn_utils
 
 
@@ -430,6 +430,9 @@ def get_model_file_path():
 
 
 def get_data_frame_csv_file_path():
+    if docker.is_docker():
+        return '/app/ta-2.csv'
+
     return utils.get_file_abspath_recursive('ta-2.csv', 'data_frames')
 
 
