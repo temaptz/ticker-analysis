@@ -1,8 +1,3 @@
-import sys
-import datetime
-
-from tinkoff.invest.schemas import IndicatorType
-
 from lib import (
     telegram,
     docker,
@@ -14,17 +9,8 @@ from lib import (
     predictions,
     predictions_save,
     utils,
-    news_save,
-    date_utils,
-    db_2,
-    yandex_disk,
-    cache,
-    instruments,
-    invest_calc,
-    tech_analysis,
 )
 from lib.db_2 import init, db_utils
-from lib.learn import ta_1_2, ta_2
 
 init.init_db()
 db_utils.optimize_db()
@@ -37,6 +23,8 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
+
+    news.news_save.save_news()
 
     # for i in instruments.get_instruments_white_list():
     #     print(tech_analysis.get_tech_analysis(

@@ -5,7 +5,8 @@ import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
 import const
-from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types, yandex_disk, docker, news_rate_v1
+from lib import utils, instruments, forecasts, fundamentals, news, cache, csv, date_utils, serializer, redis_utils, types, yandex_disk, docker
+from lib.news import news_rate_v1
 from lib.learn import learn_utils
 
 

@@ -1,6 +1,6 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 import pytz
-from lib import forecasts_save, predictions_save, news_save, yandex_disk, process_task, fundamentals_save
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news
 
 
 def start_schedule() -> None:
@@ -48,7 +48,7 @@ def start_schedule() -> None:
 
     # Сбор свежих новостей
     scheduler.add_job(
-        news_save.save_news,
+        news.news_save.save_news,
         'cron',
         hour='*/3',
         minute=0,

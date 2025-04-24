@@ -1,6 +1,6 @@
-from lib.db_2 import news_db, db_utils
-from lib.news_parsers import (rbc, rg, finam)
-from lib import telegram, types
+from lib.db_2 import news_db
+from lib.news.parsers import rbc, rg, finam, lenta
+from lib import telegram
 
 
 def save_news():
@@ -12,6 +12,7 @@ def save_news():
     saved_news_counter += save_news_from_source_to_db('RBC', rbc.get_news())
     saved_news_counter += save_news_from_source_to_db('RG', rg.get_news())
     saved_news_counter += save_news_from_source_to_db('FINAM', finam.get_news())
+    saved_news_counter += save_news_from_source_to_db('LENTA', lenta.get_news())
 
     print('TOTAL SAVED '+str(saved_news_counter)+' NEWS')
     telegram.send_message('Всего сохранено '+str(saved_news_counter)+' новостей')

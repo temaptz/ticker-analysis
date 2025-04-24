@@ -1,4 +1,4 @@
-from lib import cache, yandex_disk, forecasts_save, predictions_save, news_save, fundamentals_save, docker, counter, redis_utils, telegram
+from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news
 from lib.db_2 import db_utils
 
 
@@ -32,7 +32,7 @@ def process_single_update(text: str = None) -> None:
         predictions_save.save_daily_predictions()
 
     elif text == '/news':
-        news_save.save_news()
+        news.news_save.save_news()
 
     elif text == '/optimize':
         telegram.send_message('Начало оптимизации БД')

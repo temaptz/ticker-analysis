@@ -1,10 +1,8 @@
 import datetime
 
-from django.db.models.expressions import result
-
-import const
 from lib.db_2 import news_db
-from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types, news_rate_v1
+from lib import instruments, yandex, cache, serializer, utils, logger
+from lib.news import news_rate_v1
 
 
 class NewsSourceRated:
