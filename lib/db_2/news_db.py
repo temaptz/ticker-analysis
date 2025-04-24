@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session, declarative_base
 import datetime
 from typing import Type
 
-from lib.db.fundamentals_db import serialize
 from lib.db_2 import connection
 from lib import logger, serializer
 

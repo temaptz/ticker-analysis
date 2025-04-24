@@ -1,5 +1,6 @@
 import datetime
 from typing import Optional
+import sqlalchemy
 from sqlalchemy import Column, DateTime, String, select
 from sqlalchemy.orm import declarative_base, Session
 from lib.db_2.connection import get_engine
@@ -32,8 +33,23 @@ def get_response(request: str) -> Optional[str]:
 
 
 @logger.error_logger
-def insert_response(request: str, response: str, date=datetime.datetime.now(datetime.UTC)) -> None:
+def insert_response(request: str, response: str, date: datetime.datetime = None) -> None:
+    if date is None:
+        date = datetime.datetime.now(datetime.timezone.utc)
+
+    insert_response = sqlalchemy.insert(GptRequest).values(
+        request=request,
+        response=response,
+        date=date
+    ).on_conflict_do_update(
+        index_elements=['request'],  # предполагается, что поле request — primary key или unique
+        set_={
+            'response': response,
+            'date': date
+        }
+    )
+
+
     with Session(engine) as session:
-        record = GptRequest(request=request, response=response, date=date)
-        session.add(record)
+        session.execute(insert_response)
         session.commit()

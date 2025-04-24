@@ -156,16 +156,6 @@ export class ApiService {
     return this.http.get<TechAnalysisResp>(`${this.apiUrl}/instrument/tech_analysis/graph`, {params: params});
   }
 
-  getInstrumentNews(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsResponse> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('start_date', startDate.toJSON());
-    params = params.set('end_date', endDate.toJSON());
-    params = params.set('is_with_content', isWithContent ? 'true' : 'false');
-
-    return this.http.get<NewsResponse>(`${this.apiUrl}/instrument/news`, {params: params});
-  }
-
   getInstrumentNewsListRated(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsListRatedResponse> {
     let params = new HttpParams();
     params = params.set('uid', uid);

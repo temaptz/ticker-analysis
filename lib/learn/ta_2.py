@@ -5,7 +5,7 @@ import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
 import const
-from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types, yandex_disk, docker
+from lib import utils, instruments, forecasts, fundamentals, news, cache, yandex, csv, date_utils, serializer, redis_utils, types, yandex_disk, docker, news_rate_v1
 from lib.learn import learn_utils
 
 
@@ -164,7 +164,7 @@ class Ta2LearningCard:
             end_date=end_date,
         )
         news_ids = [n.news_uid for n in news_list or []]
-        rate = news.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
+        rate = news_rate_v1.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
 
         if rate and (rate.positive_percent + rate.negative_percent + rate.neutral_percent) > 0:
             result = types.NewsRate(

@@ -28,7 +28,7 @@ services:
     depends_on:
       - redis
       - postgres
-    restart: unless-stopped
+    restart: no
 
   apiserver:
     build:
@@ -98,22 +98,25 @@ services:
     volumes:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-#    ports:
-#      - "6379:6379"
+    ports:
+      - "6379:6379"
     restart: unless-stopped
 
-  gpt:
-    image: ghcr.io/huggingface/text-generation-inference:latest
-    container_name: gpt
+#  gpt:
+#    image: ghcr.io/huggingface/text-generation-inference:2.3.0
+#    container_name: gpt
 #    ports:
-#      - "8080:8080"
-    environment:
-      - MODEL_ID=mistralai/Mistral-7B-Instruct
-      - MAX_INPUT_LENGTH=1024
-      - MAX_TOTAL_TOKENS=2048
-    volumes:
-      - ./gpt_learn_models:/data
-    restart: unless-stopped
+#      - "8080:80"
+#    environment:
+#      - MODEL_ID=hugging-quants/gemma-2-9b-it-AWQ-INT4
+#      - QUANTIZE=awq
+#      - MAX_INPUT_LENGTH=4000
+#      - MAX_TOTAL_TOKENS=4096
+#      - NUM_SHARD=1
+#    volumes:
+#      - ./phi3_learn_models:/data
+#    restart: unless-stopped
+
 
 volumes:
   pg_data:

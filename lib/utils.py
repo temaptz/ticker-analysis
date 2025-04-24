@@ -3,6 +3,8 @@ import os
 import re
 from tinkoff.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
 import hashlib
+import re
+from html import unescape
 from lib import date_utils, logger
 
 
@@ -102,3 +104,28 @@ def filter_array_by_date_interval(source: list, date_field: str, interval: Candl
             last_date = item_date
 
     return filtered
+
+
+def clean_news_text_for_llm(title: str, text: str, max_chars: int = 28000) -> str or None:
+    if not isinstance(title, str) or not isinstance(text, str):
+        return None
+
+    result = f'{title} {text}'
+
+    # Удаление base64 inline изображений
+    result = re.sub(r'<img[^>]+src=["\']data:image/[^"\']+["\'][^>]*>', '', result, flags=re.IGNORECASE)
+
+    # Удаление всех остальных HTML-тегов
+    result = re.sub(r'<[^>]+>', '', result)
+
+    # Преобразование HTML-сущностей в нормальные символы
+    result = unescape(result)
+
+    # Удаление лишних пробелов и переносов строк
+    result = re.sub(r'\s+', ' ', result).strip()
+
+    # Усечём текст до лимита символов (ориентировочно <8000 токенов)
+    if len(result) > max_chars:
+        result = result[:max_chars].rsplit(' ', 1)[0]  # чтобы не обрывать слово посередине
+
+    return result

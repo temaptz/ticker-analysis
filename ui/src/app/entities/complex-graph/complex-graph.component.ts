@@ -46,6 +46,7 @@ export class ComplexGraphComponent {
   isShowOperations = input<boolean>(false);
   isShowForecasts = input<boolean>(false);
   isShowTechAnalysis = input<boolean>(false);
+  isShowLegend = input<boolean>(false);
 
   isLoadedHistoryPrice = signal<boolean>(true);
   isLoadedPredictions = signal<boolean>(true);
@@ -398,7 +399,7 @@ export class ComplexGraphComponent {
     return {
       ...ECHARTS_MAIN_OPTIONS,
       legend: {
-        show: true,
+        show: this.isShowLegend(),
       },
       series,
     }

@@ -31,7 +31,3 @@ def restore_database(dump_file_path: str):
         '-f', dump_file_path
     ]
     subprocess.run(cmd, env={'PGPASSWORD': const.DB_PASSWORD}, check=True)
-
-@logger.error_logger
-def drop_database():
-    db_2.migrate_sqlite.drop_tables()
