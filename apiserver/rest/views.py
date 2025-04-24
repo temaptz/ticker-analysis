@@ -5,7 +5,7 @@ from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, gpt_client
 from lib.learn import ta_1_2, ta_2
 import json
 
@@ -431,6 +431,22 @@ def instrument_brand(request):
 
     if resp:
         patch_cache_control(response, public=True, max_age=3600 * 24 * 30)
+
+    return response
+
+
+@api_view(['GET'])
+def gpt(request):
+    resp = None
+    text = request.GET.get('text')
+
+    if text:
+        resp = gpt_client.generate_text_llama(request=text)
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    # if resp:
+    #     patch_cache_control(response, public=True, max_age=3600 * 24 * 30)
 
     return response
 

@@ -159,7 +159,7 @@ class Ta2LearningCard:
         end_date = self.date - datetime.timedelta(days=days_from)
 
         news_list = news.get_news_by_instrument_uid(
-            uid=self.instrument.uid,
+            instrument_uid=self.instrument.uid,
             start_date=start_date,
             end_date=end_date,
         )

@@ -38,6 +38,7 @@ services:
     volumes:
       - ./db.sqlite:/app/db.sqlite
       - /etc/is_my_prod:/container_host_is_prod:ro
+      - ./llm_models:/app/llm_models
 #    ports:
 #      - "8000:8000"
     command:

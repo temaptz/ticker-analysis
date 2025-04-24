@@ -56,15 +56,15 @@ def get_news_rate_by_instrument_uid(
 
 @logger.error_logger
 def get_news_by_instrument_uid(
-        uid: str,
+        instrument_uid: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime
-):
+) -> [news_db.News]:
     start_date_beginning_day = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
     end_date_end_day = start_date.replace(hour=23, minute=59, second=59, microsecond=999)
     cache_key = utils.get_md5(serializer.to_json({
         'method': 'get_news_by_instrument_uid',
-        'uid': uid,
+        'instrument_uid': instrument_uid,
         'start_date': start_date_beginning_day,
         'end_date': end_date_end_day,
     }))
@@ -73,7 +73,7 @@ def get_news_by_instrument_uid(
     if cached:
         return cached
 
-    keywords = get_keywords_by_instrument_uid(uid)
+    keywords = get_keywords_by_instrument_uid(instrument_uid=instrument_uid)
 
     response = news_db.get_news_by_date_keywords_fts(
         start_date=start_date,
@@ -84,12 +84,14 @@ def get_news_by_instrument_uid(
     if response:
         cache.cache_set(key=cache_key, value=response, ttl=3600*24*14)
 
-    return response
+        return response
+
+    return []
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 365)
-def get_keywords_by_instrument_uid(uid: str) -> list[str]:
-    i = instruments.get_instrument_by_uid(uid)
+def get_keywords_by_instrument_uid(instrument_uid: str) -> list[str]:
+    i = instruments.get_instrument_by_uid(instrument_uid)
     response = []
 
     for word in yandex.get_keywords(legal_name=i.name):

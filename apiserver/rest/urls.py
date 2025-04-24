@@ -26,4 +26,5 @@ urlpatterns = [
     path('instrument/brand', views.instrument_brand),
     path('instrument/invest_calc', views.instrument_invest_calc),
     path('instrument/tech_analysis/graph', views.tech_analysis_graph),
+    path('gpt', views.gpt),
 ]

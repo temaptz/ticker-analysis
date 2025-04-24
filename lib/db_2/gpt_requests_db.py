@@ -37,7 +37,7 @@ def insert_response(request: str, response: str, date: datetime.datetime = None)
     if date is None:
         date = datetime.datetime.now(datetime.timezone.utc)
 
-    insert_response = sqlalchemy.insert(GptRequest).values(
+    stmt = sqlalchemy.insert(GptRequest).values(
         request=request,
         response=response,
         date=date
@@ -45,11 +45,11 @@ def insert_response(request: str, response: str, date: datetime.datetime = None)
         index_elements=['request'],  # предполагается, что поле request — primary key или unique
         set_={
             'response': response,
-            'date': date
+            'date': date,
         }
     )
 
 
     with Session(engine) as session:
-        session.execute(insert_response)
+        session.execute(stmt)
         session.commit()

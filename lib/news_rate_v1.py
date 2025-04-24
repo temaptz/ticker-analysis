@@ -68,7 +68,7 @@ def get_news_rate_by_instrument_uid(
         keywords: [str],
 ):
     response = None
-    news_uid_list = [n.news_uid for n in news_list]
+    news_uid_list = [n.news_uid for n in news_list or []]
 
     yandex_absolute_rate: types.NewsRateAbsoluteYandex = get_news_rate_absolute(
         news_uid_list=news_uid_list,
