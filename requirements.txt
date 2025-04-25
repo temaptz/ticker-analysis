@@ -20,5 +20,3 @@ traitlets
 psycopg2-binary
 sqlalchemy
 matplotlib
-telethon
-llama-cpp-python

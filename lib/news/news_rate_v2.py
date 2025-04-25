@@ -32,7 +32,13 @@ def get_text_rate(text: str, subject_name: str) -> types.NewsRate2 or None:
         prompt=get_prompt(news_text=text, subject_name=subject_name)
     )
 
-    print('RESP LLM', resp)
+    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('GPT REQUEST\n', get_prompt(news_text=text, subject_name=subject_name))
+    print('GPT RESPONSE\n', resp)
+    print('GPT PARAM PARSED sentiment\n', parse_rate_param(resp=resp, param_name='sentiment'))
+    print('GPT PARAM PARSED impact_strength\n', parse_rate_param(resp=resp, param_name='impact_strength'))
+    print('GPT PARAM PARSED mention_focus\n', parse_rate_param(resp=resp, param_name='mention_focus'))
+    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
     return None
 
@@ -55,3 +61,16 @@ mention_focus: [значение]
 Текст новости:
 {news_text}
 '''
+
+
+def parse_rate_param(resp: str, param_name: str) -> float or None:
+    if resp:
+        lines = resp.split('\n')
+        for line in lines:
+            if param_name in line:
+                try:
+                    value = float(line.split(':')[1].strip())
+                    return value
+                except (IndexError, ValueError):
+                    return None
+    return None

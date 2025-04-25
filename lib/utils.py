@@ -110,7 +110,7 @@ def clean_news_text_for_llm(title: str, text: str, max_chars: int = 28000) -> st
     if not isinstance(title, str) or not isinstance(text, str):
         return None
 
-    result = f'{title} {text}'
+    result = f'{title}\n{text}'
 
     # Удаление base64 inline изображений
     result = re.sub(r'<img[^>]+src=["\']data:image/[^"\']+["\'][^>]*>', '', result, flags=re.IGNORECASE)

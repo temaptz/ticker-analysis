@@ -1,0 +1,13 @@
+{
+  "host": "0.0.0.0",
+  "port": 8080,
+  "models": [
+    {
+      "model": "/app/models/DeepHermes-3-Llama-3-8B-F16.gguf",
+      "model_alias": "llama-3-8b",
+      "n_threads": 4,
+      "n_batch": 64,
+      "n_ctx": 8192
+    }
+  ]
+}

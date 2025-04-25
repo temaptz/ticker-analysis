@@ -15,4 +15,8 @@ RUN pip install llama-cpp-python[server]
 
 FROM requirements
 
-CMD ["python3", "-m", "llama_cpp.server", "--model", "/models/DeepHermes-3-Llama-3-8B-F16.gguf"]
+WORKDIR /app
+
+COPY ./config.json /app/config.json
+
+CMD ["python3", "-m", "llama_cpp.server", "--config_file", "/app/config.json"]

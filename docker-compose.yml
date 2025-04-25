@@ -30,6 +30,21 @@ services:
       - postgres
     restart: no
 
+  news_ranker:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    container_name: news_ranker
+    volumes:
+      - /etc/is_my_prod:/container_host_is_prod:ro
+    command:
+      - python
+      - news_ranker.py
+    depends_on:
+      - redis
+      - postgres
+    restart: no
+
   apiserver:
     build:
       context: .
@@ -98,25 +113,22 @@ services:
     volumes:
       - redis_data:/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-    ports:
-      - "6379:6379"
+#    ports:
+#      - "6379:6379"
     restart: unless-stopped
 
-#  gpt:
-#    image: ghcr.io/huggingface/text-generation-inference:2.3.0
-#    container_name: gpt
+  gpt:
+    build:
+      context: llm_service
+      dockerfile: Dockerfile
+    container_name: gpt
 #    ports:
-#      - "8080:80"
-#    environment:
-#      - MODEL_ID=hugging-quants/gemma-2-9b-it-AWQ-INT4
-#      - QUANTIZE=awq
-#      - MAX_INPUT_LENGTH=4000
-#      - MAX_TOTAL_TOKENS=4096
-#      - NUM_SHARD=1
-#    volumes:
-#      - ./phi3_learn_models:/data
-#    restart: unless-stopped
-
+#      - "8080:8080"
+    volumes:
+      - ./llm_models:/app/models
+    mem_limit: 24g
+    cpus: 4
+    restart: unless-stopped
 
 volumes:
   pg_data:

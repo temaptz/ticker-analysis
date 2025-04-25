@@ -1,25 +1,23 @@
 import requests
-import time
+from lib import logger, serializer
 
-def query_gpt_local(prompt: str, retries: int = 5) -> str:
-    url = 'http://localhost:8080/generate'
+@logger.error_logger
+def query_gpt_local(prompt: str) -> str or None:
+    url = 'http://gpt:8080/v1/completions'
     headers = {'Content-Type': 'application/json'}
     payload = {
-        'inputs': prompt,
-        'parameters': {
-            'max_new_tokens': 64,
-            'do_sample': False,
-        }
+        'prompt': prompt,
+        'model': 'llama-3-8b'
     }
 
-    for attempt in range(retries):
-        try:
-            response = requests.post(url, headers=headers, json=payload, timeout=None)
-            response.raise_for_status()
-            result = response.json()
-            return result['generated_text']  # или result['generated_texts'][0] если API менялось
-        except requests.exceptions.RequestException as e:
-            print(f'[QueryGPT] Attempt {attempt+1}/{retries} failed: {e}')
-            time.sleep(2)
+    response = requests.post(url, headers=headers, json=payload, timeout=None)
 
-    raise RuntimeError('Failed to get a response from GPT container after several retries.')
+    if response:
+        result = response.json()
+
+        if result and result['choices'] and result['choices'][0] and result['choices'][0]['text']:
+            logger.log_info(message='GPT RESPONSE USAGE', output=serializer.to_json(result['usage']))
+
+            return result['choices'][0]['text']
+
+    return None
