@@ -16,6 +16,7 @@ import {
   Instrument, InvestCalc, NewsRateResponse, InstrumentForecastsGraphItem, NewsListRatedResponse, TechAnalysisResp,
 } from '../../types';
 import { CandleInterval } from '../../enums';
+import { SortModeEnum } from '../types';
 
 
 @Injectable({
@@ -31,8 +32,13 @@ export class ApiService {
     private http: HttpClient,
   ) {}
 
-  getInstruments(): Observable<InstrumentInList[]> {
-    return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`);
+  getInstruments(sort: SortModeEnum): Observable<InstrumentInList[]> {
+    const params = new HttpParams({
+      fromObject: {
+        sort
+      }
+    })
+    return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`, {params});
   }
 
   getInstrument(uid?: string, ticker?: string): Observable<Instrument> {

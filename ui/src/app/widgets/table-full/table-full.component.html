@@ -1,3 +1,7 @@
+@if (!isLoaded()) {
+  <preloader></preloader>
+}
+
 <cdk-virtual-scroll-viewport
   *ngIf="dataSource"
   headerHeight="50"
@@ -133,6 +137,6 @@
   </table>
 </cdk-virtual-scroll-viewport>
 
-@if (!isLoaded()) {
-  <preloader></preloader>
-}
+<drawer
+  [(sort)]="sortTickers"
+></drawer>

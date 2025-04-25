@@ -63,7 +63,7 @@ class InvestCalc:
 
 
 @logger.error_logger
-def get_invest_calc_by_instrument_uid(instrument_uid: str):
+def get_invest_calc_by_instrument_uid(instrument_uid: str) -> dict or None:
     result = {
         'balance': None,
         'current_price': None,
@@ -83,7 +83,7 @@ def get_invest_calc_by_instrument_uid(instrument_uid: str):
         if balance_qty:
             operations = users.get_user_instrument_operations(instrument_figi=instrument.figi)
 
-            if operations and len(operations):
+            if operations and len(operations) > 0:
                 calc = InvestCalc(
                     operations=operations,
                     current_price=current_price,
@@ -98,7 +98,9 @@ def get_invest_calc_by_instrument_uid(instrument_uid: str):
                 result['avg_price'] = calc.get_average_price()
                 result['operations'] = operations
 
-    return result
+                return result
+
+    return None
 
 
 def is_recommend_to_buy(instrument_uid: str) -> bool:

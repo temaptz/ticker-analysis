@@ -36,7 +36,6 @@ services:
       dockerfile: Dockerfile-python-services
     container_name: apiserver
     volumes:
-      - ./db.sqlite:/app/db.sqlite
       - /etc/is_my_prod:/container_host_is_prod:ro
       - ./llm_models:/app/llm_models
 #    ports:

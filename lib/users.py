@@ -1,3 +1,4 @@
+import datetime
 from tinkoff.invest import (
     Client,
     constants,
@@ -9,7 +10,7 @@ from tinkoff.invest import (
     Instrument,
 )
 from const import TINKOFF_INVEST_TOKEN
-from lib import cache, instruments, utils, logger
+from lib import cache, instruments, utils, logger, invest_calc, predictions
 
 
 @cache.ttl_cache(ttl=3600)
@@ -109,6 +110,15 @@ def sort_instruments_by_balance(instruments_list: list[Instrument]) -> list[Inst
     return sorted(instruments_list, key=get_instrument_total_balance_for_sort, reverse=True)
 
 
+def sort_instruments_for_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=get_instrument_potential_perspective_for_sort, reverse=True)
+
+
+def sort_instruments_for_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=get_instrument_profit_for_sort, reverse=True)
+
+
+@cache.ttl_cache(ttl=3600)
 def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
     try:
         total_balance = get_user_instrument_balance(instrument_uid=instrument.uid)
@@ -123,4 +133,36 @@ def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
     except Exception as e:
         logger.log_error(method_name='get_instrument_total_balance_for_sort', error=e)
 
-    return 0
+    return float('-inf')
+
+
+@cache.ttl_cache(ttl=3600)
+def get_instrument_profit_for_sort(instrument: Instrument) -> float:
+    try:
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
+
+        if calc and calc['potential_profit_percent'] is not None:
+            return calc['potential_profit_percent']
+
+    except Exception as e:
+        logger.log_error(method_name='get_instrument_profit_for_sort', error=e)
+
+    return float('-inf')
+
+
+@cache.ttl_cache(ttl=3600)
+def get_instrument_potential_perspective_for_sort(instrument: Instrument) -> float:
+    try:
+        last_price = instruments.get_instrument_last_price_by_uid(uid=instrument.uid)
+        prediction_consensus = predictions.get_predictions_consensus(
+            instrument_uid=instrument.uid,
+            date_target=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
+        )
+
+        if last_price and prediction_consensus:
+            return prediction_consensus - last_price
+
+    except Exception as e:
+        logger.log_error(method_name='get_instrument_potential_perspective_for_sort', error=e)
+
+    return float('-inf')

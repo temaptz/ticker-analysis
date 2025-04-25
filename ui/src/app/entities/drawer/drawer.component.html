@@ -1,0 +1,20 @@
+<div
+  class="toggler"
+  (click)="handleToggleDrawer()"
+>🛠</div>
+
+<div
+  class="drawer"
+  [class.hidden]="!isDrawerOpen"
+>
+  <mat-button-toggle-group name="Сортировка" (change)="handleChangeSort($event)">
+    <mat-button-toggle
+      [checked]="sort() === sortModeEnum.Buy"
+      [value]="sortModeEnum.Buy"
+    >Покупка</mat-button-toggle>
+    <mat-button-toggle
+      [checked]="sort() === sortModeEnum.Sell"
+      [value]="sortModeEnum.Sell"
+    >Продажа</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -12,7 +12,7 @@ import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
-import { BalanceComponent } from '../../entities/balance/balance.component';
+import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PredictionComponent } from '../../entities/prediction/prediction.component';
 import { ForecastComponent } from '../../entities/forecast/forecast.component';
 import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
@@ -24,6 +24,8 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
+import { BalanceComponent } from '../../entities/balance/balance.component';
+import { SortModeEnum } from '../../shared/types';
 
 
 @Component({
@@ -34,7 +36,7 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     ScrollingModule,
     InstrumentLogoComponent,
     FundamentalsComponent,
-    BalanceComponent,
+    DrawerComponent,
     PredictionComponent,
     ForecastComponent,
     ForecastHistoryComponent,
@@ -49,14 +51,16 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     MatIconModule,
     NewsComplexComponent,
     PreloaderComponent,
+    BalanceComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',
   styleUrl: './table-full.component.scss'
 })
-export class TableFullComponent implements OnInit {
+export class TableFullComponent {
 
   isLoaded = signal<boolean>(false);
+  sortTickers = signal<SortModeEnum>(SortModeEnum.Buy)
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
 
   protected readonly CandleInterval = CandleInterval;
@@ -82,21 +86,23 @@ export class TableFullComponent implements OnInit {
 
   private destroyRef = inject(DestroyRef);
 
-  ngOnInit() {
-    this.loadInstrument();
-  }
+  constructor() {
+    effect(() => {
+      const sortTickers = this.sortTickers();
 
-  private loadInstrument(): void {
-    this.appService.getInstruments()
-      .pipe(
-        finalize(() => this.isLoaded.set(true)),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(resp => {
-        if (resp?.length) {
-          this.dataSource.data = resp;
-        }
-      });
+      this.dataSource.data = [];
+
+      this.appService.getInstruments(sortTickers)
+        .pipe(
+          finalize(() => this.isLoaded.set(true)),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(resp => {
+          if (resp?.length) {
+            this.dataSource.data = resp;
+          }
+        });
+    });
   }
 
 }

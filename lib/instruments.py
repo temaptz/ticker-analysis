@@ -17,13 +17,13 @@ def get_instruments_white_list() -> list[InstrumentResponse.instrument]:
     return result
 
 
-@cache.ttl_cache(ttl=60)
-def get_favorites():
-    with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-        return client.instruments.get_favorites().favorite_instruments
+# @cache.ttl_cache(ttl=60)
+# def get_favorites():
+#     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+#         return client.instruments.get_favorites().favorite_instruments
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 7)
+@cache.ttl_cache(ttl=3600 * 24 * 10)
 def get_instrument_by_uid(uid: str):
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
@@ -32,7 +32,7 @@ def get_instrument_by_uid(uid: str):
         ).instrument
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 7)
+@cache.ttl_cache(ttl=3600 * 24 * 10)
 def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(

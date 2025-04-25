@@ -1,4 +1,6 @@
 import datetime
+from typing import Any
+
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.utils.cache import patch_cache_control
@@ -12,13 +14,22 @@ import json
 
 @api_view(['GET'])
 def instruments_list(request):
-    instruments_list_sorted = users.sort_instruments_by_balance(
-        instruments_list=instruments.get_instruments_white_list()
-    )
+    sort = request.GET.get('sort')
 
-    response = HttpResponse(serializer.to_json(instruments_list_sorted))
+    sorted_list = instruments.get_instruments_white_list()
 
-    if len(instruments_list_sorted) != 0:
+    if sort and (sort == 1 or sort == '1'):
+        sorted_list = users.sort_instruments_for_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 2 or sort == '2'):
+        sorted_list = users.sort_instruments_for_sell(
+            instruments_list=sorted_list
+        )
+
+    response = HttpResponse(serializer.to_json(sorted_list))
+
+    if len(sorted_list) > 0:
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
 
     return response
@@ -402,7 +413,7 @@ def instrument_news_rates(request):
     end_date = utils.parse_json_date(request.GET.get('end_date'))
 
     if uid and start_date and end_date:
-        resp = news.get_news_rate_by_instrument_uid(
+        resp = news.news.get_news_rate_by_instrument_uid(
             instrument_uid=uid,
             start_date=start_date,
             end_date=end_date,
