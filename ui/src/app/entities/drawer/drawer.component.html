@@ -16,5 +16,13 @@
       [checked]="sort() === sortModeEnum.Sell"
       [value]="sortModeEnum.Sell"
     >Продажа</mat-button-toggle>
+    <mat-button-toggle
+      [checked]="sort() === sortModeEnum.Profit"
+      [value]="sortModeEnum.Profit"
+    >Рост</mat-button-toggle>
+    <mat-button-toggle
+      [checked]="sort() === sortModeEnum.MarketValue"
+      [value]="sortModeEnum.MarketValue"
+    >Стоимость портфеля</mat-button-toggle>
   </mat-button-toggle-group>
 </div>

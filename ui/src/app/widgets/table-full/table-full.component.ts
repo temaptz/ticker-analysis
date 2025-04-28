@@ -1,12 +1,12 @@
-import { Component, DestroyRef, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, tap } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList } from '../../types';
@@ -84,24 +84,18 @@ export class TableFullComponent {
 
   @ViewChild(MatSort) sort!: MatSort;
 
-  private destroyRef = inject(DestroyRef);
+  private instruments = toSignal(
+    toObservable(this.sortTickers).pipe(
+      tap(() => this.isLoaded.set(false)),
+      switchMap(sort => this.appService.getInstruments(sort)),
+      tap(() => this.isLoaded.set(true)),
+    ), {initialValue: []}
+  )
 
   constructor() {
     effect(() => {
-      const sortTickers = this.sortTickers();
-
-      this.dataSource.data = [];
-
-      this.appService.getInstruments(sortTickers)
-        .pipe(
-          finalize(() => this.isLoaded.set(true)),
-          takeUntilDestroyed(this.destroyRef)
-        )
-        .subscribe(resp => {
-          if (resp?.length) {
-            this.dataSource.data = resp;
-          }
-        });
+      const sortTickers = this.instruments();
+      this.dataSource.data = sortTickers ?? [];
     });
   }
 

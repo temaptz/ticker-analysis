@@ -9,7 +9,8 @@ def is_docker():
                     return True
 
     except Exception as e:
-        print('ERROR is_docker', e)
+        if e:
+            return False
 
     return False
 

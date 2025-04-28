@@ -1,9 +1,9 @@
 import requests
-from lib import logger, serializer
+from lib import logger, serializer, docker
 
 @logger.error_logger
 def query_gpt_local(prompt: str) -> str or None:
-    url = 'http://gpt:8080/v1/completions'
+    url = 'http://gpt:8080/v1/completions' if docker.is_docker() else 'http://localhost:8080/v1/completions'
     headers = {'Content-Type': 'application/json'}
     payload = {
         'prompt': prompt,

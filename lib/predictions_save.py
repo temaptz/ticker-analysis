@@ -1,7 +1,7 @@
 import datetime
 from lib import predictions, telegram, instruments, date_utils
-from lib.db_2 import predictions_ta_1_db, predictions_ta_1_1_db, predictions_ta_1_2_db, predictions_ta_2_db
-from lib.learn import ta_1_2, ta_2
+from lib.db_2 import predictions_db
+from lib.learn import ta_1_2, ta_2, const
 
 
 def save_daily_predictions():
@@ -28,9 +28,11 @@ def save_predictions_ta_1():
         if prediction:
             print('PREDICTION TA-1: ', prediction)
 
-            predictions_ta_1_db.insert_prediction(
-                uid=instrument.uid,
-                prediction=prediction
+            predictions_db.insert_prediction(
+                instrument_uid=instrument.uid,
+                prediction=prediction,
+                target_date=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30),
+                model_name=const.TA_1,
             )
 
             counter += 1
@@ -52,9 +54,11 @@ def save_predictions_ta_1_1():
         if prediction:
             print('PREDICTION TA-1_1: ', prediction)
 
-            predictions_ta_1_1_db.insert_prediction(
+            predictions_db.insert_prediction(
                 uid=instrument.uid,
-                prediction=prediction
+                prediction=prediction,
+                target_date=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30),
+                model_name=const.TA_1_1,
             )
 
             counter += 1
@@ -82,10 +86,11 @@ def save_predictions_ta_1_2():
             if prediction is not None:
                 print('PREDICTION TA-1_2: ', prediction, date)
 
-                predictions_ta_1_2_db.insert_prediction(
+                predictions_db.insert_prediction(
                     uid=instrument.uid,
                     prediction=prediction,
-                    target_date=date_today,
+                    target_date=date,
+                    model_name=const.TA_1_2,
                 )
 
                 counter += 1
@@ -113,10 +118,11 @@ def save_predictions_ta_2():
             if prediction is not None:
                 print('PREDICTION TA-2: ', prediction, date)
 
-                predictions_ta_2_db.insert_prediction(
+                predictions_db.insert_prediction(
                     uid=instrument.uid,
                     prediction=prediction,
-                    target_date=date_today,
+                    target_date=date,
+                    model_name=const.TA_2
                 )
 
                 counter += 1

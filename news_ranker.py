@@ -9,7 +9,7 @@ from lib import (
 print('IS DOCKER', docker.is_docker())
 print('IS PROD', docker.is_prod())
 
-if docker.is_docker():
+if True or docker.is_docker():
     for i in instruments.get_instruments_white_list():
         subject_name = yandex.get_human_name(legal_name=i.name)
         print(i.ticker, subject_name)
@@ -23,7 +23,8 @@ if docker.is_docker():
         print('NEWS LEN', len(news_list))
 
         for n in news_list:
-            rate = news.news_rate_v2.get_news_rate(
-                news_uid=[n.news_uid],
-                subject_name=subject_name,
-            )
+            if len(n.text) < 500:
+                rate = news.news_rate_v2.get_news_rate(
+                    news_uid=[n.news_uid],
+                    subject_name=subject_name,
+                )

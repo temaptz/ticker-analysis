@@ -115,6 +115,14 @@ def sort_instruments_for_buy(instruments_list: list[Instrument]) -> list[Instrum
 
 
 def sort_instruments_for_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=get_instrument_profit_percent_for_sort, reverse=True)
+
+
+def sort_instruments_cost(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=get_instrument_cost_for_sort, reverse=True)
+
+
+def sort_instruments_profit(instruments_list: list[Instrument]) -> list[Instrument]:
     return sorted(instruments_list, key=get_instrument_profit_for_sort, reverse=True)
 
 
@@ -137,7 +145,7 @@ def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_profit_for_sort(instrument: Instrument) -> float:
+def get_instrument_profit_percent_for_sort(instrument: Instrument) -> float:
     try:
         calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
 
@@ -164,5 +172,33 @@ def get_instrument_potential_perspective_for_sort(instrument: Instrument) -> flo
 
     except Exception as e:
         logger.log_error(method_name='get_instrument_potential_perspective_for_sort', error=e)
+
+    return float('-inf')
+
+
+@cache.ttl_cache(ttl=3600)
+def get_instrument_profit_for_sort(instrument: Instrument) -> float:
+    try:
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
+
+        if calc and calc['potential_profit'] is not None:
+            return calc['potential_profit']
+
+    except Exception as e:
+        logger.log_error(method_name='get_instrument_profit_for_sort', error=e)
+
+    return float('-inf')
+
+
+@cache.ttl_cache(ttl=3600)
+def get_instrument_cost_for_sort(instrument: Instrument) -> float:
+    try:
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
+
+        if calc and calc['market_value'] is not None:
+            return calc['market_value']
+
+    except Exception as e:
+        logger.log_error(method_name='get_instrument_cost_for_sort', error=e)
 
     return float('-inf')

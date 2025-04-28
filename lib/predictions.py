@@ -1,12 +1,13 @@
 import datetime
 
 from numpy.lib.utils import source
+from collections import defaultdict
 
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
-from lib.learn import ta_1_1, ta_1_2, ta_2
+from lib.learn import ta_1_1, ta_1_2, ta_2, const
 from lib import date_utils, logger, utils
-from lib.db_2 import predictions_ta_1_db, predictions_ta_1_1_db
+from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
 
@@ -40,10 +41,11 @@ def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: d
     try:
         result = list()
 
-        for i in predictions_ta_1_db.get_predictions_by_uid_date(
+        for i in predictions_db.get_predictions_by_uid_date(
             uid=uid,
             date_from=date_from - timedelta,
             date_to=date_to - timedelta,
+            model_name=const.TA_1,
         ):
             result.append({
                 'prediction': i.prediction,
@@ -62,10 +64,11 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
     try:
         result = list()
 
-        for i in predictions_ta_1_1_db.get_predictions_by_uid_date(
+        for i in predictions_db.get_predictions_by_uid_date(
                 uid=uid,
                 date_from=date_from - timedelta,
                 date_to=date_to - timedelta,
+                model_name=const.TA_1_1,
         ):
             result.append({
                 'prediction': i.prediction,
@@ -128,6 +131,34 @@ def get_prediction_ta_2_graph(uid: str, date_from: datetime.datetime, date_to: d
     except Exception as e:
         print('ERROR get_prediction_ta_2_graph_by_uid', e)
         return []
+
+
+@logger.error_logger
+def get_prediction_ta_2_history_graph(
+        uid: str,
+        date_from: datetime.datetime,
+        date_to: datetime.datetime,
+        interval: CandleInterval,
+) -> dict:
+    result = dict()
+
+    for prediction in predictions_db.get_predictions_by_uid_date(
+        uid=uid,
+        date_from=date_from,
+        date_to=date_to,
+        model_name=const.TA_2,
+    ):
+        key = prediction.date
+
+        if not result[key]:
+            result[key] = []
+
+        result[key].append({
+            'prediction': prediction.prediction,
+            'date': date_utils.parse_date(prediction.date),
+        })
+
+    return result
 
 
 @logger.error_logger

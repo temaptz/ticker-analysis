@@ -6,7 +6,8 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { map, Observable, of, switchMap, tap } from 'rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { combineLatest, map, of, switchMap, tap } from 'rxjs';
 import { addDays, endOfDay, isAfter, parseJSON, startOfDay, subDays } from 'date-fns';
 import * as echarts from 'echarts';
 import { ApiService } from '../../shared/services/api.service';
@@ -25,12 +26,12 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ComplexGraphControlComponent } from '../complex-graph-control/complex-graph-control.component';
 
 
 @Component({
   selector: 'complex-graph',
-  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent],
+  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent],
   providers: [PriceFormatPipe],
   templateUrl: './complex-graph.component.html',
   styleUrl: './complex-graph.component.scss'
@@ -38,16 +39,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class ComplexGraphComponent {
 
   instrumentUid = input.required<InstrumentInList['uid']>();
-  historyInterval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
-  daysHistory = input(90, { transform: numberAttribute });
-  daysFuture = input(90, { transform: numberAttribute });
+  interval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
+  historyDaysCount = input(90, { transform: numberAttribute });
+  futureDaysCount = input(90, { transform: numberAttribute });
   width = input<string>('450px');
   height = input<string>('150px');
   isShowOperations = input<boolean>(false);
   isShowForecasts = input<boolean>(false);
   isShowTechAnalysis = input<boolean>(false);
   isShowLegend = input<boolean>(false);
+  isShowControl = input<boolean>(true);
 
+  historyInterval = signal<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
+  daysHistory = signal<number>(90);
+  daysFuture = signal<number>(90);
   isLoadedHistoryPrice = signal<boolean>(true);
   isLoadedPredictions = signal<boolean>(true);
   isLoadedOperations = signal<boolean>(true);
@@ -55,11 +60,111 @@ export class ComplexGraphComponent {
   isLoadedTechAnalysis = signal<boolean>(true);
   isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis()));
 
-  historyPrices = signal<InstrumentHistoryPrice[]>([]);
-  predictionResp = signal<PredictionGraphResp | null>(null);
-  operations = signal<Operation[]>([]);
-  forecasts = signal<InstrumentForecastsGraphItem[]>([]);
-  techAnalysis = signal<TechAnalysisResp | null>(null);
+  historyPrices = toSignal<InstrumentHistoryPrice[]>(
+    combineLatest([
+      toObservable(this.instrumentUid),
+      toObservable(this.daysHistory),
+      toObservable(this.historyInterval),
+    ])
+      .pipe(
+        tap(() => this.isLoadedHistoryPrice.set(false)),
+        switchMap(([uid, historyDays, interval]) => this.appService.getInstrumentHistoryPrices(
+          uid,
+          historyDays,
+          interval
+        )),
+        tap(() => this.isLoadedHistoryPrice.set(true)),
+      )
+  );
+
+  predictionResp = toSignal<PredictionGraphResp | null>(
+    combineLatest([
+      toObservable(this.instrumentUid),
+      toObservable(this.daysHistory),
+      toObservable(this.daysFuture),
+      toObservable(this.historyInterval),
+    ])
+      .pipe(
+        tap(() => this.isLoadedPredictions.set(false)),
+        switchMap(([uid, historyDays, futureDays, interval]) => this.appService.getInstrumentPredictionGraph(
+          uid,
+          startOfDay(subDays(new Date(), historyDays)),
+          endOfDay(addDays(new Date(), futureDays)),
+          interval,
+        )),
+        tap(() => this.isLoadedPredictions.set(true)),
+      )
+  );
+
+  operations = toSignal<Operation[]>(
+    combineLatest([
+      toObservable(this.instrumentUid),
+      toObservable(this.daysHistory),
+      toObservable(this.isShowOperations),
+    ])
+      .pipe(
+        tap(() => this.isLoadedOperations.set(false)),
+        switchMap(([uid, daysHistory, isShowOperations]) => isShowOperations
+          ? this.appService.getInstrument(uid)
+            .pipe(
+              switchMap((instrument: Instrument) =>
+                this.appService.getInstrumentOperations(instrument.figi)
+              ),
+              map((operations: Operation[]) => {
+                const from = subDays(new Date(), daysHistory);
+                return operations.filter(i => isAfter(parseJSON(i.date), from));
+              }),
+            )
+          : of([])
+        ),
+        tap(() => this.isLoadedOperations.set(true)),
+      )
+  );
+
+  forecasts = toSignal<InstrumentForecastsGraphItem[]>(
+    combineLatest([
+      toObservable(this.daysHistory),
+      toObservable(this.daysFuture),
+      toObservable(this.historyInterval),
+      toObservable(this.isShowForecasts),
+    ])
+      .pipe(
+        tap(() => this.isLoadedForecasts.set(false)),
+        switchMap(([historyDays, futureDays, interval, isShowForecasts]) => isShowForecasts
+          ? this.appService.getInstrumentForecastsGraph(
+            this.instrumentUid(),
+            startOfDay(subDays(new Date(), historyDays)),
+            endOfDay(addDays(new Date(), futureDays)),
+            interval,
+          )
+          : of([])
+        ),
+        tap(() => this.isLoadedForecasts.set(true)),
+      )
+  );
+
+  techAnalysis = toSignal<TechAnalysisResp | null>(
+    combineLatest([
+      toObservable(this.instrumentUid),
+      toObservable(this.daysHistory),
+      toObservable(this.daysFuture),
+      toObservable(this.historyInterval),
+      toObservable(this.isShowTechAnalysis),
+    ])
+      .pipe(
+        tap(() => this.isLoadedTechAnalysis.set(false)),
+        switchMap(([uid, historyDays, futureDays, interval, isShowTechAnalysis]) => isShowTechAnalysis
+          ? this.appService.getInstrumentTechGraph(
+            uid,
+            startOfDay(subDays(new Date(), historyDays)),
+            endOfDay(addDays(new Date(), futureDays)),
+            interval
+          )
+          : of(null)
+        ),
+        tap(() => this.isLoadedTechAnalysis.set(true)),
+      )
+  );
 
   seriesHistoryPrice = computed<echarts.SeriesOption>(() => {
     const history = this.historyPrices();
@@ -405,127 +510,29 @@ export class ComplexGraphComponent {
     }
   });
 
-  private destroyRef = inject(DestroyRef);
+  private appService = inject(ApiService);
+  private priceFormatPipe = inject(PriceFormatPipe);
 
-  constructor(
-    private appService: ApiService,
-    private priceFormatPipe: PriceFormatPipe,
-  ) {
+  constructor() {
     effect(() => {
-      const uid = this.instrumentUid();
-      const historyDays = this.daysHistory();
-      const interval = this.historyInterval();
-
-      of(undefined)
-        .pipe(
-          tap(() => this.isLoadedHistoryPrice.set(false)),
-          switchMap(() => this.appService.getInstrumentHistoryPrices(
-            uid,
-            historyDays,
-            interval
-          )),
-          tap(() => this.isLoadedHistoryPrice.set(true)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe((resp: InstrumentHistoryPrice[]) => this.historyPrices.set(resp));
-    });
-
-    effect(() => {
-      const uid = this.instrumentUid();
-      const historyDays = this.daysHistory();
-      const futureDays = this.daysFuture();
-      const interval = this.historyInterval();
-
-      of(undefined)
-        .pipe(
-          tap(() => this.isLoadedPredictions.set(false)),
-          switchMap(() => this.appService.getInstrumentPredictionGraph(
-            uid,
-            startOfDay(subDays(new Date(), historyDays)),
-            endOfDay(addDays(new Date(), futureDays)),
-            interval,
-          )),
-          tap(() => this.isLoadedPredictions.set(true)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe((resp: PredictionGraphResp) => this.predictionResp.set(resp));
-    });
-
-    effect(() => {
-      const historyDays = this.daysHistory();
-      const isShowOperations = this.isShowOperations();
-
-      of(undefined)
-        .pipe(
-          tap(() => this.isLoadedOperations.set(false)),
-          switchMap(() => isShowOperations
-            ? this.appService.getInstrument(this.instrumentUid())
-              .pipe(
-                switchMap((instrument: Instrument) =>
-                  this.appService.getInstrumentOperations(instrument.figi)
-                ),
-                map((operations: Operation[]) => {
-                  const from = subDays(new Date(), historyDays);
-                  return operations.filter(i => isAfter(parseJSON(i.date), from));
-                }),
-              )
-            : of([])
-          ),
-          tap(() => this.isLoadedOperations.set(true)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe((resp: Operation[]) => this.operations.set(resp));
-    });
-
-    effect(() => {
-      const historyDays = this.daysHistory();
-      const futureDays = this.daysFuture();
-      const interval = this.historyInterval();
-      const isShowForecasts = this.isShowForecasts();
-
-      of(undefined)
-        .pipe(
-          tap(() => this.isLoadedForecasts.set(false)),
-          switchMap(() => isShowForecasts
-            ? this.appService.getInstrumentForecastsGraph(
-              this.instrumentUid(),
-              startOfDay(subDays(new Date(), historyDays)),
-              endOfDay(addDays(new Date(), futureDays)),
-              interval,
-            )
-            : of([])
-          ),
-          tap(() => this.isLoadedForecasts.set(true)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe((resp: InstrumentForecastsGraphItem[]) => this.forecasts.set(resp));
-    });
-
-    effect(() => {
-      const uid = this.instrumentUid();
-      const historyDays = this.daysHistory();
-      const futureDays = this.daysFuture();
-      const interval = this.historyInterval();
-      const isShowTechAnalysis = this.isShowTechAnalysis();
-
-      of(undefined)
-        .pipe(
-          tap(() => this.isLoadedTechAnalysis.set(false)),
-          switchMap(() => isShowTechAnalysis
-            ? this.appService.getInstrumentTechGraph(
-              uid,
-              startOfDay(subDays(new Date(), historyDays)),
-              endOfDay(addDays(new Date(), futureDays)),
-              interval
-            )
-            : of(null)
-          ),
-          tap(() => this.isLoadedTechAnalysis.set(true)),
-          takeUntilDestroyed(this.destroyRef),
-        )
-        .subscribe((resp: TechAnalysisResp | null) => this.techAnalysis.set(resp));
+      this.daysHistory.set(this.historyDaysCount());
+      this.historyInterval.set(this.interval());
+      this.daysFuture.set(this.futureDaysCount());
     });
   }
 
+  handleChangeControl(event: {historyDaysCount: number, interval: CandleInterval, futureDaysCount: number}): void {
+    if (event.historyDaysCount !== this.daysHistory()) {
+      this.daysHistory.set(event.historyDaysCount);
+    }
+
+    if (event.interval !== this.historyInterval()) {
+      this.historyInterval.set(event.interval);
+    }
+
+    if (event.futureDaysCount !== this.daysFuture()) {
+      this.daysFuture.set(event.futureDaysCount);
+    }
+  }
 }
 

@@ -70,9 +70,9 @@
           width="700px"
           height="250px"
           [instrumentUid]="instrument.uid"
-          [historyInterval]="CandleInterval.CANDLE_INTERVAL_WEEK"
-          [daysHistory]="365"
-          [daysFuture]="30"
+          [interval]="CandleInterval.CANDLE_INTERVAL_WEEK"
+          [historyDaysCount]="365"
+          [futureDaysCount]="30"
           [isShowForecasts]="true"
           [isShowLegend]="false"
         ></complex-graph>

@@ -9,3 +9,14 @@
     <preloader></preloader>
   </div>
 }
+
+@if (isShowControl()) {
+  <div class="control">
+    <complex-graph-control
+      [historyDaysCount]="daysHistory()"
+      [interval]="historyInterval()"
+      [futureDaysCount]="daysFuture()"
+      (onChange)="handleChangeControl($event)"
+    ></complex-graph-control>
+  </div>
+}

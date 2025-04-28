@@ -8,7 +8,7 @@ from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
 from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
-from lib.learn import ta_1_2, ta_2
+from lib.learn import ta_1_2, ta_2, const
 import json
 
 
@@ -24,6 +24,14 @@ def instruments_list(request):
         )
     elif sort and (sort == 2 or sort == '2'):
         sorted_list = users.sort_instruments_for_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 3 or sort == '3'):
+        sorted_list = users.sort_instruments_profit(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 4 or sort == '4'):
+        sorted_list = users.sort_instruments_cost(
             instruments_list=sorted_list
         )
 
@@ -218,10 +226,10 @@ def instrument_prediction(request):
 
     if uid:
         next_month = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
-        resp['ta-1'] = predictions.get_prediction_ta_1_by_uid(uid)
-        resp['ta-1_1'] = predictions.get_prediction_ta_1_1_by_uid(uid)
-        resp['ta-1_2'] = ta_1_2.predict_future(instrument_uid=uid, date_target=next_month)
-        resp['ta-2'] = ta_2.predict_future(instrument_uid=uid, date_target=next_month)
+        resp[const.TA_1] = predictions.get_prediction_ta_1_by_uid(uid)
+        resp[const.TA_1_1] = predictions.get_prediction_ta_1_1_by_uid(uid)
+        resp[const.TA_1_2] = ta_1_2.predict_future(instrument_uid=uid, date_target=next_month)
+        resp[const.TA_2] = ta_2.predict_future(instrument_uid=uid, date_target=next_month)
         resp['consensus'] = predictions.get_predictions_consensus(instrument_uid=uid, date_target=next_month)
 
     response = HttpResponse(json.dumps(resp))
@@ -241,25 +249,25 @@ def instrument_prediction_graph(request):
     interval = CandleInterval(int(request.GET.get('interval')))
 
     if uid and date_from and date_to and interval:
-        resp['ta-1'] = predictions.get_prediction_ta_1_graph(
+        resp[const.TA_1] = predictions.get_prediction_ta_1_graph(
             uid=uid,
             date_from=date_from,
             date_to=date_to,
             interval=interval,
         )
-        resp['ta-1_1'] = predictions.get_prediction_ta_1_1_graph(
+        resp[const.TA_1_1] = predictions.get_prediction_ta_1_1_graph(
             uid=uid,
             date_from=date_from,
             date_to=date_to,
             interval=interval,
         )
-        resp['ta-1_2'] = predictions.get_prediction_ta_1_2_graph(
+        resp[const.TA_1_2] = predictions.get_prediction_ta_1_2_graph(
             uid=uid,
             date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,
             interval=interval,
         )
-        resp['ta-2'] = predictions.get_prediction_ta_2_graph(
+        resp[const.TA_2] = predictions.get_prediction_ta_2_graph(
             uid=uid,
             date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,
@@ -391,7 +399,7 @@ def instrument_news_list_rated(request):
     end_date = utils.parse_json_date(request.GET.get('end_date'))
 
     if uid and start_date and end_date:
-        resp = news.get_rated_news_by_instrument_uid(
+        resp = news.news.get_rated_news_by_instrument_uid(
             instrument_uid=uid,
             start_date=start_date,
             end_date=end_date,

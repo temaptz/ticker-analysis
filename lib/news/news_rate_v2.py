@@ -28,17 +28,18 @@ def get_news_rate(
 
 
 def get_text_rate(text: str, subject_name: str) -> types.NewsRate2 or None:
+    print('------------------------------------------------------------------')
+    print('GPT REQUEST\n', get_prompt(news_text=text, subject_name=subject_name))
+
     resp = local_llm.query_gpt_local(
         prompt=get_prompt(news_text=text, subject_name=subject_name)
     )
 
-    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-    print('GPT REQUEST\n', get_prompt(news_text=text, subject_name=subject_name))
     print('GPT RESPONSE\n', resp)
     print('GPT PARAM PARSED sentiment\n', parse_rate_param(resp=resp, param_name='sentiment'))
     print('GPT PARAM PARSED impact_strength\n', parse_rate_param(resp=resp, param_name='impact_strength'))
     print('GPT PARAM PARSED mention_focus\n', parse_rate_param(resp=resp, param_name='mention_focus'))
-    print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     return None
 

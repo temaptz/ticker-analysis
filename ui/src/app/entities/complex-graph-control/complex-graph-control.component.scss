@@ -1,0 +1,27 @@
+.control {
+  position: relative;
+}
+
+button {
+  opacity: .3;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.panel {
+  position: absolute;
+  left: 30px;
+  bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 300px;
+  height: auto;
+  padding: 16px;
+  background-color: white;
+  border: 1px solid lightgray;
+
+  label {}
+}
