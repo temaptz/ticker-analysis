@@ -121,4 +121,4 @@ def save_predictions_ta_2():
 
                 counter += 1
 
-    telegram.send_message('Всего сохранено '+str(counter)+' предсказаний модели ta-1_2')
+    telegram.send_message('Всего сохранено '+str(counter)+' предсказаний модели ta-2')
