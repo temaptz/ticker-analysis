@@ -55,7 +55,7 @@ def save_predictions_ta_1_1():
             print('PREDICTION TA-1_1: ', prediction)
 
             predictions_db.insert_prediction(
-                uid=instrument.uid,
+                instrument_uid=instrument.uid,
                 prediction=prediction,
                 target_date=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30),
                 model_name=const.TA_1_1,
@@ -87,7 +87,7 @@ def save_predictions_ta_1_2():
                 print('PREDICTION TA-1_2: ', prediction, date)
 
                 predictions_db.insert_prediction(
-                    uid=instrument.uid,
+                    instrument_uid=instrument.uid,
                     prediction=prediction,
                     target_date=date,
                     model_name=const.TA_1_2,
@@ -119,7 +119,7 @@ def save_predictions_ta_2():
                 print('PREDICTION TA-2: ', prediction, date)
 
                 predictions_db.insert_prediction(
-                    uid=instrument.uid,
+                    instrument_uid=instrument.uid,
                     prediction=prediction,
                     target_date=date,
                     model_name=const.TA_2

@@ -92,10 +92,10 @@ export interface PredictionResp {
 }
 
 export interface PredictionGraphResp {
-  'ta-1': PredictionGraph[];
-  'ta-1_1': PredictionGraph[];
-  'ta-1_2': PredictionGraph[];
-  'ta-2': PredictionGraph[];
+  'ta_1': PredictionGraph[];
+  'ta_1_1': PredictionGraph[];
+  'ta_1_2': PredictionGraph[];
+  'ta_2': PredictionGraph[];
 }
 
 export interface PredictionGraph {
