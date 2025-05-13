@@ -166,6 +166,7 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
     pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
     pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
     pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
+    pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
     pred_list = []
 
     if pred_ta_1 is not None:
@@ -176,6 +177,9 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
 
     if pred_ta_1_2 is not None:
         pred_list.append(pred_ta_1_2)
+
+    if pred_ta_2 is not None:
+        pred_list.append(pred_ta_2)
 
     if len(pred_list) > 0:
         return sum(pred_list) / len(pred_list)
