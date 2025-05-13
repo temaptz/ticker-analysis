@@ -38,20 +38,19 @@ def get_predictions_by_uid_date(
         date_from: datetime.datetime,
         date_to: datetime.datetime,
         model_name: str = None
-) -> list[
-    Type[PredictionDB]]:
+) -> list[PredictionDB]:
     with (Session(engine) as session):
         query = session.query(PredictionDB).filter(
             and_(
                 PredictionDB.instrument_uid == uid,
-                PredictionDB.date.between(date_from, date_to)
+                PredictionDB.target_date.between(date_from, date_to),
+                PredictionDB.model_name == model_name,
             )
         )
 
-        if model_name:
-            query = query.filter(PredictionDB.model_name == model_name)
+        res = query.all()
 
-        return query.all()
+        return res
 
 
 @logger.error_logger

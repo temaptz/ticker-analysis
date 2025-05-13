@@ -98,6 +98,10 @@ export interface PredictionGraphResp {
   'ta_2': PredictionGraph[];
 }
 
+export interface PredictionHistoryGraphResp {
+  [key: string]: PredictionGraph[];
+}
+
 export interface PredictionGraph {
   prediction: number;
   date: string;

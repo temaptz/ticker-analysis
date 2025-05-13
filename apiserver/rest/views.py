@@ -276,7 +276,31 @@ def instrument_prediction_graph(request):
     response = HttpResponse(serializer.to_json(resp))
 
     if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+        patch_cache_control(response, public=True, max_age=3600 * 24)
+
+    return response
+
+
+@api_view(['GET'])
+def instrument_prediction_history_graph(request):
+    resp = None
+    uid = request.GET.get('uid')
+    date_from = date_utils.parse_date(request.GET.get('date_from'))
+    date_to = date_utils.parse_date(request.GET.get('date_to'))
+    interval = CandleInterval(int(request.GET.get('interval')))
+
+    if uid and date_from and date_to and interval:
+        resp = predictions.get_prediction_ta_2_history_graph(
+            uid=uid,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        )
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24)
 
     return response
 

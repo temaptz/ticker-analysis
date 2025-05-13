@@ -36,20 +36,18 @@ def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
 
 
 def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
-    timedelta = datetime.timedelta(days=30)
-
     try:
         result = list()
 
         for i in predictions_db.get_predictions_by_uid_date(
             uid=uid,
-            date_from=date_from - timedelta,
-            date_to=date_to - timedelta,
+            date_from=date_from,
+            date_to=date_to,
             model_name=const.TA_1,
         ):
             result.append({
                 'prediction': i.prediction,
-                'date': (date_utils.parse_date(i.date) + timedelta).isoformat(),
+                'date': date_utils.parse_date(i.target_date).isoformat(),
             })
 
         return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
@@ -59,20 +57,18 @@ def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: d
 
 
 def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
-    timedelta = datetime.timedelta(days=30)
-
     try:
         result = list()
 
         for i in predictions_db.get_predictions_by_uid_date(
                 uid=uid,
-                date_from=date_from - timedelta,
-                date_to=date_to - timedelta,
+                date_from=date_from,
+                date_to=date_to,
                 model_name=const.TA_1_1,
         ):
             result.append({
                 'prediction': i.prediction,
-                'date': (date_utils.parse_date(i.date) + timedelta).isoformat(),
+                'date': date_utils.parse_date(i.target_date).isoformat(),
             })
 
         return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
@@ -140,7 +136,7 @@ def get_prediction_ta_2_history_graph(
         date_to: datetime.datetime,
         interval: CandleInterval,
 ) -> dict:
-    result = dict()
+    result = {}
 
     for prediction in predictions_db.get_predictions_by_uid_date(
         uid=uid,
@@ -148,15 +144,17 @@ def get_prediction_ta_2_history_graph(
         date_to=date_to,
         model_name=const.TA_2,
     ):
-        key = prediction.date
+        key = date_utils.parse_date(prediction.date).isoformat()
+        target_dt = date_utils.parse_date(prediction.target_date)
 
-        if not result[key]:
+        if key not in result:
             result[key] = []
 
-        result[key].append({
-            'prediction': prediction.prediction,
-            'date': date_utils.parse_date(prediction.date),
-        })
+        if not any(p['date'] == target_dt for p in result[key]):
+            result[key].append({
+                'prediction': prediction.prediction,
+                'date': target_dt,
+            })
 
     return result
 

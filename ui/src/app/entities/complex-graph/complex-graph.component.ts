@@ -18,7 +18,7 @@ import {
   InstrumentHistoryPrice,
   InstrumentInList,
   Operation,
-  PredictionGraphResp, TechAnalysisResp
+  PredictionGraphResp, PredictionHistoryGraphResp, TechAnalysisResp
 } from '../../types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval } from '../../enums';
@@ -27,12 +27,11 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
 import { ComplexGraphControlComponent } from '../complex-graph-control/complex-graph-control.component';
-import { RouterLink } from '@angular/router';
 
 
 @Component({
   selector: 'complex-graph',
-  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent, RouterLink],
+  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent],
   providers: [PriceFormatPipe],
   templateUrl: './complex-graph.component.html',
   styleUrl: './complex-graph.component.scss'
@@ -51,6 +50,7 @@ export class ComplexGraphComponent {
   isShowTechAnalysis = input<boolean>(false);
   isShowLegend = input<boolean>(false);
   isShowControl = input<boolean>(true);
+  isShowPredictionsHistory = input<boolean>(false);
 
   historyInterval = signal<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
   daysHistory = signal<number>(90);
@@ -60,6 +60,7 @@ export class ComplexGraphComponent {
   isLoadedOperations = signal<boolean>(true);
   isLoadedForecasts = signal<boolean>(true);
   isLoadedTechAnalysis = signal<boolean>(true);
+  isLoadedPredictionsHistory = signal<boolean>(true);
   isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis()));
 
   historyPrices = toSignal<InstrumentHistoryPrice[]>(
@@ -168,6 +169,25 @@ export class ComplexGraphComponent {
       )
   );
 
+  predictionsHistoryGraphResp = toSignal<PredictionHistoryGraphResp | null>(
+    combineLatest([
+      toObservable(this.instrumentUid),
+      toObservable(this.daysHistory),
+      toObservable(this.daysFuture),
+      toObservable(this.historyInterval),
+    ])
+      .pipe(
+        tap(() => this.isLoadedPredictionsHistory.set(false)),
+        switchMap(([uid, historyDays, futureDays, interval]) => this.appService.getInstrumentPredictionHistoryGraph(
+          uid,
+          startOfDay(subDays(new Date(), historyDays)),
+          endOfDay(addDays(new Date(), futureDays)),
+          interval,
+        )),
+        tap(() => this.isLoadedPredictionsHistory.set(true)),
+      )
+  );
+
   seriesHistoryPrice = computed<echarts.SeriesOption>(() => {
     const history = this.historyPrices();
 
@@ -183,7 +203,7 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: [1, 2, 3, 4]
+        y: [1, 2, 3, 4],
       },
       data: history?.map(i => [
         parseJSON(i.time),                 // x
@@ -212,11 +232,11 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: 1
+        y: 1,
       },
       data: predictions?.map(i => [
           parseJSON(i.date),
-          getRoundPrice(i.prediction)
+          getRoundPrice(i.prediction),
         ]
       ) ?? []
     } as echarts.SeriesOption;
@@ -239,11 +259,11 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: 1
+        y: 1,
       },
       data: predictions?.map(i => [
           parseJSON(i.date),
-          getRoundPrice(i.prediction)
+          getRoundPrice(i.prediction),
         ]
       ) ?? []
     };
@@ -266,11 +286,11 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: 1
+        y: 1,
       },
       data: predictions?.map(i => [
           parseJSON(i.date),
-          getRoundPrice(i.prediction)
+          getRoundPrice(i.prediction),
         ]
       ) ?? []
     };
@@ -297,7 +317,7 @@ export class ComplexGraphComponent {
       },
       data: predictions?.map(i => [
           parseJSON(i.date),
-          getRoundPrice(i.prediction)
+          getRoundPrice(i.prediction),
         ]
       ) ?? []
     };
@@ -475,6 +495,34 @@ export class ComplexGraphComponent {
     ];
   });
 
+  seriesPredictionsHistory = computed<echarts.SeriesOption[]>(() => {
+    const graphResp = this.predictionsHistoryGraphResp();
+
+    return Object.keys(graphResp ?? {}).map((date: string) => {
+      return {
+        name: `История TA_2 [${date}]`,
+        type: 'line',
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 2.5,
+        itemStyle: {
+          color: '#00000'
+        },
+        lineStyle: {
+          width: 1,
+        },
+        encode: {
+          x: 0,
+          y: 1,
+        },
+        data: graphResp?.[date]?.map(i => [
+          parseJSON(i.date),
+          getRoundPrice(i.prediction),
+        ]) ?? []
+      };
+    });
+  });
+
   option = computed<echarts.EChartsOption>(() => {
     const series: echarts.SeriesOption[] = [];
 
@@ -501,6 +549,10 @@ export class ComplexGraphComponent {
 
     if (this.isLoadedTechAnalysis()) {
       series.push(...this.seriesTechAnalysis());
+    }
+
+    if (this.isLoadedPredictionsHistory()) {
+      series.push(...this.seriesPredictionsHistory());
     }
 
     return {

@@ -13,7 +13,13 @@ import {
   PredictionGraphResp,
   InstrumentForecastsHistory,
   FundamentalsHistory,
-  Instrument, InvestCalc, NewsRateResponse, InstrumentForecastsGraphItem, NewsListRatedResponse, TechAnalysisResp,
+  Instrument,
+  InvestCalc,
+  NewsRateResponse,
+  InstrumentForecastsGraphItem,
+  NewsListRatedResponse,
+  TechAnalysisResp,
+  PredictionHistoryGraphResp,
 } from '../../types';
 import { CandleInterval } from '../../enums';
 import { SortModeEnum } from '../types';
@@ -130,6 +136,16 @@ export class ApiService {
     params = params.set('interval', interval);
 
     return this.http.get<PredictionGraphResp>(`${this.apiUrl}/instrument/prediction/graph`, {params: params});
+  }
+
+  getInstrumentPredictionHistoryGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionHistoryGraphResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('date_from', from.toJSON());
+    params = params.set('date_to', to.toJSON());
+    params = params.set('interval', interval);
+
+    return this.http.get<PredictionHistoryGraphResp>(`${this.apiUrl}/instrument/prediction/history_graph`, {params: params});
   }
 
   getInstrumentOperations(figi: string): Observable<Operation[]> {
