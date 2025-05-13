@@ -4,7 +4,7 @@ import numpy
 import datetime
 from tinkoff.invest import CandleInterval, InstrumentResponse
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils, docker
+from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils, docker, yandex_disk
 from lib.learn import learn_utils
 
 
@@ -332,6 +332,12 @@ def prepare_data():
     csv.save_df_to_csv(data_frame=data_frame, filename=get_data_frame_csv_file_path())
 
     print('DATA FRAME FILE SAVED')
+
+    file_name = f'data_frame_ta_1_2_{date_utils.get_local_time_log_str()}.csv'
+
+    yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
+
+    print('DATA FRAME FILE UPLOADED')
 
 
 

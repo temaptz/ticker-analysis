@@ -250,7 +250,7 @@ def generate_data():
     records = []
 
     print('GENERATE DATA TA-2')
-    print(len(const.TICKER_LIST))
+    print(len(instruments_list))
 
     for instrument in instruments_list:
         instrument_index += 1
@@ -307,7 +307,7 @@ def generate_data():
 
     print('DATA FRAME FILE SAVED')
 
-    file_name = f'data_frame_ta_2_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv'
+    file_name = f'data_frame_ta_2_{date_utils.get_local_time_log_str()}.csv'
 
     yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
 
