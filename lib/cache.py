@@ -25,7 +25,7 @@ def clean():
         print('ERROR cache clean', e)
 
 
-def ttl_cache(ttl: int = 3600, maxsize: int = 1024):
+def ttl_cache(ttl: int = 3600, maxsize: int = 1024, skip_empty: bool = False):
     """Декоратор кэширования с временем жизни (ttl) и ограничением по размеру."""
     def decorator(func):
         @wraps(func)
@@ -33,13 +33,14 @@ def ttl_cache(ttl: int = 3600, maxsize: int = 1024):
             try:
                 key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}')
                 saved_cache = cache_get(key=key_md5)
-                is_skip_cache = 'skip_cache' in kwargs and kwargs['skip_cache']
 
-                if saved_cache and not is_skip_cache:
+                if saved_cache:
                     return saved_cache  # Возвращаем из кэша, если есть
 
                 result = func(*args, **kwargs)  # Вычисляем функцию
-                cache_set(key=key_md5, value=result, ttl=ttl)  # Сохраняем в кэше
+
+                if not skip_empty or result:
+                    cache_set(key=key_md5, value=result, ttl=ttl)  # Сохраняем в кэше
 
                 return result
 

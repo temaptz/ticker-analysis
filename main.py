@@ -13,7 +13,7 @@ from lib import (
     utils,
     date_utils,
 )
-from lib.db_2 import init, db_utils, predictions_ta_1_db, predictions_ta_1_1_db, predictions_ta_1_2_db, predictions_ta_2_db, predictions_db
+from lib.db_2 import init, db_utils, predictions_db
 from lib.learn import const
 
 init.init_db()
@@ -70,41 +70,4 @@ else:
     #
     # print('GOT NEWS', len(news))
     # news_save.save_news()
-
-
-    for i in predictions_ta_1_db.get_predictions():
-        predictions_db.insert_prediction(
-            instrument_uid=i.instrument_uid,
-            prediction=i.prediction,
-            target_date=date_utils.parse_date(i.date) + datetime.timedelta(days=30),
-            model_name=const.TA_1,
-            date=i.date,
-        )
-
-    for i in predictions_ta_1_1_db.get_predictions():
-        predictions_db.insert_prediction(
-            instrument_uid=i.instrument_uid,
-            prediction=i.prediction,
-            target_date=date_utils.parse_date(i.date) + datetime.timedelta(days=30),
-            model_name=const.TA_1_1,
-            date=i.date,
-        )
-
-    for i in predictions_ta_1_2_db.get_predictions():
-        predictions_db.insert_prediction(
-            instrument_uid=i.instrument_uid,
-            prediction=i.prediction,
-            target_date=date_utils.parse_date(i.date) + datetime.timedelta(days=30),
-            model_name=const.TA_1_2,
-            date=i.date,
-        )
-
-    for i in predictions_ta_2_db.get_predictions():
-        predictions_db.insert_prediction(
-            instrument_uid=i.instrument_uid,
-            prediction=i.prediction,
-            target_date=date_utils.parse_date(i.date) + datetime.timedelta(days=30),
-            model_name=const.TA_2,
-            date=i.date,
-        )
 

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from lib import docker
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-!xbbffy&k+_+)8&!@kj^@5xxh!t$nlc*m#nx2bh(kh3nej*2zs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = not docker.is_prod()
 
 ALLOWED_HOSTS = ['home.urvanov.pro', 'localhost', '192.168.1.31']
 
@@ -93,8 +94,12 @@ WSGI_APPLICATION = 'apiserver.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_db',
+        'USER': 'main_db_user',
+        'PASSWORD': 'main_db_password',
+        'HOST': 'postgres' if docker.is_docker() else 'localhost',  # имя контейнера PostgreSQL
+        'PORT': '5432',
     }
 }
 

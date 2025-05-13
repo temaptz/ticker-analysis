@@ -22,12 +22,12 @@ class NewsSourceRated:
 @logger.error_logger
 def get_rated_news_by_instrument_uid(
         instrument_uid: str,
-        news_list: [news_db.News],
-        keywords: [str],
-):
+        news_list: list[news_db.News],
+        keywords: list[str],
+) -> dict:
     news_ids_list = [n.news_uid for n in news_list or []]
 
-    response = {
+    response: dict = {
         'list': [],
         'keywords': keywords,
         'total_absolute': get_news_rate_absolute(
@@ -64,8 +64,8 @@ def get_news_rate_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
         end_date: datetime.datetime,
-        news_list: [news_db.News],
-        keywords: [str],
+        news_list: list[news_db.News],
+        keywords: list[str],
 ):
     response = None
     news_uid_list = [n.news_uid for n in news_list or []]
@@ -93,7 +93,7 @@ def get_news_rate_by_instrument_uid(
 
 
 def get_news_rate(
-        news_uid_list: [str],
+        news_uid_list: list[str],
         instrument_uid: str,
 ) -> types.NewsRate or None:
     abs_rate = get_news_rate_absolute(news_uid_list=news_uid_list, instrument_uid=instrument_uid)
@@ -124,9 +124,9 @@ def get_news_rate(
     return None
 
 
-@cache.ttl_cache(ttl=3600)
+@cache.ttl_cache(ttl=3600, skip_empty=True)
 def get_news_rate_absolute(
-        news_uid_list: [str],
+        news_uid_list: list[str],
         instrument_uid: str,
 ) -> types.NewsRateAbsoluteYandex or None:
     news = []

@@ -71,7 +71,7 @@ export class TableFullComponent {
     'ticker',
     'name',
     'fundamental',
-    '5years',
+    // '5years',
     'complex',
     'price',
     'balance',
@@ -81,6 +81,9 @@ export class TableFullComponent {
   ];
 
   private appService = inject(ApiService);
+
+  private ls = localStorage;
+  private lsKey = 'sortTickers';
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -93,10 +96,19 @@ export class TableFullComponent {
   )
 
   constructor() {
+    const ls = this.ls.getItem(this.lsKey);
+    if (ls) {
+      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.Buy);
+    }
+
     effect(() => {
-      const sortTickers = this.instruments();
-      this.dataSource.data = sortTickers ?? [];
+      const instruments = this.instruments();
+      this.dataSource.data = instruments ?? [];
     });
+  }
+
+  handleChangeSort(): void {
+    this.ls.setItem(this.lsKey, JSON.stringify(this.sortTickers()));
   }
 
 }

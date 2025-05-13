@@ -3,7 +3,6 @@ import os
 import re
 from tinkoff.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
 import hashlib
-import re
 from html import unescape
 from lib import date_utils, logger
 
@@ -20,12 +19,12 @@ def get_price_by_candle(candle: HistoricCandle) -> float or None:
 
 def get_price_by_quotation(price: Quotation or MoneyValue) -> float or None:
     try:
-        return float(str(price.units)+'.'+str(price.nano))
+        return float(str(price.units)+'.'+str(abs(price.nano)))
 
     except Exception as e:
         print('ERROR get_price_by_quotation', e, price)
 
-        return None
+    return None
 
 
 def get_file_abspath_recursive(file_name: str, dir_name: str = '') -> str or None:

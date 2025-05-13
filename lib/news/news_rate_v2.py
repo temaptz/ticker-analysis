@@ -8,7 +8,7 @@ from lib import instruments, yandex, cache, counter, docker, serializer, utils, 
 
 
 def get_news_rate(
-        news_uid: [str],
+        news_uid: list[str],
         subject_name: str,
 ) -> types.NewsRate2 or None:
     news = []

@@ -24,10 +24,12 @@ class InvestCalc:
 
         for o in self.operations:
             if o.operation_type == OperationType.OPERATION_TYPE_BUY:
+
                 open_positions.append({
                     'quantity': o.quantity,
-                    'cost_per_share': utils.get_price_by_quotation(price=o.price) or 0
+                    'cost_per_share': abs(utils.get_price_by_quotation(price=o.payment)) / o.quantity or 0
                 })
+
             elif o.operation_type == OperationType.OPERATION_TYPE_SELL:
                 remain_to_sell = o.quantity
 
@@ -41,10 +43,9 @@ class InvestCalc:
                         first_pos['quantity'] -= remain_to_sell
                         remain_to_sell = 0
 
-        total_qty = sum(pos['quantity'] for pos in open_positions)
         total_cost = sum(pos['quantity'] * pos['cost_per_share'] for pos in open_positions)
 
-        return total_cost / total_qty if total_qty > 0 else 0
+        return total_cost / self.balance_qty if self.balance_qty > 0 else 0
 
     def get_market_value(self) -> float:
         return self.balance_qty * self.current_price

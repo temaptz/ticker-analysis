@@ -4,7 +4,7 @@ from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
 from lib import cache, utils, date_utils, logger
 
 
-@cache.ttl_cache(ttl=3600 * 24)
+@cache.ttl_cache(ttl=3600 * 24, skip_empty=True)
 def get_instruments_white_list() -> list[InstrumentResponse.instrument]:
     result = list()
 
@@ -54,7 +54,7 @@ def get_instrument_last_prices_by_uid(uid: str) -> list[LastPrice] or None:
         print('ERROR get_instrument_last_price_by_uid', e)
 
 
-@cache.ttl_cache(ttl=3600 * 4)
+@cache.ttl_cache(ttl=3600 * 4, skip_empty=True)
 def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime) -> list[HistoricCandle]:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -63,7 +63,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
                 from_=(to_date - datetime.timedelta(days=days_count)),
                 to=to_date,
                 interval=interval
-            ).candles
+            ).candles or []
 
     except Exception as e:
         print('ERROR get_instrument_history_price_by_uid', e)

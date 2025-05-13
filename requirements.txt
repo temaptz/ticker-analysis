@@ -20,4 +20,3 @@ traitlets
 psycopg2-binary
 sqlalchemy
 matplotlib
-transformers[torch]

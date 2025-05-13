@@ -82,6 +82,7 @@ def get_positions(account_id: str) -> PositionsResponse or None:
         logger.log_error(method_name='get_positions', error=e)
 
 
+@cache.ttl_cache(ttl=3600)
 def get_operations(account_id: str, figi: str) -> list[Operation] or None:
     try:
         resp = list()

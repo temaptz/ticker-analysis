@@ -4,7 +4,7 @@ import numpy
 import datetime
 from tinkoff.invest import CandleInterval, InstrumentResponse
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils
+from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils, docker
 from lib.learn import learn_utils
 
 
@@ -149,6 +149,9 @@ def get_model_file_path():
 
 
 def get_data_frame_csv_file_path():
+    if docker.is_docker():
+        return '/app/ta-1_2.csv'
+
     return utils.get_file_abspath_recursive('ta-1_2.csv', 'data_frames')
 
 
@@ -264,8 +267,8 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
 def prepare_data():
     print('PREPARE DATA TA-1_2')
 
-    date_start = datetime.datetime(year=2025, month=1, day=10, hour=12)
-    date_end = datetime.datetime.combine(datetime.datetime.now(datetime.timezone.utc), datetime.time(12))
+    date_start = datetime.datetime(year=2025, month=1, day=10, hour=12, tzinfo=datetime.timezone.utc)
+    date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(12), tzinfo=datetime.timezone.utc)
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
     counter_added = 0

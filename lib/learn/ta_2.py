@@ -28,18 +28,18 @@ class Ta2LearningCard:
     pe_ratio_ttm: float = None  # P/E — цена/прибыль
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
-    news_positive_percent_0: int = None  # Количество упоминаний в новостях 0-7 дней до даты
-    news_negative_percent_0: int = None  # Количество упоминаний в новостях 0-7 дней до даты
-    news_neutral_percent_0: int = None  # Количество упоминаний в новостях 0-7 дней до даты
-    news_positive_percent_1: int = None  # Количество упоминаний в новостях 8-14 дней до даты
-    news_negative_percent_1: int = None  # Количество упоминаний в новостях 8-14 дней до даты
-    news_neutral_percent_1: int = None  # Количество упоминаний в новостях 8-14 дней до даты
-    news_positive_percent_2: int = None  # Количество упоминаний в новостях 15-21 дней до даты
-    news_negative_percent_2: int = None  # Количество упоминаний в новостях 15-21 дней до даты
-    news_neutral_percent_2: int = None  # Количество упоминаний в новостях 15-21 дней до даты
-    news_positive_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
-    news_negative_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
-    news_neutral_percent_3: int = None  # Количество упоминаний в новостях 22-28 дней до даты
+    news_positive_percent_0: int = None  # Процент позитивного новостного фона 0-7 дней до даты
+    news_negative_percent_0: int = None  # Процент негативного новостного фона 0-7 дней до даты
+    news_neutral_percent_0: int = None  # Процент нейтрального новостного фона 0-7 дней до даты
+    news_positive_percent_1: int = None  # Процент позитивного новостного фона 8-14 дней до даты
+    news_negative_percent_1: int = None  # Процент негативного новостного фона 8-14 дней до даты
+    news_neutral_percent_1: int = None  # Процент нейтрального новостного фона 8-14 дней до даты
+    news_positive_percent_2: int = None  # Процент позитивного новостного фона 15-21 дней до даты
+    news_negative_percent_2: int = None  # Процент негативного новостного фона 15-21 дней до даты
+    news_neutral_percent_2: int = None  # Процент нейтрального новостного фона 15-21 дней до даты
+    news_positive_percent_3: int = None  # Процент позитивного новостного фона 22-28 дней до даты
+    news_negative_percent_3: int = None  # Процент негативного новостного фона 22-28 дней до даты
+    news_neutral_percent_3: int = None  # Процент нейтрального новостного фона 22-28 дней до даты
 
     def __init__(self, instrument: InstrumentResponse.instrument, date: datetime.datetime, target_date: datetime.datetime, fill_empty=False):
         if date > target_date:
@@ -396,6 +396,7 @@ def predict(data: list) -> float or None:
     return None
 
 
+@cache.ttl_cache(ttl=3600 * 24)
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
     cache_key = utils.get_md5(serializer.to_json({

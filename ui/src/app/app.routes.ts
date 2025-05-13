@@ -13,4 +13,8 @@ export const routes: Routes = [
     path: 'ticker/:ticker',
     loadComponent: () => import('./pages/instrument/instrument.component').then(c => c.InstrumentComponent)
   },
+  {
+    path: 'complex-graph/:ticker',
+    loadComponent: () => import('./pages/complex-graph-page/complex-graph-page.component').then(c => c.ComplexGraphPageComponent)
+  },
 ];

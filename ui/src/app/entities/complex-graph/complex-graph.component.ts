@@ -27,11 +27,12 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
 import { ComplexGraphControlComponent } from '../complex-graph-control/complex-graph-control.component';
+import { RouterLink } from '@angular/router';
 
 
 @Component({
   selector: 'complex-graph',
-  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent],
+  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent, RouterLink],
   providers: [PriceFormatPipe],
   templateUrl: './complex-graph.component.html',
   styleUrl: './complex-graph.component.scss'
@@ -39,6 +40,7 @@ import { ComplexGraphControlComponent } from '../complex-graph-control/complex-g
 export class ComplexGraphComponent {
 
   instrumentUid = input.required<InstrumentInList['uid']>();
+  instrumentTicker = input<string>();
   interval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
   historyDaysCount = input(90, { transform: numberAttribute });
   futureDaysCount = input(90, { transform: numberAttribute });
@@ -194,10 +196,10 @@ export class ComplexGraphComponent {
   });
 
   seriesTa_1 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta-1'] ?? [];
+    const predictions = this.predictionResp()?.['ta_1'] ?? [];
 
     return {
-      name: 'Предсказания TA-1',
+      name: 'Предсказания TA_1',
       type: 'line',
       showSymbol: true,
       symbol: 'circle',
@@ -217,14 +219,14 @@ export class ComplexGraphComponent {
           getRoundPrice(i.prediction)
         ]
       ) ?? []
-    };
+    } as echarts.SeriesOption;
   });
 
   seriesTa_1_1 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta-1_1'] ?? [];
+    const predictions = this.predictionResp()?.['ta_1_1'] ?? [];
 
     return {
-      name: 'Предсказания TA-1_1',
+      name: 'Предсказания TA_1_1',
       type: 'line',
       showSymbol: true,
       symbol: 'circle',
@@ -248,10 +250,10 @@ export class ComplexGraphComponent {
   });
 
   seriesTa_1_2 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta-1_2'] ?? [];
+    const predictions = this.predictionResp()?.['ta_1_2'] ?? [];
 
     return {
-      name: 'Предсказания TA-1_2',
+      name: 'Предсказания TA_1_2',
       type: 'line',
       showSymbol: true,
       symbol: 'circle',
@@ -275,10 +277,10 @@ export class ComplexGraphComponent {
   });
 
   seriesTa_2 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta-2'] ?? [];
+    const predictions = this.predictionResp()?.['ta_2'] ?? [];
 
     return {
-      name: 'Предсказания TA-2',
+      name: 'Предсказания TA_2',
       type: 'line',
       showSymbol: true,
       symbol: 'circle',

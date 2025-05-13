@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID, TSVECTOR
 from sqlalchemy.sql import text as sql_text
 from sqlalchemy.orm import Session, declarative_base
 import datetime
-from typing import Type
+from typing import Type, Any
 
 from lib.db_2 import connection
 from lib import logger, serializer
@@ -51,17 +51,42 @@ def get_news_by_uid(news_uid: str) -> Type[News]:
 
 
 @logger.error_logger
-def get_news_by_date_keywords_fts(start_date: datetime.datetime, end_date: datetime.datetime, keywords: list[str]) -> list[Type[News]]:
-    query_string = ' | '.join(keywords)
-    ts_query = func.plainto_tsquery('russian', func.unaccent(query_string))
+def get_news_by_date_keywords_fts(
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        keywords: list[str],
+) -> list[News]:
+    if not keywords:
+        return []
+
+    query_string = build_ts_query(keywords)
+    safe_query_string = query_string.replace("'", "''")
+
+    raw_sql = f"""
+        SELECT news_uid, date, source_name, title, text, search_vector
+        FROM news
+        WHERE date BETWEEN :start_date AND :end_date
+          AND search_vector @@ to_tsquery('russian', unaccent('{safe_query_string}'))
+        ORDER BY date DESC
+    """
 
     with Session(engine) as session:
-        return session.query(News).filter(
-            and_(
-                News.date.between(start_date, end_date),
-                News.search_vector.op('@@')(ts_query)
-            )
-        ).order_by(desc(News.date)).all()
+        result = session.execute(
+            sqlalchemy.text(raw_sql),
+            {"start_date": start_date, "end_date": end_date}
+        ).mappings()
+
+        rows = result.fetchall()
+
+        result = [News(
+            news_uid=row['news_uid'],
+            date=row['date'],
+            source_name=row['source_name'],
+            title=row['title'],
+            text=row['text'],
+        ) for row in rows]
+
+        return result
 
 
 @logger.error_logger
@@ -86,3 +111,20 @@ def insert_news(record: News) -> None:
         )
         session.execute(stmt)
         session.commit()
+
+
+def build_ts_query(keywords: list[str]) -> str:
+    """
+    Формирует ts_query для PostgreSQL с учётом фраз (ключевых слов с пробелами).
+    Между словами внутри фразы ставит оператор <-> (точная последовательность слов).
+    Между отдельными ключевыми словами ставит оператор | (ИЛИ).
+    """
+    terms = []
+    for kw in keywords:
+        words = kw.strip().split()
+        if len(words) > 1:
+            phrase = ' <-> '.join(words)
+            terms.append(f'({phrase})')
+        else:
+            terms.append(words[0])
+    return ' | '.join(terms)
