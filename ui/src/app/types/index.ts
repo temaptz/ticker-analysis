@@ -84,10 +84,10 @@ export interface NewsRateResponse {
 
 
 export interface PredictionResp {
-  'ta-1': number;
-  'ta-1_1': number;
-  'ta-1_2': number;
-  'ta-2': number;
+  'ta_1': number;
+  'ta_1_1': number;
+  'ta_1_2': number;
+  'ta_2': number;
   'consensus': number;
 }
 

@@ -57,10 +57,10 @@ export class PredictionComponent {
         )
         .subscribe(([predictions, currentPrice]: [Forecast, number | null]) => {
           const current = currentPrice ?? 0;
-          const prediction_ta_1 = predictions['ta-1'] ?? 0;
-          const prediction_ta_1_1 = predictions['ta-1_1'] ?? 0;
-          const prediction_ta_1_2 = predictions['ta-1_2'] ?? 0;
-          const prediction_ta_2 = predictions['ta-2'] ?? 0;
+          const prediction_ta_1 = predictions['ta_1'] ?? 0;
+          const prediction_ta_1_1 = predictions['ta_1_1'] ?? 0;
+          const prediction_ta_1_2 = predictions['ta_1_2'] ?? 0;
+          const prediction_ta_2 = predictions['ta_2'] ?? 0;
           const prediction_consensus = predictions['consensus'] ?? 0;
           const absPercentChange_ta_1 = Math.round(Math.abs(prediction_ta_1 - current) / current * 10000) / 100;
           const absPercentChange_ta_1_1 = Math.round(Math.abs(prediction_ta_1_1 - current) / current * 10000) / 100;
