@@ -175,15 +175,19 @@ export class ComplexGraphComponent {
       toObservable(this.daysHistory),
       toObservable(this.daysFuture),
       toObservable(this.historyInterval),
+      toObservable(this.isLoadedPredictionsHistory),
     ])
       .pipe(
         tap(() => this.isLoadedPredictionsHistory.set(false)),
-        switchMap(([uid, historyDays, futureDays, interval]) => this.appService.getInstrumentPredictionHistoryGraph(
-          uid,
-          startOfDay(subDays(new Date(), historyDays)),
-          endOfDay(addDays(new Date(), futureDays)),
-          interval,
-        )),
+        switchMap(([uid, historyDays, futureDays, interval, isShowPredictionsHistory]) => isShowPredictionsHistory
+          ? this.appService.getInstrumentPredictionHistoryGraph(
+            uid,
+            startOfDay(subDays(new Date(), historyDays)),
+            endOfDay(addDays(new Date(), futureDays)),
+            interval,
+          )
+          : of(null)
+        ),
         tap(() => this.isLoadedPredictionsHistory.set(true)),
       )
   );
@@ -539,19 +543,19 @@ export class ComplexGraphComponent {
       );
     }
 
-    if (this.isLoadedOperations()) {
+    if (this.isShowOperations() && this.isLoadedOperations()) {
       series.push(this.seriesOperations());
     }
 
-    if (this.isLoadedForecasts()) {
+    if (this.isShowForecasts() && this.isLoadedForecasts()) {
       series.push(this.seriesForecasts());
     }
 
-    if (this.isLoadedTechAnalysis()) {
+    if (this.isShowTechAnalysis() && this.isLoadedTechAnalysis()) {
       series.push(...this.seriesTechAnalysis());
     }
 
-    if (this.isLoadedPredictionsHistory()) {
+    if (this.isShowPredictionsHistory() && this.isLoadedPredictionsHistory()) {
       series.push(...this.seriesPredictionsHistory());
     }
 
