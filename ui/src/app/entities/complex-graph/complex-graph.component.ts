@@ -61,7 +61,7 @@ export class ComplexGraphComponent {
   isLoadedForecasts = signal<boolean>(true);
   isLoadedTechAnalysis = signal<boolean>(true);
   isLoadedPredictionsHistory = signal<boolean>(true);
-  isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis()));
+  isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis() && this.isLoadedPredictionsHistory()));
 
   historyPrices = toSignal<InstrumentHistoryPrice[]>(
     combineLatest([
@@ -175,7 +175,7 @@ export class ComplexGraphComponent {
       toObservable(this.daysHistory),
       toObservable(this.daysFuture),
       toObservable(this.historyInterval),
-      toObservable(this.isLoadedPredictionsHistory),
+      toObservable(this.isShowPredictionsHistory),
     ])
       .pipe(
         tap(() => this.isLoadedPredictionsHistory.set(false)),
@@ -510,7 +510,7 @@ export class ComplexGraphComponent {
         symbol: 'circle',
         symbolSize: 2.5,
         itemStyle: {
-          color: '#00000'
+          color: '#fdff72'
         },
         lineStyle: {
           width: 1,
