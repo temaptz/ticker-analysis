@@ -304,7 +304,7 @@ def learn():
     mse_test = mean_squared_error(y_test, y_pred_test)
     mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
 
-    logger.log_info(message=f'TA-2_1 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME SIZE: {df.size}')
+    logger.log_info(message=f'TA-2_1 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME SIZE: {df.size}', is_send_telegram=True)
 
     learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
 

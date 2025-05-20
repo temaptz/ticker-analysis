@@ -69,11 +69,8 @@ def storage_delete(key: str) -> None:
 
 
 def clear_cache() -> None:
-    """
-    Полная очистка всех данных в текущей базе Redis.
-    """
     try:
-        r_cache.flushall()
+        r_cache.flushdb()
     except Exception as e:
         print('ERROR REDIS CACHE cache_clean', e)
 
