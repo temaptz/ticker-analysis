@@ -8,7 +8,7 @@ from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
 from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
-from lib.learn import ta_1_2, ta_2, const
+from lib.learn import ta_1_2, ta_2, ta_2_1, const
 import json
 
 
@@ -230,6 +230,7 @@ def instrument_prediction(request):
         resp[const.TA_1_1] = predictions.get_prediction_ta_1_1_by_uid(uid)
         resp[const.TA_1_2] = ta_1_2.predict_future(instrument_uid=uid, date_target=next_month)
         resp[const.TA_2] = ta_2.predict_future(instrument_uid=uid, date_target=next_month)
+        resp[const.TA_2_1] = ta_2_1.predict_future(instrument_uid=uid, date_target=next_month)
         resp['consensus'] = predictions.get_predictions_consensus(instrument_uid=uid, date_target=next_month)
 
     response = HttpResponse(json.dumps(resp))
@@ -261,14 +262,23 @@ def instrument_prediction_graph(request):
             date_to=date_to,
             interval=interval,
         )
-        resp[const.TA_1_2] = predictions.get_prediction_ta_1_2_graph(
+        resp[const.TA_1_2] = predictions.get_prediction_graph(
             uid=uid,
+            model_name=const.TA_1_2,
             date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,
             interval=interval,
         )
-        resp[const.TA_2] = predictions.get_prediction_ta_2_graph(
+        resp[const.TA_2] = predictions.get_prediction_graph(
             uid=uid,
+            model_name=const.TA_2,
+            date_from=datetime.datetime.now(datetime.timezone.utc),
+            date_to=date_to,
+            interval=interval,
+        )
+        resp[const.TA_2_1] = predictions.get_prediction_graph(
+            uid=uid,
+            model_name=const.TA_2_1,
             date_from=datetime.datetime.now(datetime.timezone.utc),
             date_to=date_to,
             interval=interval,
@@ -290,8 +300,9 @@ def instrument_prediction_history_graph(request):
     interval = CandleInterval(int(request.GET.get('interval')))
 
     if uid and date_from and date_to and interval:
-        resp = predictions.get_prediction_ta_2_history_graph(
+        resp = predictions.get_prediction_history_graph(
             uid=uid,
+            model_name=const.TA_2,
             date_from=date_from,
             date_to=date_to,
             interval=interval,

@@ -1,11 +1,7 @@
 import datetime
-
-from numpy.lib.utils import source
-from collections import defaultdict
-
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
-from lib.learn import ta_1_1, ta_1_2, ta_2, const
+from lib.learn import ta_1_1, ta_1_2, ta_2, ta_2_1, const
 from lib import date_utils, logger, utils
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
@@ -77,7 +73,7 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
         return []
 
 
-def get_prediction_ta_1_2_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
+def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
 
@@ -86,52 +82,41 @@ def get_prediction_ta_1_2_graph(uid: str, date_from: datetime.datetime, date_to:
                 date_to=date_to,
                 interval_seconds=date_utils.get_interval_sec_by_candle(interval)
         ):
-            prediction = ta_1_2.predict_future(
-                instrument_uid=uid,
-                date_target=date,
-            )
+            prediction_item = None
 
-            if prediction is not None:
+            if model_name == const.TA_1_2:
+                prediction_item = ta_1_2.predict_future(
+                    instrument_uid=uid,
+                    date_target=date,
+                )
+            elif model_name == const.TA_2:
+                prediction_item = ta_2.predict_future(
+                    instrument_uid=uid,
+                    date_target=date,
+                )
+            elif model_name == const.TA_2_1:
+                prediction_item = ta_2_1.predict_future(
+                    instrument_uid=uid,
+                    date_target=date,
+                )
+
+            if prediction_item is not None:
                 result.append({
-                    'prediction': prediction,
+                    'prediction': prediction_item,
                     'date': date,
                 })
 
         return result
     except Exception as e:
-        print('ERROR get_prediction_ta_1_2_graph_by_uid', e)
-        return []
+        print('ERROR get_prediction_graph_by_uid', e)
 
-
-def get_prediction_ta_2_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
-    try:
-        result = list()
-
-        for date in date_utils.get_dates_interval_list(
-                date_from=date_from,
-                date_to=date_to,
-                interval_seconds=date_utils.get_interval_sec_by_candle(interval)
-        ):
-            prediction = ta_2.predict_future(
-                instrument_uid=uid,
-                date_target=date,
-            )
-
-            if prediction is not None:
-                result.append({
-                    'prediction': prediction,
-                    'date': date,
-                })
-
-        return result
-    except Exception as e:
-        print('ERROR get_prediction_ta_2_graph_by_uid', e)
-        return []
+    return []
 
 
 @logger.error_logger
-def get_prediction_ta_2_history_graph(
+def get_prediction_history_graph(
         uid: str,
+        model_name: str,
         date_from: datetime.datetime,
         date_to: datetime.datetime,
         interval: CandleInterval,
@@ -142,7 +127,7 @@ def get_prediction_ta_2_history_graph(
         uid=uid,
         date_from=date_from,
         date_to=date_to,
-        model_name=const.TA_2,
+        model_name=model_name,
     ):
         key = date_utils.parse_date(prediction.date).isoformat()
         target_dt = date_utils.parse_date(prediction.target_date)

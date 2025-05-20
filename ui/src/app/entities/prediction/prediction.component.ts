@@ -8,7 +8,7 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { GRAPH_COLORS } from '../../shared/const';
-import { Forecast, InstrumentInList } from '../../types';
+import { Forecast, InstrumentInList } from '../../shared/types';
 
 
 @Component({

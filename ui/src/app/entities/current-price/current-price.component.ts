@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList } from '../../types';
+import { InstrumentInList } from '../../shared/types';
 import { PreloaderComponent } from '../preloader/preloader.component';
 
 

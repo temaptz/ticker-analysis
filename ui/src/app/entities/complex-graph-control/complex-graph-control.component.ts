@@ -18,9 +18,9 @@ import {
   InstrumentInList,
   Operation,
   PredictionGraphResp, TechAnalysisResp
-} from '../../types';
+} from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
-import { CandleInterval } from '../../enums';
+import { CandleInterval } from '../../shared/enums';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';

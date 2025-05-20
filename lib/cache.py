@@ -20,7 +20,7 @@ def cache_set(key: str, value: any, ttl: int = 3600) -> None:
 
 def clean():
     try:
-        redis_utils.flush_all()
+        redis_utils.clear_cache()
     except Exception as e:
         print('ERROR cache clean', e)
 

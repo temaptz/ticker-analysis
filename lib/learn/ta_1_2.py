@@ -4,7 +4,7 @@ import numpy
 import datetime
 from tinkoff.invest import CandleInterval, InstrumentResponse
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, fundamentals, forecasts, csv, redis_utils, serializer, cache, date_utils, docker, yandex_disk
+from lib import utils, instruments, fundamentals, forecasts, redis_utils, serializer, cache, date_utils, docker, yandex_disk, logger
 from lib.learn import learn_utils
 
 
@@ -212,9 +212,9 @@ def learn():
 
     y_pred_test = model.predict(test_pool)
     mse_test = mean_squared_error(y_test, y_pred_test)
-    print('Test MSE:', mse_test)
     mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
-    print('Test MAPE:', mape_test)
+
+    logger.log_info(message=f'TA-2 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME SIZE: {df.size}')
 
     learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
 
@@ -281,13 +281,10 @@ def prepare_data():
         instrument_index += 1
         print('INSTRUMENT', instrument.ticker)
 
-        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end):
+        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, is_skip_holidays=True):
             print('DATE', date)
 
-            days_until_today = len(date_utils.get_dates_interval_list(date, date_end))
-
-            for target_days_count in range(1, days_until_today):
-                target_date = (date + datetime.timedelta(days=target_days_count))
+            for target_date in date_utils.get_dates_interval_list(date_from=date, date_to=date_end, is_skip_holidays=True):
                 cached_record = get_record_cache(
                     ticker=instrument.ticker,
                     date=date,
@@ -325,11 +322,11 @@ def prepare_data():
     print('TOTAL COUNT', counter_total)
     print('TOTAL RECORDS PREPARED', len(records))
 
-    data_frame = csv.initialize_df_by_records(records=records)
+    data_frame = pandas.DataFrame(records)
 
     print(data_frame)
 
-    csv.save_df_to_csv(data_frame=data_frame, filename=get_data_frame_csv_file_path())
+    data_frame.to_csv(get_data_frame_csv_file_path(), index=False)
 
     print('DATA FRAME FILE SAVED')
 
@@ -337,7 +334,7 @@ def prepare_data():
 
     yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
 
-    print('DATA FRAME FILE UPLOADED')
+    logger.log_info(message=f'TA-1_2 DATA FRAME file uploaded. NAME: {file_name}, SIZE: {utils.get_file_size_readable(filepath=get_data_frame_csv_file_path())}')
 
 
 
@@ -418,7 +415,7 @@ def cache_record(card: LearningCard) -> None:
         date=card.date,
         target_date=card.target_date,
     )
-    cache.cache_set(key=cache_key, value=card, ttl=3600 * 24 * 365)
+    redis_utils.storage_set(key=cache_key, value=card, ttl_sec=3600 * 24 * 90)
 
 
 def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
@@ -427,11 +424,11 @@ def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.date
         date=date,
         target_date=target_date,
     )
-    cache.cache_set(key=cache_key, value='error', ttl=3600 * 24 * 7)
+    redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24 * 7)
 
 
-def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> LearningCard or str or None:
-    return cache.cache_get(key=get_record_cache_key(
+def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> LearningCard or None:
+    return redis_utils.storage_get(key=get_record_cache_key(
         ticker=ticker,
         date=date,
         target_date=target_date,

@@ -20,8 +20,8 @@ import {
   NewsListRatedResponse,
   TechAnalysisResp,
   PredictionHistoryGraphResp,
-} from '../../types';
-import { CandleInterval } from '../../enums';
+} from '../types';
+import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
 
 

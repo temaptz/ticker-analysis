@@ -6,7 +6,8 @@ REDIS_HOST = os.getenv('REDIS_HOST', 'redis' if docker.is_docker() else 'localho
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 
 # Подключение к Redis
-r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=False)
+r_cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=False)
+r_storage = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=1, decode_responses=False)
 
 
 def cache_set(key: str, value: any, ttl_sec=600) -> None:
@@ -14,9 +15,9 @@ def cache_set(key: str, value: any, ttl_sec=600) -> None:
     Записывает значение в Redis с TTL в секундах (по умолчанию 600 = 10 минут).
     """
     try:
-        r.set(name=key, value=serializer.db_serialize(data=value), ex=ttl_sec)
+        r_cache.set(name=key, value=serializer.db_serialize(data=value), ex=ttl_sec)
     except Exception as e:
-        print('ERROR CACHE cache_set', e)
+        print('ERROR REDIS CACHE cache_set', e)
 
 
 def cache_get(key: str) -> any:
@@ -24,33 +25,57 @@ def cache_get(key: str) -> any:
     Получает значение из Redis, или None, если ключа нет.
     """
     try:
-        raw = r.get(key)
+        raw = r_cache.get(key)
         if raw:
             return serializer.db_deserialize(data=raw)
     except Exception as e:
-        print('ERROR CACHE cache_get', e)
+        print('ERROR REDIS CACHE cache_get', e)
 
     return None
 
 
-def cache_delete(key: str) -> None:
+def storage_set(key: str, value: any, ttl_sec=600) -> None:
+    """
+    Записывает значение в Redis с TTL в секундах (по умолчанию 600 = 10 минут).
+    """
+    try:
+        r_storage.set(name=key, value=serializer.db_serialize(data=value), ex=ttl_sec)
+    except Exception as e:
+        print('ERROR REDIS CACHE storage_set', e)
+
+
+def storage_get(key: str) -> any:
+    """
+    Получает значение из Redis, или None, если ключа нет.
+    """
+    try:
+        raw = r_storage.get(key)
+        if raw:
+            return serializer.db_deserialize(data=raw)
+    except Exception as e:
+        print('ERROR REDIS CACHE storage_get', e)
+
+    return None
+
+
+def storage_delete(key: str) -> None:
     """
     Удаляет ключ из Redis.
     """
     try:
-        r.delete(key)
+        r_storage.delete(key)
     except Exception as e:
-        print('ERROR CACHE cache_delete', e)
+        print('ERROR REDIS CACHE storage_delete', e)
 
 
-def flush_all() -> None:
+def clear_cache() -> None:
     """
     Полная очистка всех данных в текущей базе Redis.
     """
     try:
-        r.flushall()
+        r_cache.flushall()
     except Exception as e:
-        print('ERROR CACHE cache_clean', e)
+        print('ERROR REDIS CACHE cache_clean', e)
 
 
 def get_redis_stats() -> str:
@@ -62,7 +87,7 @@ def get_redis_stats() -> str:
     - Макс. объём памяти (если настроено)
     """
     try:
-        redis_info = r.info()  # Словарь со множеством показателей
+        redis_info = r_cache.info()  # Словарь со множеством показателей
         used_memory_bytes = redis_info.get('used_memory', 0)
         used_memory_mb = round(used_memory_bytes / 1024 / 1024, 2)
 
@@ -71,7 +96,7 @@ def get_redis_stats() -> str:
         total_keys = db0_info.get('keys', 0)
 
         # Запрашиваем maxmemory (если 0, значит не установлен)
-        config_data = r.config_get('maxmemory')
+        config_data = r_cache.config_get('maxmemory')
         max_memory_str = config_data.get('maxmemory', '0')
         max_memory = int(max_memory_str)
         max_memory_mb = round(max_memory / 1024 / 1024, 2) if max_memory > 0 else 0
@@ -92,7 +117,7 @@ def get_redis_max_size_mb() -> float:
     Возвращает максимальный объём памяти (MB), настроенный для Redis.
     """
     try:
-        config_data = r.config_get('maxmemory')
+        config_data = r_cache.config_get('maxmemory')
         max_memory = int(config_data.get('maxmemory', '0'))
         return round(max_memory / 1024 / 1024, 2) if max_memory > 0 else 0.0
     except Exception as e:
@@ -105,7 +130,7 @@ def get_redis_size_mb() -> float:
     Возвращает текущий объём занятой Redis памяти (MB).
     """
     try:
-        redis_info = r.info()
+        redis_info = r_cache.info()
         used_memory_bytes = redis_info.get('used_memory', 0)
         return round(used_memory_bytes / 1024 / 1024, 2)
     except Exception as e:

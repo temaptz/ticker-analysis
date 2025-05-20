@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
-import { InstrumentForecastsHistory, InstrumentInList } from '../../types';
+import { InstrumentForecastsHistory, InstrumentInList } from '../../shared/types';
 import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 

@@ -1,4 +1,4 @@
-import { Quotation } from '../types';
+import { Quotation } from '../shared/types';
 
 export const getPriceByCandle = (candle: Quotation): number | null => {
   const high = getPriceByQuotation(candle.high);

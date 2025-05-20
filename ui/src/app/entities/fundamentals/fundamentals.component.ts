@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
-import { Fundamentals, InstrumentInList } from '../../types';
+import { Fundamentals, InstrumentInList } from '../../shared/types';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { FundamentalsCardComponent } from '../fundamentals-card/fundamentals-card.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

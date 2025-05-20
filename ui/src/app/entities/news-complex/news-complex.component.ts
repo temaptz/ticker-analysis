@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, forkJoin, of } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList, NewsRateResponse } from '../../types';
+import { InstrumentInList, NewsRateResponse } from '../../shared/types';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { NewsBarComponent } from '../news-bar/news-bar.component';
 

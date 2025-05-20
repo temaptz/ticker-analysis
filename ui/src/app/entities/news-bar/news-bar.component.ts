@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MathRoundPipe } from '../../shared/pipes/math-round.pipe';
-import { NewsAbsoluteRate } from '../../types';
+import { NewsAbsoluteRate } from '../../shared/types';
 
 
 @Component({

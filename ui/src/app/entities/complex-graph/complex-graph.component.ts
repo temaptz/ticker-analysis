@@ -19,9 +19,9 @@ import {
   InstrumentInList,
   Operation,
   PredictionGraphResp, PredictionHistoryGraphResp, TechAnalysisResp
-} from '../../types';
+} from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
-import { CandleInterval } from '../../enums';
+import { CandleInterval, ModelNameEnum } from '../../shared/enums';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
@@ -220,7 +220,7 @@ export class ComplexGraphComponent {
   });
 
   seriesTa_1 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta_1'] ?? [];
+    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_1] ?? [];
 
     return {
       name: 'Предсказания TA_1',
@@ -247,7 +247,7 @@ export class ComplexGraphComponent {
   });
 
   seriesTa_1_1 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta_1_1'] ?? [];
+    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_1_1] ?? [];
 
     return {
       name: 'Предсказания TA_1_1',
@@ -274,7 +274,7 @@ export class ComplexGraphComponent {
   });
 
   seriesTa_1_2 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta_1_2'] ?? [];
+    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_1_2] ?? [];
 
     return {
       name: 'Предсказания TA_1_2',
@@ -297,11 +297,11 @@ export class ComplexGraphComponent {
           getRoundPrice(i.prediction),
         ]
       ) ?? []
-    };
+    } as echarts.SeriesOption;
   });
 
   seriesTa_2 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.['ta_2'] ?? [];
+    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_2] ?? [];
 
     return {
       name: 'Предсказания TA_2',
@@ -324,7 +324,34 @@ export class ComplexGraphComponent {
           getRoundPrice(i.prediction),
         ]
       ) ?? []
-    };
+    } as echarts.SeriesOption;
+  });
+
+  seriesTa_2_1 = computed<echarts.SeriesOption>(() => {
+    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_2_1] ?? [];
+
+    return {
+      name: 'Предсказания TA_2_1',
+      type: 'line',
+      showSymbol: true,
+      symbol: 'circle',
+      symbolSize: 2.5,
+      itemStyle: {
+        color: GRAPH_COLORS.ta_2_1
+      },
+      lineStyle: {
+        width: 1,
+      },
+      encode: {
+        x: 0,
+        y: 1
+      },
+      data: predictions?.map(i => [
+          parseJSON(i.date),
+          getRoundPrice(i.prediction),
+        ]
+      ) ?? []
+    } as echarts.SeriesOption;
   });
 
   seriesOperations = computed<echarts.SeriesOption>(() => {
@@ -540,6 +567,7 @@ export class ComplexGraphComponent {
         this.seriesTa_1_1(),
         this.seriesTa_1_2(),
         this.seriesTa_2(),
+        this.seriesTa_2_1(),
       );
     }
 

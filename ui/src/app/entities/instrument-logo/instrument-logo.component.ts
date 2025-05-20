@@ -1,7 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { InstrumentBrandResponse } from '../../types';
+import { InstrumentBrandResponse } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
 
 

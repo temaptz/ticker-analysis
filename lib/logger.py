@@ -8,7 +8,8 @@ def error_logger(func):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            log_error(method_name=function_name, error=e)
+            log_error(method_name=function_name, error=e, debug_info=f'{args}:{kwargs}')
+        return None
     return wrapper
 
 
@@ -28,9 +29,13 @@ def log_error(method_name: str, error: Exception = None, debug_info: str = None)
         telegram.send_message(error_str)
 
 
-def log_info(message: str, output: any = None) -> None:
+def log_info(message: str, output: any = None, is_send_telegram=False) -> None:
     date_str = get_local_time_log_str()
-    print(f'\033[94m[{date_str}] {message}\033[0m', output)
+    out_str = f'\033[94m[{date_str}] {message}\033[0m'
+    print(out_str, output)
+
+    if is_send_telegram and docker.is_prod():
+        telegram.send_message(message=out_str)
 
 
 def get_local_time_log_str() -> str:

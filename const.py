@@ -36,7 +36,6 @@ TICKER_LIST: list[str] = [
     'VTBR',
     'GMKN',
     'PHOR',
-    'HHR',
     'HEAD',
     'RTKMP',
     'CNRU',

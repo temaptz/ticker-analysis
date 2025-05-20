@@ -24,6 +24,7 @@ def get_instruments_white_list() -> list[InstrumentResponse.instrument]:
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 10)
+@logger.error_logger
 def get_instrument_by_uid(uid: str):
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
@@ -33,6 +34,7 @@ def get_instrument_by_uid(uid: str):
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 10)
+@logger.error_logger
 def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(

@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
-import { FundamentalsHistory, Instrument } from '../../types';
+import { FundamentalsHistory, Instrument } from '../../shared/types';
 import { FundamentalsCardComponent } from '../../entities/fundamentals-card/fundamentals-card.component';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';

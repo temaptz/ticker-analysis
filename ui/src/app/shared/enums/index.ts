@@ -14,3 +14,12 @@ export enum CandleInterval {
   CANDLE_INTERVAL_WEEK = 12,
   CANDLE_INTERVAL_MONTH = 13,
 }
+
+
+export enum ModelNameEnum {
+  Ta_1 =  'ta_1',
+  Ta_1_1 =  'ta_1_1',
+  Ta_1_2 =  'ta_1_2',
+  Ta_2 =  'ta_2',
+  Ta_2_1 =  'ta_2_1',
+}

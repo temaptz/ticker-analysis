@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
-import { NewsListRatedResponse } from '../../types';
+import { NewsListRatedResponse } from '../../shared/types';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { NewsBarComponent } from '../../entities/news-bar/news-bar.component';
 import { HighlightWordsPipe } from '../../shared/pipes/highlight-words.pipe';

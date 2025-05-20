@@ -1,7 +1,7 @@
 import { inject, Pipe, PipeTransform } from '@angular/core';
 import { map, Observable, of } from 'rxjs';
 import { ApiService } from '../services/api.service';
-import { Instrument } from '../../types';
+import { Instrument } from '../types';
 
 
 @Pipe({
