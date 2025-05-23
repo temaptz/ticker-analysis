@@ -55,10 +55,23 @@ export interface NewsListRatedResponse {
     source: string;
     rate_absolute: NewsAbsoluteRate;
     rate_percent: NewsPercentRate;
+    rate_v2: NewsRateV2;
   }[];
   keywords: string[];
   total_absolute: NewsAbsoluteRate;
   total_percent: NewsPercentRate;
+}
+
+
+export interface NewsRateV2 {
+  sentiment: number;
+  impact_strength: number;
+  mention_focus: number;
+  model_name: string;
+  pretrain_name: string;
+  generation_time_sec: number;
+  generation_date: string;
+  influence_score: number;
 }
 
 

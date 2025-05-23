@@ -1,8 +1,8 @@
 import datetime
 
 from lib.db_2 import news_db
-from lib import instruments, yandex, cache, serializer, utils, logger
-from lib.news import news_rate_v1
+from lib import instruments, yandex, cache, serializer, utils, logger, learn
+from lib.news import news_rate_v1, news_rate_v2
 
 
 class NewsSourceRated:
@@ -23,15 +23,48 @@ def get_rated_news_by_instrument_uid(
         start_date: datetime.datetime,
         end_date: datetime.datetime,
 ):
-    return news_rate_v1.get_rated_news_by_instrument_uid(
+    news_list = get_news_by_instrument_uid(
         instrument_uid=instrument_uid,
-        news_list=get_news_by_instrument_uid(
-            instrument_uid=instrument_uid,
-            start_date=start_date,
-            end_date=end_date,
-        ),
-        keywords=get_keywords_by_instrument_uid(instrument_uid=instrument_uid),
+        start_date=start_date,
+        end_date=end_date,
     )
+    news_ids_list = [n.news_uid for n in news_list or []]
+    keywords = get_keywords_by_instrument_uid(instrument_uid=instrument_uid)
+    response: dict = {
+        'list': [],
+        'keywords': keywords,
+        'total_absolute': news_rate_v1.get_news_rate_absolute(
+            news_uid_list=news_ids_list,
+            instrument_uid=instrument_uid,
+        ),
+        'total_percent': news_rate_v1.get_news_rate(
+            news_uid_list=news_ids_list,
+            instrument_uid=instrument_uid,
+        ),
+    }
+
+    for n in news_list or []:
+        response['list'].append({
+            'news_uid': n.news_uid,
+            'title': n.title,
+            'text': n.text,
+            'date': n.date,
+            'source': n.source_name,
+            'rate_absolute': news_rate_v1.get_news_rate_absolute(
+                news_uid_list=[n.news_uid],
+                instrument_uid=instrument_uid,
+            ),
+            'rate_percent': news_rate_v1.get_news_rate(
+                news_uid_list=[n.news_uid],
+                instrument_uid=instrument_uid,
+            ),
+            'rate_v2': news_rate_v2.get_news_rate_db(
+                news_uid=n.news_uid,
+                instrument_uid=instrument_uid,
+            ),
+        })
+
+    return response
 
 
 def get_news_rate_by_instrument_uid(

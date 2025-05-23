@@ -38,6 +38,8 @@ def get_rate(instrument_uid: str, news_uid: str) -> list[NewsRate2Db]:
         return session.query(NewsRate2Db).filter(
             NewsRate2Db.instrument_uid == instrument_uid,
             NewsRate2Db.news_uid == news_uid
+        ).order_by(
+            NewsRate2Db.generation_date.desc()
         ).all()
 
 

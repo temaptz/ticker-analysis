@@ -1,30 +1,51 @@
 import re
 import time
 
-from lib.db_2 import news_db
+from lib.db_2 import news_db, news_rate_2_db
 from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types, local_llm
 
 
 @logger.error_logger
-def get_news_rate(
-        news_uid: list[str],
-        subject_name: str,
+def get_news_rate_db(
+        news_uid: str,
+        instrument_uid: str,
 ) -> types.NewsRate2 or None:
-    news = []
-    for i in news_uid:
-        n = news_db.get_news_by_uid(news_uid=i)
-        if n:
-            news.append(n)
+    rate = news_rate_2_db.get_rate(instrument_uid=instrument_uid, news_uid=news_uid) or []
 
-    if len(news) > 0:
-        for i in news:
-            rate = get_text_rate(
-                text=utils.clean_news_text_for_llm(title=i.title, text=i.text),
-                subject_name=subject_name,
-            )
+    if len(rate) > 0:
+        last_rate = rate[0]
+        result = types.NewsRate2(
+            sentiment=last_rate.sentiment,
+            impact_strength=last_rate.impact_strength,
+            mention_focus=last_rate.mention_focus,
+            model_name=last_rate.model_name,
+            pretrain_name=last_rate.pretrain_name,
+            generation_time_sec=last_rate.generation_time_sec,
+            generation_date=last_rate.generation_date,
+        )
 
-            if rate and rate.is_ready():
-                return rate
+        if result.is_ready_to_calc():
+            result.get_influence_score_value()
+            return result
+
+    return None
+
+
+@logger.error_logger
+def get_news_rate(
+        news_uid: str,
+        instrument_uid: str,
+) -> types.NewsRate2 or None:
+    if news := news_db.get_news_by_uid(news_uid=news_uid):
+        if instrument := instruments.get_instrument_by_uid(instrument_uid=instrument_uid):
+            if subject_name := yandex.get_human_name(legal_name=instrument.name):
+                rate = get_text_rate(
+                    text=utils.clean_news_text_for_llm(title=news.title, text=news.text),
+                    subject_name=subject_name,
+                )
+
+                if rate and rate.is_ready_to_calc():
+                    return rate
 
     return None
 
@@ -57,7 +78,7 @@ def get_text_rate(text: str, subject_name: str) -> types.NewsRate2 or None:
             llm_response=resp,
         )
 
-        if rate and rate.is_ready():
+        if rate and rate.is_ready_to_calc():
             return rate
 
     return None

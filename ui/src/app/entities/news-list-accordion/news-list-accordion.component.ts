@@ -9,11 +9,12 @@ import { NewsListRatedResponse } from '../../shared/types';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { NewsBarComponent } from '../../entities/news-bar/news-bar.component';
 import { HighlightWordsPipe } from '../../shared/pipes/highlight-words.pipe';
+import { RateV2Component } from '../rate-v2/rate-v2.component';
 
 
 @Component({
   selector: 'news-list-accordion',
-  imports: [CommonModule, PreloaderComponent, MatExpansionModule, NewsBarComponent, HighlightWordsPipe],
+  imports: [CommonModule, PreloaderComponent, MatExpansionModule, NewsBarComponent, HighlightWordsPipe, RateV2Component],
   providers: [],
   templateUrl: './news-list-accordion.component.html',
   styleUrl: './news-list-accordion.component.scss'

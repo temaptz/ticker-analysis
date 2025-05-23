@@ -26,8 +26,8 @@ def rate_all_news() -> None:
 
                 start = time.time()
                 rate: types.NewsRate2 = news.news_rate_v2.get_news_rate(
-                    news_uid=[n.news_uid],
-                    subject_name=subject_name,
+                    news_uid=n.news_uid,
+                    instrument_uid=instrument.uid,
                 )
                 end = time.time()
                 generation_time_sec = float(f'{end - start:.4f}')

@@ -1,11 +1,9 @@
 import sqlalchemy
-from sqlalchemy import Column, MetaData, DateTime, Text, func, and_, insert, desc
+from sqlalchemy import Column, MetaData, DateTime, Text, func
 from sqlalchemy.dialects.postgresql import UUID, TSVECTOR
 from sqlalchemy.sql import text as sql_text
 from sqlalchemy.orm import Session, declarative_base
 import datetime
-from typing import Type, Any
-
 from lib.db_2 import connection
 from lib import logger, serializer
 
@@ -39,13 +37,13 @@ def init_tables() -> None:
 
 
 @logger.error_logger
-def get_news() -> list[Type[News]]:
+def get_news() -> list[News]:
     with Session(engine) as session:
         return session.query(News).all()
 
 
 @logger.error_logger
-def get_news_by_uid(news_uid: str) -> Type[News]:
+def get_news_by_uid(news_uid: str) -> News:
     with Session(engine) as session:
         return session.query(News).filter(News.news_uid == news_uid).one_or_none()
 

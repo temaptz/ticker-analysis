@@ -1,0 +1,28 @@
+.rate {
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  white-space: nowrap;
+  font-size: .5em;
+  border: 1px solid gray;
+
+  &.plus {
+    border-color: green;
+
+    & > b {
+      color: green;
+    }
+  }
+
+  &.minus {
+    border-color: red;
+
+    & > b {
+      color: red;
+    }
+  }
+
+  & > b {
+    font-size: 2em;
+  }
+}

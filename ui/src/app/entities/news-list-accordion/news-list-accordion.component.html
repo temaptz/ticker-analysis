@@ -23,8 +23,12 @@
           <mat-expansion-panel-header>
             <div class="header">
               <span>{{ n.date | date: 'yyyy-MM-dd HH:mm' }}</span>
-              <span>{{ n.source }}</span>
+              <span class="source">{{ n.source }}</span>
               @if (n.rate_percent) {
+                <div class="rate-v2">
+                  <rate-v2 [rate_v2]="n.rate_v2"></rate-v2>
+                </div>
+
                 <div class="rate">
                   <news-bar
                     [positivePercent]="n.rate_percent.positive_percent"

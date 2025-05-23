@@ -143,7 +143,7 @@ def get_text_classify(title: str, text: str, subject_name: str) -> FewShotTextCl
 
 
 # Возвращает распространенное в обиходе название
-@cache.ttl_cache(ttl=3600 * 24 * 30)
+@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
 def get_human_name(legal_name: str) -> str:
     instruction = (
         'Ты эксперт в области бизнеса, финансов и журналистики. '

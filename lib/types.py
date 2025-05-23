@@ -33,33 +33,47 @@ class LocalLlmResponse:
 
 
 class NewsRate2:
-    sentiment = None  # эмоциональный/финансовый тон новости (от -1.0 до +1.0)
-    impact_strength = None  # сила потенциального влияния на цену акций (0.0 - не повлияет, 1.0 - повлияет значительно)
-    mention_focus = None  # Степень акцентированности упоминания компании (0.0 - вскользь, 1.0 - явно, подробно)
-    llm_response: LocalLlmResponse or None = None  # Степень акцентированности упоминания компании (0.0 - вскользь, 1.0 - явно, подробно)
+    sentiment: float or None = None
+    impact_strength: float or None = None
+    mention_focus: float or None = None
+    model_name: str or None = None
+    pretrain_name: str or None = None
+    generation_time_sec: float or None = None
+    generation_date: datetime.datetime or None = None
+    llm_response: LocalLlmResponse or None = None
+    influence_score: float or None = None
 
     def __init__(
             self,
-            sentiment: float = None,
-            impact_strength: float = None,
-            mention_focus: float = None,
-            llm_response: LocalLlmResponse = None
+            sentiment: float or None = None,
+            impact_strength: float or None = None,
+            mention_focus: float or None = None,
+            model_name: str or None = None,
+            pretrain_name: str or None = None,
+            generation_time_sec: float or None = None,
+            generation_date: datetime.datetime or None = None,
+            llm_response: LocalLlmResponse or None = None,
     ):
         self.sentiment = sentiment
         self.impact_strength = impact_strength
         self.mention_focus = mention_focus
+        self.model_name = model_name
+        self.pretrain_name = pretrain_name
+        self.generation_time_sec = generation_time_sec
+        self.generation_date = generation_date
         self.llm_response = llm_response
 
     # Это отражает влияние одной новости на потенциальное изменение цены акции - позитивное или негативное
     def get_influence_score_value(self) -> float or None:
-        if self.is_ready():
+        if self.is_ready_to_calc():
             try:
-                return self.sentiment * self.impact_strength * self.mention_focus
+                self.influence_score = self.sentiment * self.impact_strength * self.mention_focus
+                return self.influence_score
             except Exception as e:
                 print('ERROR NewsRate2 get_influence_score', e)
         return None
 
-    def is_ready(self) -> bool:
+    def is_ready_to_calc(self) -> bool:
         return self.sentiment is not None and self.impact_strength is not None and self.mention_focus is not None
 
 
