@@ -64,7 +64,7 @@
 <!--    </ng-container>-->
 
     <ng-container matColumnDef="complex">
-      <th mat-header-cell *matHeaderCellDef>Год + прогнозы на месяц</th>
+      <th mat-header-cell *matHeaderCellDef>Год истории + полгода прогнозов</th>
       <td mat-cell *matCellDef="let instrument">
         <complex-graph
           width="700px"
@@ -73,7 +73,7 @@
           [instrumentTicker]="instrument.ticker"
           [interval]="CandleInterval.CANDLE_INTERVAL_WEEK"
           [historyDaysCount]="365"
-          [futureDaysCount]="30"
+          [futureDaysCount]="180"
           [isShowForecasts]="true"
           [isShowLegend]="false"
         ></complex-graph>

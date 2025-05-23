@@ -18,7 +18,7 @@ class NewsClassifyGptCache(Base):
     news_hash = Column(String)
     subject_name = Column(String)
     classify = Column(Text)  # JSON as string
-    date = Column(DateTime, default=datetime.datetime.now(datetime.UTC))
+    date = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))
 
 def init_table():
     Base.metadata.create_all(engine)

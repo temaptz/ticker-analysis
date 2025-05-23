@@ -23,24 +23,44 @@ class NewsRateAbsoluteYandex:
         self.negative_total = negative_total
         self.neutral_total = neutral_total
 
+
+class LocalLlmResponse:
+    def __init__(self, prompt: str = None, response: str = None, model_name: str = None, pretrain_name: str = None):
+        self.prompt = prompt
+        self.response = response
+        self.model_name = model_name
+        self.pretrain_name = pretrain_name
+
+
 class NewsRate2:
     sentiment = None  # эмоциональный/финансовый тон новости (от -1.0 до +1.0)
     impact_strength = None  # сила потенциального влияния на цену акций (0.0 - не повлияет, 1.0 - повлияет значительно)
     mention_focus = None  # Степень акцентированности упоминания компании (0.0 - вскользь, 1.0 - явно, подробно)
+    llm_response: LocalLlmResponse or None = None  # Степень акцентированности упоминания компании (0.0 - вскользь, 1.0 - явно, подробно)
 
-    def __int__(self, sentiment: float = None, impact_strength: float = None, mention_focus: float = None):
+    def __init__(
+            self,
+            sentiment: float = None,
+            impact_strength: float = None,
+            mention_focus: float = None,
+            llm_response: LocalLlmResponse = None
+    ):
         self.sentiment = sentiment
         self.impact_strength = impact_strength
         self.mention_focus = mention_focus
+        self.llm_response = llm_response
 
     # Это отражает влияние одной новости на потенциальное изменение цены акции - позитивное или негативное
-    def get_influence_score(self) -> float or None:
-        if self.sentiment is not None and self.impact_strength is not None and self.mention_focus is not None:
+    def get_influence_score_value(self) -> float or None:
+        if self.is_ready():
             try:
                 return self.sentiment * self.impact_strength * self.mention_focus
             except Exception as e:
                 print('ERROR NewsRate2 get_influence_score', e)
         return None
+
+    def is_ready(self) -> bool:
+        return self.sentiment is not None and self.impact_strength is not None and self.mention_focus is not None
 
 
 class NewsRatePeriod2:
@@ -48,7 +68,7 @@ class NewsRatePeriod2:
     date_to: datetime.datetime = None
     news_rate_list: [NewsRate2] = []
 
-    def __int__(self, date_from: datetime.datetime = None, date_to: datetime.datetime = None, news_rate_list: [NewsRate2] = []):
+    def __init__(self, date_from: datetime.datetime = None, date_to: datetime.datetime = None, news_rate_list: [NewsRate2] = []):
         self.date_from = date_from
         self.date_to = date_to
         self.news_rate_list = news_rate_list
@@ -61,7 +81,7 @@ class NewsRatePeriod2:
                 # Общее "давление" новостного фона — положительное или отрицательное.
                 weekly_news_score = sum(
                     score for i in self.news_rate_list
-                    if (score := i.get_influence_score()) is not None
+                    if (score := i.get_influence_score_value()) is not None
                 )
 
                 return weekly_news_score / news_len

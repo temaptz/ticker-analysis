@@ -1,5 +1,6 @@
 import catboost
 import numpy
+from lib import docker
 from lib.learn.ta_1 import prepare_data
 from lib.utils import get_file_abspath_recursive
 
@@ -48,4 +49,7 @@ def predict(data: list):
 
 
 def get_model_file_path():
+    if docker.is_docker():
+        return '/app/learn_models/ta-1.txt'
+
     return get_file_abspath_recursive('ta-1.txt', 'learn_models')

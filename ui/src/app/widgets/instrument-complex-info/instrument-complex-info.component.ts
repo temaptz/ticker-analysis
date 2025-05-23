@@ -32,10 +32,9 @@ export class InstrumentComplexInfoComponent {
   instrument = signal<Instrument | null>(null);
   isLoaded = signal<boolean>(false);
 
-  complexGraphHistoryDaysCount = 180
-  complexGraphFutureDaysCount = 30
-  complexGraphHistoryInterval: CandleInterval = CandleInterval.CANDLE_INTERVAL_DAY;
-  protected readonly candleInterval = CandleInterval;
+  complexGraphHistoryDaysCount = 365
+  complexGraphFutureDaysCount = 180
+  complexGraphHistoryInterval: CandleInterval = CandleInterval.CANDLE_INTERVAL_WEEK;
 
   private appService = inject(ApiService);
   private destroyRef = inject(DestroyRef);

@@ -145,6 +145,9 @@ class LearningCard:
 
 
 def get_model_file_path():
+    if docker.is_docker():
+        return '/app/learn_models/ta-1_2.txt'
+
     return utils.get_file_abspath_recursive('ta-1_2.txt', 'learn_models')
 
 
@@ -156,7 +159,7 @@ def get_data_frame_csv_file_path():
 
 
 def learn():
-    df = pandas.read_csv(get_data_frame_csv_file_path(), index_col=0)
+    df = pandas.read_csv(get_data_frame_csv_file_path())
     x = df.drop(columns=['result'])
     y = df['result']
 
@@ -214,7 +217,7 @@ def learn():
     mse_test = mean_squared_error(y_test, y_pred_test)
     mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
 
-    logger.log_info(message=f'TA-2 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME SIZE: {df.size}', is_send_telegram=True)
+    logger.log_info(message=f'TA-1_2 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
 
     learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
 
@@ -235,17 +238,9 @@ def predict(data: list) -> float or None:
         print('ERROR predict ta_1_2', e)
 
 
+@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
-    cache_key = utils.get_md5(serializer.to_json({
-        'method': 'ta-1_2_predict_future',
-        'instrument_uid': instrument_uid,
-        'prediction_target_date': prediction_target_date,
-    }))
-    cached = cache.cache_get(key=cache_key)
-
-    if cached:
-        return cached
 
     card = LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
@@ -258,9 +253,7 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
         prediction = predict(data=card.get_x())
 
         if prediction:
-            cache.cache_set(key=cache_key, value=prediction, ttl=3600 * 24 * 30)
-
-        return prediction
+            return prediction
 
     return None
 
@@ -317,7 +310,7 @@ def prepare_data():
 
                 counter_total += 1
 
-                print(f'(TOTAL: {counter_total}; ERROR: {counter_error}; CACHED: {counter_cached}; ADDED: {counter_added}; redis: {redis_utils.get_redis_size_mb()}MB/{redis_utils.get_redis_max_size_mb()}MB; CURRENT_TICKER: {instrument.ticker}({instrument_index}/{len(instruments_list)}))')
+                print(f'(TA-1_2 PREPARE: {counter_total}; ERROR: {counter_error}; CACHED: {counter_cached}; ADDED: {counter_added}; redis: {redis_utils.get_redis_size_mb()}MB/{redis_utils.get_redis_max_size_mb()}MB; CURRENT_TICKER: {instrument.ticker}({instrument_index}/{len(instruments_list)}))')
 
     print('TOTAL COUNT', counter_total)
     print('TOTAL RECORDS PREPARED', len(records))

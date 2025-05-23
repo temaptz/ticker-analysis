@@ -150,3 +150,11 @@ export enum SortModeEnum {
   Profit = 3,
   MarketValue = 4,
 }
+
+export interface TechAnalysisOptions {
+  isShowRSI?: boolean;
+  isShowBB?: boolean;
+  isShowEMA?: boolean;
+  isShowSMA?: boolean;
+  isShowMACD?: boolean;
+}

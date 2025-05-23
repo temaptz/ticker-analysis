@@ -16,7 +16,12 @@
       [historyDaysCount]="daysHistory()"
       [interval]="historyInterval()"
       [futureDaysCount]="daysFuture()"
+      [isShowTechAnalysis]="isShowTechAnalysis()"
+      [techAnalysisOptions]="techAnalysisOptions()"
       (onChange)="handleChangeControl($event)"
+      (onChangeTechAnalysis)="handleChangeTechAnalysis($event)"
     ></complex-graph-control>
   </div>
 }
+
+<p>{{ techAnalysisOptions() | json }}</p>

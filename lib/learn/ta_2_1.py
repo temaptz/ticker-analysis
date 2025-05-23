@@ -1,12 +1,16 @@
 import numpy
-from tinkoff.invest import CandleInterval, InstrumentResponse
+from tinkoff.invest import CandleInterval, InstrumentResponse, Instrument
 import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types, yandex_disk, docker, logger
+from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types, yandex_disk, docker, logger, yandex
 from lib.news import news_rate_v1
 from lib.learn import learn_utils
+
+
+def get_feature_names() -> list:
+    return ['target_date_days', 'news_positive_percent', 'news_negative_percent', 'news_neutral_percent', 'name', 'exchange', 'class_code', 'currency', 'country_of_risk', 'price', 'forecast_price', 'revenue_ttm', 'ebitda_ttm', 'market_capitalization', 'total_debt_mrq', 'eps_ttm', 'pe_ratio_ttm', 'ev_to_ebitda_mrq', 'dividend_payout_ratio_fy', 'price_week_0', 'price_week_1', 'price_week_2', 'price_week_3', 'price_week_4', 'price_week_5', 'price_week_6', 'price_week_7', 'price_week_8', 'price_week_9', 'price_week_10', 'price_week_11', 'price_week_12', 'price_week_13', 'price_week_14', 'price_week_15', 'price_week_16', 'price_week_17', 'price_week_18', 'price_week_19', 'price_week_20', 'price_week_21', 'price_week_22', 'price_week_23', 'price_week_24', 'price_week_25', 'price_week_26', 'price_week_27', 'price_week_28', 'price_week_29', 'price_week_30', 'price_week_31', 'price_week_32', 'price_week_33', 'price_week_34', 'price_week_35', 'price_week_36', 'price_week_37', 'price_week_38', 'price_week_39', 'price_week_40', 'price_week_41', 'price_week_42', 'price_week_43', 'price_week_44', 'price_week_45', 'price_week_46', 'price_week_47', 'price_week_48', 'price_week_49', 'price_week_50']
 
 
 class Ta21LearningCard:
@@ -31,7 +35,7 @@ class Ta21LearningCard:
     news_negative_percent: int = None  # Процент негативного новостного фона за месяц до даты
     news_neutral_percent: int = None  # Процент нейтрального новостного фона за месяц до даты
 
-    def __init__(self, instrument: InstrumentResponse.instrument, date: datetime.datetime, target_date: datetime.datetime, fill_empty=False):
+    def __init__(self, instrument: Instrument, date: datetime.datetime, target_date: datetime.datetime, fill_empty=False):
         if date > target_date:
             self.is_ok = False
             return
@@ -83,7 +87,7 @@ class Ta21LearningCard:
             self.is_ok = False
             return
 
-        if len(self.get_x()) != 65:
+        if len(self.get_x()) != 70:
             print('CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
@@ -154,6 +158,11 @@ class Ta21LearningCard:
             self.news_positive_percent,
             self.news_negative_percent,
             self.news_neutral_percent,
+            self.instrument.name, # Название инструмента.
+            self.instrument.exchange, # Tорговая площадка (секция биржи).
+            self.instrument.class_code, # Класс-код инструмента.
+            self.instrument.currency, # Валюта инструмента.
+            self.instrument.country_of_risk, # Код страны
             numpy.float32(self.price),
             numpy.float32(self.consensus_forecast_price),
             numpy.float32(self.revenue_ttm),
@@ -169,6 +178,19 @@ class Ta21LearningCard:
     # Выходные данные для обучения
     def get_y(self) -> float:
         return self.target_price
+
+    def get_csv_record(self) -> dict:
+        result = {}
+        x = self.get_x()
+        y = self.get_y()
+        fields_x = get_feature_names()
+
+        for i in range(len(fields_x)):
+            result[fields_x[i]] = x[i]
+
+        result['result'] = y
+
+        return result
 
 
 def generate_data():
@@ -201,9 +223,11 @@ def generate_data():
                     target_date=target_date,
                 )
 
-                if cached_record and cached_record != 'error':
-                    counter_cached += 1
-                    records.append(get_csv_record_by_learning_card(card=cached_record))
+                if cached_record:
+                    if cached_record != 'error':
+                        if cached_csv := cached_record.get_csv_record():
+                            counter_cached += 1
+                            records.append(cached_csv)
                 else:
                     card = Ta21LearningCard(
                         instrument=instrument,
@@ -214,7 +238,7 @@ def generate_data():
                     if card.is_ok and card.get_y() and card.get_y() != 0:
                         cache_record(card=card)
                         counter_added += 1
-                        records.append(get_csv_record_by_learning_card(card=card))
+                        records.append(card.get_csv_record())
 
                     else:
                         cache_error(
@@ -246,9 +270,11 @@ def generate_data():
     logger.log_info(message=f'TA-2_1 DATA FRAME file uploaded. NAME: {file_name}, SIZE: {utils.get_file_size_readable(filepath=get_data_frame_csv_file_path())}')
 
 def learn():
-    df = pandas.read_csv(get_data_frame_csv_file_path(), index_col=0)
+    df = pandas.read_csv(get_data_frame_csv_file_path())
     x = df.drop(columns=['result'])
     y = df['result']
+    text_features = ['name']
+    cat_features = ['exchange', 'class_code', 'currency', 'country_of_risk']
 
     x_array = x.values
     y_array = y.values
@@ -275,9 +301,27 @@ def learn():
     print('Y_val shape:', y_val.shape)
     print('Y_test shape:', y_test.shape)
 
-    train_pool = catboost.Pool(data=x_train, label=y_train)
-    validate_pool = catboost.Pool(data=x_val, label=y_val)
-    test_pool = catboost.Pool(data=x_test, label=y_test)
+    train_pool = catboost.Pool(
+        data=x_train,
+        label=y_train,
+        cat_features=cat_features,
+        text_features=text_features,
+        feature_names=get_feature_names(),
+    )
+    validate_pool = catboost.Pool(
+        data=x_val,
+        label=y_val,
+        cat_features=cat_features,
+        text_features=text_features,
+        feature_names=get_feature_names(),
+    )
+    test_pool = catboost.Pool(
+        data=x_test,
+        label=y_test,
+        cat_features=cat_features,
+        text_features=text_features,
+        feature_names=get_feature_names(),
+    )
 
     model = catboost.CatBoostRegressor(
         task_type='CPU',
@@ -304,7 +348,7 @@ def learn():
     mse_test = mean_squared_error(y_test, y_pred_test)
     mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
 
-    logger.log_info(message=f'TA-2_1 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME SIZE: {df.size}', is_send_telegram=True)
+    logger.log_info(message=f'TA-2_1 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
 
     learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
 
@@ -315,30 +359,9 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return numpy.mean(numpy.abs((y_true[nonzero_mask] - y_pred[nonzero_mask]) / y_true[nonzero_mask])) * 100
 
 
-def predict(data: list) -> float or None:
-    try:
-        model = catboost.CatBoostRegressor()
-        model.load_model(get_model_file_path())
-
-        return model.predict(data=data)
-    except Exception as e:
-        print('ERROR predict ta_2_1', e)
-
-    return None
-
-
-@cache.ttl_cache(ttl=3600 * 24)
+@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
-    cache_key = utils.get_md5(serializer.to_json({
-        'method': 'ta-2_predict_future',
-        'instrument_uid': instrument_uid,
-        'prediction_target_date': prediction_target_date,
-    }))
-    cached = cache.cache_get(key=cache_key)
-
-    if cached:
-        return cached
 
     card = Ta21LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
@@ -348,17 +371,20 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
     )
 
     if card.is_ok:
-        prediction = predict(data=card.get_x())
+        model = catboost.CatBoostRegressor()
+        model.load_model(get_model_file_path())
+        prediction = model.predict(data=card.get_x())
 
         if prediction:
-            cache.cache_set(key=cache_key, value=prediction, ttl=3600 * 24 * 30)
-
-        return prediction
+            return prediction
 
     return None
 
 
 def get_model_file_path():
+    if docker.is_docker():
+        return '/app/learn_models/ta-2_1.txt'
+
     return utils.get_file_abspath_recursive('ta-2_1.txt', 'learn_models')
 
 
@@ -369,87 +395,13 @@ def get_data_frame_csv_file_path():
     return utils.get_file_abspath_recursive('ta-2_1.csv', 'data_frames')
 
 
-def get_csv_record_by_learning_card(card: Ta21LearningCard) -> dict:
-    x = card.get_x()
-    y = card.get_y()
-
-    return {
-        'target_date_days': x[0],
-        'news_positive_percent': x[1],
-        'news_negative_percent': x[2],
-        'news_neutral_percent': x[3],
-        'price': x[4],
-        'forecast_price': x[5],
-        'revenue_ttm': x[6],
-        'ebitda_ttm': x[7],
-        'market_capitalization': x[8],
-        'total_debt_mrq': x[9],
-        'eps_ttm': x[10],
-        'pe_ratio_ttm': x[11],
-        'ev_to_ebitda_mrq': x[12],
-        'dividend_payout_ratio_fy': x[13],
-        'price_week_0': x[14],
-        'price_week_1': x[15],
-        'price_week_2': x[16],
-        'price_week_3': x[17],
-        'price_week_4': x[18],
-        'price_week_5': x[19],
-        'price_week_6': x[20],
-        'price_week_7': x[21],
-        'price_week_8': x[22],
-        'price_week_9': x[23],
-        'price_week_10': x[24],
-        'price_week_11': x[25],
-        'price_week_12': x[26],
-        'price_week_13': x[27],
-        'price_week_14': x[28],
-        'price_week_15': x[29],
-        'price_week_16': x[30],
-        'price_week_17': x[31],
-        'price_week_18': x[32],
-        'price_week_19': x[33],
-        'price_week_20': x[34],
-        'price_week_21': x[35],
-        'price_week_22': x[36],
-        'price_week_23': x[37],
-        'price_week_24': x[38],
-        'price_week_25': x[39],
-        'price_week_26': x[40],
-        'price_week_27': x[41],
-        'price_week_28': x[42],
-        'price_week_29': x[43],
-        'price_week_30': x[44],
-        'price_week_31': x[45],
-        'price_week_32': x[46],
-        'price_week_33': x[47],
-        'price_week_34': x[48],
-        'price_week_35': x[49],
-        'price_week_36': x[50],
-        'price_week_37': x[51],
-        'price_week_38': x[52],
-        'price_week_39': x[53],
-        'price_week_40': x[54],
-        'price_week_41': x[55],
-        'price_week_42': x[56],
-        'price_week_43': x[57],
-        'price_week_44': x[58],
-        'price_week_45': x[59],
-        'price_week_46': x[60],
-        'price_week_47': x[61],
-        'price_week_48': x[62],
-        'price_week_49': x[63],
-        'price_week_50': x[64],
-        'result': y,
-    }
-
-
 def cache_record(card: Ta21LearningCard) -> None:
     cache_key = get_record_cache_key(
         ticker=card.instrument.ticker,
         date=card.date,
         target_date=card.target_date,
     )
-    redis_utils.storage_set(key=cache_key, value=card, ttl_sec=3600 * 24 * 90)
+    redis_utils.storage_set(key=cache_key, value=card, ttl_sec=3600 * 24 * 30)
 
 
 def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
@@ -458,7 +410,7 @@ def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.date
         date=date,
         target_date=target_date,
     )
-    redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24 * 7)
+    redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24 * 3)
 
 
 def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> Ta21LearningCard or None:
@@ -471,7 +423,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key',
+        'method': 'ta_2_1_get_record_cache_key_0',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

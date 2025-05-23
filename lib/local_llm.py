@@ -1,23 +1,32 @@
-import requests
-from lib import logger, serializer, docker
+import http.client
+import json
+from lib import cache, logger, types
 
+@cache.ttl_cache(ttl=60 * 5, skip_empty=True)
 @logger.error_logger
-def query_gpt_local(prompt: str) -> str or None:
-    url = 'http://gpt:8080/v1/completions' if docker.is_docker() else 'http://localhost:8080/v1/completions'
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        'prompt': prompt,
-        'model': 'llama-3-8b'
-    }
+def generate(prompt: str) -> types.LocalLlmResponse or None:
+    conn = http.client.HTTPConnection('localhost', 8080)
+    
+    # Отправим POST-запрос по пути /predict
+    conn.request(
+        method='POST',
+        url='/generate',
+        body=json.dumps({'prompt': prompt}),
+        headers={'Content-Type': 'application/json'}
+    )
+    
+    response = conn.getresponse()
 
-    response = requests.post(url, headers=headers, json=payload, timeout=None)
+    if response.status == 200:
+        data = response.read()
+        parsed = json.loads(data.decode('utf-8'))
 
-    if response:
-        result = response.json()
-
-        if result and result['choices'] and result['choices'][0] and result['choices'][0]['text']:
-            logger.log_info(message='GPT RESPONSE USAGE', output=serializer.to_json(result['usage']))
-
-            return result['choices'][0]['text']
+        if 'response' in parsed and parsed['response']:
+            return types.LocalLlmResponse(
+                prompt=parsed['prompt'],
+                response=parsed['response'],
+                model_name=parsed['model_name'],
+                pretrain_name=parsed['pretrain_name'],
+            )
 
     return None

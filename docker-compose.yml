@@ -6,13 +6,13 @@ services:
     container_name: tasks
     volumes:
       - /etc/is_my_prod:/container_host_is_prod:ro
+      - ./learn_models:/app/learn_models
     command:
       - python
       - main.py
     depends_on:
       - redis
       - postgres
-      - apiserver
     restart: unless-stopped
 
   learn:
@@ -22,6 +22,7 @@ services:
     container_name: learn
     volumes:
       - /etc/is_my_prod:/container_host_is_prod:ro
+      - ./learn_models:/app/learn_models
     command:
       - python
       - learn.py
@@ -30,16 +31,17 @@ services:
       - postgres
     restart: no
 
-  news_ranker:
+  news_rate:
     build:
       context: .
       dockerfile: Dockerfile-python-services
-    container_name: news_ranker
+    container_name: news_rate
     volumes:
       - /etc/is_my_prod:/container_host_is_prod:ro
+      - ./learn_models:/app/learn_models
     command:
       - python
-      - news_ranker.py
+      - news_rate.py
     depends_on:
       - redis
       - postgres
@@ -52,18 +54,34 @@ services:
     container_name: apiserver
     volumes:
       - /etc/is_my_prod:/container_host_is_prod:ro
-      - ./llm_models:/app/llm_models
+      - ./learn_models:/app/learn_models
 #    ports:
 #      - "8000:8000"
-    command:
-      - python
-      - apiserver/manage.py
-      - runserver
-      - 0.0.0.0:8000
+    command: >
+      gunicorn apiserver.wsgi:application
+      --chdir /app/apiserver
+      --bind 0.0.0.0:8000
+      --workers 4
+      --threads 2
+      --timeout 120
     depends_on:
       - redis
       - postgres
     restart: unless-stopped
+
+  local_llm:
+    build:
+      context: .
+      dockerfile: ./local_llm/Dockerfile
+    container_name: local_llm
+    volumes:
+      - ./local_llm/download_cache:/app/models_cache
+    depends_on:
+      - redis
+      - postgres
+    restart: no
+    ports:
+      - "8090:8090"
 
   ui:
     build:
@@ -116,19 +134,6 @@ services:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
 #    ports:
 #      - "6379:6379"
-    restart: unless-stopped
-
-  gpt:
-    build:
-      context: llm_service
-      dockerfile: Dockerfile
-    container_name: gpt
-#    ports:
-#      - "8080:8080"
-    volumes:
-      - ./llm_models:/app/models
-    mem_limit: 24g
-    cpus: 4
     restart: unless-stopped
 
 volumes:

@@ -58,6 +58,46 @@
           <option [value]="365 * 10">10 лет</option>
         </select>
       </label>
+
+      <label>
+        Тех анализ
+        <br>
+        <div>
+          <input
+            type="checkbox"
+            [value]="techAnalysisOptions().isShowRSI"
+            (change)="handleChangeTechAnalysisOption('isShowRSI', !techAnalysisOptions().isShowRSI)"
+          /> RSI
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [value]="techAnalysisOptions().isShowBB"
+            (change)="handleChangeTechAnalysisOption('isShowBB', !techAnalysisOptions().isShowBB)"
+            /> BB
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [value]="techAnalysisOptions().isShowEMA"
+            (change)="handleChangeTechAnalysisOption('isShowEMA', !techAnalysisOptions().isShowEMA)"
+          /> EMA
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [value]="techAnalysisOptions().isShowSMA"
+            (change)="handleChangeTechAnalysisOption('isShowSMA', !techAnalysisOptions().isShowSMA)"
+          /> SMA
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [value]="techAnalysisOptions().isShowMACD"
+            (change)="handleChangeTechAnalysisOption('isShowMACD', !techAnalysisOptions().isShowMACD)"
+          /> MACD
+        </div>
+      </label>
     </div>
   }
 </div>

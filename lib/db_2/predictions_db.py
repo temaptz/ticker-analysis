@@ -18,7 +18,7 @@ class PredictionDB(Base):
     prediction = Column(Float, nullable=False)
     target_date = Column(DateTime, nullable=False, default=datetime.datetime)
     model_name = Column(String, nullable=False)
-    date = Column(DateTime, nullable=False, default=datetime.datetime.now(datetime.timezone.utc))
+    date = Column(DateTime, nullable=False, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 @logger.error_logger

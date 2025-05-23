@@ -76,10 +76,17 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
 def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
+        date_from_utc = date_utils.convert_to_utc(
+            datetime.datetime.combine(
+                date_from,
+                datetime.time(hour=12, minute=0, second=0, microsecond=0)
+            )
+        )
+        date_to_utc = date_utils.convert_to_utc(date_to)
 
         for date in date_utils.get_dates_interval_list(
-                date_from=date_from,
-                date_to=date_to,
+                date_from=date_from_utc,
+                date_to=date_to_utc,
                 interval_seconds=date_utils.get_interval_sec_by_candle(interval)
         ):
             prediction_item = None
@@ -150,6 +157,7 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
     pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
     pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
     pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
+    pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target)
     pred_list = []
 
     if pred_ta_1 is not None:
@@ -163,6 +171,9 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
 
     if pred_ta_2 is not None:
         pred_list.append(pred_ta_2)
+
+    if pred_ta_2_1 is not None:
+        pred_list.append(pred_ta_2_1)
 
     if len(pred_list) > 0:
         return sum(pred_list) / len(pred_list)

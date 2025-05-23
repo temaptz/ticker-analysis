@@ -1,13 +1,15 @@
 import {
-  Component, computed, DestroyRef,
-  effect, inject,
   input,
-  numberAttribute,
+  effect,
+  inject,
   signal,
+  computed,
+  Component,
+  numberAttribute,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, map, of, switchMap, tap } from 'rxjs';
+import { combineLatest, debounceTime, map, of, switchMap, tap } from 'rxjs';
 import { addDays, endOfDay, isAfter, parseJSON, startOfDay, subDays } from 'date-fns';
 import * as echarts from 'echarts';
 import { ApiService } from '../../shared/services/api.service';
@@ -18,7 +20,9 @@ import {
   InstrumentHistoryPrice,
   InstrumentInList,
   Operation,
-  PredictionGraphResp, PredictionHistoryGraphResp, TechAnalysisResp
+  PredictionGraphResp,
+  PredictionHistoryGraphResp, TechAnalysisOptions,
+  TechAnalysisResp
 } from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval, ModelNameEnum } from '../../shared/enums';
@@ -63,6 +67,8 @@ export class ComplexGraphComponent {
   isLoadedPredictionsHistory = signal<boolean>(true);
   isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis() && this.isLoadedPredictionsHistory()));
 
+  techAnalysisOptions = signal<TechAnalysisOptions>({});
+
   historyPrices = toSignal<InstrumentHistoryPrice[]>(
     combineLatest([
       toObservable(this.instrumentUid),
@@ -70,6 +76,7 @@ export class ComplexGraphComponent {
       toObservable(this.historyInterval),
     ])
       .pipe(
+        debounceTime(0),
         tap(() => this.isLoadedHistoryPrice.set(false)),
         switchMap(([uid, historyDays, interval]) => this.appService.getInstrumentHistoryPrices(
           uid,
@@ -88,6 +95,7 @@ export class ComplexGraphComponent {
       toObservable(this.historyInterval),
     ])
       .pipe(
+        debounceTime(0),
         tap(() => this.isLoadedPredictions.set(false)),
         switchMap(([uid, historyDays, futureDays, interval]) => this.appService.getInstrumentPredictionGraph(
           uid,
@@ -106,6 +114,7 @@ export class ComplexGraphComponent {
       toObservable(this.isShowOperations),
     ])
       .pipe(
+        debounceTime(0),
         tap(() => this.isLoadedOperations.set(false)),
         switchMap(([uid, daysHistory, isShowOperations]) => isShowOperations
           ? this.appService.getInstrument(uid)
@@ -132,6 +141,7 @@ export class ComplexGraphComponent {
       toObservable(this.isShowForecasts),
     ])
       .pipe(
+        debounceTime(0),
         tap(() => this.isLoadedForecasts.set(false)),
         switchMap(([historyDays, futureDays, interval, isShowForecasts]) => isShowForecasts
           ? this.appService.getInstrumentForecastsGraph(
@@ -155,6 +165,7 @@ export class ComplexGraphComponent {
       toObservable(this.isShowTechAnalysis),
     ])
       .pipe(
+        debounceTime(0),
         tap(() => this.isLoadedTechAnalysis.set(false)),
         switchMap(([uid, historyDays, futureDays, interval, isShowTechAnalysis]) => isShowTechAnalysis
           ? this.appService.getInstrumentTechGraph(
@@ -178,6 +189,7 @@ export class ComplexGraphComponent {
       toObservable(this.isShowPredictionsHistory),
     ])
       .pipe(
+        debounceTime(0),
         tap(() => this.isLoadedPredictionsHistory.set(false)),
         switchMap(([uid, historyDays, futureDays, interval, isShowPredictionsHistory]) => isShowPredictionsHistory
           ? this.appService.getInstrumentPredictionHistoryGraph(
@@ -411,35 +423,40 @@ export class ComplexGraphComponent {
         parseJSON(i.date),
         getRoundPrice(i.consensus)
       ]) ?? []
-    };
+    } as echarts.SeriesOption;
   });
 
   seriesTechAnalysis = computed<echarts.SeriesOption[]>(() => {
     const techAnalysis = this.techAnalysis();
+    const techAnalysisOptions = this.techAnalysisOptions();
+    const result: echarts.SeriesOption[] = [];
 
-    return [
-      // {
-      //   name: 'Тех. анализ RSI',
-      //   type: 'line',
-      //   showSymbol: true,
-      //   symbol: 'circle',
-      //   symbolSize: 2.5,
-      //   itemStyle: {
-      //     color: GRAPH_COLORS.tech_rsi
-      //   },
-      //   lineStyle: {
-      //     width: 1,
-      //   },
-      //   encode: {
-      //     x: 0,
-      //     y: 1
-      //   },
-      //   data: techAnalysis?.RSI?.map(i => [
-      //     parseJSON(i.date),
-      //     i.signal,
-      //   ]) ?? []
-      // },
-      {
+    if (techAnalysisOptions?.isShowRSI) {
+      result.push({
+        name: 'Тех. анализ RSI',
+        type: 'line',
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 2.5,
+        itemStyle: {
+          color: GRAPH_COLORS.tech_rsi
+        },
+        lineStyle: {
+          width: 1,
+        },
+        encode: {
+          x: 0,
+          y: 1
+        },
+        data: techAnalysis?.RSI?.map(i => [
+          parseJSON(i.date),
+          i.signal,
+        ]) ?? []
+      });
+    }
+
+    if (techAnalysisOptions?.isShowBB) {
+      result.push({
         name: 'Тех. анализ BB',
         type: 'line',
         showSymbol: true,
@@ -459,8 +476,11 @@ export class ComplexGraphComponent {
           parseJSON(i.date),
           i.middle_band,
         ]) ?? []
-      },
-      {
+      });
+    }
+
+    if (techAnalysisOptions.isShowEMA) {
+      result.push({
         name: 'Тех. анализ EMA',
         type: 'line',
         showSymbol: true,
@@ -480,8 +500,11 @@ export class ComplexGraphComponent {
           parseJSON(i.date),
           i.signal,
         ]) ?? []
-      },
-      {
+      });
+    }
+
+    if (techAnalysisOptions.isShowSMA) {
+      result.push({
         name: 'Тех. анализ SMA',
         type: 'line',
         showSymbol: true,
@@ -501,29 +524,34 @@ export class ComplexGraphComponent {
           parseJSON(i.date),
           i.signal,
         ]) ?? []
-      },
-      // {
-      //   name: 'Тех. анализ MACD',
-      //   type: 'line',
-      //   showSymbol: true,
-      //   symbol: 'circle',
-      //   symbolSize: 2.5,
-      //   itemStyle: {
-      //     color: GRAPH_COLORS.tech_macd
-      //   },
-      //   lineStyle: {
-      //     width: 1,
-      //   },
-      //   encode: {
-      //     x: 0,
-      //     y: 1
-      //   },
-      //   data: techAnalysis?.MACD?.map(i => [
-      //     parseJSON(i.date),
-      //     i.macd,
-      //   ]) ?? []
-      // }
-    ];
+      });
+    }
+
+    if (techAnalysisOptions.isShowMACD) {
+      result.push({
+        name: 'Тех. анализ MACD',
+        type: 'line',
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 2.5,
+        itemStyle: {
+          color: GRAPH_COLORS.tech_macd
+        },
+        lineStyle: {
+          width: 1,
+        },
+        encode: {
+          x: 0,
+          y: 1
+        },
+        data: techAnalysis?.MACD?.map(i => [
+          parseJSON(i.date),
+          i.macd,
+        ]) ?? []
+      });
+    }
+
+    return result;
   });
 
   seriesPredictionsHistory = computed<echarts.SeriesOption[]>(() => {
@@ -620,5 +648,10 @@ export class ComplexGraphComponent {
       this.daysFuture.set(event.futureDaysCount);
     }
   }
+
+  handleChangeTechAnalysis(options: TechAnalysisOptions): void {
+    this.techAnalysisOptions.set({...options});
+  }
+
 }
 

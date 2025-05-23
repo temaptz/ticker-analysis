@@ -2,7 +2,7 @@ import catboost
 import pandas
 import numpy
 from sklearn.metrics import mean_squared_error
-from lib import utils
+from lib import utils, docker
 from lib.learn.ta_1.learning_card import LearningCard
 
 
@@ -104,10 +104,16 @@ def prepare_csv():
 
 
 def get_model_file_path():
+    if docker.is_docker():
+        return '/app/learn_models/ta-1_1.txt'
+
     return utils.get_file_abspath_recursive('ta-1_1.txt', 'learn_models')
 
 
 def get_data_frame_csv_file_path():
+    if docker.is_docker():
+        return '/app/ta-1_1.csv'
+
     return utils.get_file_abspath_recursive('ta-1_1.csv', 'data_frames')
 
 

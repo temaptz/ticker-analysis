@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   Component, computed, DestroyRef,
   effect, inject,
   input, model,
@@ -17,7 +18,7 @@ import {
   InstrumentHistoryPrice,
   InstrumentInList,
   Operation,
-  PredictionGraphResp, TechAnalysisResp
+  PredictionGraphResp, TechAnalysisOptions, TechAnalysisResp
 } from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval } from '../../shared/enums';
@@ -41,8 +42,11 @@ export class ComplexGraphControlComponent {
   historyDaysCount = input(0, {transform: numberAttribute});
   interval = input<CandleInterval | null>(null);
   futureDaysCount = input(0, {transform: numberAttribute});
+  isShowTechAnalysis = input(false, {transform: booleanAttribute});
+  techAnalysisOptions = input<TechAnalysisOptions>({});
 
   onChange = output<{historyDaysCount: number, interval: CandleInterval, futureDaysCount: number}>();
+  onChangeTechAnalysis = output<TechAnalysisOptions>();
 
   isPanelOpen = false;
   form = new FormGroup({
@@ -76,5 +80,13 @@ export class ComplexGraphControlComponent {
   handleTogglePanel(): void {
     this.isPanelOpen = !this.isPanelOpen;
   }
+
+  handleChangeTechAnalysisOption(optionName: keyof TechAnalysisOptions, value: any): void {
+    const nextOptions = this.techAnalysisOptions();
+    nextOptions[optionName] = value;
+
+    this.onChangeTechAnalysis.emit(nextOptions);
+  }
+
 }
 

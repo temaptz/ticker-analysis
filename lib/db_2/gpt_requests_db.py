@@ -37,7 +37,7 @@ def insert_response(request: str, response: str, date: datetime.datetime = None)
     if date is None:
         date = datetime.datetime.now(datetime.timezone.utc)
 
-    stmt = sqlalchemy.insert(GptRequest).values(
+    stmt = sqlalchemy.dialects.postgresql.insert(GptRequest).values(
         request=request,
         response=response,
         date=date
