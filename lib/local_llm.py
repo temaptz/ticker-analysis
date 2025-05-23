@@ -5,7 +5,7 @@ from lib import cache, logger, types
 @cache.ttl_cache(ttl=60 * 5, skip_empty=True)
 @logger.error_logger
 def generate(prompt: str) -> types.LocalLlmResponse or None:
-    conn = http.client.HTTPConnection('localhost', 8080)
+    conn = http.client.HTTPConnection('local_llm', 8090)
     
     # Отправим POST-запрос по пути /predict
     conn.request(

@@ -39,9 +39,9 @@ def get_text_rate(text: str, subject_name: str) -> types.NewsRate2 or None:
     )
 
     if resp:
-        sentiment = parse_rate_param(text=resp['response'], param_name='sentiment')
-        impact_strength = parse_rate_param(text=resp['response'], param_name='impact_strength')
-        mention_focus = parse_rate_param(text=resp['response'], param_name='mention_focus')
+        sentiment = parse_rate_param(text=resp.response, param_name='sentiment')
+        impact_strength = parse_rate_param(text=resp.response, param_name='impact_strength')
+        mention_focus = parse_rate_param(text=resp.response, param_name='mention_focus')
 
         # print('GPT RESPONSE\n', resp)
         # print('------------------------------------------------------------------')
