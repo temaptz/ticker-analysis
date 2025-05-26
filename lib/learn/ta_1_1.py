@@ -172,8 +172,8 @@ def learn():
     print('Test MSE:', mse_test)
 
 
-def predict(data: list):
+def predict(data: list) -> float or None:
     model = catboost.CatBoostRegressor()
     model.load_model(get_model_file_path())
 
-    return model.predict(data=data)
+    return utils.round_float(model.predict(data=data))

@@ -408,7 +408,7 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
         prediction = predict(data=card.get_x())
 
         if prediction:
-            return prediction
+            return utils.round_float(prediction)
 
     return None
 

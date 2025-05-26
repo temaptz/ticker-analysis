@@ -1,6 +1,6 @@
 import catboost
 import numpy
-from lib import docker
+from lib import docker, utils
 from lib.learn.ta_1 import prepare_data
 from lib.utils import get_file_abspath_recursive
 
@@ -45,7 +45,7 @@ def predict(data: list):
     model = catboost.CatBoostRegressor()
     model.load_model(get_model_file_path())
 
-    return model.predict(data=data)
+    return utils.round_float(model.predict(data=data))
 
 
 def get_model_file_path():

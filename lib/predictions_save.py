@@ -1,5 +1,5 @@
 import datetime
-from lib import predictions, telegram, instruments, date_utils, utils
+from lib import predictions, telegram, instruments, date_utils, logger
 from lib.db_2 import predictions_db
 from lib.learn import ta_1_2, ta_2, ta_2_1, const
 
@@ -92,11 +92,11 @@ def save_predictions(model_name: str):
                 prediction = ta_2_1.predict_future(uid=instrument.uid, date=date)
 
             if prediction is not None:
-                print(f'PREDICTION {model_name}: ', prediction, date)
+                logger.log_info(f'PREDICTION {model_name}: {prediction}')
 
                 predictions_db.insert_prediction(
                     instrument_uid=instrument.uid,
-                    prediction=utils.round_float(prediction, 4),
+                    prediction=prediction,
                     target_date=date,
                     model_name=model_name
                 )
