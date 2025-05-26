@@ -7,11 +7,11 @@
 
 @defer (when isLoaded()) {
   <span
-    *ngIf="getPriceByQuotation(forecast()?.price_change_rel) as priceChangeRel"
+    *ngIf="getPriceByQuotation(forecast()?.consensus?.price_change_rel) as priceChangeRel"
     [class.plus]="priceChangeRel > 0"
     [class.minus]="priceChangeRel < 0"
   >
-    {{ priceChangeRel }}% → <b>{{ getPriceByQuotation(forecast()?.consensus) | priceFormat }}</b>
+    {{ priceChangeRel }}% → <b>{{ getPriceByQuotation(forecast()?.consensus?.consensus) | priceFormat }}</b>
   </span>
 } @placeholder {
   <preloader></preloader>

@@ -21,14 +21,14 @@ export class ForecastComponent implements OnInit {
   @Input({required: true}) instrumentUid!: InstrumentInList['uid'];
 
   isLoaded = signal<boolean>(false);
-  forecast = signal<Forecast>(null);
+  forecast = signal<Forecast | null>(null);
   getPriceByQuotation = getPriceByQuotation;
 
   private apiService = inject(ApiService);
   private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.apiService.getInstrumentConsensusForecast(this.instrumentUid)
+    this.apiService.getInstrumentForecasts(this.instrumentUid)
       .pipe(
         finalize(() => this.isLoaded.set(true)),
         takeUntilDestroyed(this.destroyRef),

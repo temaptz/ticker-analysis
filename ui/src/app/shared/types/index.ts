@@ -15,7 +15,6 @@ export type InstrumentLastPriceResp = number;
 export type InstrumentHistoryPrice = any;
 export type Candle = any;
 export type Quotation = any;
-export type Forecast = any;
 export type Fundamentals = any;
 export type Operation = any;
 export type InstrumentBrandResponse = any;
@@ -170,4 +169,11 @@ export interface TechAnalysisOptions {
   isShowEMA?: boolean;
   isShowSMA?: boolean;
   isShowMACD?: boolean;
+}
+
+export interface Forecast {
+  consensus: {
+    consensus: Quotation;
+    price_change_rel: Quotation;
+  };
 }

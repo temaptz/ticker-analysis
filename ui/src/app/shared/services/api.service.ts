@@ -19,7 +19,7 @@ import {
   InstrumentForecastsGraphItem,
   NewsListRatedResponse,
   TechAnalysisResp,
-  PredictionHistoryGraphResp,
+  PredictionHistoryGraphResp, Forecast,
 } from '../types';
 import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
@@ -77,11 +77,11 @@ export class ApiService {
     return this.http.get<InstrumentHistoryPrice[]>(`${this.apiUrl}/instrument/history_prices`, {params: params});
   }
 
-  getInstrumentConsensusForecast(uid: string): Observable<InstrumentHistoryPrice[]> {
+  getInstrumentForecasts(uid: string): Observable<Forecast> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
-    return this.http.get<InstrumentHistoryPrice[]>(`${this.apiUrl}/instrument/consensus_forecast`, {params: params});
+    return this.http.get<Forecast>(`${this.apiUrl}/instrument/forecasts`, {params: params});
   }
 
   getInstrumentHistoryForecasts(uid: string): Observable<InstrumentForecastsHistory[]> {

@@ -2,7 +2,7 @@ import http.client
 import json
 from lib import cache, logger, types
 
-@cache.ttl_cache(ttl=60 * 5, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
 @logger.error_logger
 def generate(prompt: str) -> types.LocalLlmResponse or None:
     conn = http.client.HTTPConnection('local_llm', 8090)

@@ -85,11 +85,11 @@ def save_predictions(model_name: str):
             prediction = None
 
             if model_name == const.TA_1_2:
-                prediction = ta_1_2.predict_future(uid=instrument.uid, date=date)
+                prediction = ta_1_2.predict_future(instrument_uid=instrument.uid, date_target=date)
             elif model_name == const.TA_2:
-                prediction = ta_2.predict_future(uid=instrument.uid, date=date)
+                prediction = ta_2.predict_future(instrument_uid=instrument.uid, date_target=date)
             elif model_name == const.TA_2_1:
-                prediction = ta_2_1.predict_future(uid=instrument.uid, date=date)
+                prediction = ta_2_1.predict_future(instrument_uid=instrument.uid, date_target=date)
 
             if prediction is not None:
                 logger.log_info(f'PREDICTION {model_name}: {prediction}')

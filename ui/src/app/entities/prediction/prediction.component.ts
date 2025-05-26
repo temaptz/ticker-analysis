@@ -8,7 +8,7 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { GRAPH_COLORS } from '../../shared/const';
-import { Forecast, InstrumentInList } from '../../shared/types';
+import { InstrumentInList, PredictionResp } from '../../shared/types';
 
 
 @Component({
@@ -55,7 +55,7 @@ export class PredictionComponent {
           finalize(() => this.isLoaded.set(true)),
           takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(([predictions, currentPrice]: [Forecast, number | null]) => {
+        .subscribe(([predictions, currentPrice]: [PredictionResp, number | null]) => {
           const current = currentPrice ?? 0;
           const prediction_ta_1 = predictions['ta_1'] ?? 0;
           const prediction_ta_1_1 = predictions['ta_1_1'] ?? 0;

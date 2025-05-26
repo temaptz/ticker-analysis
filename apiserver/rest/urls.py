@@ -12,7 +12,7 @@ urlpatterns = [
     path('instrument/last_price', views.instrument_last_price),
     path('instrument/price_by_date', views.instrument_price_by_date),
     path('instrument/history_prices', views.instrument_history_prices),
-    path('instrument/consensus_forecast', views.instrument_consensus_forecast),
+    path('instrument/forecasts', views.instrument_forecasts),
     path('instrument/history_forecasts', views.instrument_history_forecasts),
     path('instrument/history_forecasts/graph', views.instrument_history_forecasts_graph),
     path('instrument/fundamentals', views.instrument_fundamentals),

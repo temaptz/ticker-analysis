@@ -30,6 +30,7 @@ def process_single_update(text: str = None) -> None:
 
     elif text == '/predictions':
         predictions_save.save_daily_predictions()
+        predictions_save.save_weekly_predictions()
 
     elif text == '/news':
         news.news_save.save_news()

@@ -125,17 +125,15 @@ def instrument_history_prices(request):
 
 
 @api_view(['GET'])
-def instrument_consensus_forecast(request):
-    resp = ''
-    uid = request.GET.get('uid')
+def instrument_forecasts(request):
+    resp = None
 
-    if uid:
-        consensus = forecasts.get_forecasts(uid)
+    if uid := request.GET.get('uid'):
+        if f := forecasts.get_forecasts(uid):
+            if f := serializer.to_json(f):
+                resp = f
 
-        if consensus:
-            resp = serializer.get_dict_by_object(consensus.consensus)
-
-    response = HttpResponse(json.dumps(resp))
+    response = HttpResponse(resp)
 
     if resp:
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)

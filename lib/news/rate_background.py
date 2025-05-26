@@ -21,33 +21,36 @@ def rate_all_news() -> None:
             print(f'WILL RATE NEWS - {subject_name} [{instrument.ticker}] ({date_from} - {date_to}) NEWS COUNT: {len(news_list)}')
 
             for n in news_list:
-                print('---------------------------------NEWS RATED START---------------------------------')
-                print(f'NEWS TEXT: {utils.clean_news_text_for_llm(title=n.title, text=n.text)}]')
-
-                start = time.time()
-                rate: types.NewsRate2 = news.news_rate_v2.get_news_rate(
-                    news_uid=n.news_uid,
-                    instrument_uid=instrument.uid,
-                )
-                end = time.time()
-                generation_time_sec = float(f'{end - start:.4f}')
-
-                if rate:
-                    db_2.news_rate_2_db.insert_or_update_rate(
-                        instrument_uid=instrument.uid,
-                        news_uid=n.news_uid,
-                        news_rate=rate,
-                        model_name=rate.llm_response.model_name,
-                        pretrain_name=rate.llm_response.pretrain_name,
-                        generation_time_sec=generation_time_sec,
-                    )
-                    print(f'NEWS RATE: [sentiment: {rate.sentiment}; impact_strength: {rate.impact_strength}; mention_focus: {rate.mention_focus}]')
-                    print(f'NEWS TOTAL RATE: {rate.get_influence_score_value()}')
-
+                if r := db_2.news_rate_2_db.get_rate(instrument_uid=instrument.uid, news_uid=n.news_uid):
+                    print('[NEWS ALREADY RATED]', r[0] if r and len(r) > 0 else r)
                 else:
-                    print('[NEWS NOT RATED]', rate)
+                    print('---------------------------------NEWS RATED START---------------------------------')
+                    print(f'NEWS TEXT: {utils.clean_news_text_for_llm(title=n.title, text=n.text)}]')
 
-                print(f'GENERATION TIME: {generation_time_sec} sec')
-                print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^NEWS RATED END^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                    start = time.time()
+                    rate: types.NewsRate2 = news.news_rate_v2.get_news_rate(
+                        news_uid=n.news_uid,
+                        instrument_uid=instrument.uid,
+                    )
+                    end = time.time()
+                    generation_time_sec = float(f'{end - start:.4f}')
 
-                time.sleep(60)
+                    if rate:
+                        db_2.news_rate_2_db.insert_or_update_rate(
+                            instrument_uid=instrument.uid,
+                            news_uid=n.news_uid,
+                            news_rate=rate,
+                            model_name=rate.llm_response.model_name,
+                            pretrain_name=rate.llm_response.pretrain_name,
+                            generation_time_sec=generation_time_sec,
+                        )
+                        print(f'NEWS RATE: [sentiment: {rate.sentiment}; impact_strength: {rate.impact_strength}; mention_focus: {rate.mention_focus}]')
+                        print(f'NEWS TOTAL RATE: {rate.get_influence_score_value()}')
+
+                    else:
+                        print('[NEWS NOT RATED]', rate)
+
+                    print(f'GENERATION TIME: {generation_time_sec} sec')
+                    print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^NEWS RATED END^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+
+                    time.sleep(60)
