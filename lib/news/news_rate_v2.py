@@ -37,7 +37,7 @@ def get_news_rate(
         instrument_uid: str,
 ) -> types.NewsRate2 or None:
     if news := news_db.get_news_by_uid(news_uid=news_uid):
-        if instrument := instruments.get_instrument_by_uid(instrument_uid=instrument_uid):
+        if instrument := instruments.get_instrument_by_uid(uid=instrument_uid):
             if subject_name := yandex.get_human_name(legal_name=instrument.name):
                 rate = get_text_rate(
                     text=utils.clean_news_text_for_llm(title=news.title, text=news.text),
