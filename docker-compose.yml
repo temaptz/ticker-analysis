@@ -45,6 +45,7 @@ services:
     depends_on:
       - redis
       - postgres
+      - local_llm
     restart: no
 
   apiserver:
@@ -76,9 +77,6 @@ services:
     container_name: local_llm
     volumes:
       - ./local_llm/download_cache:/app/models_cache
-    depends_on:
-      - redis
-      - postgres
     restart: no
 #    ports:
 #      - "8090:8090"
