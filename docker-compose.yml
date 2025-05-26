@@ -80,8 +80,8 @@ services:
       - redis
       - postgres
     restart: no
-    ports:
-      - "8090:8090"
+#    ports:
+#      - "8090:8090"
 
   ui:
     build:
@@ -116,8 +116,6 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
-#    ports:
-#      - "5050:80"  # Внешний порт 5050, внутренний 80 (PgAdmin)
     environment:
       PGADMIN_DEFAULT_EMAIL: temaptz@gmail.com
       PGADMIN_DEFAULT_PASSWORD: admin
