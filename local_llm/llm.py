@@ -102,7 +102,7 @@ def train():
     # === 5. Параметры тренировки ===
     training_args = transformers.TrainingArguments(
         output_dir=get_adapter_path(),       # Куда сохранять LoRA-адаптер
-        num_train_epochs=1,                  # Сколько раз пройти по датасету (обычно 2-5)
+        num_train_epochs=3,                  # Сколько раз пройти по датасету (обычно 2-5)
         per_device_train_batch_size=1,       # Размер батча (для CPU обычно 1)
         per_device_eval_batch_size=1,
         learning_rate=2e-4,                  # Скорость обучения (можно уменьшить при переобучении)
