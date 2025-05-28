@@ -45,15 +45,21 @@ def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_last_prices_by_uid(uid: str) -> list[LastPrice] or None:
+def get_instrument_last_price_by_uid(uid: str) -> float or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            return client.market_data.get_last_prices(
+            last_prices = client.market_data.get_last_prices(
                 instrument_id=[uid]
             ).last_prices
 
+            if last_prices and len(last_prices) > 0 and last_prices[0].price:
+                if price := utils.get_price_by_quotation(last_prices[0].price):
+                    return price
+
     except Exception as e:
         print('ERROR get_instrument_last_price_by_uid', e)
+
+    return None
 
 
 @cache.ttl_cache(ttl=3600 * 4, skip_empty=True)
@@ -106,15 +112,5 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or 
 
     except Exception as e:
         print('ERROR get_instrument_price_by_date', e)
-
-    return None
-
-
-@logger.error_logger
-def get_instrument_last_price_by_uid(uid: str) -> float or None:
-    last_prices = get_instrument_last_prices_by_uid(uid=uid)
-
-    if last_prices and last_prices[0]:
-        return utils.get_price_by_quotation(last_prices[0].price)
 
     return None

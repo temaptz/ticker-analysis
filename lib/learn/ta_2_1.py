@@ -20,7 +20,7 @@ class Ta21LearningCard:
     target_date: datetime.datetime = None  # Дата на которую составляется прогноз
     target_date_days: int = None  # Количество дней до даты прогнозируемой цены
     price: float = None  # Цена в дату создания прогноза
-    target_price: float = None  # Прогнозируемая цена
+    target_change_relative: float = None  # Прогнозируемая цена
     history: list = []  # Список цен за год с интервалом в неделю в хронологическом порядке
     consensus_forecast_price: float = None  # Прогноз аналитиков
     revenue_ttm: float = None  # Выручка
@@ -55,7 +55,7 @@ class Ta21LearningCard:
     def fill_card(self, fill_empty=False):
         self.history = self.get_history(fill_empty=fill_empty)
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
-        self.target_price = self.get_target_price()
+        self.target_change_relative = self.get_target_change_relative()
         self.consensus_forecast_price = utils.get_price_by_quotation(
             forecasts.get_db_forecast_by_uid_date(
                 uid=self.instrument.uid,
@@ -143,9 +143,11 @@ class Ta21LearningCard:
 
         return result
 
-    def get_target_price(self) -> float or None:
-        if self.target_date < datetime.datetime.now(datetime.timezone.utc):
-            return instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date)
+    def get_target_change_relative(self) -> float or None:
+        if self.price:
+            if self.target_date < datetime.datetime.now(datetime.timezone.utc):
+                if target_price := instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date):
+                    return utils.get_price_change_relative(a=self.price, b=target_price)
 
         return None
 
@@ -177,7 +179,7 @@ class Ta21LearningCard:
 
     # Выходные данные для обучения
     def get_y(self) -> float:
-        return self.target_price
+        return self.target_change_relative
 
     def get_csv_record(self) -> dict:
         result = {}
@@ -360,7 +362,7 @@ def mean_absolute_percentage_error(y_true, y_pred):
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
-def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+def predict_future_relative_change(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
 
     card = Ta21LearningCard(
@@ -377,6 +379,14 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
 
         if prediction:
             return utils.round_float(prediction)
+
+    return None
+
+
+def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    if current_price := instruments.get_instrument_last_price_by_uid(uid=instrument_uid):
+        if relative_change := predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target):
+            return utils.round_float(current_price * relative_change, decimals=2)
 
     return None
 
@@ -423,7 +433,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key_0',
+        'method': 'ta_2_1_get_record_cache_key_1',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

@@ -4,8 +4,9 @@ from lib import date_utils, instruments, yandex, news, db_2, types, utils
 
 def rate_all_news() -> None:
     for date in date_utils.get_dates_interval_list(
-            date_from=datetime.datetime.now() - datetime.timedelta(days=30),
-            date_to=datetime.datetime.now(),
+        date_from=datetime.datetime(year=2025, month=2, day=1),
+        date_to=datetime.datetime.now(),
+        is_order_descending=True,
     ):
         for instrument in instruments.get_instruments_white_list():
             subject_name = yandex.get_human_name(legal_name=instrument.name)

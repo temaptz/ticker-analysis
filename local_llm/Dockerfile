@@ -11,5 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM requirements
 
 COPY ./local_llm/llm.py /app/llm.py
+COPY ./local_llm/dataset.csv /app/dataset.csv
 
 CMD ["python", "llm.py"]

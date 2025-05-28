@@ -43,7 +43,8 @@ def get_dates_interval_list(
         date_from: datetime.datetime,
         date_to: datetime.datetime,
         interval_seconds=24*3600,
-        is_skip_holidays=False
+        is_skip_holidays=False,
+        is_order_descending=False,
 ) -> list[datetime.datetime]:
     """
     Возвращает список дат с заданным интервалом между date_from и date_to (включительно),
@@ -53,6 +54,7 @@ def get_dates_interval_list(
     :param date_to: Конечная дата (datetime).
     :param interval_seconds: Интервал между датами в секундах (по умолчанию 1 день).
     :param is_skip_holidays: Если True, пропускать праздничные дни.
+    :param is_order_descending: Если True, возвращать список дат в обратном порядке.
     :return: Список дат (datetime).
     """
     result = []
@@ -64,7 +66,7 @@ def get_dates_interval_list(
             result.append(current)
         current += datetime.timedelta(seconds=interval_seconds)
 
-    return result
+    return reversed(result) if is_order_descending else result
 
 
 def is_holiday(date: datetime.datetime) -> bool:

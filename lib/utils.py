@@ -85,6 +85,15 @@ def round_float(num: float, decimals: int = 10) -> float:
         logger.log_error(method_name='round_float', error=e)
 
 
+def get_price_change_relative(a: float, b: float) -> float or None:
+    try:
+        return (b - a) / a
+    except Exception as e:
+        logger.log_error(method_name='get_price_change_relative', error=e)
+
+    return None
+
+
 def get_md5(data: str) -> str:
     return hashlib.md5(data.encode()).hexdigest()
 

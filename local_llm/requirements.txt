@@ -1,2 +1,6 @@
 transformers
 torch
+accelerate
+peft
+pandas
+datasets

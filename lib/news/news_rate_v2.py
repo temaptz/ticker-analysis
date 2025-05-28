@@ -103,6 +103,9 @@ mention_focus: [значение]
 {news_text}
 '''
 
+def get_response(sentiment: float, impact_strength: float, mention_focus: float) -> str:
+    return f'''sentiment: {sentiment}\nimpact_strength: {impact_strength}\nmention_focus: {mention_focus}'''
+
 
 def parse_rate_param(text: str, param_name: str) -> float or None:
     if text:
