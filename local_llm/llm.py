@@ -9,7 +9,38 @@ import datasets
 import math
 
 
+GENERATOR: transformers.Pipeline or None = None
+
 def generate(prompt: str) -> str or None:
+    try:
+        if GENERATOR:
+            print('-----------------START GENERATE RESPONSE-----------------')
+            response = GENERATOR(
+                prompt,
+                max_new_tokens=600,
+                temperature=0.6,
+                top_p=0.9,
+                truncation=False
+            )
+
+            if response and len(response) > 0 and response[0] and 'generated_text' in response[0] and response[0]['generated_text']:
+                print('RESPONSE:\n', response[0]['generated_text'])
+                return response[0]['generated_text']
+            else:
+                print('EMPTY RESPONSE\n', response)
+
+            print('^^^^^^^^^^^^^^^^^^END GENERATE RESPONSE^^^^^^^^^^^^^^^^^^')
+
+        else:
+            print('GENERATOR IS NOT INITIALIZED')
+
+    except Exception as e:
+        print('ERROR generate', e)
+
+    return None
+
+
+def init_generator() -> transformers.Pipeline or None:
     try:
         model = transformers.AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=get_model_path(),
@@ -23,27 +54,15 @@ def generate(prompt: str) -> str or None:
             trust_remote_code=True,
         )
 
-        generator = transformers.pipeline(
+        return transformers.pipeline(
             task='text-generation',
             model=model,
             tokenizer=tokenizer,
             device='cpu',
             torch_dtype=torch.float32,
         )
-
-        response = generator(
-            prompt,
-            max_new_tokens=600,
-            temperature=0.6,
-            top_p=0.9,
-            truncation=False
-        )
-
-        if response and len(response) > 0 and response[0] and 'generated_text' in response[0] and response[0]['generated_text']:
-            return response[0]['generated_text']
-
     except Exception as e:
-        print('ERROR generate', e)
+        print('ERROR init_generator', e)
 
     return None
 
@@ -198,10 +217,13 @@ def run_server():
     httpd.serve_forever()
 
 print('MODEL DIR\n', os.listdir(get_model_path()))
+print('ADAPTER DIR\n', os.listdir(get_adapter_path()))
 
 if not os.listdir(get_adapter_path()):
     print('START TRAIN ADAPTER')
     train()
     print('END TRAIN ADAPTER')
+
+GENERATOR = init_generator()
 
 run_server()
