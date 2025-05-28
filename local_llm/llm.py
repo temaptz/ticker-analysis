@@ -145,7 +145,7 @@ def get_pretrain_name() -> str:
 
 
 def get_app_dir() -> str:
-    return os.path.abspath('./') # '/app'
+    return os.path.abspath('/app')
 
 
 def get_models_cache_path() -> str:
@@ -199,10 +199,9 @@ def run_server():
 
 print('MODEL DIR\n', os.listdir(get_model_path()))
 
-print('START TRAINING')
-
-train()
-
-print('END TRAINING')
+if not os.listdir(get_adapter_path()):
+    print('START TRAIN ADAPTER')
+    train()
+    print('END TRAIN ADAPTER')
 
 run_server()
