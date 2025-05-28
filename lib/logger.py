@@ -13,9 +13,9 @@ def error_logger(func):
     return wrapper
 
 
-def log_error(method_name: str, error: Exception = None, debug_info: str = None) -> None:
+def log_error(method_name: str, error: Exception = None, debug_info: str = None, is_telegram_send=docker.is_prod()) -> None:
     date_str = get_local_time_log_str()
-    error_str = f'[{date_str}] ERROR: {method_name}'
+    error_str = f'\033[91m[{date_str}] ERROR: {method_name}\033[0m'
 
     if error:
         error_str += f' -> {error}'
@@ -25,7 +25,7 @@ def log_error(method_name: str, error: Exception = None, debug_info: str = None)
 
     print(error_str)
 
-    if docker.is_prod():
+    if is_telegram_send:
         telegram.send_message(error_str)
 
 
