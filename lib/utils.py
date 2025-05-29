@@ -90,9 +90,9 @@ def round_float(num: float, decimals: int = 10) -> float:
     return num
 
 
-def get_change_relative_by_price(a: float, b: float) -> float or None:
+def get_change_relative_by_price(main_price: float, next_price: float) -> float or None:
     try:
-        return (b - a) / a
+        return (next_price - main_price) / main_price
     except Exception as e:
         logger.log_error(method_name='get_change_relative_by_price', error=e)
 

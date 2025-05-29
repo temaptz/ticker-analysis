@@ -10,7 +10,7 @@ from lib.learn import learn_utils
 
 
 def get_feature_names() -> list:
-    return ['target_date_days', 'news_positive_percent', 'news_negative_percent', 'news_neutral_percent', 'name', 'exchange', 'class_code', 'currency', 'country_of_risk', 'price', 'forecast_price', 'revenue_ttm', 'ebitda_ttm', 'market_capitalization', 'total_debt_mrq', 'eps_ttm', 'pe_ratio_ttm', 'ev_to_ebitda_mrq', 'dividend_payout_ratio_fy', 'price_week_0', 'price_week_1', 'price_week_2', 'price_week_3', 'price_week_4', 'price_week_5', 'price_week_6', 'price_week_7', 'price_week_8', 'price_week_9', 'price_week_10', 'price_week_11', 'price_week_12', 'price_week_13', 'price_week_14', 'price_week_15', 'price_week_16', 'price_week_17', 'price_week_18', 'price_week_19', 'price_week_20', 'price_week_21', 'price_week_22', 'price_week_23', 'price_week_24', 'price_week_25', 'price_week_26', 'price_week_27', 'price_week_28', 'price_week_29', 'price_week_30', 'price_week_31', 'price_week_32', 'price_week_33', 'price_week_34', 'price_week_35', 'price_week_36', 'price_week_37', 'price_week_38', 'price_week_39', 'price_week_40', 'price_week_41', 'price_week_42', 'price_week_43', 'price_week_44', 'price_week_45', 'price_week_46', 'price_week_47', 'price_week_48', 'price_week_49', 'price_week_50']
+    return ['target_date_days', 'news_positive_percent', 'news_negative_percent', 'news_neutral_percent', 'name', 'currency', 'country_of_risk', 'forecast_price_change', 'revenue_ttm', 'ebitda_ttm', 'market_capitalization', 'total_debt_mrq', 'eps_ttm', 'pe_ratio_ttm', 'ev_to_ebitda_mrq', 'dividend_payout_ratio_fy', 'price_change_2_days', 'price_change_1_week', 'price_change_1_month', 'price_change_3_months', 'price_change_6_months', 'price_change_1_year', 'price_change_2_years', 'price_change_3_years']
 
 
 class Ta21LearningCard:
@@ -19,10 +19,12 @@ class Ta21LearningCard:
     date: datetime.datetime = None  # Дата создания прогноза
     target_date: datetime.datetime = None  # Дата на которую составляется прогноз
     target_date_days: int = None  # Количество дней до даты прогнозируемой цены
+    news_positive_percent: int = None  # Процент позитивного новостного фона за месяц до даты
+    news_negative_percent: int = None  # Процент негативного новостного фона за месяц до даты
+    news_neutral_percent: int = None  # Процент нейтрального новостного фона за месяц до даты
     price: float = None  # Цена в дату создания прогноза
-    target_change_relative: float = None  # Прогнозируемая цена
-    history: list = []  # Список цен за год с интервалом в неделю в хронологическом порядке
-    consensus_forecast_price: float = None  # Прогноз аналитиков
+    target_price_change: float = None  # Прогнозируемая цена
+    forecast_price_change: float = None  # Прогноз аналитиков
     revenue_ttm: float = None  # Выручка
     ebitda_ttm: float = None  # EBITDA
     market_capitalization: float = None  # Капитализация
@@ -31,9 +33,14 @@ class Ta21LearningCard:
     pe_ratio_ttm: float = None  # P/E — цена/прибыль
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
-    news_positive_percent: int = None  # Процент позитивного новостного фона за месяц до даты
-    news_negative_percent: int = None  # Процент негативного новостного фона за месяц до даты
-    news_neutral_percent: int = None  # Процент нейтрального новостного фона за месяц до даты
+    price_change_2_days: float = None # Изменение цены за 2 дня
+    price_change_1_week: float = None # Изменение цены за 1 неделю
+    price_change_1_month: float = None # Изменение цены за 1 месяц
+    price_change_3_months: float = None # Изменение цены за 3 месяца
+    price_change_6_months: float = None # Изменение цены за 6 месяцев
+    price_change_1_year: float = None # Изменение цены за 1 год
+    price_change_2_years: float = None # Изменение цены за 2 года
+    price_change_3_years: float = None # Изменение цены за 3 года
 
     def __init__(self, instrument: Instrument, date: datetime.datetime, target_date: datetime.datetime, fill_empty=False):
         if date > target_date:
@@ -45,24 +52,17 @@ class Ta21LearningCard:
         self.target_date = target_date
 
         try:
-            self.fill_card(fill_empty=fill_empty)
-            self.check_x()
+            self.fill_card(is_fill_empty=fill_empty)
+            self.check_x(is_fill_empty=fill_empty)
         except Exception as e:
             print('ERROR INIT Ta21LearningCard', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def fill_card(self, fill_empty=False):
-        self.history = self.get_history(fill_empty=fill_empty)
+    def fill_card(self, is_fill_empty=False):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
-        self.target_change_relative = self.get_target_change_relative()
-        self.consensus_forecast_price = utils.get_price_by_quotation(
-            forecasts.get_db_forecast_by_uid_date(
-                uid=self.instrument.uid,
-                date=self.date
-            )[1].consensus.current_price
-        )
-
+        self.target_price_change = self.get_target_change_relative()
+        self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
         f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]
         self.revenue_ttm = f.revenue_ttm
         self.ebitda_ttm = f.ebitda_ttm
@@ -72,6 +72,13 @@ class Ta21LearningCard:
         self.pe_ratio_ttm = f.pe_ratio_ttm
         self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
         self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        self.price_change_1_week = self.get_price_change_days(days_count=7, is_fill_empty=is_fill_empty)
+        self.price_change_1_month = self.get_price_change_days(days_count=30, is_fill_empty=is_fill_empty)
+        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3, is_fill_empty=is_fill_empty)
+        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6, is_fill_empty=is_fill_empty)
+        self.price_change_1_year = self.get_price_change_days(days_count=365, is_fill_empty=is_fill_empty)
+        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2, is_fill_empty=is_fill_empty)
+        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3, is_fill_empty=is_fill_empty)
 
         news_rated = self.get_news_rated()
 
@@ -81,45 +88,58 @@ class Ta21LearningCard:
             self.news_neutral_percent = news_rated.neutral_percent
 
     # Проверка карточки
-    def check_x(self):
+    def check_x(self, is_fill_empty=False):
         if self.price is None:
-            print('CARD IS NOT OK BY PRICE', self.instrument.ticker, self.date)
+            print('CARD IS NOT OK BY CURRENT PRICE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
-        if len(self.get_x()) != 70:
+        if len(self.get_x()) != len(get_feature_names()):
             print('CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
         if (
-                self.news_positive_percent is None
-                or self.news_negative_percent is None
-                or self.news_neutral_percent is None
+                not is_fill_empty
+                and (
+                    self.news_positive_percent is None
+                    or self.news_negative_percent is None
+                    or self.news_neutral_percent is None
+                )
         ):
             print('CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
-    # Вернет цены за последние 52 недели (год) в хронологическом порядке
-    def get_history(self, fill_empty=False) -> list:
-        result = []
+        if not all(x is not None for x in self.get_x()):
+            print('CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
+            self.is_ok = False
+            return
 
-        candles = instruments.get_instrument_history_price_by_uid(
-            uid=self.instrument.uid,
-            days_count=365,
-            interval=CandleInterval.CANDLE_INTERVAL_WEEK,
-            to_date=self.date
-        )
+    def get_price_change_days(self, days_count: int, is_fill_empty=False) -> float or None:
+        target_date = self.date - datetime.timedelta(days=days_count)
+        current_price = self.price
+        if target_price := instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=target_date):
+            if price_change := utils.get_change_relative_by_price(main_price=target_price, next_price=current_price):
+                return price_change
 
-        for i in candles[:52]:
-            result.append(utils.get_price_by_candle(candle=i))
+        return 1 if is_fill_empty else None
 
-        if fill_empty and len(result) < 52:
-            padding = [0] * (52 - len(result))
-            result = padding + result
+    def get_forecast_change(self, is_fill_empty=False) -> float or None:
+        try:
+            if current_price := self.price:
+                if price_forecast := utils.get_price_by_quotation(
+                    price=forecasts.get_db_forecast_by_uid_date(
+                        uid=self.instrument.uid,
+                        date=self.date
+                    )[1].consensus.consensus
+                ):
+                    if price_change := utils.get_change_relative_by_price(main_price=current_price, next_price=price_forecast):
+                        return price_change
+        except Exception as e:
+            logger.log_error(method_name='Ta21LearningCard.get_forecast_change', error=e, is_telegram_send=False)
 
-        return result
+        return 1 if is_fill_empty else None
 
     def get_news_rated(self) -> types.NewsRate or None:
         result = None
@@ -147,7 +167,7 @@ class Ta21LearningCard:
         if self.price:
             if self.target_date < datetime.datetime.now(datetime.timezone.utc):
                 if target_price := instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date):
-                    return utils.get_change_relative_by_price(a=self.price, b=target_price)
+                    return utils.get_change_relative_by_price(main_price=self.price, next_price=target_price)
 
         return None
 
@@ -161,12 +181,9 @@ class Ta21LearningCard:
             self.news_negative_percent,
             self.news_neutral_percent,
             self.instrument.name, # Название инструмента.
-            self.instrument.exchange, # Tорговая площадка (секция биржи).
-            self.instrument.class_code, # Класс-код инструмента.
             self.instrument.currency, # Валюта инструмента.
             self.instrument.country_of_risk, # Код страны
-            numpy.float32(self.price),
-            numpy.float32(self.consensus_forecast_price),
+            numpy.float32(self.forecast_price_change),
             numpy.float32(self.revenue_ttm),
             numpy.float32(self.ebitda_ttm),
             numpy.float32(self.market_capitalization),
@@ -174,12 +191,20 @@ class Ta21LearningCard:
             numpy.float32(self.eps_ttm),
             numpy.float32(self.pe_ratio_ttm),
             numpy.float32(self.ev_to_ebitda_mrq),
-            numpy.float32(self.dividend_payout_ratio_fy)
-        ] + [numpy.float32(i) for i in self.history[-51:]]
+            numpy.float32(self.dividend_payout_ratio_fy),
+            numpy.float32(self.price_change_2_days),
+            numpy.float32(self.price_change_1_week),
+            numpy.float32(self.price_change_1_month),
+            numpy.float32(self.price_change_3_months),
+            numpy.float32(self.price_change_6_months),
+            numpy.float32(self.price_change_1_year),
+            numpy.float32(self.price_change_2_years),
+            numpy.float32(self.price_change_3_years),
+        ]
 
     # Выходные данные для обучения
     def get_y(self) -> float:
-        return self.target_change_relative
+        return self.target_price_change
 
     def get_csv_record(self) -> dict:
         result = {}
@@ -276,7 +301,7 @@ def learn():
     x = df.drop(columns=['result'])
     y = df['result']
     text_features = ['name']
-    cat_features = ['exchange', 'class_code', 'currency', 'country_of_risk']
+    cat_features = ['currency', 'country_of_risk']
 
     x_array = x.values
     y_array = y.values
@@ -434,7 +459,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key_1',
+        'method': 'ta_2_1_get_record_cache_key_0_',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,
