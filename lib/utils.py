@@ -80,16 +80,30 @@ def round_float(num: float, decimals: int = 10) -> float:
         int_len = len(str(num).split('.')[0])
         float_str = str(num)[0:int_len+decimals+5]
         float_only_digits_str = re.sub(r'[^0-9\.,]', '', float_str)
-        return round(float(float_only_digits_str), decimals)
+        return round(
+            float(float_only_digits_str) * (1 if (num > 0) else -1),
+            decimals
+        )
     except Exception as e:
         logger.log_error(method_name='round_float', error=e)
 
+    return num
 
-def get_price_change_relative(a: float, b: float) -> float or None:
+
+def get_change_relative_by_price(a: float, b: float) -> float or None:
     try:
         return (b - a) / a
     except Exception as e:
-        logger.log_error(method_name='get_price_change_relative', error=e)
+        logger.log_error(method_name='get_change_relative_by_price', error=e)
+
+    return None
+
+
+def get_price_by_change_relative(current_price: float, relative_change: float) -> float or None:
+    try:
+        return current_price + (current_price * relative_change)
+    except Exception as e:
+        logger.log_error(method_name='get_price_by_change_relative', error=e)
 
     return None
 

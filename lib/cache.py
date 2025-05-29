@@ -1,5 +1,5 @@
 from functools import wraps
-from lib import utils, redis_utils
+from lib import utils, redis_utils, logger
 
 
 def cache_get(key: str):
@@ -19,6 +19,8 @@ def cache_set(key: str, value: any, ttl: int = 3600) -> None:
 
 
 def clean():
+    logger.log_info(message='CACHE CLEAN')
+
     try:
         redis_utils.clear_cache()
     except Exception as e:

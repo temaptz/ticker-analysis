@@ -15,6 +15,7 @@ from lib import (
 )
 from lib.db_2 import init, db_utils, predictions_db
 from lib.learn import const
+import pandas
 
 init.init_db()
 db_utils.optimize_db()
@@ -27,6 +28,51 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
+
+    # news_500 =pandas.read_csv('./local_llm/news_500.csv')
+    #
+    # prompts = []
+    # responses = []
+    #
+    # for n in news_500.itertuples():
+    #     # print(n.subject_name)
+    #     # print(n.news_text)
+    #     # print(n.sentiment)
+    #     # print(n.impact_strength)
+    #     # print(n.mention_focus)
+    #
+    #     prompt = news.news_rate_v2.get_prompt(
+    #         news_text=n.news_text,
+    #         subject_name=n.subject_name,
+    #     )
+    #
+    #     response = news.news_rate_v2.get_response(
+    #         sentiment=n.sentiment,
+    #         impact_strength=n.impact_strength,
+    #         mention_focus=n.mention_focus
+    #     )
+    #
+    #     prompts.append(prompt)
+    #     responses.append(response)
+    #
+    # df = pandas.DataFrame({
+    #     'prompt': prompts,
+    #     'response': responses
+    # })
+    #
+    # df.to_csv('./local_llm/dataset.csv', index=False)
+
+
+
+
+
+    # schedule.start_schedule(
+
+
+
+
+
+
 
     # news.news_save.save_news()
 

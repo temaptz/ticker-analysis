@@ -147,7 +147,7 @@ class Ta21LearningCard:
         if self.price:
             if self.target_date < datetime.datetime.now(datetime.timezone.utc):
                 if target_price := instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date):
-                    return utils.get_price_change_relative(a=self.price, b=target_price)
+                    return utils.get_change_relative_by_price(a=self.price, b=target_price)
 
         return None
 
@@ -386,7 +386,8 @@ def predict_future_relative_change(instrument_uid: str, date_target: datetime.da
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     if current_price := instruments.get_instrument_last_price_by_uid(uid=instrument_uid):
         if relative_change := predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target):
-            return utils.round_float(current_price * relative_change, decimals=2)
+            if predict_price := utils.get_price_by_change_relative(current_price=current_price, relative_change=relative_change):
+                return utils.round_float(predict_price, decimals=2)
 
     return None
 
