@@ -1,5 +1,5 @@
 import numpy
-from tinkoff.invest import CandleInterval, InstrumentResponse, Instrument
+from tinkoff.invest import InstrumentResponse, Instrument
 import datetime
 import catboost
 import pandas
@@ -11,6 +11,10 @@ from lib.learn import learn_utils
 
 def get_feature_names() -> list:
     return ['target_date_days', 'news_positive_percent', 'news_negative_percent', 'news_neutral_percent', 'name', 'currency', 'country_of_risk', 'forecast_price_change', 'revenue_ttm', 'ebitda_ttm', 'market_capitalization', 'total_debt_mrq', 'eps_ttm', 'pe_ratio_ttm', 'ev_to_ebitda_mrq', 'dividend_payout_ratio_fy', 'price_change_2_days', 'price_change_1_week', 'price_change_1_month', 'price_change_3_months', 'price_change_6_months', 'price_change_1_year', 'price_change_2_years', 'price_change_3_years']
+
+
+def to_numpy_float(num: float) -> float:
+    return numpy.float32(num) if num else num
 
 
 class Ta21LearningCard:
@@ -62,7 +66,7 @@ class Ta21LearningCard:
     def fill_card(self, is_fill_empty=False):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price_change = self.get_target_change_relative()
-        self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
+        self.forecast_price_change = self.get_forecast_change()
         f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]
         self.revenue_ttm = f.revenue_ttm
         self.ebitda_ttm = f.ebitda_ttm
@@ -72,13 +76,15 @@ class Ta21LearningCard:
         self.pe_ratio_ttm = f.pe_ratio_ttm
         self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
         self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
-        self.price_change_1_week = self.get_price_change_days(days_count=7, is_fill_empty=is_fill_empty)
-        self.price_change_1_month = self.get_price_change_days(days_count=30, is_fill_empty=is_fill_empty)
-        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3, is_fill_empty=is_fill_empty)
-        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6, is_fill_empty=is_fill_empty)
-        self.price_change_1_year = self.get_price_change_days(days_count=365, is_fill_empty=is_fill_empty)
-        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2, is_fill_empty=is_fill_empty)
-        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3, is_fill_empty=is_fill_empty)
+
+        self.price_change_2_days = self.get_price_change_days(days_count=2)
+        self.price_change_1_week = self.get_price_change_days(days_count=7)
+        self.price_change_1_month = self.get_price_change_days(days_count=30)
+        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3)
+        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6)
+        self.price_change_1_year = self.get_price_change_days(days_count=365)
+        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2)
+        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3)
 
         news_rated = self.get_news_rated()
 
@@ -113,19 +119,25 @@ class Ta21LearningCard:
 
         if not all(x is not None for x in self.get_x()):
             print('CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
+            print(self.get_csv_record())
             self.is_ok = False
             return
 
-    def get_price_change_days(self, days_count: int, is_fill_empty=False) -> float or None:
+    def get_price_change_days(self, days_count: int) -> float or None:
         target_date = self.date - datetime.timedelta(days=days_count)
-        current_price = self.price
-        if target_price := instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=target_date):
-            if price_change := utils.get_change_relative_by_price(main_price=target_price, next_price=current_price):
-                return price_change
+        if current_price := self.price:
+            delta_hours = 24 * 10 if days_count > 300 else 24
+            if target_price := instruments.get_instrument_price_by_date(
+                    uid=self.instrument.uid,
+                    date=target_date,
+                    delta_hours=delta_hours,
+            ):
+                if price_change := utils.get_change_relative_by_price(main_price=target_price, next_price=current_price):
+                    return price_change
 
-        return 1 if is_fill_empty else None
+        return None
 
-    def get_forecast_change(self, is_fill_empty=False) -> float or None:
+    def get_forecast_change(self) -> float or None:
         try:
             if current_price := self.price:
                 if price_forecast := utils.get_price_by_quotation(
@@ -139,7 +151,7 @@ class Ta21LearningCard:
         except Exception as e:
             logger.log_error(method_name='Ta21LearningCard.get_forecast_change', error=e, is_telegram_send=False)
 
-        return 1 if is_fill_empty else None
+        return None
 
     def get_news_rated(self) -> types.NewsRate or None:
         result = None
@@ -183,23 +195,23 @@ class Ta21LearningCard:
             self.instrument.name, # Название инструмента.
             self.instrument.currency, # Валюта инструмента.
             self.instrument.country_of_risk, # Код страны
-            numpy.float32(self.forecast_price_change),
-            numpy.float32(self.revenue_ttm),
-            numpy.float32(self.ebitda_ttm),
-            numpy.float32(self.market_capitalization),
-            numpy.float32(self.total_debt_mrq),
-            numpy.float32(self.eps_ttm),
-            numpy.float32(self.pe_ratio_ttm),
-            numpy.float32(self.ev_to_ebitda_mrq),
-            numpy.float32(self.dividend_payout_ratio_fy),
-            numpy.float32(self.price_change_2_days),
-            numpy.float32(self.price_change_1_week),
-            numpy.float32(self.price_change_1_month),
-            numpy.float32(self.price_change_3_months),
-            numpy.float32(self.price_change_6_months),
-            numpy.float32(self.price_change_1_year),
-            numpy.float32(self.price_change_2_years),
-            numpy.float32(self.price_change_3_years),
+            to_numpy_float(self.forecast_price_change),
+            to_numpy_float(self.revenue_ttm),
+            to_numpy_float(self.ebitda_ttm),
+            to_numpy_float(self.market_capitalization),
+            to_numpy_float(self.total_debt_mrq),
+            to_numpy_float(self.eps_ttm),
+            to_numpy_float(self.pe_ratio_ttm),
+            to_numpy_float(self.ev_to_ebitda_mrq),
+            to_numpy_float(self.dividend_payout_ratio_fy),
+            to_numpy_float(self.price_change_2_days),
+            to_numpy_float(self.price_change_1_week),
+            to_numpy_float(self.price_change_1_month),
+            to_numpy_float(self.price_change_3_months),
+            to_numpy_float(self.price_change_6_months),
+            to_numpy_float(self.price_change_1_year),
+            to_numpy_float(self.price_change_2_years),
+            to_numpy_float(self.price_change_3_years),
         ]
 
     # Выходные данные для обучения
@@ -259,7 +271,8 @@ def generate_data():
                     card = Ta21LearningCard(
                         instrument=instrument,
                         date=date,
-                        target_date=target_date
+                        target_date=target_date,
+                        fill_empty=False,
                     )
 
                     if card.is_ok and card.get_y() and card.get_y() != 0:
@@ -459,7 +472,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key_0_',
+        'method': 'ta_2_1_get_record_cache_key_0_____',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

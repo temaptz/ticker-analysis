@@ -67,6 +67,23 @@ def init_generator() -> transformers.Pipeline or None:
     return None
 
 
+def compute_metrics(eval_preds):
+    if isinstance(eval_preds, tuple):
+        loss = eval_preds[0]
+    elif isinstance(eval_preds, dict) and 'loss' in eval_preds:
+        loss = eval_preds['loss']
+    else:
+        return {}
+
+    if isinstance(loss, (list, np.ndarray)):
+        loss = np.mean(loss)
+    elif hasattr(loss, 'item'):
+        loss = loss.item()
+
+    perplexity = math.exp(loss) if loss < 50 else float('inf')
+    return {'perplexity': perplexity}
+
+
 def train():
     df = pandas.read_csv(f'{get_app_dir()}/dataset.csv')
 
@@ -85,16 +102,25 @@ def train():
         trust_remote_code=True,
     )
 
-    def compute_metrics(eval_pred):
-        loss = eval_pred[0]
-        perplexity = math.exp(loss) if loss < 50 else float('inf')
-        return {'perplexity': perplexity}
-
     def preprocess(example):
         return tokenizer(example['text'], truncation=True, max_length=512)
 
     tokenized_train = train_ds.map(preprocess, batched=False)
     tokenized_val = val_ds.map(preprocess, batched=False)
+
+    print('\n========== TOKENIZED TRAIN DATASET ==========')
+    print(tokenized_train)
+    print('\n----- First 10 entries (tokenized) -----')
+    for i, sample in enumerate(tokenized_train.select(range(10))):
+        print(f'\nExample #{i + 1}')
+        print(sample)
+
+    print('\n========== TOKENIZED VALIDATION DATASET ==========')
+    print(tokenized_val)
+    print('\n----- First 10 entries (tokenized) -----')
+    for i, sample in enumerate(tokenized_val.select(range(10))):
+        print(f'\nExample #{i + 1}')
+        print(sample)
 
     lora_config = peft.LoraConfig(
         task_type=peft.TaskType.CAUSAL_LM,
@@ -121,7 +147,7 @@ def train():
     # === 5. Параметры тренировки ===
     training_args = transformers.TrainingArguments(
         output_dir=get_adapter_path(),       # Куда сохранять LoRA-адаптер
-        num_train_epochs=3,                  # Сколько раз пройти по датасету (обычно 2-5)
+        num_train_epochs=5,                  # Сколько раз пройти по датасету (обычно 2-5)
         per_device_train_batch_size=1,       # Размер батча (для CPU обычно 1)
         per_device_eval_batch_size=1,
         learning_rate=2e-4,                  # Скорость обучения (можно уменьшить при переобучении)
@@ -133,7 +159,7 @@ def train():
         load_best_model_at_end=True,         # в конце вернёт лучшую по метрике версию
         metric_for_best_model='eval_loss',
         greater_is_better=False,
-        save_total_limit=1,                  # Сколько последних чекпоинтов хранить
+        save_total_limit=5,                  # Сколько последних чекпоинтов хранить
         use_cpu=True,
     )
 
@@ -148,7 +174,7 @@ def train():
         callbacks=[transformers.EarlyStoppingCallback(early_stopping_patience=3)]
     )
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=is_adapter_exists())
 
     # === 7. Сохраняем адаптер и токенизатор ===
     model.save_pretrained(get_adapter_path())
@@ -164,7 +190,10 @@ def get_pretrain_name() -> str:
 
 
 def get_app_dir() -> str:
-    return os.path.abspath('/app')
+    if os.path.exists('/app'):
+        return '/app'
+
+    return os.path.abspath('./')
 
 
 def get_models_cache_path() -> str:
@@ -177,6 +206,10 @@ def get_model_path() -> str:
 
 def get_adapter_path() -> str:
     return f'{get_models_cache_path()}/lora_adapter'
+
+
+def is_adapter_exists() -> bool:
+    return os.path.exists(get_adapter_path()) and len(os.listdir(get_adapter_path())) > 0
 
 
 class ServerHandler(http.server.BaseHTTPRequestHandler):
@@ -216,6 +249,8 @@ def run_server():
     print(f'Server running on port {port}...')
     httpd.serve_forever()
 
+if not is_adapter_exists():
+    os.makedirs(get_adapter_path(), exist_ok=True)
 print('MODEL DIR\n', os.listdir(get_model_path()))
 print('ADAPTER DIR\n', os.listdir(get_adapter_path()))
 

@@ -94,7 +94,7 @@ def get_change_relative_by_price(main_price: float, next_price: float) -> float 
     try:
         return (next_price - main_price) / main_price
     except Exception as e:
-        logger.log_error(method_name='get_change_relative_by_price', error=e)
+        logger.log_error(method_name='get_change_relative_by_price', error=e, is_telegram_send=False)
 
     return None
 
@@ -103,7 +103,7 @@ def get_price_by_change_relative(current_price: float, relative_change: float) -
     try:
         return current_price + (current_price * relative_change)
     except Exception as e:
-        logger.log_error(method_name='get_price_by_change_relative', error=e)
+        logger.log_error(method_name='get_price_by_change_relative', error=e, is_telegram_send=False)
 
     return None
 

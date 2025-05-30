@@ -78,7 +78,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or None:
+def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=24) -> float or None:
     if date.date() == datetime.datetime.now().date():
         return get_instrument_last_price_by_uid(uid=uid)
 
@@ -88,9 +88,9 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime) -> float or 
             date_utc = date_utils.convert_to_utc(date=date)
             candles = client.market_data.get_candles(
                 instrument_id=uid,
-                from_=date_utc - datetime.timedelta(hours=24),
-                to=date_utc + datetime.timedelta(hours=24),
-                interval=CandleInterval.CANDLE_INTERVAL_HOUR
+                from_=date_utc - datetime.timedelta(hours=delta_hours),
+                to=date_utc + datetime.timedelta(hours=delta_hours),
+                interval=(CandleInterval.CANDLE_INTERVAL_HOUR if delta_hours < 48 else CandleInterval.CANDLE_INTERVAL_DAY)
             ).candles
 
             nearest: HistoricCandle or None = None
