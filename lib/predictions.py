@@ -1,7 +1,7 @@
 import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
-from lib.learn import ta_1_1, ta_1_2, ta_2, ta_2_1, const
+from lib.learn import ta_1_1, ta_1_2, ta_2, ta_2_1, model
 from lib import date_utils, logger, utils
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
@@ -39,7 +39,7 @@ def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: d
             uid=uid,
             date_from=date_from,
             date_to=date_to,
-            model_name=const.TA_1,
+            model_name=model.TA_1,
         ):
             result.append({
                 'prediction': i.prediction,
@@ -60,7 +60,7 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
                 uid=uid,
                 date_from=date_from,
                 date_to=date_to,
-                model_name=const.TA_1_1,
+                model_name=model.TA_1_1,
         ):
             result.append({
                 'prediction': i.prediction,
@@ -91,17 +91,17 @@ def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime
         ):
             prediction_item = None
 
-            if model_name == const.TA_1_2:
+            if model_name == model.TA_1_2:
                 prediction_item = ta_1_2.predict_future(
                     instrument_uid=uid,
                     date_target=date,
                 )
-            elif model_name == const.TA_2:
+            elif model_name == model.TA_2:
                 prediction_item = ta_2.predict_future(
                     instrument_uid=uid,
                     date_target=date,
                 )
-            elif model_name == const.TA_2_1:
+            elif model_name == model.TA_2_1:
                 prediction_item = ta_2_1.predict_future(
                     instrument_uid=uid,
                     date_target=date,

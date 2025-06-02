@@ -8,7 +8,7 @@ if docker.is_prod():
     cache.clean()
 
     telegram.send_message('[LEARN] Начало обучения TA-1_2')
-    ta_1_2.prepare_data()
+    ta_1_2.generate_data()
     ta_1_2.learn()
     telegram.send_message('[LEARN] Обучение TA-1_2 завершено')
 

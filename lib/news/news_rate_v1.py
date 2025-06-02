@@ -60,38 +60,6 @@ def get_rated_news_by_instrument_uid(
     return response
 
 
-def get_news_rate_by_instrument_uid(
-        instrument_uid: str,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
-        news_list: list[news_db.News],
-        keywords: list[str],
-):
-    response = None
-    news_uid_list = [n.news_uid for n in news_list or []]
-
-    yandex_absolute_rate: types.NewsRateAbsoluteYandex = get_news_rate_absolute(
-        news_uid_list=news_uid_list,
-        instrument_uid=instrument_uid,
-    )
-
-    yandex_percent_rate: types.NewsRateAbsoluteYandex = get_news_rate(
-        news_uid_list=news_uid_list,
-        instrument_uid=instrument_uid,
-    )
-
-    if yandex_absolute_rate or yandex_percent_rate:
-        response = {
-            'yandex_absolute': yandex_absolute_rate,
-            'yandex_percent': yandex_percent_rate,
-            'keywords': keywords,
-            'start_date': start_date,
-            'end_date': end_date,
-        }
-
-    return response
-
-
 def get_news_rate(
         news_uid_list: list[str],
         instrument_uid: str,

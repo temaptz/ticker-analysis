@@ -12,6 +12,6 @@ import { NewsRateV2 } from '../../shared/types';
 })
 export class RateV2Component {
 
-  rate_v2 = input<NewsRateV2 | null>(null);
+  rate_v2 = input<Partial<NewsRateV2> | null>(null);
 
 }

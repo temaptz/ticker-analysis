@@ -1,7 +1,7 @@
 import datetime
 from lib import predictions, telegram, instruments, date_utils, logger
 from lib.db_2 import predictions_db
-from lib.learn import ta_1_2, ta_2, ta_2_1, const
+from lib.learn import ta_1_2, ta_2, ta_2_1, model
 
 
 def save_daily_predictions():
@@ -10,9 +10,9 @@ def save_daily_predictions():
 
 
 def save_weekly_predictions():
-    save_predictions(model_name=const.TA_1_2)
-    save_predictions(model_name=const.TA_2)
-    save_predictions(model_name=const.TA_2_1)
+    save_predictions(model_name=model.TA_1_2)
+    save_predictions(model_name=model.TA_2)
+    save_predictions(model_name=model.TA_2_1)
 
 
 def save_predictions_ta_1():
@@ -33,7 +33,7 @@ def save_predictions_ta_1():
                 instrument_uid=instrument.uid,
                 prediction=prediction,
                 target_date=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30),
-                model_name=const.TA_1,
+                model_name=model.TA_1,
             )
 
             counter += 1
@@ -59,7 +59,7 @@ def save_predictions_ta_1_1():
                 instrument_uid=instrument.uid,
                 prediction=prediction,
                 target_date=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30),
-                model_name=const.TA_1_1,
+                model_name=model.TA_1_1,
             )
 
             counter += 1
@@ -84,11 +84,11 @@ def save_predictions(model_name: str):
         ):
             prediction = None
 
-            if model_name == const.TA_1_2:
+            if model_name == model.TA_1_2:
                 prediction = ta_1_2.predict_future(instrument_uid=instrument.uid, date_target=date)
-            elif model_name == const.TA_2:
+            elif model_name == model.TA_2:
                 prediction = ta_2.predict_future(instrument_uid=instrument.uid, date_target=date)
-            elif model_name == const.TA_2_1:
+            elif model_name == model.TA_2_1:
                 prediction = ta_2_1.predict_future(instrument_uid=instrument.uid, date_target=date)
 
             if prediction is not None:

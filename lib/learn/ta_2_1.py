@@ -6,7 +6,7 @@ import pandas
 from sklearn.metrics import mean_squared_error
 from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types, yandex_disk, docker, logger, yandex
 from lib.news import news_rate_v1
-from lib.learn import learn_utils
+from lib.learn import learn_utils, model
 
 
 def get_feature_names() -> list:
@@ -96,12 +96,12 @@ class Ta21LearningCard:
     # Проверка карточки
     def check_x(self, is_fill_empty=False):
         if self.price is None:
-            print('CARD IS NOT OK BY CURRENT PRICE', self.instrument.ticker, self.date)
+            print(f'{model.TA_2_1} CARD IS NOT OK BY CURRENT PRICE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
         if len(self.get_x()) != len(get_feature_names()):
-            print('CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
+            print(f'{model.TA_2_1} CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
@@ -113,12 +113,12 @@ class Ta21LearningCard:
                     or self.news_neutral_percent is None
                 )
         ):
-            print('CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
+            print(f'{model.TA_2_1} CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
         if not all(x is not None for x in self.get_x()):
-            print('CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
+            print(f'{model.TA_2_1} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
             print(self.get_csv_record())
             self.is_ok = False
             return
@@ -245,7 +245,7 @@ def generate_data():
     instrument_index = 0
     records = []
 
-    print('GENERATE DATA TA-2')
+    print('GENERATE DATA TA-2_1')
     print(len(instruments_list))
 
     for instrument in instruments_list:
@@ -472,7 +472,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key_0_____',
+        'method': 'ta_2_1_get_record_cache_key_____',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

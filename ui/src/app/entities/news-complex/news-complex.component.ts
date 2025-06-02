@@ -7,11 +7,12 @@ import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, NewsRateResponse } from '../../shared/types';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { NewsBarComponent } from '../news-bar/news-bar.component';
+import { RateV2Component } from '../rate-v2/rate-v2.component';
 
 
 @Component({
   selector: 'news-complex',
-  imports: [CommonModule, PreloaderComponent, NewsBarComponent],
+  imports: [CommonModule, PreloaderComponent, NewsBarComponent, RateV2Component],
   providers: [],
   templateUrl: './news-complex.component.html',
   styleUrl: './news-complex.component.scss'

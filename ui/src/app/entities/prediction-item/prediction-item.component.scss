@@ -1,0 +1,30 @@
+span {
+  white-space: nowrap;
+}
+
+.plus {
+  color: green;
+
+  &:before {
+    content: '+';
+  }
+}
+
+.minus {
+  color: red;
+
+  &:before {
+    content: '-';
+  }
+}
+
+div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+h5 {
+  margin: 0 3px 0 0;
+}

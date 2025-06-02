@@ -5,17 +5,25 @@
   @let newsResp = news();
 
   @if (newsResp) {
-    @if (newsResp.total_percent) {
-      <div class="total-news">
-        <div>Общий новостной фон:</div>
+    <div class="total-news">
+      <div>Общий новостной фон:</div>
+
+      @if (newsResp.rate_v2.influence_score) {
+        <rate-v2
+          [rate_v2]="newsResp.rate_v2"
+        ></rate-v2>
+        <h5>influence_score: {{ newsResp.rate_v2.influence_score }}</h5>
+      }
+
+      @if (newsResp.total_percent) {
         <news-bar
           [positivePercent]="newsResp.total_percent.positive_percent"
           [negativePercent]="newsResp.total_percent.negative_percent"
           [neutralPercent]="newsResp.total_percent.neutral_percent"
           [absolute]="newsResp.total_absolute"
         ></news-bar>
-      </div>
-    }
+      }
+    </div>
 
     <mat-accordion>
       @for (n of newsResp.list; track n.news_uid) {

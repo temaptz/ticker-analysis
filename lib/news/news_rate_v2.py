@@ -1,5 +1,5 @@
 import re
-import time
+import datetime
 
 from lib.db_2 import news_db, news_rate_2_db
 from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types, local_llm
@@ -27,6 +27,28 @@ def get_news_rate_db(
         if result.is_ready_to_calc():
             result.get_influence_score_value()
             return result
+
+    return None
+
+@logger.error_logger
+def get_news_total_influence_score(
+        instrument_uid: str,
+        news_ids: list[str],
+) -> float or None:
+    rates: list[types.NewsRate2] = list()
+
+    for n_id in news_ids:
+        if rate := get_news_rate_db(instrument_uid=instrument_uid, news_uid=n_id):
+            rates.append(rate)
+
+    if len(rates) > 0:
+        result = 0
+
+        for r in rates:
+            if r.is_ready_to_calc():
+                result += r.get_influence_score_value()
+
+        return result
 
     return None
 

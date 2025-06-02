@@ -1,43 +1,18 @@
 @defer (when isLoaded()) {
-  <div>
-    <h5 [style.color]="colors.ta_1">TA-1:</h5>
-    <span
-      [class.plus]="isPlus_ta_1()"
-      [class.minus]="!isPlus_ta_1()"
-    >{{ percent_ta_1() }}% -> <b>{{ prediction_ta_1() | priceRound | priceFormat }}</b></span>
-  </div>
+  @let pResp = predictionResp();
+  @let price = currentPrice();
 
-  <div>
-    <h5 [style.color]="colors.ta_1_1">TA-1_1:</h5>
-    <span
-      [class.plus]="isPlus_ta_1_1()"
-      [class.minus]="!isPlus_ta_1_1()"
-    >{{ percent_ta_1_1() }}% -> <b>{{ prediction_ta_1_1() | priceRound | priceFormat }}</b></span>
-  </div>
-
-  <div>
-    <h5 [style.color]="colors.ta_1_2">TA-1_2:</h5>
-    <span
-      [class.plus]="isPlus_ta_1_2()"
-      [class.minus]="!isPlus_ta_1_2()"
-    >{{ percent_ta_1_2() }}% -> <b>{{ prediction_ta_1_2() | priceRound | priceFormat }}</b></span>
-  </div>
-
-  <div>
-    <h5 [style.color]="colors.ta_2">TA-2:</h5>
-    <span
-      [class.plus]="isPlus_ta_2()"
-      [class.minus]="!isPlus_ta_2()"
-    >{{ percent_ta_2() }}% -> <b>{{ prediction_ta_2() | priceRound | priceFormat }}</b></span>
-  </div>
-
-  <div>
-    <h5 [style.color]="colors.consensus">CONSENSUS:</h5>
-    <span
-      [class.plus]="isPlus_consensus()"
-      [class.minus]="!isPlus_consensus()"
-    >{{ percent_consensus() }}% -> <b>{{ prediction_consensus() | priceRound | priceFormat }}</b></span>
-  </div>
+  @if (pResp && price) {
+    @for (modelName of modelNames; track modelName) {
+      <div>
+        <prediction-item
+          [predictionResp]="pResp"
+          [modelName]="modelName"
+          [currentPrice]="price"
+        ></prediction-item>
+      </div>
+    }
+  }
 } @placeholder {
   <preloader></preloader>
 }

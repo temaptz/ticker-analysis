@@ -9,7 +9,13 @@
     <div class="week">
       <div
         class="date"
-      >{{ week.start_date | date : 'yyyy-MM-dd' }} - {{ week.end_date | date : 'yyyy-MM-dd' }}</div>
+      >
+        {{ week.start_date | date : 'yyyy-MM-dd' }} - {{ week.end_date | date : 'yyyy-MM-dd' }}
+
+        @if (week.rate_v2) {
+          <rate-v2 [rate_v2]="week.rate_v2"></rate-v2>
+        }
+      </div>
 
       @if (week?.yandex_percent) {
         <div class="bar">

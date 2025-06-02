@@ -1,7 +1,7 @@
 import datetime
 
 from lib.db_2 import news_db
-from lib import instruments, yandex, cache, serializer, utils, logger, learn
+from lib import instruments, yandex, cache, serializer, utils, logger, learn, types
 from lib.news import news_rate_v1, news_rate_v2
 
 
@@ -41,6 +41,12 @@ def get_rated_news_by_instrument_uid(
             news_uid_list=news_ids_list,
             instrument_uid=instrument_uid,
         ),
+        'rate_v2': {
+            'influence_score': utils.round_float(news_rate_v2.get_news_total_influence_score(
+                instrument_uid=instrument_uid,
+                news_ids=news_ids_list,
+            ))
+        },
     }
 
     for n in news_list or []:
@@ -72,17 +78,42 @@ def get_news_rate_by_instrument_uid(
         start_date: datetime.datetime,
         end_date: datetime.datetime,
 ):
-    return news_rate_v1.get_news_rate_by_instrument_uid(
+    response = None
+    news_list=get_news_by_instrument_uid(
         instrument_uid=instrument_uid,
         start_date=start_date,
         end_date=end_date,
-        news_list=get_news_by_instrument_uid(
-            instrument_uid=instrument_uid,
-            start_date=start_date,
-            end_date=end_date,
-        ),
-        keywords=get_keywords_by_instrument_uid(instrument_uid=instrument_uid),
     )
+    keywords=get_keywords_by_instrument_uid(instrument_uid=instrument_uid)
+
+    news_uid_list = [n.news_uid for n in news_list or []]
+
+    yandex_absolute_rate: types.NewsRateAbsoluteYandex = news_rate_v1.get_news_rate_absolute(
+        news_uid_list=news_uid_list,
+        instrument_uid=instrument_uid,
+    )
+
+    yandex_percent_rate: types.NewsRateAbsoluteYandex = news_rate_v1.get_news_rate(
+        news_uid_list=news_uid_list,
+        instrument_uid=instrument_uid,
+    )
+
+    if yandex_absolute_rate or yandex_percent_rate:
+        response = {
+            'yandex_absolute': yandex_absolute_rate,
+            'yandex_percent': yandex_percent_rate,
+            'rate_v2': {
+                'influence_score': utils.round_float(news_rate_v2.get_news_total_influence_score(
+                    instrument_uid=instrument_uid,
+                    news_ids=news_uid_list,
+                ))
+            },
+            'keywords': keywords,
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+
+    return response
 
 
 @cache.ttl_cache(ttl=3600, skip_empty=True)

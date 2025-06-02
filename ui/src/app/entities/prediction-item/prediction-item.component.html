@@ -1,0 +1,8 @@
+<div>
+  <h5 [style.color]="modelColor()">{{ modelName() }}</h5>
+
+  <span
+    [class.plus]="isPlus()"
+    [class.minus]="!isPlus()"
+  >{{ percent() }}% -> <b>{{ prediction() | priceRound | priceFormat }}</b></span>
+</div>
