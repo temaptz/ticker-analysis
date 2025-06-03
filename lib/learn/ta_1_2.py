@@ -338,9 +338,8 @@ def learn():
 
     y_pred_test = model.predict(test_pool)
     mse_test = mean_squared_error(y_test, y_pred_test)
-    mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
 
-    logger.log_info(message=f'TA-1_2 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
+    logger.log_info(message=f'TA-1_2 LEARN RESULT. MSE: {mse_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
 
     learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
 

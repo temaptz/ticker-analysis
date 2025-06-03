@@ -17,6 +17,9 @@ def to_numpy_float(num: float) -> float:
     return numpy.float32(num) if num else num
 
 
+MODEL_NAME = model.TA_2_1
+
+
 class Ta21LearningCard:
     is_ok: bool = True  # будет меняться в случае ошибки
     instrument: InstrumentResponse.instrument = None
@@ -96,12 +99,12 @@ class Ta21LearningCard:
     # Проверка карточки
     def check_x(self, is_fill_empty=False):
         if self.price is None:
-            print(f'{model.TA_2_1} CARD IS NOT OK BY CURRENT PRICE', self.instrument.ticker, self.date)
+            print(f'{MODEL_NAME} CARD IS NOT OK BY CURRENT PRICE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
         if len(self.get_x()) != len(get_feature_names()):
-            print(f'{model.TA_2_1} CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
+            print(f'{MODEL_NAME} CARD IS NOT OK BY X SIZE', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
@@ -113,12 +116,12 @@ class Ta21LearningCard:
                     or self.news_neutral_percent is None
                 )
         ):
-            print(f'{model.TA_2_1} CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
+            print(f'{MODEL_NAME} CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
         if not all(x is not None for x in self.get_x()):
-            print(f'{model.TA_2_1} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
+            print(f'{MODEL_NAME} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
             print(self.get_csv_record())
             self.is_ok = False
             return
@@ -363,7 +366,7 @@ def learn():
         feature_names=get_feature_names(),
     )
 
-    model = catboost.CatBoostRegressor(
+    model_cb = catboost.CatBoostRegressor(
         task_type='CPU',
         iterations=10000,
         learning_rate=0.03,
@@ -376,27 +379,21 @@ def learn():
         loss_function='RMSE',
     )
 
-    model.fit(
+    model_cb.fit(
         train_pool,
         eval_set=validate_pool,
         plot=True,
     )
 
-    model.save_model(get_model_file_path())
+    model_cb.save_model(get_model_file_path())
 
-    y_pred_test = model.predict(test_pool)
+    y_pred_test = model_cb.predict(test_pool)
     mse_test = mean_squared_error(y_test, y_pred_test)
-    mape_test = mean_absolute_percentage_error(y_test, y_pred_test)
+    rmse_test = mean_squared_error(y_test, y_pred_test, squared=False)
 
-    logger.log_info(message=f'TA-2_1 LEARN RESULT. MSE: {mse_test}, MAPE: {mape_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
+    logger.log_info(message=f'{MODEL_NAME} LEARN RESULT. RMSE: {rmse_test}, MSE: {mse_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
 
-    learn_utils.plot_catboost_metrics(model, metric_name='RMSE')
-
-
-def mean_absolute_percentage_error(y_true, y_pred):
-    y_true, y_pred = numpy.array(y_true), numpy.array(y_pred)
-    nonzero_mask = y_true != 0
-    return numpy.mean(numpy.abs((y_true[nonzero_mask] - y_pred[nonzero_mask]) / y_true[nonzero_mask])) * 100
+    learn_utils.plot_catboost_metrics(model_cb, metric_name='RMSE')
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)

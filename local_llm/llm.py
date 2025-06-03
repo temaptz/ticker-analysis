@@ -7,6 +7,8 @@ import peft
 import pandas
 import datasets
 import math
+import numpy as np
+import random
 
 
 GENERATOR: transformers.Pipeline or None = None
@@ -46,6 +48,7 @@ def init_generator() -> transformers.Pipeline or None:
             pretrained_model_name_or_path=get_model_path(),
             local_files_only=True,
             trust_remote_code=True,
+            attn_implementation='eager',
         )
         model = peft.PeftModel.from_pretrained(model, get_adapter_path())
         tokenizer = transformers.AutoTokenizer.from_pretrained(
@@ -85,6 +88,31 @@ def compute_metrics(eval_preds):
 
 
 def train():
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        pretrained_model_name_or_path=get_model_path(),
+        local_files_only=True,
+        trust_remote_code=True,
+    )
+
+    max_tokens = 768
+
+    def preprocess(example):
+        return tokenizer(example['text'], truncation=True, max_length=max_tokens)
+
+    def preprocess_with_filtering(example):
+        encoded = tokenizer(example['text'], truncation=False)
+        length = len(encoded['input_ids'])
+        encoded['text'] = example['text']
+        encoded['length'] = length
+        encoded['is_too_long'] = length > max_tokens
+
+        print('---------------------START TOO LONG---------------------')
+        print('LENGTH:', encoded['length'])
+        print('TEXT:', encoded['text'])
+        print('----------------------TOO LONG END----------------------')
+
+        return encoded
+
     df = pandas.read_csv(f'{get_app_dir()}/dataset.csv')
 
     # Формируем строки для обучения в формате диалога
@@ -93,32 +121,33 @@ def train():
     # Превращаем в HuggingFace Dataset
     dataset = datasets.Dataset.from_list(samples)
 
-    ds_split = dataset.train_test_split(test_size=0.1, seed=42)
+    tokenized_all = dataset.map(preprocess_with_filtering, batched=False)
+
+    # Отдельно примеры, которые превышают max_tokens токена
+    too_long = tokenized_all.filter(lambda e: e['is_too_long'])
+    tokenized_filtered = tokenized_all.filter(lambda e: not e['is_too_long'])
+
+    ds_split = tokenized_filtered.train_test_split(test_size=0.1, seed=42)
     train_ds, val_ds = ds_split['train'], ds_split['test']
-
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path=get_model_path(),
-        local_files_only=True,
-        trust_remote_code=True,
-    )
-
-    def preprocess(example):
-        return tokenizer(example['text'], truncation=True, max_length=512)
 
     tokenized_train = train_ds.map(preprocess, batched=False)
     tokenized_val = val_ds.map(preprocess, batched=False)
 
+    print(f'\nWILL TRAIN WITH {len(tokenized_filtered)} TOTAL EXAMPLES. {len(tokenized_train)} TRAIN. {len(tokenized_val)} VAL. {len(too_long)} FILTERED.')
+
     print('\n========== TOKENIZED TRAIN DATASET ==========')
     print(tokenized_train)
-    print('\n----- First 10 entries (tokenized) -----')
-    for i, sample in enumerate(tokenized_train.select(range(10))):
+    print('\n----- First 5 entries (tokenized) -----')
+    random_samples = tokenized_train.shuffle(seed=random.randint(1, 10_000)).select(range(5))
+    for i, sample in enumerate(random_samples):
         print(f'\nExample #{i + 1}')
         print(sample)
 
     print('\n========== TOKENIZED VALIDATION DATASET ==========')
     print(tokenized_val)
-    print('\n----- First 10 entries (tokenized) -----')
-    for i, sample in enumerate(tokenized_val.select(range(10))):
+    print('\n----- First 5 entries (tokenized) -----')
+    random_samples = tokenized_val.shuffle(seed=random.randint(1, 10_000)).select(range(5))
+    for i, sample in enumerate(random_samples):
         print(f'\nExample #{i + 1}')
         print(sample)
 
@@ -140,6 +169,7 @@ def train():
         pretrained_model_name_or_path=get_model_path(),
         local_files_only=True,
         trust_remote_code=True,
+        attn_implementation='eager',
     )
     model.gradient_checkpointing_enable()  # экономим RAM
     model = peft.get_peft_model(model, lora_config)
@@ -156,7 +186,7 @@ def train():
         eval_steps=100,
         save_strategy='steps',
         save_steps=100,                      # Как часто сохранять чекпоинты
-        save_total_limit=5,                  # Сколько последних чекпоинтов хранить
+        save_total_limit=3,                  # Сколько последних чекпоинтов хранить
         load_best_model_at_end=True,         # в конце вернёт лучшую по метрике версию
         metric_for_best_model='eval_loss',
         greater_is_better=False,
@@ -179,6 +209,9 @@ def train():
     # === 7. Сохраняем адаптер и токенизатор ===
     model.save_pretrained(get_adapter_path())
     tokenizer.save_pretrained(get_adapter_path())
+
+    metrics = trainer.evaluate()
+    print('FINAL EVAL METRICS:', metrics)
 
 
 def get_model_name() -> str:

@@ -85,7 +85,7 @@ def round_float(num: float, decimals: int = 10) -> float:
             decimals
         )
     except Exception as e:
-        logger.log_error(method_name='round_float', error=e)
+        logger.log_error(method_name='round_float', error=e, is_telegram_send=False)
 
     return num
 
