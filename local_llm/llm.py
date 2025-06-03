@@ -94,7 +94,7 @@ def train():
         trust_remote_code=True,
     )
 
-    max_tokens = 768
+    max_tokens = 512
 
     def preprocess(example):
         return tokenizer(example['text'], truncation=True, max_length=max_tokens)
