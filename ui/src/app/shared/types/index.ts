@@ -59,9 +59,9 @@ export interface NewsListRatedResponse {
   keywords: string[];
   total_absolute: NewsAbsoluteRate;
   total_percent: NewsPercentRate;
-  rate_v2: {
-    influence_score: number;
-  };
+  rate_v2: Partial<NewsRateV2>;
+  start_date: string | Date;
+  end_date: string | Date;
 }
 
 
@@ -88,16 +88,6 @@ export interface NewsPercentRate {
   positive_percent: number;
   negative_percent: number;
   neutral_percent: number;
-}
-
-
-export interface NewsRateResponse {
-  yandex_absolute: NewsAbsoluteRate;
-  yandex_percent: NewsPercentRate;
-  rate_v2: Partial<NewsRateV2>;
-  keywords: string[];
-  start_date: string | Date;
-  end_date: string | Date;
 }
 
 

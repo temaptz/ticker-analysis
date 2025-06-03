@@ -447,28 +447,6 @@ def instrument_news_list_rated(request):
 
 
 @api_view(['GET'])
-def instrument_news_rates(request):
-    resp = None
-    uid = request.GET.get('uid')
-    start_date = utils.parse_json_date(request.GET.get('start_date'))
-    end_date = utils.parse_json_date(request.GET.get('end_date'))
-
-    if uid and start_date and end_date:
-        resp = news.news.get_news_rate_by_instrument_uid(
-            instrument_uid=uid,
-            start_date=start_date,
-            end_date=end_date,
-        )
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
-
-
-@api_view(['GET'])
 def instrument_brand(request):
     resp = None
     uid = request.GET.get('uid')

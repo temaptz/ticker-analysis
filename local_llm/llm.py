@@ -156,10 +156,10 @@ def train():
         eval_steps=100,
         save_strategy='steps',
         save_steps=100,                      # Как часто сохранять чекпоинты
+        save_total_limit=5,                  # Сколько последних чекпоинтов хранить
         load_best_model_at_end=True,         # в конце вернёт лучшую по метрике версию
         metric_for_best_model='eval_loss',
         greater_is_better=False,
-        save_total_limit=5,                  # Сколько последних чекпоинтов хранить
         use_cpu=True,
     )
 
@@ -174,7 +174,7 @@ def train():
         callbacks=[transformers.EarlyStoppingCallback(early_stopping_patience=3)]
     )
 
-    trainer.train(resume_from_checkpoint=is_adapter_exists())
+    trainer.train(resume_from_checkpoint=True if is_adapter_exists() else None)
 
     # === 7. Сохраняем адаптер и токенизатор ===
     model.save_pretrained(get_adapter_path())

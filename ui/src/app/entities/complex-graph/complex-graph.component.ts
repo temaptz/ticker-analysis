@@ -565,7 +565,7 @@ export class ComplexGraphComponent {
         symbol: 'circle',
         symbolSize: 2.5,
         itemStyle: {
-          color: '#fdff72'
+          color: GRAPH_COLORS.history,
         },
         lineStyle: {
           width: 1,

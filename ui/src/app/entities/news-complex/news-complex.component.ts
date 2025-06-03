@@ -1,10 +1,10 @@
-import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, resource, ResourceLoaderParams, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, forkJoin, of } from 'rxjs';
+import { finalize, firstValueFrom, forkJoin, lastValueFrom, map, of } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList, NewsRateResponse } from '../../shared/types';
+import { InstrumentInList, NewsListRatedResponse } from '../../shared/types';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { NewsBarComponent } from '../news-bar/news-bar.component';
 import { RateV2Component } from '../rate-v2/rate-v2.component';
@@ -22,43 +22,26 @@ export class NewsComplexComponent {
   instrumentUid = input.required<InstrumentInList['uid']>();
 
   isLoaded = signal<boolean>(false);
-  weeksResponse = signal<NewsRateResponse[]>([]);
+
+  weeksResource = resource<NewsListRatedResponse[], string>({
+    request: () => this.instrumentUid(),
+    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
+      forkJoin([
+        ...this.weeks.map(([from, to]) => this.apiService.getInstrumentNewsListRated(params.request, from, to)
+        )
+      ])
+    )
+  });
 
   weeks: [Date, Date][] = [
     [startOfDay(subDays(new Date(), 6)), endOfDay(new Date())],
     [startOfDay(subDays(new Date(), 13)), endOfDay(subDays(new Date(), 7))],
     [startOfDay(subDays(new Date(), 20)), endOfDay(subDays(new Date(), 14))],
     [startOfDay(subDays(new Date(), 27)), endOfDay(subDays(new Date(), 21))],
+    [startOfDay(subDays(new Date(), 27)), endOfDay(new Date())],
   ];
 
   private apiService = inject(ApiService);
-  private destroyRef = inject(DestroyRef);
-
-  constructor() {
-    effect(() => forkJoin([
-      ...this.weeks.map(([from, to]) => forkJoin([
-          this.apiService.getInstrumentNewsRate(this.instrumentUid(), from, to),
-          of<[Date, Date]>([from, to]),
-        ])
-      )
-    ])
-      .pipe(
-        finalize(() => this.isLoaded.set(true)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((resp: [NewsRateResponse | null, [Date, Date]][]) => {
-        this.weeksResponse.set(resp.map(i => {
-          const keywords = resp?.find(j => j?.[0]?.keywords?.length)?.[0]?.keywords ?? [];
-
-          return {
-            ...(i[0] ?? {}),
-            start_date: i[1][0],
-            end_date: i[1][1],
-            keywords,
-          } as NewsRateResponse;
-        }));
-      }));
-  }
 
   protected readonly Object = Object;
 }

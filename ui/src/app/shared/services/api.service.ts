@@ -15,7 +15,6 @@ import {
   FundamentalsHistory,
   Instrument,
   InvestCalc,
-  NewsRateResponse,
   InstrumentForecastsGraphItem,
   NewsListRatedResponse,
   TechAnalysisResp,
@@ -185,15 +184,6 @@ export class ApiService {
     params = params.set('end_date', endDate.toJSON());
 
     return this.http.get<NewsListRatedResponse>(`${this.apiUrl}/instrument/news/list_rated`, {params: params});
-  }
-
-  getInstrumentNewsRate(uid: string, startDate: Date, endDate: Date): Observable<NewsRateResponse> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('start_date', startDate.toJSON());
-    params = params.set('end_date', endDate.toJSON());
-
-    return this.http.get<NewsRateResponse>(`${this.apiUrl}/instrument/news/rates`, {params: params});
   }
 
   getInstrumentBrand(uid: string): Observable<InstrumentBrandResponse> {

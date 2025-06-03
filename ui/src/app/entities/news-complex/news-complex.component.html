@@ -1,5 +1,5 @@
-@defer (when isLoaded()) {
-  @let weeksResp = weeksResponse();
+@defer (when weeksResource.hasValue()) {
+  @let weeksResp = weeksResource.value();
 
   @if (weeksResp && weeksResp.length > 0) {
     <div class="keywords">Ключевые слова: {{ weeksResp[0].keywords.join('; ') }}</div>
@@ -17,13 +17,13 @@
         }
       </div>
 
-      @if (week?.yandex_percent) {
+      @if (week?.total_percent) {
         <div class="bar">
           <news-bar
-            [positivePercent]="week.yandex_percent.positive_percent"
-            [negativePercent]="week.yandex_percent.negative_percent"
-            [neutralPercent]="week.yandex_percent.neutral_percent"
-            [absolute]="week.yandex_absolute"
+            [positivePercent]="week.total_percent.positive_percent"
+            [negativePercent]="week.total_percent.negative_percent"
+            [neutralPercent]="week.total_percent.neutral_percent"
+            [absolute]="week.total_absolute"
           ></news-bar>
         </div>
       } @else {
