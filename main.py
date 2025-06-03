@@ -14,7 +14,7 @@ from lib import (
     date_utils,
 )
 from lib.db_2 import init, db_utils, predictions_db
-from lib.learn import const
+from lib.learn import model
 import pandas
 
 init.init_db()
