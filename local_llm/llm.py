@@ -16,22 +16,21 @@ GENERATOR: transformers.Pipeline or None = None
 def generate(prompt: str) -> str or None:
     try:
         if GENERATOR:
+            model, tokenizer = GENERATOR
+
             print('-----------------START GENERATE RESPONSE-----------------')
-            response = GENERATOR(
-                prompt,
-                max_new_tokens=600,
+            inputs = tokenizer(prompt, return_tensors="pt")
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=200,
                 temperature=0.6,
                 top_p=0.9,
-                truncation=False
+                do_sample=True,
             )
-
-            if response and len(response) > 0 and response[0] and 'generated_text' in response[0] and response[0]['generated_text']:
-                print('RESPONSE:\n', response[0]['generated_text'])
-                return response[0]['generated_text']
-            else:
-                print('EMPTY RESPONSE\n', response)
-
+            decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            print('RESPONSE:\n', decoded)
             print('^^^^^^^^^^^^^^^^^^END GENERATE RESPONSE^^^^^^^^^^^^^^^^^^')
+            return decoded
 
         else:
             print('GENERATOR IS NOT INITIALIZED')
@@ -42,32 +41,27 @@ def generate(prompt: str) -> str or None:
     return None
 
 
-def init_generator() -> transformers.Pipeline or None:
+def init_generator():
     try:
-        model = transformers.AutoModelForCausalLM.from_pretrained(
+        base_model = transformers.AutoModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path=get_model_path(),
             local_files_only=True,
             trust_remote_code=True,
             attn_implementation='eager',
         )
-        model = peft.PeftModel.from_pretrained(model, get_adapter_path())
+        model = peft.PeftModel.from_pretrained(base_model, get_adapter_path())
+        model.eval()
+
         tokenizer = transformers.AutoTokenizer.from_pretrained(
-            pretrained_model_name_or_path=get_adapter_path(),
+            pretrained_model_name_or_path=get_model_path(),  # ВАЖНО: tokenizer должен быть от базовой модели
             local_files_only=True,
             trust_remote_code=True,
         )
 
-        return transformers.pipeline(
-            task='text-generation',
-            model=model,
-            tokenizer=tokenizer,
-            device='cpu',
-            torch_dtype=torch.float32,
-        )
+        return model, tokenizer
     except Exception as e:
         print('ERROR init_generator', e)
-
-    return None
+        return None, None
 
 
 def compute_metrics(eval_preds):
@@ -106,10 +100,11 @@ def train():
         encoded['length'] = length
         encoded['is_too_long'] = length > max_tokens
 
-        print('---------------------START TOO LONG---------------------')
-        print('LENGTH:', encoded['length'])
-        print('TEXT:', encoded['text'])
-        print('----------------------TOO LONG END----------------------')
+        if encoded['is_too_long']:
+            print('---------------------START TOO LONG---------------------')
+            print('LENGTH:', encoded['length'])
+            print('TEXT:', encoded['text'])
+            print('----------------------TOO LONG END----------------------')
 
         return encoded
 
@@ -185,7 +180,7 @@ def train():
         eval_strategy='steps',               # запускаем eval каждые N шагов
         eval_steps=100,
         save_strategy='steps',
-        save_steps=100,                      # Как часто сохранять чекпоинты
+        save_steps=50,                       # Как часто сохранять чекпоинты
         save_total_limit=3,                  # Сколько последних чекпоинтов хранить
         load_best_model_at_end=True,         # в конце вернёт лучшую по метрике версию
         metric_for_best_model='eval_loss',
