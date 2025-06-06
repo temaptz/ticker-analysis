@@ -54,6 +54,10 @@ def process_single_update(text: str = None) -> None:
         telegram.send_message('Очистка кэша')
         cache.clean()
 
+    elif text == '/recommendation':
+        telegram.send_message('Подготовка инвестиционных рекомендаций')
+        send_invest_recommendations()
+
 
 def send_invest_recommendations() -> None:
     recommendation = agent.get_invest_recommendation()
