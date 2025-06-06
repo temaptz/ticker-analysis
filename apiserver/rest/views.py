@@ -507,7 +507,10 @@ def instrument_recommendation(request):
 
     if uid:
         resp_short = agent.get_instrument_invest_short_recommendation(instrument_uid=uid)
-        resp_long = agent.get_instrument_invest_recommendation(instrument_uid=uid, is_long=True) if is_long else None
+        resp_long = None
+
+        if is_long:
+            resp_long = agent.get_instrument_invest_recommendation(instrument_uid=uid)
 
         if resp_short or resp_long:
             resp = {
