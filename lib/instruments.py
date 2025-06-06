@@ -33,8 +33,7 @@ def get_instrument_by_uid(uid: str):
         ).instrument
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 10)
-@logger.error_logger
+@cache.ttl_cache(ttl=3600 * 24 * 10, skip_empty=True)
 def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(

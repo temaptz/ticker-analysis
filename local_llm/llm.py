@@ -103,7 +103,7 @@ def train():
         if encoded['is_too_long']:
             print('---------------------START TOO LONG---------------------')
             print('LENGTH:', encoded['length'])
-            print('TEXT:', encoded['text'])
+            print('TEXT:', encoded['text'][:900])
             print('----------------------TOO LONG END----------------------')
 
         return encoded
@@ -180,7 +180,7 @@ def train():
         eval_strategy='steps',               # запускаем eval каждые N шагов
         eval_steps=100,
         save_strategy='steps',
-        save_steps=50,                       # Как часто сохранять чекпоинты
+        save_steps=100,                       # Как часто сохранять чекпоинты
         save_total_limit=3,                  # Сколько последних чекпоинтов хранить
         load_best_model_at_end=True,         # в конце вернёт лучшую по метрике версию
         metric_for_best_model='eval_loss',
@@ -199,7 +199,7 @@ def train():
         callbacks=[transformers.EarlyStoppingCallback(early_stopping_patience=3)]
     )
 
-    trainer.train(resume_from_checkpoint=True if is_adapter_exists() else None)
+    trainer.train(resume_from_checkpoint=True)
 
     # === 7. Сохраняем адаптер и токенизатор ===
     model.save_pretrained(get_adapter_path())
@@ -237,7 +237,7 @@ def get_adapter_path() -> str:
 
 
 def is_adapter_exists() -> bool:
-    return os.path.exists(get_adapter_path()) and len(os.listdir(get_adapter_path())) > 0
+    return os.path.exists(get_adapter_path()) and len(os.listdir(get_adapter_path())) > 4
 
 
 class ServerHandler(http.server.BaseHTTPRequestHandler):
@@ -282,7 +282,7 @@ if not is_adapter_exists():
 print('MODEL DIR\n', os.listdir(get_model_path()))
 print('ADAPTER DIR\n', os.listdir(get_adapter_path()))
 
-if not os.listdir(get_adapter_path()):
+if not is_adapter_exists():
     print('START TRAIN ADAPTER')
     train()
     print('END TRAIN ADAPTER')

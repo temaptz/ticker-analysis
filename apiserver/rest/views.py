@@ -184,14 +184,16 @@ def instrument_history_forecasts_graph(request):
 @api_view(['GET'])
 def instrument_fundamentals(request):
     resp = None
-    asset_uid = request.GET.get('asset_uid')
+    uid = request.GET.get('uid')
 
-    if asset_uid:
-        fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(asset_uid=asset_uid)
+    if uid:
+        if instrument := instruments.get_instrument_by_uid(uid):
+            if instrument.asset_uid:
+                fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid)
 
-        if fundamentals_resp:
-            for f in fundamentals_resp:
-                resp = serializer.get_dict_by_object(f)
+                if fundamentals_resp:
+                    for f in fundamentals_resp:
+                        resp = serializer.get_dict_by_object(f)
 
     response = HttpResponse(json.dumps(resp))
 
@@ -221,9 +223,10 @@ def instrument_fundamentals_history(request):
 def instrument_prediction(request):
     resp = {}
     uid = request.GET.get('uid')
+    days_future = int(request.GET.get('days_future')) if request.GET.get('days_future') else 30
 
     if uid:
-        next_month = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
+        next_month = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days_future)
         resp[model.TA_1] = predictions.get_prediction_ta_1_by_uid(uid)
         resp[model.TA_1_1] = predictions.get_prediction_ta_1_1_by_uid(uid)
         resp[model.TA_1_2] = ta_1_2.predict_future(instrument_uid=uid, date_target=next_month)
