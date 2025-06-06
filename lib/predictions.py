@@ -2,7 +2,7 @@ import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1_1, ta_1_2, ta_2, ta_2_1, model
-from lib import date_utils, logger, utils
+from lib import date_utils, logger, utils, instruments
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
@@ -19,6 +19,24 @@ def get_prediction_ta_1_by_uid(uid: str) -> float or None:
         return None
 
 
+def get_relative_prediction_ta_1_by_uid(uid: str) -> float or None:
+    c = LearningCard()
+    c.load_by_uid(uid=uid, fill_empty=True)
+    x = c.get_x()
+
+    try:
+        if c.price:
+            if prediction := learn.predict(x):
+                return utils.get_change_relative_by_price(
+                    main_price=c.price,
+                    next_price=prediction,
+                )
+    except Exception as e:
+        print('ERROR get_relative_prediction_ta_1_by_uid', e)
+
+    return None
+
+
 def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     c = ta_1_1.LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -29,6 +47,24 @@ def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     except Exception as e:
         print('ERROR get_prediction_ta_1_1_by_uid', e)
         return None
+
+
+def get_relative_prediction_ta_1_1_by_uid(uid: str) -> float or None:
+    c = ta_1_1.LearningCard()
+    c.load_by_uid(uid=uid, fill_empty=True)
+    x = c.get_x()
+
+    try:
+        if c.price:
+            if prediction := ta_1_1.predict(x):
+                return utils.get_change_relative_by_price(
+                    main_price=c.price,
+                    next_price=prediction,
+                )
+    except Exception as e:
+        print('ERROR get_prediction_ta_1_1_by_uid', e)
+
+    return None
 
 
 def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
@@ -177,5 +213,16 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
 
     if len(pred_list) > 0:
         return sum(pred_list) / len(pred_list)
+
+    return None
+
+
+def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    if current_price := instruments.get_instrument_last_price_by_uid(uid=instrument_uid):
+        if consensus := get_predictions_consensus(instrument_uid=instrument_uid, date_target=date_target):
+            return utils.get_change_relative_by_price(
+                main_price=current_price,
+                next_price=consensus,
+            )
 
     return None

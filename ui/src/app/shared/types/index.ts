@@ -19,6 +19,11 @@ export type Fundamentals = any;
 export type Operation = any;
 export type InstrumentBrandResponse = any;
 
+export interface RecommendationResp {
+  short: string;
+  long: string;
+}
+
 export interface NewsResponse {
   sources: {
     [key: string]: {

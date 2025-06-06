@@ -17,9 +17,8 @@
             <h5>Фундаментальные показатели</h5>
 
             <fundamentals
-              *ngIf="instr.asset_uid as asset_uid"
               [ticker]="instr.ticker"
-              [instrumentAssetUid]="asset_uid"
+              [instrumentUid]="instr.uid"
             ></fundamentals>
           </td>
           <td>
@@ -53,12 +52,20 @@
               [instrumentFigi]="figi"
             ></balance>
           </td>
-          <td colspan="2">
+          <td>
             <h5>Новости</h5>
 
             <news-complex
               [instrumentUid]="instr.uid"
             ></news-complex>
+          </td>
+          <td>
+            <h5>Рекомендации</h5>
+
+            <recommendation
+              [instrumentUid]="instr.uid"
+              [isLong]="true"
+            ></recommendation>
           </td>
         </tr>
 

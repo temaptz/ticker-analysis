@@ -22,3 +22,5 @@ sqlalchemy
 matplotlib
 holidays
 gunicorn
+langchain
+langchain-community

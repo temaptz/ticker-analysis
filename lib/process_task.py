@@ -1,4 +1,4 @@
-from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news
+from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news, agent
 from lib.db_2 import db_utils
 
 
@@ -53,3 +53,12 @@ def process_single_update(text: str = None) -> None:
     elif text == '/cache':
         telegram.send_message('Очистка кэша')
         cache.clean()
+
+
+def send_invest_recommendations() -> None:
+    recommendation = agent.get_invest_recommendation()
+
+    telegram.send_message(message=f'''
+    Инвестиционные рекомендации:
+    {recommendation}
+    ''')

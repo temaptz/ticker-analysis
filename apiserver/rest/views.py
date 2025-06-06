@@ -7,7 +7,7 @@ from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, agent
 from lib.learn import ta_1_2, ta_2, ta_2_1, model
 import json
 
@@ -32,6 +32,10 @@ def instruments_list(request):
         )
     elif sort and (sort == 4 or sort == '4'):
         sorted_list = users.sort_instruments_cost(
+            instruments_list=sorted_list
+        )
+    elif not sort:
+        sorted_list = users.sort_instruments_for_sell(
             instruments_list=sorted_list
         )
 
@@ -118,7 +122,7 @@ def instrument_history_prices(request):
 
     response = HttpResponse(json.dumps(resp))
 
-    if len(resp):
+    if resp and len(resp):
         patch_cache_control(response, public=True, max_age=3600 * 3)
 
     return response
@@ -186,6 +190,8 @@ def instrument_fundamentals(request):
     resp = None
     uid = request.GET.get('uid')
 
+    print('instrument_fundamentals', uid)
+
     if uid:
         if instrument := instruments.get_instrument_by_uid(uid):
             if instrument.asset_uid:
@@ -197,7 +203,7 @@ def instrument_fundamentals(request):
 
     response = HttpResponse(json.dumps(resp))
 
-    if len(resp):
+    if resp and len(resp):
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
 
     return response
@@ -213,7 +219,7 @@ def instrument_fundamentals_history(request):
 
     response = HttpResponse(serializer.to_json(resp))
 
-    if len(resp):
+    if resp and len(resp):
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
 
     return response
@@ -226,13 +232,22 @@ def instrument_prediction(request):
     days_future = int(request.GET.get('days_future')) if request.GET.get('days_future') else 30
 
     if uid:
-        next_month = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days_future)
+        date_target = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days_future)
+
         resp[model.TA_1] = predictions.get_prediction_ta_1_by_uid(uid)
         resp[model.TA_1_1] = predictions.get_prediction_ta_1_1_by_uid(uid)
-        resp[model.TA_1_2] = ta_1_2.predict_future(instrument_uid=uid, date_target=next_month)
-        resp[model.TA_2] = ta_2.predict_future(instrument_uid=uid, date_target=next_month)
-        resp[model.TA_2_1] = ta_2_1.predict_future(instrument_uid=uid, date_target=next_month)
-        resp['consensus'] = predictions.get_predictions_consensus(instrument_uid=uid, date_target=next_month)
+        resp[model.TA_1_2] = ta_1_2.predict_future(instrument_uid=uid, date_target=date_target)
+        resp[model.TA_2] = ta_2.predict_future(instrument_uid=uid, date_target=date_target)
+        resp[model.TA_2_1] = ta_2_1.predict_future(instrument_uid=uid, date_target=date_target)
+        resp['consensus'] = predictions.get_predictions_consensus(instrument_uid=uid, date_target=date_target)
+
+        resp['relative'] = {}
+        resp['relative'][model.TA_1] = predictions.get_relative_prediction_ta_1_by_uid(uid)
+        resp['relative'][model.TA_1_1] = predictions.get_relative_prediction_ta_1_1_by_uid(uid)
+        resp['relative'][model.TA_1_2] = ta_1_2.predict_future_relative_change(instrument_uid=uid, date_target=date_target)
+        resp['relative'][model.TA_2] = ta_2.predict_future_relative_change(instrument_uid=uid, date_target=date_target)
+        resp['relative'][model.TA_2_1] = ta_2_1.predict_future_relative_change(instrument_uid=uid, date_target=date_target)
+        resp['relative']['consensus'] = predictions.get_relative_predictions_consensus(instrument_uid=uid, date_target=date_target)
 
     response = HttpResponse(json.dumps(resp))
 
@@ -480,6 +495,30 @@ def gpt(request):
 
     # if resp:
     #     patch_cache_control(response, public=True, max_age=3600 * 24 * 30)
+
+    return response
+
+
+@api_view(['GET'])
+def instrument_recommendation(request):
+    resp = None
+    uid = request.GET.get('uid')
+    is_long = request.GET.get('is_long')
+
+    if uid:
+        resp_short = agent.get_instrument_invest_short_recommendation(instrument_uid=uid)
+        resp_long = agent.get_instrument_invest_recommendation(instrument_uid=uid, is_long=True) if is_long else None
+
+        if resp_short or resp_long:
+            resp = {
+                'short': resp_short,
+                'long': resp_long,
+            }
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24)
 
     return response
 

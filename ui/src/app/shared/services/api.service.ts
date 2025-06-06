@@ -18,7 +18,7 @@ import {
   InstrumentForecastsGraphItem,
   NewsListRatedResponse,
   TechAnalysisResp,
-  PredictionHistoryGraphResp, Forecast,
+  PredictionHistoryGraphResp, Forecast, RecommendationResp,
 } from '../types';
 import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
@@ -106,9 +106,9 @@ export class ApiService {
     return this.http.get<InstrumentForecastsGraphItem[]>(`${this.apiUrl}/instrument/history_forecasts/graph`, {params: params});
   }
 
-  getInstrumentFundamentals(assetUid: string): Observable<Fundamentals> {
+  getInstrumentFundamentals(uid: string): Observable<Fundamentals> {
     let params = new HttpParams();
-    params = params.set('asset_uid', assetUid);
+    params = params.set('uid', uid);
 
     return this.http.get<Fundamentals>(`${this.apiUrl}/instrument/fundamentals`, {params: params});
   }
@@ -191,6 +191,17 @@ export class ApiService {
     params = params.set('uid', uid);
 
     return this.http.get<InstrumentBrandResponse>(`${this.apiUrl}/instrument/brand`, {params: params});
+  }
+
+  getInstrumentInvestRecommendation(uid: string, isLong = false): Observable<RecommendationResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+
+    if (isLong) {
+      params = params.set('is_long', 'true');
+    }
+
+    return this.http.get<RecommendationResp>(`${this.apiUrl}/instrument/recommendation`, {params: params});
   }
 
 }

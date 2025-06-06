@@ -1,0 +1,18 @@
+div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  span {
+    color: gray;
+    font-weight: bold;
+
+    &.red {
+      color: red;
+    }
+
+    &.green {
+      color: green;
+    }
+  }
+}

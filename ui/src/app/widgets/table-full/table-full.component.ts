@@ -25,6 +25,7 @@ import { NewsComplexComponent } from '../../entities/news-complex/news-complex.c
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
 import { SortModeEnum } from '../../shared/types';
+import { RecommendationComponent } from '../../entities/recommendation/recommendation.component';
 
 
 @Component({
@@ -50,6 +51,7 @@ import { SortModeEnum } from '../../shared/types';
     NewsComplexComponent,
     PreloaderComponent,
     BalanceComponent,
+    RecommendationComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',
@@ -75,7 +77,7 @@ export class TableFullComponent {
     'balance',
     'forecast',
     'prediction',
-    'news'
+    'news',
   ];
 
   private appService = inject(ApiService);

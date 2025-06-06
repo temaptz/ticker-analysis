@@ -1,0 +1,14 @@
+@defer (when recommendationResource.hasValue()) {
+  @let recommendation = recommendationResource.value();
+
+  <div>
+    Рекомендация:
+    <span
+      [class.red]="isRed()"
+      [class.green]="isGreen()"
+      [title]="recommendation?.long"
+    >{{ recommendation?.short }}</span>
+  </div>
+} @placeholder {
+  <preloader></preloader>
+}

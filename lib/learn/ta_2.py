@@ -413,6 +413,22 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
     return None
 
 
+def predict_future_relative_change(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    try:
+        current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
+
+        if current_price:
+            if prediction := predict_future(instrument_uid=instrument_uid, date_target=date_target):
+                return utils.get_change_relative_by_price(
+                    main_price=current_price,
+                    next_price=prediction,
+                )
+    except Exception as e:
+        print('ERROR TA-2 predict_future_relative_change', e)
+
+    return None
+
+
 def get_model_file_path():
     if docker.is_docker():
         return '/app/learn_models/ta-2.txt'

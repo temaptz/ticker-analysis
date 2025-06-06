@@ -18,8 +18,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class FundamentalsComponent {
 
-  instrumentAssetUid = input.required<InstrumentInList['asset_uid']>();
-  ticker = input<InstrumentInList['uid']>();
+  instrumentUid = input.required<InstrumentInList['uid']>();
+  ticker = input<InstrumentInList['ticker']>();
 
   isLoaded = signal<boolean>(false);
   fundamentals = signal<Fundamentals>(null);
@@ -29,7 +29,7 @@ export class FundamentalsComponent {
 
   constructor() {
     effect(() => {
-      this.apiService.getInstrumentFundamentals(this.instrumentAssetUid())
+      this.apiService.getInstrumentFundamentals(this.instrumentUid())
         .pipe(
           finalize(() => this.isLoaded.set(true)),
           takeUntilDestroyed(this.destroyRef),
