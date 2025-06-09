@@ -68,6 +68,7 @@ def start_schedule() -> None:
     scheduler.add_job(
         process_task.send_invest_recommendations,
         'cron',
+        day_of_week='mon',
         hour=15,
         minute=0,
         timezone=timezone
