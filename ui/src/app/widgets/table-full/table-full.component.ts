@@ -60,7 +60,7 @@ import { RecommendationComponent } from '../../entities/recommendation/recommend
 export class TableFullComponent {
 
   isLoaded = signal<boolean>(false);
-  sortTickers = signal<SortModeEnum>(SortModeEnum.Buy)
+  sortTickers = signal<SortModeEnum>(SortModeEnum.PotentialPerspective)
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
 
   protected readonly CandleInterval = CandleInterval;
@@ -98,7 +98,7 @@ export class TableFullComponent {
   constructor() {
     const ls = this.ls.getItem(this.lsKey);
     if (ls) {
-      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.Buy);
+      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.PotentialPerspective);
     }
 
     effect(() => {

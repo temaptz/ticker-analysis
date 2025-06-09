@@ -34,10 +34,6 @@ def instruments_list(request):
         sorted_list = users.sort_instruments_cost(
             instruments_list=sorted_list
         )
-    elif not sort:
-        sorted_list = users.sort_instruments_for_sell(
-            instruments_list=sorted_list
-        )
 
     response = HttpResponse(serializer.to_json(sorted_list))
 

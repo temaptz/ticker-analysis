@@ -156,9 +156,9 @@ export interface InvestCalc {
 }
 
 export enum SortModeEnum {
-  Buy = 1,
-  Sell = 2,
-  Profit = 3,
+  PotentialPerspective = 1,
+  SellProfitPercent = 2,
+  SellProfit = 3,
   MarketValue = 4,
 }
 

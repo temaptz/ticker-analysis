@@ -9,17 +9,17 @@
 >
   <mat-button-toggle-group name="Сортировка" (change)="handleChangeSort($event)">
     <mat-button-toggle
-      [checked]="sort() === sortModeEnum.Buy"
-      [value]="sortModeEnum.Buy"
-    >Покупка</mat-button-toggle>
+      [checked]="sort() === sortModeEnum.PotentialPerspective"
+      [value]="sortModeEnum.PotentialPerspective"
+    >Перспектива роста</mat-button-toggle>
     <mat-button-toggle
-      [checked]="sort() === sortModeEnum.Sell"
-      [value]="sortModeEnum.Sell"
-    >Продажа</mat-button-toggle>
+      [checked]="sort() === sortModeEnum.SellProfitPercent"
+      [value]="sortModeEnum.SellProfitPercent"
+    >Выгодная продажа в процентах</mat-button-toggle>
     <mat-button-toggle
-      [checked]="sort() === sortModeEnum.Profit"
-      [value]="sortModeEnum.Profit"
-    >Рост</mat-button-toggle>
+      [checked]="sort() === sortModeEnum.SellProfit"
+      [value]="sortModeEnum.SellProfit"
+    >Выгодная продажа в абсолютных значениях</mat-button-toggle>
     <mat-button-toggle
       [checked]="sort() === sortModeEnum.MarketValue"
       [value]="sortModeEnum.MarketValue"

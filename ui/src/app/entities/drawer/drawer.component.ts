@@ -13,7 +13,7 @@ import { SortModeEnum } from '../../shared/types';
 })
 export class DrawerComponent {
 
-  sort = model<SortModeEnum>(SortModeEnum.Buy);
+  sort = model<SortModeEnum>(SortModeEnum.PotentialPerspective);
 
   sortModeEnum = SortModeEnum;
 
