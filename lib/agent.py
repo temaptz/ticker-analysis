@@ -112,7 +112,7 @@ def format_percent(num: float) -> str:
     return '-'
 
 
-@cache.ttl_cache(ttl=3600, skip_empty=True)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_invest_recommendation() -> str or None:
     result = agent.invoke(f'''
     Ты финансовый эксперт. Даешь качественные инвестиционные рекомендации.
@@ -129,7 +129,7 @@ def get_invest_recommendation() -> str or None:
     return result['output'] if result and result['output'] else None
 
 
-@cache.ttl_cache(ttl=3600, skip_empty=True)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_instrument_invest_recommendation(instrument_uid: str) -> str or None:
     result = agent.invoke(f'''
     Ты финансовый эксперт. Даешь качественные инвестиционные рекомендации.
@@ -147,7 +147,7 @@ def get_instrument_invest_recommendation(instrument_uid: str) -> str or None:
     return result['output'] if result and result['output'] else None
 
 
-@cache.ttl_cache(ttl=3600, skip_empty=True)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_instrument_invest_short_recommendation(instrument_uid: str) -> str or None:
     result = agent.invoke(f'''
     Ты финансовый эксперт. Даешь качественные инвестиционные рекомендации.

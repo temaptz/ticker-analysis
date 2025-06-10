@@ -2,19 +2,19 @@ import re
 import datetime
 
 from lib.db_2 import news_db, news_rate_2_db
-from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types, local_llm
+from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types_util, local_llm
 
 
 @logger.error_logger
 def get_news_rate_db(
         news_uid: str,
         instrument_uid: str,
-) -> types.NewsRate2 or None:
+) -> types_util.NewsRate2 or None:
     rate = news_rate_2_db.get_rate(instrument_uid=instrument_uid, news_uid=news_uid) or []
 
     if len(rate) > 0:
         last_rate = rate[0]
-        result = types.NewsRate2(
+        result = types_util.NewsRate2(
             sentiment=last_rate.sentiment,
             impact_strength=last_rate.impact_strength,
             mention_focus=last_rate.mention_focus,
@@ -35,7 +35,7 @@ def get_news_total_influence_score(
         instrument_uid: str,
         news_ids: list[str],
 ) -> float or None:
-    rates: list[types.NewsRate2] = list()
+    rates: list[types_util.NewsRate2] = list()
 
     for n_id in news_ids:
         if rate := get_news_rate_db(instrument_uid=instrument_uid, news_uid=n_id):
@@ -57,7 +57,7 @@ def get_news_total_influence_score(
 def get_news_rate(
         news_uid: str,
         instrument_uid: str,
-) -> types.NewsRate2 or None:
+) -> types_util.NewsRate2 or None:
     if news := news_db.get_news_by_uid(news_uid=news_uid):
         if instrument := instruments.get_instrument_by_uid(uid=instrument_uid):
             if subject_name := yandex.get_human_name(legal_name=instrument.name):
@@ -73,11 +73,11 @@ def get_news_rate(
 
 
 @logger.error_logger
-def get_text_rate(text: str, subject_name: str) -> types.NewsRate2 or None:
+def get_text_rate(text: str, subject_name: str) -> types_util.NewsRate2 or None:
     # print('------------------------------------------------------------------')
     # print('GPT REQUEST\n', get_prompt(news_text=text, subject_name=subject_name))
 
-    resp: types.LocalLlmResponse or None = local_llm.generate(
+    resp: types_util.LocalLlmResponse or None = local_llm.generate(
         prompt=get_prompt(news_text=text, subject_name=subject_name)
     )
 
@@ -93,7 +93,7 @@ def get_text_rate(text: str, subject_name: str) -> types.NewsRate2 or None:
         # print('GPT PARAM PARSED mention_focus', mention_focus)
         # print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
-        rate = types.NewsRate2(
+        rate = types_util.NewsRate2(
             sentiment=sentiment,
             impact_strength=impact_strength,
             mention_focus=mention_focus,

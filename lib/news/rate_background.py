@@ -1,6 +1,6 @@
 import time
 import datetime
-from lib import date_utils, instruments, yandex, news, db_2, types, utils
+from lib import date_utils, instruments, yandex, news, db_2, types_util, utils
 
 def rate_all_news() -> None:
     for date in date_utils.get_dates_interval_list(
@@ -29,7 +29,7 @@ def rate_all_news() -> None:
                     print(f'NEWS TEXT: {utils.clean_news_text_for_llm(title=n.title, text=n.text)}]')
 
                     start = time.time()
-                    rate: types.NewsRate2 = news.news_rate_v2.get_news_rate(
+                    rate: types_util.NewsRate2 = news.news_rate_v2.get_news_rate(
                         news_uid=n.news_uid,
                         instrument_uid=instrument.uid,
                     )

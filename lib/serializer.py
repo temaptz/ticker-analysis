@@ -1,7 +1,9 @@
 import datetime
+from types import SimpleNamespace
 import tinkoff.invest
 import json
 import pickle
+from lib import logger
 
 
 def to_json(obj, ensure_ascii=True) -> str or None:
@@ -47,7 +49,7 @@ def get_dict_by_object(input) -> dict:
             is_datetime = isinstance(property_value, datetime.datetime)
 
             if is_quotation:
-                property_value = get_dict_by_object(property_value)
+                property_value = get_dict_by_object_recursive(property_value)
 
             if is_datetime:
                 property_value = datetime.datetime.isoformat(property_value)
@@ -84,3 +86,20 @@ def db_deserialize(data: bytes or str)-> any:
         print(f'Ошибка десериализации объекта db_deserialize: {e}')
 
     return data
+
+
+def dict_to_object_recursive(d):
+    if isinstance(d, dict):
+        obj_dict = {}
+        for k, v in d.items():
+            if not isinstance(k, str) or not k.isidentifier():
+                continue
+            try:
+                obj_dict[k] = dict_to_object_recursive(v)
+            except Exception as e:
+                logger.log_error(method_name='dict_to_object_recursive_1', error=e, is_telegram_send=False)
+        return SimpleNamespace(**obj_dict)
+    elif isinstance(d, list):
+        return [dict_to_object_recursive(i) for i in d]
+    else:
+        return d

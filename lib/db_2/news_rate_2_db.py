@@ -6,7 +6,7 @@ from sqlalchemy.orm import declarative_base, Session
 from tinkoff.invest import StatisticResponse
 
 from lib.db_2.connection import get_engine
-from lib import logger, serializer, types
+from lib import logger, serializer, types_util
 
 Base = declarative_base()
 engine = get_engine()
@@ -47,7 +47,7 @@ def get_rate(instrument_uid: str, news_uid: str) -> list[NewsRate2Db]:
 def insert_or_update_rate(
         news_uid: str,
         instrument_uid: str,
-        news_rate: types.NewsRate2,
+        news_rate: types_util.NewsRate2,
         model_name: str,
         generation_time_sec: float,
         pretrain_name: str = None,

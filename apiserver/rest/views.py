@@ -57,7 +57,7 @@ def instrument_info(request):
         instrument = instruments.get_instrument_by_ticker(ticker)
 
     if instrument:
-            resp = serializer.get_dict_by_object(instrument)
+        resp = serializer.get_dict_by_object_recursive(instrument)
 
     response = HttpResponse(json.dumps(resp))
 
@@ -114,7 +114,7 @@ def instrument_history_prices(request):
                 interval=CandleInterval(int(interval)),
                 to_date=datetime.datetime.now()
         ):
-            resp.append(serializer.get_dict_by_object(i))
+            resp.append(serializer.get_dict_by_object_recursive(i))
 
     response = HttpResponse(json.dumps(resp))
 
@@ -186,8 +186,6 @@ def instrument_fundamentals(request):
     resp = None
     uid = request.GET.get('uid')
 
-    print('instrument_fundamentals', uid)
-
     if uid:
         if instrument := instruments.get_instrument_by_uid(uid):
             if instrument.asset_uid:
@@ -195,7 +193,7 @@ def instrument_fundamentals(request):
 
                 if fundamentals_resp:
                     for f in fundamentals_resp:
-                        resp = serializer.get_dict_by_object(f)
+                        resp = serializer.get_dict_by_object_recursive(f)
 
     response = HttpResponse(json.dumps(resp))
 

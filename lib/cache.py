@@ -1,5 +1,5 @@
 from functools import wraps
-from lib import utils, redis_utils, logger
+from lib import utils, redis_utils, logger, serializer
 
 
 def cache_get(key: str):
@@ -27,13 +27,13 @@ def clean():
         print('ERROR cache clean', e)
 
 
-def ttl_cache(ttl: int = 3600, maxsize: int = 1024, skip_empty: bool = False):
+def ttl_cache(ttl: int = 3600, is_skip_empty: bool = False, is_convert_object: bool = False):
     """Декоратор кэширования с временем жизни (ttl) и ограничением по размеру."""
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}')
+                key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}_')
                 saved_cache = cache_get(key=key_md5)
 
                 if saved_cache:
@@ -41,8 +41,13 @@ def ttl_cache(ttl: int = 3600, maxsize: int = 1024, skip_empty: bool = False):
 
                 result = func(*args, **kwargs)  # Вычисляем функцию
 
-                if not skip_empty or result:
-                    cache_set(key=key_md5, value=result, ttl=ttl)  # Сохраняем в кэше
+                if not is_skip_empty or result:
+                    if is_convert_object:
+                        if dict_by_object := serializer.get_dict_by_object_recursive(result):
+                            if object_by_dict := serializer.dict_to_object_recursive(dict_by_object):
+                                cache_set(key=key_md5, value=object_by_dict, ttl=ttl)
+                    else:
+                        cache_set(key=key_md5, value=result, ttl=ttl)
 
                 return result
 

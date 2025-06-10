@@ -1,7 +1,7 @@
 from yandex_cloud_ml_sdk import YCloudML
 from yandex_cloud_ml_sdk._models.text_classifiers.model import FewShotTextClassifiersModelResult
 import const
-from lib import utils, cache, counter, logger, serializer, types, docker, throttle_decorator
+from lib import utils, cache, counter, logger, serializer, types_util, docker, throttle_decorator
 from lib.db_2 import gpt_requests_db, news_classify_requests
 
 
@@ -143,7 +143,7 @@ def get_text_classify(title: str, text: str, subject_name: str) -> FewShotTextCl
 
 
 # Возвращает распространенное в обиходе название
-@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def get_human_name(legal_name: str) -> str:
     instruction = (
         'Ты эксперт в области бизнеса, финансов и журналистики. '
@@ -241,11 +241,11 @@ def get_news_rate_samples(instrument_name: str):
     ]
 
 
-def get_news_rate_by_ya_classify(classify: dict) -> types.NewsRate or None:
-    abs_classify: types.NewsRateAbsoluteYandex = get_news_rate_absolute_by_ya_classify(classify=classify)
+def get_news_rate_by_ya_classify(classify: dict) -> types_util.NewsRate or None:
+    abs_classify: types_util.NewsRateAbsoluteYandex = get_news_rate_absolute_by_ya_classify(classify=classify)
 
     if abs_classify:
-        result = types.NewsRate(0, 0, 0)
+        result = types_util.NewsRate(0, 0, 0)
         total_sum = abs_classify.positive_total + abs_classify.negative_total + abs_classify.neutral_total
 
         result.positive_percent = utils.round_float(num=abs_classify.positive_total / total_sum * 100, decimals=5)
@@ -257,7 +257,7 @@ def get_news_rate_by_ya_classify(classify: dict) -> types.NewsRate or None:
     return None
 
 
-def get_news_rate_absolute_by_ya_classify(classify: dict) -> types.NewsRateAbsoluteYandex or None:
+def get_news_rate_absolute_by_ya_classify(classify: dict) -> types_util.NewsRateAbsoluteYandex or None:
     if classify and 'predictions' in classify:
         sum_confidence = utils.round_float(
             num=sum(utils.round_float(num=i['confidence'], decimals=10) for i in classify['predictions']),
@@ -265,7 +265,7 @@ def get_news_rate_absolute_by_ya_classify(classify: dict) -> types.NewsRateAbsol
         )
 
         if sum_confidence > 0 and len(classify['predictions']) == 3:
-            result = types.NewsRateAbsoluteYandex(0, 0, 0)
+            result = types_util.NewsRateAbsoluteYandex(0, 0, 0)
 
             for i in classify['predictions']:
                 value = utils.round_float(

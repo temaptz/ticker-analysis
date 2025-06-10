@@ -4,7 +4,7 @@ from django.db.models.expressions import result
 
 import const
 from lib.db_2 import news_db
-from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types
+from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types_util
 
 
 class NewsSourceRated:
@@ -63,14 +63,14 @@ def get_rated_news_by_instrument_uid(
 def get_news_rate(
         news_uid_list: list[str],
         instrument_uid: str,
-) -> types.NewsRate or None:
+) -> types_util.NewsRate or None:
     abs_rate = get_news_rate_absolute(news_uid_list=news_uid_list, instrument_uid=instrument_uid)
 
     if abs_rate:
         total_sum = abs_rate.positive_total + abs_rate.negative_total + abs_rate.neutral_total
 
         if total_sum > 0:
-            rate = types.NewsRate(0, 0, 0)
+            rate = types_util.NewsRate(0, 0, 0)
 
             rate.positive_percent = utils.round_float(
                 num=(abs_rate.positive_total / total_sum * 100),
@@ -92,11 +92,11 @@ def get_news_rate(
     return None
 
 
-@cache.ttl_cache(ttl=3600, skip_empty=True)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_news_rate_absolute(
         news_uid_list: list[str],
         instrument_uid: str,
-) -> types.NewsRateAbsoluteYandex or None:
+) -> types_util.NewsRateAbsoluteYandex or None:
     news = []
     for news_uid in news_uid_list:
         n = news_db.get_news_by_uid(news_uid=news_uid)
@@ -120,7 +120,7 @@ def get_news_rate_absolute(
             )
 
             if c:
-                abs_rate: types.NewsRateAbsoluteYandex = yandex.get_news_rate_absolute_by_ya_classify(classify=c)
+                abs_rate: types_util.NewsRateAbsoluteYandex = yandex.get_news_rate_absolute_by_ya_classify(classify=c)
 
                 if abs_rate:
                     total_rate_positive += abs_rate.positive_total
@@ -128,7 +128,7 @@ def get_news_rate_absolute(
                     total_rate_neutral += abs_rate.neutral_total
 
         if total_rate_positive > 0 or total_rate_negative > 0 or total_rate_neutral > 0:
-            return types.NewsRateAbsoluteYandex(
+            return types_util.NewsRateAbsoluteYandex(
                 positive_total=total_rate_positive,
                 negative_total=total_rate_negative,
                 neutral_total=total_rate_neutral,

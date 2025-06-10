@@ -1,11 +1,11 @@
-from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, InstrumentResponse, HistoricCandle, LastPrice
+from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils, logger
+from lib import cache, utils, date_utils
 
 
-@cache.ttl_cache(ttl=3600 * 24, skip_empty=True)
-def get_instruments_white_list() -> list[InstrumentResponse.instrument]:
+@cache.ttl_cache(ttl=3600 * 24, is_convert_object=True, is_skip_empty=True)
+def get_instruments_white_list() -> list[Instrument]:
     result = list()
 
     for ticker in TICKER_LIST:
@@ -17,15 +17,8 @@ def get_instruments_white_list() -> list[InstrumentResponse.instrument]:
     return result
 
 
-# @cache.ttl_cache(ttl=60)
-# def get_favorites():
-#     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-#         return client.instruments.get_favorites().favorite_instruments
-
-
-@cache.ttl_cache(ttl=3600 * 24 * 10)
-@logger.error_logger
-def get_instrument_by_uid(uid: str):
+@cache.ttl_cache(ttl=3600 * 24 * 10, is_convert_object=True, is_skip_empty=True)
+def get_instrument_by_uid(uid: str) -> Instrument:
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
@@ -33,8 +26,8 @@ def get_instrument_by_uid(uid: str):
         ).instrument
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 10, skip_empty=True)
-def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
+@cache.ttl_cache(ttl=3600 * 24 * 10, is_convert_object=True, is_skip_empty=True)
+def get_instrument_by_ticker(ticker: str) -> Instrument:
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_TICKER,
@@ -43,7 +36,7 @@ def get_instrument_by_ticker(ticker: str) -> InstrumentResponse.instrument:
         ).instrument
 
 
-@cache.ttl_cache(ttl=3600)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_instrument_last_price_by_uid(uid: str) -> float or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -61,7 +54,7 @@ def get_instrument_last_price_by_uid(uid: str) -> float or None:
     return None
 
 
-@cache.ttl_cache(ttl=3600 * 4, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 4, is_skip_empty=True)
 def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime) -> list[HistoricCandle]:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -76,7 +69,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
         print('ERROR get_instrument_history_price_by_uid', e)
 
 
-@cache.ttl_cache(ttl=3600)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=24) -> float or None:
     if date.date() == datetime.datetime.now().date():
         return get_instrument_last_price_by_uid(uid=uid)

@@ -1,9 +1,9 @@
 import http.client
 import json
-from lib import cache, logger, types
+from lib import cache, logger, types_util
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
-def generate(prompt: str) -> types.LocalLlmResponse or None:
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
+def generate(prompt: str) -> types_util.LocalLlmResponse or None:
     try:
         conn = http.client.HTTPConnection(host='local_llm', port=8090, timeout=60 * 30)
 
@@ -22,7 +22,7 @@ def generate(prompt: str) -> types.LocalLlmResponse or None:
             parsed = json.loads(data.decode('utf-8'))
 
             if 'response' in parsed and parsed['response']:
-                return types.LocalLlmResponse(
+                return types_util.LocalLlmResponse(
                     prompt=parsed['prompt'],
                     response=parsed['response'],
                     model_name=parsed['model_name'],

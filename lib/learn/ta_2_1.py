@@ -4,7 +4,7 @@ import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types, yandex_disk, docker, logger, yandex
+from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types_util, yandex_disk, docker, logger, yandex
 from lib.news import news_rate_v1
 from lib.learn import learn_utils, model
 
@@ -143,20 +143,22 @@ class Ta21LearningCard:
     def get_forecast_change(self) -> float or None:
         try:
             if current_price := self.price:
-                if price_forecast := utils.get_price_by_quotation(
-                    price=forecasts.get_db_forecast_by_uid_date(
-                        uid=self.instrument.uid,
-                        date=self.date
-                    )[1].consensus.consensus
+                if price := forecasts.get_db_forecast_by_uid_date(
+                uid=self.instrument.uid,
+                date=self.date
                 ):
-                    if price_change := utils.get_change_relative_by_price(main_price=current_price, next_price=price_forecast):
-                        return price_change
+                    if price and len(price) > 0 and price[1] and price[1].consensus and price[1].consensus.consensus:
+                        if price_forecast := utils.get_price_by_quotation(
+                            price=price[1].consensus.consensus
+                        ):
+                            if price_change := utils.get_change_relative_by_price(main_price=current_price, next_price=price_forecast):
+                                return price_change
         except Exception as e:
             logger.log_error(method_name='Ta21LearningCard.get_forecast_change', error=e, is_telegram_send=False)
 
         return None
 
-    def get_news_rated(self) -> types.NewsRate or None:
+    def get_news_rated(self) -> types_util.NewsRate or None:
         result = None
         start_date = self.date - datetime.timedelta(days=30)
         end_date = self.date
@@ -170,7 +172,7 @@ class Ta21LearningCard:
         rate = news_rate_v1.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
 
         if rate and (rate.positive_percent + rate.negative_percent + rate.neutral_percent) > 0:
-            result = types.NewsRate(
+            result = types_util.NewsRate(
                 positive_percent=rate.positive_percent,
                 negative_percent=rate.negative_percent,
                 neutral_percent=rate.neutral_percent,
@@ -396,7 +398,7 @@ def learn():
     learn_utils.plot_catboost_metrics(model_cb, metric_name='RMSE')
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def predict_future_relative_change(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
 

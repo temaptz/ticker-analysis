@@ -80,10 +80,12 @@ def round_float(num: float, decimals: int = 10) -> float:
         int_len = len(str(num).split('.')[0])
         float_str = str(num)[0:int_len+decimals+5]
         float_only_digits_str = re.sub(r'[^0-9\.,]', '', float_str)
-        return round(
-            float(float_only_digits_str) * (1 if (num > 0) else -1),
-            decimals
-        )
+
+        if not float_only_digits_str:
+            return round(
+                float(float_only_digits_str) * (1 if (num > 0) else -1),
+                decimals
+            )
     except Exception as e:
         logger.log_error(method_name='round_float', error=e, is_telegram_send=False)
 

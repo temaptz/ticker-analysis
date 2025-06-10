@@ -4,7 +4,7 @@ import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types, yandex_disk, docker, logger, yandex
+from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types_util, yandex_disk, docker, logger, yandex
 from lib.news import news_rate_v1
 from lib.learn import learn_utils, model
 
@@ -350,7 +350,7 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return numpy.mean(numpy.abs((y_true[nonzero_mask] - y_pred[nonzero_mask]) / y_true[nonzero_mask])) * 100
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def predict_future_relative_change(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
 

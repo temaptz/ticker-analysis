@@ -5,7 +5,7 @@ import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
 import const
-from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types, yandex_disk, docker, logger
+from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types_util, yandex_disk, docker, logger
 from lib.news import news_rate_v1
 from lib.learn import learn_utils
 
@@ -154,7 +154,7 @@ class Ta2LearningCard:
 
         return result
 
-    def get_news_rated(self, days_from: int, days_to: int) -> types.NewsRate or None:
+    def get_news_rated(self, days_from: int, days_to: int) -> types_util.NewsRate or None:
         result = None
         start_date = self.date - datetime.timedelta(days=days_to)
         end_date = self.date - datetime.timedelta(days=days_from)
@@ -168,7 +168,7 @@ class Ta2LearningCard:
         rate = news_rate_v1.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
 
         if rate and (rate.positive_percent + rate.negative_percent + rate.neutral_percent) > 0:
-            result = types.NewsRate(
+            result = types_util.NewsRate(
                 positive_percent=rate.positive_percent,
                 negative_percent=rate.negative_percent,
                 neutral_percent=rate.neutral_percent,
@@ -393,7 +393,7 @@ def predict(data: list) -> float or None:
     return None
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
 

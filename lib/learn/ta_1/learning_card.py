@@ -140,7 +140,7 @@ class LearningCard:
         print('IS OK', self.is_ok)
 
     def get_json_db(self) -> str:
-        return json.dumps(serializer.get_dict_by_object(self))
+        return json.dumps(serializer.get_dict_by_object_recursive(self))
 
     def restore_from_json_db(self, json_data: str):
         try:

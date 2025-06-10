@@ -1,7 +1,7 @@
 import datetime
 
 from lib.db_2 import news_db
-from lib import instruments, yandex, cache, serializer, utils, logger, learn, types
+from lib import instruments, yandex, cache, serializer, utils, logger, learn, types_util
 from lib.news import news_rate_v1, news_rate_v2
 
 
@@ -75,7 +75,7 @@ def get_rated_news_by_instrument_uid(
     return response
 
 
-@cache.ttl_cache(ttl=3600, skip_empty=True)
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_news_by_instrument_uid(
         instrument_uid: str,
         start_date: datetime.datetime,
@@ -90,7 +90,7 @@ def get_news_by_instrument_uid(
     ) or []
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 365, skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 365, is_skip_empty=True)
 def get_keywords_by_instrument_uid(instrument_uid: str) -> list[str]:
     i = instruments.get_instrument_by_uid(instrument_uid)
     response = []
