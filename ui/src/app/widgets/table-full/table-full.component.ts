@@ -9,23 +9,20 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, tap } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList } from '../../shared/types';
+import { InstrumentInList, SortModeEnum } from '../../shared/types';
+import { CandleInterval } from '../../shared/enums';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PredictionComponent } from '../../entities/prediction/prediction.component';
 import { ForecastComponent } from '../../entities/forecast/forecast.component';
 import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
-import { CandleInterval } from '../../shared/enums';
-import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
-import { PriceRoundPipe } from '../../shared/pipes/price-round.pipe';
-import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
-import { SortModeEnum } from '../../shared/types';
-import { RecommendationComponent } from '../../entities/recommendation/recommendation.component';
 
 
 @Component({
@@ -45,13 +42,11 @@ import { RecommendationComponent } from '../../entities/recommendation/recommend
     RouterModule,
     TableVirtualScrollModule,
     CurrentPriceByUidPipe,
-    PriceRoundPipe,
     PriceFormatPipe,
     MatIconModule,
     NewsComplexComponent,
     PreloaderComponent,
     BalanceComponent,
-    RecommendationComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',
@@ -73,7 +68,6 @@ export class TableFullComponent {
     'fundamental',
     // '5years',
     'complex',
-    'price',
     'balance',
     'forecast',
     'prediction',

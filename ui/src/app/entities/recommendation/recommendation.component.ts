@@ -1,23 +1,16 @@
 import {
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
   input,
+  inject,
   resource,
+  computed,
+  Component,
   ResourceLoaderParams,
-  signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, firstValueFrom, forkJoin, lastValueFrom, map, of } from 'rxjs';
-import { endOfDay, startOfDay, subDays } from 'date-fns';
+import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
-import { InstrumentInList, NewsListRatedResponse, RecommendationResp } from '../../shared/types';
+import { InstrumentInList, RecommendationResp } from '../../shared/types';
 import { PreloaderComponent } from '../preloader/preloader.component';
-import { NewsBarComponent } from '../news-bar/news-bar.component';
-import { RateV2Component } from '../rate-v2/rate-v2.component';
 
 
 @Component({

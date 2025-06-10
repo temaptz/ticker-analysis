@@ -5,11 +5,9 @@
     <div class="keywords">Ключевые слова: {{ weeksResp[0].keywords.join('; ') }}</div>
   }
 
-  @for (week of weeksResp; track week?.start_date) {
+  @for (week of weeksResp; track week.start_date) {
     <div class="week">
-      <div
-        class="date"
-      >
+      <div class="date">
         {{ week.start_date | date : 'yyyy-MM-dd' }} - {{ week.end_date | date : 'yyyy-MM-dd' }}
 
         @if (week.rate_v2) {

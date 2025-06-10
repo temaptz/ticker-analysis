@@ -12,6 +12,14 @@
         ></prediction-item>
       </div>
     }
+
+    <div>
+      <prediction-item
+        modelName="consensus"
+        [predictionResp]="pResp"
+        [currentPrice]="price"
+      ></prediction-item>
+    </div>
   }
 } @placeholder {
   <preloader></preloader>

@@ -1,3 +1,5 @@
+$drawer-width: 950px;
+
 .toggler {
   position: fixed;
   top: 0;
@@ -17,13 +19,13 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 500px;
+  width: $drawer-width;
   margin-right: 0;
   overflow-x: hidden;
   background-color: #fff;
   transition: margin-right .3s ease-in-out;
 
   &.hidden {
-    margin-right: -500px;
+    margin-right: -$drawer-width;
   }
 }

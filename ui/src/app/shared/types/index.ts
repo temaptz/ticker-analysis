@@ -99,7 +99,12 @@ export interface NewsPercentRate {
 export type PredictionResp = {
   [key in  ModelNameEnum]: number;
 } & {
-  'consensus': number;
+  consensus: number;
+  relative: {
+    [key in  ModelNameEnum]: number;
+  } & {
+    consensus: number;
+  }
 }
 
 export type PredictionGraphResp = {

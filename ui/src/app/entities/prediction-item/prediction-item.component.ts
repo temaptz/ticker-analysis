@@ -9,7 +9,7 @@ import { ModelNameEnum } from '../../shared/enums';
 
 @Component({
   selector: 'prediction-item',
-  imports: [CommonModule, PriceRoundPipe, PriceFormatPipe],
+  imports: [CommonModule, PriceFormatPipe],
   providers: [],
   templateUrl: './prediction-item.component.html',
   styleUrl: './prediction-item.component.scss'
@@ -17,12 +17,10 @@ import { ModelNameEnum } from '../../shared/enums';
 export class PredictionItemComponent {
 
   predictionResp = input.required<PredictionResp>();
-  modelName = input.required<ModelNameEnum>();
+  modelName = input.required<ModelNameEnum | 'consensus'>();
   currentPrice = input.required<number>();
 
   isPlus = computed<boolean>(() => (this.prediction() ?? 0) > (this.currentPrice() ?? 0));
-
-  percent = computed<number>(() => Math.round(Math.abs((this.prediction() ?? 0) - (this.currentPrice() ?? 0)) / (this.currentPrice() ?? 0) * 10000) / 100);
 
   prediction = computed<number | null>(() => {
     const predictionResp = this.predictionResp();
@@ -30,6 +28,25 @@ export class PredictionItemComponent {
 
     if (modelName && predictionResp?.[modelName]) {
       return predictionResp[modelName];
+    }
+
+    return null;
+  });
+
+  percent = computed<number | null>(() => {
+    const predictionRespRelative = this.predictionResp()?.relative;
+    const modelName = this.modelName();
+
+    try {
+      if (modelName && predictionRespRelative?.[modelName]) {
+        const predictionRelative = predictionRespRelative[modelName]
+
+        if (predictionRespRelative) {
+          return Math.round((predictionRelative ?? 0) * 10000) / 100;
+        }
+      }
+    } catch (e) {
+      console.error('PREDICTION PERCENT CALCULATE ERROR', e);
     }
 
     return null;
@@ -47,6 +64,8 @@ export class PredictionItemComponent {
         return GRAPH_COLORS.ta_2;
       case ModelNameEnum.Ta_2_1:
         return GRAPH_COLORS.ta_2_1;
+      case 'consensus':
+        return GRAPH_COLORS.consensus;
       default:
         return '';
     }
