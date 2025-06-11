@@ -194,25 +194,34 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
     pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
     pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
     pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target)
-    pred_list = []
 
-    if pred_ta_1 is not None:
-        pred_list.append(pred_ta_1)
+    weights = {
+        'pred_ta_1': 1,
+        'pred_ta_1_1': 1,
+        'pred_ta_1_2': 3,
+        'pred_ta_2': 1,
+        'pred_ta_2_1': 3,
+    }
 
-    if pred_ta_1_1 is not None:
-        pred_list.append(pred_ta_1_1)
+    # Собираем значения и веса
+    pred_values = [
+        (pred_ta_1, weights['pred_ta_1']),
+        (pred_ta_1_1, weights['pred_ta_1_1']),
+        (pred_ta_1_2, weights['pred_ta_1_2']),
+        (pred_ta_2, weights['pred_ta_2']),
+        (pred_ta_2_1, weights['pred_ta_2_1']),
+    ]
 
-    if pred_ta_1_2 is not None:
-        pred_list.append(pred_ta_1_2)
+    # Считаем взвешенное среднее только по существующим значениям
+    weighted_sum = 0
+    total_weight = 0
+    for value, weight in pred_values:
+        if value is not None:
+            weighted_sum += value * weight
+            total_weight += weight
 
-    if pred_ta_2 is not None:
-        pred_list.append(pred_ta_2)
-
-    if pred_ta_2_1 is not None:
-        pred_list.append(pred_ta_2_1)
-
-    if len(pred_list) > 0:
-        return sum(pred_list) / len(pred_list)
+    if total_weight > 0:
+        return weighted_sum / total_weight
 
     return None
 
