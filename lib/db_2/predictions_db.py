@@ -70,7 +70,7 @@ def insert_prediction(
     with Session(engine) as session:
         record = PredictionDB(
             instrument_uid=instrument_uid,
-            prediction=prediction,
+            prediction=float(prediction),
             target_date=target_date,
             model_name=model_name,
             date=date,
