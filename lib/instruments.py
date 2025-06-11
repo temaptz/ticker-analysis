@@ -14,7 +14,7 @@ def get_instruments_white_list() -> list[Instrument]:
         if instrument:
             result.append(instrument)
 
-    return result
+    return result[::5]
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 10, is_convert_object=True, is_skip_empty=True)

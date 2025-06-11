@@ -65,14 +65,15 @@ def start_schedule() -> None:
     )
 
     # Инвестиционные рекомендации
-    scheduler.add_job(
-        process_task.send_invest_recommendations,
-        'cron',
-        day_of_week='mon',
-        hour=15,
-        minute=0,
-        timezone=timezone
-    )
+    # scheduler.add_job(
+    #     process_task.send_invest_recommendations,
+    #     'cron',
+    #     day_of_week='mon',
+    #     day_of_month=1,
+    #     hour=15,
+    #     minute=0,
+    #     timezone=timezone
+    # )
 
     # Проверка сообщений в телеге
     scheduler.add_job(

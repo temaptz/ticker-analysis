@@ -52,7 +52,7 @@ def ttl_cache(ttl: int = 3600, is_skip_empty: bool = False, is_convert_object: b
                 return result
 
             except Exception as e:
-                print(f'ERROR ttl_cache decorator in function {func.__name__}', e)
+                print(f'ERROR ttl_cache decorator in function {func.__name__}, kwargs: {kwargs}', e)
 
         return wrapper
     return decorator

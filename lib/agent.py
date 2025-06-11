@@ -1,63 +1,56 @@
 from langchain_community.llms.yandex import YandexGPT
-from langchain.agents import initialize_agent, Tool
-from requests.auth import HTTPBasicAuth
-import requests
+from langchain.agents import initialize_agent, AgentType
+from langchain.tools import tool
 from functools import reduce
-from lib import cache, instruments, fundamentals, predictions
-import const
+from lib import cache, instruments, fundamentals, predictions, users, invest_calc
+from const import Y_API_SECRET, Y_API_FOLDER_ID
 import datetime
 
-yandex_gpt = YandexGPT(api_key=const.Y_API_SECRET, folder_id=const.Y_API_FOLDER_ID, temperature=0.3, model_name='yandexgpt-lite')
+yandex_gpt = YandexGPT(api_key=Y_API_SECRET, folder_id=Y_API_FOLDER_ID, temperature=0.3, model_name='yandexgpt-lite')
 
-def get_instruments_list(*args) -> str:
+@tool(description='Получает список инструментов. Для каждого инструмента выводит название и UID инструмента.')
+def get_instruments_list(dummy: str = '') -> list[str]:
     instruments_list = []
 
     for instrument in instruments.get_instruments_white_list():
         instruments_list.append(instrument.uid)
 
-    return ', '.join(instruments_list)
+    return instruments_list
 
 
+@tool(description='Получает подробную информацию о единичном инструменте. На выходе: фундаментальные показатели, текущую цену и прогнозируемое относительное изменение цены каждого инструмента. На входе: UID инструмента.')
 def get_instrument_info(uid: str) -> str or None:
-    if instrument_info := instruments.get_instrument_by_uid(uid=uid):
+    instrument_uid = uid.strip('"').strip("'")
+
+    if instrument_info := instruments.get_instrument_by_uid(uid=instrument_uid):
         fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument_info.asset_uid)
         fundamentals_info = fundamentals_resp[0] if fundamentals_resp and len(fundamentals_resp) > 0 else None
-        price = instruments.get_instrument_last_price_by_uid(uid=uid)
+        price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
         now = datetime.datetime.now(datetime.timezone.utc)
         prediction_7 = predictions.get_relative_predictions_consensus(
-            instrument_uid=uid,
+            instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=7)
         )
         prediction_30 = predictions.get_relative_predictions_consensus(
-            instrument_uid=uid,
+            instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=30)
         )
         prediction_60 = predictions.get_relative_predictions_consensus(
-            instrument_uid=uid,
+            instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=60)
         )
         prediction_90 = predictions.get_relative_predictions_consensus(
-            instrument_uid=uid,
+            instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=90)
         )
         prediction_180 = predictions.get_relative_predictions_consensus(
-            instrument_uid=uid,
+            instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=180)
         )
         prediction_365 = predictions.get_relative_predictions_consensus(
-            instrument_uid=uid,
+            instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=365)
         )
-
-        # print('LOADED INSTRUMENT INFO', instrument_info)
-        # print('LOADED FUNDAMENTALS', fundamentals_info)
-        # print('LOADED PRICE', price)
-        # print('LOADED PREDICTION_7', prediction_7)
-        # print('LOADED PREDICTION_30', prediction_30)
-        # print('LOADED PREDICTION_60', prediction_60)
-        # print('LOADED PREDICTION_90', prediction_90)
-        # print('LOADED PREDICTION_180', prediction_180)
-        # print('LOADED PREDICTION_365', prediction_365)
 
         return f'''
         Фундаментальные показатели:
@@ -82,9 +75,26 @@ def get_instrument_info(uid: str) -> str or None:
         
         Полное название инcтрумента: {safe_get(instrument_info, 'name')};
         Тикер инcтрумента (краткое название): {safe_get(instrument_info, 'ticker')};
-        UID инcтрумента: {uid};
+        UID инcтрумента: {instrument_uid};
         '''
     return None
+
+
+@tool(description='Получает баланс единичного инструмента. На выходе: баланс инструмента в портфеле, среднюю цену покупки, потенциальную прибыль, рыночную стоимость. На входе: UID инструмента.')
+def get_instrument_balance(uid: str) -> str or None:
+    instrument_uid = uid.strip('"').strip("'")
+
+    if instrument_info := instruments.get_instrument_by_uid(uid=instrument_uid):
+        if balance := users.get_user_instrument_balance(instrument_uid=instrument_uid):
+            if invest_calc_info := invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument_uid):
+                return f'''
+                Баланс в портфеле: {balance} шт;
+                Рыночная стоимость: {invest_calc_info['market_value']} {instrument_info.currency};
+                Потенциальная прибыль от продажи: {invest_calc_info['potential_profit']} {instrument_info.currency};
+                Потенциальная прибыль от продажи в процентах: {invest_calc_info['potential_profit_percent']};
+                Средняя цена покупки: {invest_calc_info['avg_price']} {instrument_info.currency};
+                '''
+    return 'Баланс в портфеле: 0 шт;'
 
 
 def safe_get(d, *keys):
@@ -129,6 +139,23 @@ def get_invest_recommendation() -> str or None:
     return result['output'] if result and result['output'] else None
 
 
+# @cache.ttl_cache(ttl=3600, is_skip_empty=True)
+def get_invest_sell_recommendation() -> str or None:
+    result = agent.invoke(f'''
+    Ты финансовый эксперт. Даешь качественные и всесторонне взвешенные инвестиционные рекомендации.
+    Используй список инструментов с фондовой биржи.
+    Проанализируй каждый инструмент в списке и оцени насколько оптимальный сейчас момент для выгодной продажи.
+    При анализе используй следующие данные: текущая цена, прогнозируемое относительное изменение цены, текущий баланс инструмента в портфеле, среднюю цену покупки, потенциальную прибыль, рыночную стоимость.
+    На основе своей оценки составь рейтинг из трех инструментов, которые сейчас выгоднее всего продать и для которых именно сейчас оптимальный момент продажи. 
+    Отвечай на русском языке. Итоговый ответ должен быть подробным и объясненным.
+    ''')
+
+    print('Итоговый ответ по инвестиционным рекомендациям get_invest_sell_recommendation:')
+    print(result['output'] if result and result['output'] else None)
+
+    return result['output'] if result and result['output'] else None
+
+
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_instrument_invest_recommendation(instrument_uid: str) -> str or None:
     result = agent.invoke(f'''
@@ -165,24 +192,12 @@ def get_instrument_invest_short_recommendation(instrument_uid: str) -> str or No
     return result['output'] if result and result['output'] else None
 
 
-tools = [
-    Tool.from_function(
-        func=get_instruments_list,
-        name='get_instruments_list',
-        description='Получает список инструментов. Для каждого инструмента выводит название и UID инструмента.'
-    ),
-    Tool.from_function(
-        func=get_instrument_info,
-        name='get_instrument_info',
-        description='Получает подробную информацию о единичном инструменте. Для каждого инструмента выводит фундаментальные показатели, текущую цену и прогнозируемое относительное изменение цены. На входе - UID инструмента.'
-    ),
-]
-
 agent = initialize_agent(
-    tools=tools,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    tools=[get_instruments_list, get_instrument_info, get_instrument_balance],
     llm=yandex_gpt,
     verbose=True,
     handle_parsing_errors=True,
     max_iterations=60,
-    early_stopping_method="generate",
+    early_stopping_method='generate',
 )
