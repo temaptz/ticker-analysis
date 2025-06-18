@@ -191,13 +191,14 @@ def get_instrument_invest_short_recommendation(instrument_uid: str) -> str or No
 
     return result['output'] if result and result['output'] else None
 
+agent = None
 
-agent = initialize_agent(
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    tools=[get_instruments_list, get_instrument_info, get_instrument_balance],
-    llm=yandex_gpt,
-    verbose=True,
-    handle_parsing_errors=True,
-    max_iterations=60,
-    early_stopping_method='generate',
-)
+# agent = initialize_agent(
+#     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+#     tools=[get_instruments_list, get_instrument_info, get_instrument_balance],
+#     llm=yandex_gpt,
+#     verbose=True,
+#     handle_parsing_errors=True,
+#     max_iterations=60,
+#     early_stopping_method='generate',
+# )

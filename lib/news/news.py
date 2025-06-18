@@ -75,6 +75,27 @@ def get_rated_news_by_instrument_uid(
     return response
 
 
+@logger.error_logger
+def get_influence_score(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+) -> float:
+    influence_score = 0
+    news_list = get_news_by_instrument_uid(
+        instrument_uid=instrument_uid,
+        start_date=start_date,
+        end_date=end_date,
+    )
+    if influence_score := utils.round_float(news_rate_v2.get_news_total_influence_score(
+        instrument_uid=instrument_uid,
+        news_ids=[n.news_uid for n in news_list or []],
+    )):
+        return influence_score
+
+    return influence_score
+
+
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_news_by_instrument_uid(
         instrument_uid: str,

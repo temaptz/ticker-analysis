@@ -23,4 +23,6 @@ matplotlib
 holidays
 gunicorn
 langchain
-langchain-community
+pydantic
+langgraph
+langchain-ollama

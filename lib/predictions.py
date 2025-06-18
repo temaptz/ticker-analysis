@@ -2,7 +2,7 @@ import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1_1, ta_1_2, ta_2, ta_2_1, model
-from lib import date_utils, logger, utils, instruments
+from lib import date_utils, logger, utils, instruments, cache
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
@@ -187,6 +187,7 @@ def get_prediction_history_graph(
     return result
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 @logger.error_logger
 def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
@@ -195,33 +196,34 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
     pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
     pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target)
 
-    weights = {
-        'pred_ta_1': 1,
-        'pred_ta_1_1': 1,
-        'pred_ta_1_2': 3,
-        'pred_ta_2': 1,
-        'pred_ta_2_1': 3,
-    }
+    if pred_ta_2_1 or pred_ta_2 or pred_ta_1_2:
+        weights = {
+            'pred_ta_1': 1,
+            'pred_ta_1_1': 1,
+            'pred_ta_1_2': 5,
+            'pred_ta_2': 3,
+            'pred_ta_2_1': 7,
+        }
 
-    # Собираем значения и веса
-    pred_values = [
-        (pred_ta_1, weights['pred_ta_1']),
-        (pred_ta_1_1, weights['pred_ta_1_1']),
-        (pred_ta_1_2, weights['pred_ta_1_2']),
-        (pred_ta_2, weights['pred_ta_2']),
-        (pred_ta_2_1, weights['pred_ta_2_1']),
-    ]
+        # Собираем значения и веса
+        pred_values = [
+            (pred_ta_1, weights['pred_ta_1']),
+            (pred_ta_1_1, weights['pred_ta_1_1']),
+            (pred_ta_1_2, weights['pred_ta_1_2']),
+            (pred_ta_2, weights['pred_ta_2']),
+            (pred_ta_2_1, weights['pred_ta_2_1']),
+        ]
 
-    # Считаем взвешенное среднее только по существующим значениям
-    weighted_sum = 0
-    total_weight = 0
-    for value, weight in pred_values:
-        if value is not None:
-            weighted_sum += value * weight
-            total_weight += weight
+        # Считаем взвешенное среднее только по существующим значениям
+        weighted_sum = 0
+        total_weight = 0
+        for value, weight in pred_values:
+            if value is not None:
+                weighted_sum += value * weight
+                total_weight += weight
 
-    if total_weight > 0:
-        return weighted_sum / total_weight
+        if total_weight > 0:
+            return weighted_sum / total_weight
 
     return None
 

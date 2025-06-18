@@ -8,6 +8,7 @@ from tinkoff.invest import (
     OperationState,
     OperationType,
     Instrument,
+    Account,
 )
 from const import TINKOFF_INVEST_TOKEN
 from lib import cache, instruments, utils, logger, invest_calc, predictions
@@ -26,6 +27,21 @@ def get_user_instrument_balance(instrument_uid: str) -> int:
 
     except Exception as e:
         logger.log_error(method_name='get_user_instrument_balance', error=e)
+
+    return result
+
+
+@cache.ttl_cache(ttl=3600)
+def get_user_instruments_list() -> list[Instrument]:
+    result = []
+
+    try:
+        for instrument in instruments.get_instruments_white_list():
+            if get_user_instrument_balance(instrument_uid=instrument.uid) > 0:
+                result.append(instrument)
+
+    except Exception as e:
+        logger.log_error(method_name='get_user_instruments_list', error=e)
 
     return result
 
@@ -60,6 +76,15 @@ def get_accounts() -> GetAccountsResponse.accounts:
         logger.log_error(method_name='get_accounts', error=e)
 
     return result
+
+
+def get_analytics_account() -> Account or None:
+    if accounts := get_accounts():
+        for a in accounts or []:
+            if a.name == 'Аналитический':
+                return a
+
+    return None
 
 
 @cache.ttl_cache(ttl=3600)

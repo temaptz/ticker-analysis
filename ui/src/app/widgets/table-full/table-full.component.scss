@@ -9,3 +9,15 @@ table::ng-deep {
     top: 0 !important;
   }
 }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .ticker {}
+
+  .instrument-name {
+    max-width: 140px;
+  }
+}

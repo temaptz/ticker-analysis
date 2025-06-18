@@ -1,13 +1,11 @@
-import { Component, DestroyRef, effect, inject, signal, ViewChild } from '@angular/core';
+import { Component, effect, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
-import { ScrollingModule } from '@angular/cdk/scrolling';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, tap } from 'rxjs';
-import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
@@ -30,7 +28,6 @@ import { BalanceComponent } from '../../entities/balance/balance.component';
   imports: [
     CommonModule,
     MatTableModule,
-    ScrollingModule,
     InstrumentLogoComponent,
     FundamentalsComponent,
     DrawerComponent,
@@ -38,9 +35,7 @@ import { BalanceComponent } from '../../entities/balance/balance.component';
     ForecastComponent,
     ForecastHistoryComponent,
     ComplexGraphComponent,
-    MatSortModule,
     RouterModule,
-    TableVirtualScrollModule,
     CurrentPriceByUidPipe,
     PriceFormatPipe,
     MatIconModule,
@@ -56,17 +51,14 @@ export class TableFullComponent {
 
   isLoaded = signal<boolean>(false);
   sortTickers = signal<SortModeEnum>(SortModeEnum.PotentialPerspective)
-  dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
+  dataSource = new MatTableDataSource<InstrumentInList>([])
 
   protected readonly CandleInterval = CandleInterval;
   protected readonly tableItemHeightPx = 265;
 
   displayedColumns: string[] = [
     'logo',
-    'ticker',
-    'name',
     'fundamental',
-    // '5years',
     'complex',
     'balance',
     'forecast',

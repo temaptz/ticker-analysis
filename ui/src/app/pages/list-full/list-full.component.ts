@@ -4,11 +4,11 @@ import { TableFullComponent } from '../../widgets/table-full/table-full.componen
 
 
 @Component({
-  selector: 'list',
+  selector: 'list-full',
   imports: [CommonModule, TableFullComponent],
   providers: [],
-  templateUrl: './list.component.html',
-  styleUrl: './list.component.scss'
+  templateUrl: './list-full.component.html',
+  styleUrl: './list-full.component.scss'
 })
-export class ListComponent {
+export class ListFullComponent {
 }

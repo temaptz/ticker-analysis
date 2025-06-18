@@ -1,3 +1,5 @@
+from unittest.mock import inplace
+
 import transformers
 import torch
 import http.server
@@ -88,7 +90,7 @@ def train():
         trust_remote_code=True,
     )
 
-    max_tokens = 512
+    max_tokens = 600
 
     def preprocess(example):
         return tokenizer(example['text'], truncation=True, max_length=max_tokens)
@@ -101,10 +103,10 @@ def train():
         encoded['is_too_long'] = length > max_tokens
 
         if encoded['is_too_long']:
-            print('---------------------START TOO LONG---------------------')
-            print('LENGTH:', encoded['length'])
-            print('TEXT:', encoded['text'][:900])
-            print('----------------------TOO LONG END----------------------')
+            # print('---------------------START TOO LONG---------------------')
+            print('TOO LONGLENGTH:', encoded['length'])
+            # print('TEXT:', encoded['text'][:900])
+            # print('----------------------TOO LONG END----------------------')
 
         return encoded
 
@@ -114,7 +116,8 @@ def train():
     samples = [{'text': f'User: {row.prompt.strip()} \nAssistant: {row.response.strip()}'} for _, row in df.iterrows()]
 
     # Превращаем в HuggingFace Dataset
-    dataset = datasets.Dataset.from_list(samples)
+    d = datasets.Dataset.from_list(samples)
+    dataset = d.shuffle()
 
     tokenized_all = dataset.map(preprocess_with_filtering, batched=False)
 
@@ -130,21 +133,21 @@ def train():
 
     print(f'\nWILL TRAIN WITH {len(tokenized_filtered)} TOTAL EXAMPLES. {len(tokenized_train)} TRAIN. {len(tokenized_val)} VAL. {len(too_long)} FILTERED.')
 
-    print('\n========== TOKENIZED TRAIN DATASET ==========')
-    print(tokenized_train)
-    print('\n----- First 5 entries (tokenized) -----')
-    random_samples = tokenized_train.shuffle(seed=random.randint(1, 10_000)).select(range(5))
-    for i, sample in enumerate(random_samples):
-        print(f'\nExample #{i + 1}')
-        print(sample)
-
-    print('\n========== TOKENIZED VALIDATION DATASET ==========')
-    print(tokenized_val)
-    print('\n----- First 5 entries (tokenized) -----')
-    random_samples = tokenized_val.shuffle(seed=random.randint(1, 10_000)).select(range(5))
-    for i, sample in enumerate(random_samples):
-        print(f'\nExample #{i + 1}')
-        print(sample)
+    # print('\n========== TOKENIZED TRAIN DATASET ==========')
+    # print(tokenized_train)
+    # print('\n----- First 5 entries (tokenized) -----')
+    # random_samples = tokenized_train.shuffle(seed=random.randint(1, 10_000)).select(range(5))
+    # for i, sample in enumerate(random_samples):
+    #     print(f'\nExample #{i + 1}')
+    #     print(sample)
+    #
+    # print('\n========== TOKENIZED VALIDATION DATASET ==========')
+    # print(tokenized_val)
+    # print('\n----- First 5 entries (tokenized) -----')
+    # random_samples = tokenized_val.shuffle(seed=random.randint(1, 10_000)).select(range(5))
+    # for i, sample in enumerate(random_samples):
+    #     print(f'\nExample #{i + 1}')
+    #     print(sample)
 
     lora_config = peft.LoraConfig(
         task_type=peft.TaskType.CAUSAL_LM,
@@ -180,8 +183,8 @@ def train():
         eval_strategy='steps',               # запускаем eval каждые N шагов
         eval_steps=100,
         save_strategy='steps',
-        save_steps=100,                       # Как часто сохранять чекпоинты
-        save_total_limit=3,                  # Сколько последних чекпоинтов хранить
+        save_steps=100,                      # Как часто сохранять чекпоинты
+        save_total_limit=1,                  # Сколько последних чекпоинтов хранить
         load_best_model_at_end=True,         # в конце вернёт лучшую по метрике версию
         metric_for_best_model='eval_loss',
         greater_is_better=False,
@@ -199,7 +202,7 @@ def train():
         callbacks=[transformers.EarlyStoppingCallback(early_stopping_patience=3)]
     )
 
-    trainer.train(resume_from_checkpoint=True)
+    trainer.train()
 
     # === 7. Сохраняем адаптер и токенизатор ===
     model.save_pretrained(get_adapter_path())
@@ -214,7 +217,7 @@ def get_model_name() -> str:
 
 
 def get_pretrain_name() -> str:
-    return 'dataset-500_v0'
+    return 'dataset-569_v0'
 
 
 def get_app_dir() -> str:
@@ -282,7 +285,7 @@ if not is_adapter_exists():
 print('MODEL DIR\n', os.listdir(get_model_path()))
 print('ADAPTER DIR\n', os.listdir(get_adapter_path()))
 
-if not is_adapter_exists():
+if True or not is_adapter_exists():
     print('START TRAIN ADAPTER')
     train()
     print('END TRAIN ADAPTER')
