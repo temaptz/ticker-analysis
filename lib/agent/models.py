@@ -5,10 +5,17 @@ from typing import Annotated
 
 
 class InvestRecommendationResponse(BaseModel):
-    recommendation_list: list[dict]
+    list: list[str]
+
+
+class StepsResponse(BaseModel):
+    tasks_list: list[str]
 
 
 class State(TypedDict):
+    input: str
+    steps: list[str]
+    current_step: str
     messages: Annotated[list, add_messages]
     structured_response: InvestRecommendationResponse | None
 

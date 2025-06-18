@@ -130,10 +130,9 @@ def instrument_forecasts(request):
 
     if uid := request.GET.get('uid'):
         if f := forecasts.get_forecasts(uid):
-            if f := serializer.to_json(f):
-                resp = f
+            resp = f
 
-    response = HttpResponse(resp)
+    response = HttpResponse(serializer.to_json(resp))
 
     if resp:
         patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
