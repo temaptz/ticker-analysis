@@ -13,9 +13,9 @@ class StepsResponse(BaseModel):
 
 
 class State(TypedDict):
-    input: str
-    steps: list[str]
-    current_step: str
+    # input: str
+    # steps: list[str]
+    # current_step: str
     messages: Annotated[list, add_messages]
     structured_response: InvestRecommendationResponse | None
 

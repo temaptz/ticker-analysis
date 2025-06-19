@@ -16,7 +16,7 @@ def get_instruments_list() -> list[str]:
     """
     Получает список UID биржевых инструментов
     """
-    return [instrument.uid for instrument in instruments.get_instruments_white_list()]
+    return [instrument.uid for instrument in instruments.get_instruments_white_list()][:3]
 
 
 @tool

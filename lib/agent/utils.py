@@ -1,6 +1,8 @@
 from langchain_core.runnables.graph import MermaidDrawMethod
 from io import BytesIO
 from PIL import Image
+from lib import serializer
+from rich import print_json
 
 
 def draw_graph(graph):
@@ -14,3 +16,6 @@ def draw_graph(graph):
     except Exception as e:
         print('ERROR', e)
         pass
+
+def output_json(obj):
+    print_json(serializer.to_json(obj))
