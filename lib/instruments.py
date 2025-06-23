@@ -1,7 +1,9 @@
+from typing import Optional
+
 from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils
+from lib import cache, utils, date_utils, db_2, yandex
 
 
 @cache.ttl_cache(ttl=3600 * 24, is_convert_object=True, is_skip_empty=True)
@@ -106,3 +108,52 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=
         print('ERROR get_instrument_price_by_date', e)
 
     return None
+
+
+@cache.ttl_cache(ttl=3600 * 24 * 10, is_skip_empty=True)
+def get_instrument_human_name(uid: str) -> Optional[str]:
+    tag_name= 'human_name'
+
+    if tag := db_2.instrument_tags_db.get_tag(instrument_uid=uid, tag_name=tag_name):
+        if tag_value := tag.tag_value:
+            if isinstance(tag_value, str):
+                return tag_value
+
+    if instrument := get_instrument_by_uid(uid=uid):
+        if yandex_value := yandex.get_human_name(legal_name=instrument.name):
+            db_2.instrument_tags_db.upsert_tag(
+                instrument_uid=uid,
+                tag_name=tag_name,
+                tag_value=yandex_value,
+            )
+
+            return yandex_value
+
+        if instrument.name:
+            return instrument.name
+
+    return None
+
+
+@cache.ttl_cache(ttl=3600 * 24 * 10, is_skip_empty=True)
+def get_instrument_keywords(uid: str) -> list[str]:
+    tag_name= 'keywords'
+    tag_join_symbol = ','
+
+    if tag := db_2.instrument_tags_db.get_tag(instrument_uid=uid, tag_name=tag_name):
+        if tag_value := tag.tag_value:
+            if isinstance(tag_value, str):
+                tag_list = [i for i in tag_value.split(tag_join_symbol) if i]
+                if tag_list and len(tag_list) > 0:
+                    return tag_list
+
+    if instrument := get_instrument_by_uid(uid=uid):
+        if yandex_value := yandex.get_keywords(legal_name=instrument.name):
+            if yandex_value and len(yandex_value) > 0:
+                db_2.instrument_tags_db.upsert_tag(
+                    instrument_uid=uid,
+                    tag_name=tag_name,
+                    tag_value=tag_join_symbol.join(yandex_value),
+                )
+                return yandex_value
+    return []

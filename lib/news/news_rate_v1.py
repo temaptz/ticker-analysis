@@ -107,7 +107,7 @@ def get_news_rate_absolute(
     instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
 
     if news and len(news) > 0 and instrument:
-        subject_name = yandex.get_human_name(legal_name=instrument.name)
+        subject_name = instruments.get_instrument_human_name(uid=instrument.uid)
         total_rate_positive = 0
         total_rate_negative = 0
         total_rate_neutral = 0

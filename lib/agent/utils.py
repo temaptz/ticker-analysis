@@ -7,7 +7,9 @@ from rich import print_json
 
 def draw_graph(graph):
     try:
-        png_bytes = graph.get_graph().draw_mermaid_png(
+        png_bytes = graph.get_graph(
+            xray=True
+        ).draw_mermaid_png(
             draw_method=MermaidDrawMethod.PYPPETEER
         )
         img = Image.open(BytesIO(png_bytes))

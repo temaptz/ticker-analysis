@@ -29,7 +29,7 @@ def get_rated_news_by_instrument_uid(
         end_date=end_date,
     )
     news_ids_list = [n.news_uid for n in news_list or []]
-    keywords = get_keywords_by_instrument_uid(instrument_uid=instrument_uid)
+    keywords = instruments.get_instrument_keywords(uid=instrument_uid)
     response: dict = {
         'list': [],
         'keywords': keywords,
@@ -102,22 +102,10 @@ def get_news_by_instrument_uid(
         start_date: datetime.datetime,
         end_date: datetime.datetime
 ) -> list[news_db.News]:
-    keywords = get_keywords_by_instrument_uid(instrument_uid=instrument_uid)
+    keywords = instruments.get_instrument_keywords(uid=instrument_uid)
 
     return news_db.get_news_by_date_keywords_fts(
         start_date=start_date,
         end_date=end_date,
         keywords=keywords
     ) or []
-
-
-@cache.ttl_cache(ttl=3600 * 24 * 365, is_skip_empty=True)
-def get_keywords_by_instrument_uid(instrument_uid: str) -> list[str]:
-    i = instruments.get_instrument_by_uid(instrument_uid)
-    response = []
-
-    for word in yandex.get_keywords(legal_name=i.name):
-        if word not in response:
-            response.append(word)
-
-    return response

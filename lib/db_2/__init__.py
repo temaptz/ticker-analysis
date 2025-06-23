@@ -7,3 +7,4 @@ from . import gpt_requests_db
 from . import news_db
 from . import news_classify_requests
 from . import news_rate_2_db
+from . import instrument_tags_db

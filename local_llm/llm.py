@@ -285,7 +285,7 @@ if not is_adapter_exists():
 print('MODEL DIR\n', os.listdir(get_model_path()))
 print('ADAPTER DIR\n', os.listdir(get_adapter_path()))
 
-if True or not is_adapter_exists():
+if not is_adapter_exists():
     print('START TRAIN ADAPTER')
     train()
     print('END TRAIN ADAPTER')

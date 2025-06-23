@@ -1,13 +1,11 @@
 import datetime
-from typing import Any
-
 from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, agent
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
 from lib.learn import ta_1_2, ta_2, ta_2_1, model
 import json
 
@@ -492,31 +490,31 @@ def gpt(request):
     return response
 
 
-@api_view(['GET'])
-def instrument_recommendation(request):
-    resp = None
-    uid = request.GET.get('uid')
-    is_long = request.GET.get('is_long')
-
-    if uid:
-        resp_short = agent.get_instrument_invest_short_recommendation(instrument_uid=uid)
-        resp_long = None
-
-        if is_long:
-            resp_long = agent.get_instrument_invest_recommendation(instrument_uid=uid)
-
-        if resp_short or resp_long:
-            resp = {
-                'short': resp_short,
-                'long': resp_long,
-            }
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24)
-
-    return response
+# @api_view(['GET'])
+# def instrument_recommendation(request):
+#     resp = None
+#     uid = request.GET.get('uid')
+#     is_long = request.GET.get('is_long')
+#
+#     if uid:
+#         resp_short = agent.get_instrument_invest_short_recommendation(instrument_uid=uid)
+#         resp_long = None
+#
+#         if is_long:
+#             resp_long = agent.get_instrument_invest_recommendation(instrument_uid=uid)
+#
+#         if resp_short or resp_long:
+#             resp = {
+#                 'short': resp_short,
+#                 'long': resp_long,
+#             }
+#
+#     response = HttpResponse(serializer.to_json(resp))
+#
+#     if resp:
+#         patch_cache_control(response, public=True, max_age=3600 * 24)
+#
+#     return response
 
 
 # def get_instrument_full(instrument: Instrument):

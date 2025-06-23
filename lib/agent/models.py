@@ -4,18 +4,26 @@ from langgraph.graph.message import add_messages
 from typing import Annotated
 
 
-class InvestRecommendationResponse(BaseModel):
+class AgentFinalResultFormat(BaseModel):
     list: list[str]
 
 
-class StepsResponse(BaseModel):
-    tasks_list: list[str]
+class CorrectPlanResponseFormat(BaseModel):
+    is_plan_done: bool
+    is_plan_step_done: bool
+    updated_steps: list[str]
+    updated_current_step: str
 
 
 class State(TypedDict):
-    # input: str
-    # steps: list[str]
-    # current_step: str
+    input: str
+    steps: list[str]
+    current_step: str
+    is_plan_step_done: bool
+    is_plan_done: bool
     messages: Annotated[list, add_messages]
-    structured_response: InvestRecommendationResponse | None
+    structured_response: AgentFinalResultFormat | None
 
+
+class StateAgent(TypedDict):
+    messages: Annotated[list, add_messages]
