@@ -36,7 +36,7 @@ class TagDB(Base):
 
 @logger.error_logger
 def init_table() -> None:
-    Base.metadata.create_all(engine, checkfirst=True)
+    Base.metadata.create_all(engine)
 
 
 @logger.error_logger

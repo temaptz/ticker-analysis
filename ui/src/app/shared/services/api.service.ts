@@ -18,7 +18,7 @@ import {
   InstrumentForecastsGraphItem,
   NewsListRatedResponse,
   TechAnalysisResp,
-  PredictionHistoryGraphResp, Forecast, RecommendationResp,
+  PredictionHistoryGraphResp, Forecast, RecommendationResp, NewsGraphItem,
 } from '../types';
 import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
@@ -184,6 +184,16 @@ export class ApiService {
     params = params.set('end_date', endDate.toJSON());
 
     return this.http.get<NewsListRatedResponse>(`${this.apiUrl}/instrument/news/list_rated`, {params: params});
+  }
+
+  getInstrumentNewsGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<NewsGraphItem[]> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('date_from', from.toJSON());
+    params = params.set('date_to', to.toJSON());
+    params = params.set('interval', interval);
+
+    return this.http.get<NewsGraphItem[]>(`${this.apiUrl}/instrument/news/graph`, {params: params});
   }
 
   getInstrumentBrand(uid: string): Observable<InstrumentBrandResponse> {

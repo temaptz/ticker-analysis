@@ -456,6 +456,30 @@ def instrument_news_list_rated(request):
 
 
 @api_view(['GET'])
+def instrument_news_graph(request):
+    resp = None
+    uid = request.GET.get('uid')
+    start_date = utils.parse_json_date(request.GET.get('date_from'))
+    end_date = utils.parse_json_date(request.GET.get('date_to'))
+    interval = CandleInterval(int(request.GET.get('interval')))
+
+    if uid and start_date and end_date and interval:
+        resp = news.news.get_rated_news_graph(
+            instrument_uid=uid,
+            start_date=start_date,
+            end_date=end_date,
+            interval=interval
+        )
+
+    response = HttpResponse(serializer.to_json(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+
+    return response
+
+
+@api_view(['GET'])
 def instrument_brand(request):
     resp = None
     uid = request.GET.get('uid')

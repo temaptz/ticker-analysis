@@ -1,7 +1,9 @@
 import datetime
 
+from tinkoff.invest import CandleInterval
+
 from lib.db_2 import news_db
-from lib import instruments, yandex, cache, serializer, utils, logger, learn, types_util
+from lib import instruments, yandex, cache, serializer, utils, logger, learn, types_util, date_utils
 from lib.news import news_rate_v1, news_rate_v2
 
 
@@ -71,6 +73,40 @@ def get_rated_news_by_instrument_uid(
                 instrument_uid=instrument_uid,
             ),
         })
+
+    return response
+
+
+@logger.error_logger
+def get_rated_news_graph(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+        interval: CandleInterval,
+):
+    response = []
+
+    for date in date_utils.get_dates_interval_list(
+        date_from=start_date,
+        date_to=end_date,
+        interval_seconds=date_utils.get_interval_sec_by_candle(interval=interval)
+    ):
+        news_list = get_news_by_instrument_uid(
+            instrument_uid=instrument_uid,
+            start_date=date_utils.get_day_start(date),
+            end_date=date_utils.get_day_end(date),
+        )
+        news_ids_list = [n.news_uid for n in news_list or []]
+        influence_score = news_rate_v2.get_news_total_influence_score(
+            instrument_uid=instrument_uid,
+            news_ids=news_ids_list,
+        )
+
+        if influence_score:
+            response.append({
+                'date': date,
+                'influence_score': influence_score,
+            })
 
     return response
 

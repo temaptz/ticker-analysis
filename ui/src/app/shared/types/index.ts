@@ -130,6 +130,11 @@ export interface InstrumentForecastsGraphItem {
   consensus: number;
 }
 
+export interface NewsGraphItem {
+  date: string;
+  influence_score: number;
+}
+
 export interface TechAnalysisResp {
   RSI: TechAnalysisGraphItem[];
   BB: TechAnalysisGraphItem[];

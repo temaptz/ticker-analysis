@@ -93,3 +93,11 @@ def get_interval_sec_by_candle(interval: CandleInterval) -> int:
 
 def get_local_time_log_str(date=datetime.datetime.now()) -> str:
     return date.strftime('%Y-%m-%d_%H-%M-%S')
+
+
+def get_day_start(date: datetime.datetime) -> datetime.datetime:
+    return date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def get_day_end(date: datetime.datetime) -> datetime.datetime:
+    return date.replace(hour=23, minute=59, second=59, microsecond=999999)

@@ -1,0 +1,14 @@
+@if (option.value()) {
+  <echarts-graph
+    [option]="option.value()!"
+    [width]="width()"
+    [height]="height()"
+  ></echarts-graph>
+}
+
+
+@if (option.isLoading()) {
+  <div class="preloader">
+    <preloader></preloader>
+  </div>
+}

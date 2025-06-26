@@ -23,6 +23,7 @@ urlpatterns = [
     path('instrument/balance', views.instrument_balance),
     path('instrument/operations', views.instrument_operations),
     path('instrument/news/list_rated', views.instrument_news_list_rated),
+    path('instrument/news/graph', views.instrument_news_graph),
     path('instrument/brand', views.instrument_brand),
     path('instrument/invest_calc', views.instrument_invest_calc),
     path('instrument/tech_analysis/graph', views.tech_analysis_graph),

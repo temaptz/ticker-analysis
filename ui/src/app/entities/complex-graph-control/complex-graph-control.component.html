@@ -8,6 +8,7 @@
       <label>
         История
         <select formControlName="historyDaysCount">
+          <option [value]="0">0 дней</option>
           <option [value]="5">5 дней</option>
           <option [value]="10">10 дней</option>
           <option [value]="30">30 дней</option>
@@ -41,6 +42,7 @@
       <label>
         Будущее
         <select formControlName="futureDaysCount">
+          <option [value]="0">0 дней</option>
           <option [value]="5">5 дней</option>
           <option [value]="10">10 дней</option>
           <option [value]="30">30 дней</option>

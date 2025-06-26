@@ -51,7 +51,7 @@ def upload_file(file_path: str, file_name: str) -> requests.Response or None:
 
     with open(file_path, 'rb') as file:
         print('FILE CREATED, BEFORE BACKUP UPLOAD', file_size)
-        response_upload = requests.put(response_resource['href'], files={'file': file})
+        response_upload = requests.put(response_resource.get('href'), files={'file': file})
 
         print('RESPONSE FILE UPLOAD', response_upload.status_code, response_upload.text, response_upload)
 

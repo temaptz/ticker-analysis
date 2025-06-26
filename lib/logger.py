@@ -18,7 +18,7 @@ def log_error(method_name: str, error: Exception = None, debug_info: str = None,
     error_str = f'\033[91m[{date_str}] ERROR: {method_name}\033[0m'
 
     if error:
-        error_str += f' -> {error}'
+        error_str += f' Exception: {error}'
 
     if debug_info:
         error_str += f'; DEBUG INFO: {debug_info}'

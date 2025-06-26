@@ -31,11 +31,12 @@ import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
 import { ComplexGraphControlComponent } from '../complex-graph-control/complex-graph-control.component';
+import { NewsGraphComponent } from '../news-graph/news-graph.component';
 
 
 @Component({
   selector: 'complex-graph',
-  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent],
+  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent, NewsGraphComponent],
   providers: [PriceFormatPipe],
   templateUrl: './complex-graph.component.html',
   styleUrl: './complex-graph.component.scss'
@@ -55,6 +56,7 @@ export class ComplexGraphComponent {
   isShowLegend = input<boolean>(false);
   isShowControl = input<boolean>(true);
   isShowPredictionsHistory = input<boolean>(false);
+  isShowNewsGraph = input<boolean>(false);
 
   historyInterval = signal<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
   daysHistory = signal<number>(90);

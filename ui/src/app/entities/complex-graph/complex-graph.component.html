@@ -10,6 +10,19 @@
   </div>
 }
 
+@if (isShowNewsGraph()) {
+  <div class="news-graph">
+    <news-graph
+      [instrumentUid]="instrumentUid()"
+      [interval]="historyInterval()"
+      [historyDaysCount]="daysHistory()"
+      [futureDaysCount]="daysFuture()"
+      [width]="width()"
+      height="300px"
+    ></news-graph>
+  </div>
+}
+
 @if (isShowControl()) {
   <div class="control">
     <complex-graph-control

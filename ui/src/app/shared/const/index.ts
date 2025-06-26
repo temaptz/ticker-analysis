@@ -9,6 +9,7 @@ export const GRAPH_COLORS = {
   consensus: '#AEEA00',
   forecasts: '#B0BEC5',
   history: '#99cfcf',
+  influence_score: '#009900',
 
   // Технические индикаторы (новые, уникальные цвета)
   tech_rsi: '#FF3D00',     // ярко-оранжево-красный (контрастный к E91E63 и FF9800)
