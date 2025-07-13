@@ -1,4 +1,6 @@
 import datetime
+import os
+from dotenv import load_dotenv
 
 from lib import (
     telegram,
@@ -12,10 +14,13 @@ from lib import (
     predictions_save,
     utils,
     date_utils,
+    yandex_disk,
 )
 from lib.db_2 import init, db_utils, predictions_db
 from lib.learn import model
 import pandas
+
+load_dotenv()
 
 init.init_db()
 db_utils.optimize_db()
@@ -28,6 +33,9 @@ if docker.is_docker():
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
+
+    # agent.get_invest_recommendation()
+    # agent.agent_3.run()
 
     # news_500 =pandas.read_csv('./local_llm/news_500.csv')
     #
@@ -116,4 +124,6 @@ else:
     #
     # print('GOT NEWS', len(news))
     # news_save.save_news()
+
+    # yandex_disk.upload_db_backup()
 

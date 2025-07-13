@@ -62,8 +62,9 @@ services:
       gunicorn apiserver.wsgi:application
       --chdir /app/apiserver
       --bind 0.0.0.0:8000
+      --worker-class gthread
       --workers 4
-      --threads 2
+      --threads 16
       --timeout 120
     depends_on:
       - redis

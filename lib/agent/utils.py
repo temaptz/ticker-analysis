@@ -3,6 +3,7 @@ from io import BytesIO
 from PIL import Image
 from lib import serializer
 from rich import print_json
+from lib.agent import models
 
 
 def draw_graph(graph):
@@ -21,3 +22,10 @@ def draw_graph(graph):
 
 def output_json(obj):
     print_json(serializer.to_json(obj))
+
+
+def get_last_message_content(state: models.State) -> str | None:
+    if messages := state.get('messages', []):
+        if len(messages) > 0 and messages[-1] and messages[-1].content:
+            return messages[-1].content
+    return None

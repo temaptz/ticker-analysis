@@ -17,7 +17,15 @@ def upload_db_backup() -> None:
     db_dump_file_name = f'db_{date_utils.get_local_time_log_str()}.dump'
     db_dump_file_path = db_dump_file_name
 
+    logger.log_info(
+        message='Резервное копирование базы данных',
+        output={'db_dump_file_name': db_dump_file_name},
+        is_send_telegram=True,
+    )
+
     backup.backup_database(dump_file_path=db_dump_file_path)
+
+    print('BACKUP DATABASE DONE')
 
     upload_resp = upload_file(file_path=db_dump_file_path, file_name=db_dump_file_name)
     file_size = utils.get_file_size_readable(filepath=db_dump_file_path)
@@ -36,6 +44,7 @@ def upload_file(file_path: str, file_name: str) -> requests.Response or None:
 
     telegram.send_message(message='Начата загрузка файла: '+serializer.to_json({
         'file_path': file_path,
+        'file_name': file_name,
         'file_path_on_ya_disk': file_path_on_ya_disk,
         'file_size': file_size,
     }))
@@ -49,6 +58,9 @@ def upload_file(file_path: str, file_name: str) -> requests.Response or None:
         headers={'Authorization': 'OAuth %s' % const.Y_DISK_TOKEN}
     ).json()
 
+    print('RESPONSE RESOURCE 0', response_resource)
+    print('RESPONSE RESOURCE 1', serializer.to_json(response_resource))
+
     with open(file_path, 'rb') as file:
         print('FILE CREATED, BEFORE BACKUP UPLOAD', file_size)
         response_upload = requests.put(response_resource.get('href'), files={'file': file})
@@ -59,6 +71,8 @@ def upload_file(file_path: str, file_name: str) -> requests.Response or None:
             print('FILE UPLOADED', response_upload.status_code, file_path_on_ya_disk)
 
             return response_upload
+
+    return None
 
 
 class YandexDiskJSON:
