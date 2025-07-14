@@ -24,7 +24,7 @@ def output_json(obj):
     print_json(serializer.to_json(obj))
 
 
-def get_last_message_content(state: models.State) -> str | None:
+def get_last_message_content(state: models.State) -> str or None:
     if messages := state.get('messages', []):
         if len(messages) > 0 and messages[-1] and messages[-1].content:
             return messages[-1].content

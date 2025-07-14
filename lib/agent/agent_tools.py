@@ -1,14 +1,18 @@
 import datetime
+import multiprocessing
+import resource
+import io
+import textwrap
+import traceback
 from langchain_core.tools import tool
-from lib import instruments, fundamentals, predictions, users, invest_calc, news
+from contextlib import redirect_stdout
+from RestrictedPython import compile_restricted
+from RestrictedPython.Guards import safe_builtins
+from lib import instruments, fundamentals, predictions, users, invest_calc, news, agent
 
-
-@tool
-def get_weather(city: str) -> str:
-    """
-    Возвращает погоду в заданном городе
-    """
-    return 'Дождь'
+TIME_LIMIT = 2          # сек
+MEM_LIMIT_MB = 64       # МБ
+MEM_LIMIT = MEM_LIMIT_MB * 1024 * 1024
 
 
 @tool
@@ -16,7 +20,7 @@ def get_instruments_list() -> list[str]:
     """
     Получает список UID биржевых инструментов
     """
-    return [instrument.uid for instrument in instruments.get_instruments_white_list()][:3]
+    return [instrument.uid for instrument in instruments.get_instruments_white_list()][:10]
 
 
 @tool
@@ -115,3 +119,46 @@ def get_instrument_balance(uid: str) -> dict or None:
                 'avg_price': invest_calc_info['avg_price'],
             }
     return None
+
+
+def _sandbox_runner(src: str, queue):
+    """Запуск кода в изолированном процессе."""
+    try:
+        # 1) Ограничиваем ресурсы
+        resource.setrlimit(resource.RLIMIT_AS, (MEM_LIMIT, MEM_LIMIT))  # память
+        # 2) Компилируем с RestrictedPython
+        byte_code = compile_restricted(textwrap.dedent(src), "<agent>", "exec")
+        env = {"__builtins__": safe_builtins}
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            exec(byte_code, env, {})
+        queue.put(agent.models.PythonExecutionResult(ok=True, output=buf.getvalue()))
+    except Exception as e:
+        queue.put(
+            agent.models.PythonExecutionResult(
+                ok=False,
+                output="Ошибка: " + "".join(traceback.format_exception_only(type(e), e)).strip()
+            )
+        )
+
+
+@tool
+def run_python_code(code: str) -> dict:
+    """
+    Безопасно выполняет фрагмент Python 3.11.
+    """
+    q = multiprocessing.Queue()
+    p = multiprocessing.Process(target=_sandbox_runner, args=(code, q))
+    p.start()
+    p.join(TIME_LIMIT)
+
+    if p.is_alive():
+        p.terminate()
+        return agent.models.PythonExecutionResult(ok=False, output='Ошибка: превышен лимит времени').model_dump()
+
+    try:
+        result: agent.models.PythonExecutionResult = q.get_nowait()
+        return result.dict()
+    except Exception as e:
+        print('ERROR run_python_code', e)
+        return agent.models.PythonExecutionResult(ok=False, output='Неизвестная ошибка выполнения').model_dump()

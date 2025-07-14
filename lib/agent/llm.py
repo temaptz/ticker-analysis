@@ -12,16 +12,16 @@ from lib.agent import agent_tools, models, utils
 from langchain_experimental.plan_and_execute import load_chat_planner
 
 tools = [
-    agent_tools.get_weather,
     agent_tools.get_instruments_list,
     agent_tools.get_user_instruments_list,
     agent_tools.get_instrument_info,
     agent_tools.get_instrument_balance,
+    agent_tools.run_python_code,
 ]
 
 checkpointer = InMemorySaver()
 
-llm = ChatOllama(model='PetrosStav/gemma3-tools:4b', verbose=True, name='llm_ollama')
+llm = ChatOllama(model='PetrosStav/gemma3-tools:12b', verbose=True, name='llm_ollama', num_ctx=16384)
 llm_with_tools = llm.bind_tools(tools=tools)
 llm_agent = create_react_agent(
     model=llm,
@@ -34,14 +34,49 @@ llm_agent = create_react_agent(
 config: RunnableConfig = {'configurable': {'thread_id': '1'}}
 
 
-def agent_step(state: models.State):
-    result = llm_agent.invoke({'messages': state.get('messages', [])}, config=config)
-    return {'messages': state.get('messages', []) + result.get('messages', [])}
+def agent_step(state: models.State) -> models.State:
+    result: models.State = {}
+
+    if current_step := state.get('current_step', None):
+        prompt = f'''{current_step}'''
+
+        if response := llm_agent.invoke({'messages': [HumanMessage(content=prompt)]}, config=config):
+            if last_agent_messages := response.get('messages', []):
+                if len(last_agent_messages) > 0:
+                    result['last_agent_messages'] = last_agent_messages
+
+                    if last_message := last_agent_messages[-1]:
+                        result['messages'] = [last_message]
+                        result['agent_results'] = state.get('agent_results', []) + [last_message.content]
+
+                        print('AGENT SUCCESS RESULT', result)
+                        print('APPEND RESULT', last_message.content)
+
+        print('AGENT PROMPT', prompt)
+        print('AGENT RESPONSE', response)
+        utils.output_json(response)
+
+    return result
 
 
 def llm_step(state: models.State):
-    result = llm.invoke(state.get('messages', []), config=config)
-    return {'messages': state.get('messages', []) + [result]}
+    prompt = f'''
+    # ИСХОДНАЯ ЦЕЛЬ
+    {state.get('input', 'Unknown')}
+    
+    # СПИСОК ПРОМЕЖУТОЧНЫХ РЕЗУЛЬТАТОВ
+    {get_results_prompt(state)}
+    
+    # ЗАДАНИЕ
+    Сформулируй окончательный результат выполнения действия
+    '''
+    result: models.State = {
+        'messages': [],
+    }
+    if response := llm.invoke(prompt, config=config):
+        result['messages'].append(response)
+
+    return result
 
 
 def parse_final_step(state: models.State):
@@ -54,15 +89,11 @@ def parse_final_step(state: models.State):
     return {'structured_response': None}
 
 
-# def correct_plan_condition_checker(state: models.State):
-#     if state.get('is_plan_done', False):
-#         return END
-#
-#     return '__continue__'
+def get_results_prompt(state: models.State, default ='') -> str:
+    if agent_results := state.get('agent_results', None):
+        if len(agent_results) > 0:
+            result = '\n'.join(f'{n}. {r}' for n, r in enumerate(agent_results, 1))
 
+            return f'\n{result}\n'
 
-# def get_last_message_content(state: models.State) -> str | None:
-#     if messages := state.get('messages', []):
-#         if len(messages) > 0 and messages[-1] and messages[-1].content:
-#             return messages[-1].content
-#     return None
+    return '[None]'

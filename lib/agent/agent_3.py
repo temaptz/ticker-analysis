@@ -13,17 +13,15 @@ def get_plan_graph() -> CompiledStateGraph:
     checkpointer = InMemorySaver()
     graph_builder = StateGraph(models.State)
 
-    graph_builder.add_node('create_plan', planner.get_create_plan_graph())
     graph_builder.add_node('correct_plan', planner.get_correct_plan_graph())
-    graph_builder.add_node('llm_agent', llm.agent_step)
-    graph_builder.add_node('llm', llm.llm_step)
     graph_builder.add_node('check_plan', planner.get_check_plan_graph())
+    graph_builder.add_node('execute_plan_step', llm.agent_step)
+    graph_builder.add_node('llm', llm.llm_step)
     graph_builder.add_node('parse_final', llm.parse_final_step)
 
-    graph_builder.add_edge(START,'create_plan')
-    graph_builder.add_edge('create_plan', 'correct_plan')
-    graph_builder.add_edge('correct_plan', 'llm_agent')
-    graph_builder.add_edge('llm_agent', 'check_plan')
+    graph_builder.add_edge(START, 'correct_plan')
+    graph_builder.add_edge('correct_plan', 'execute_plan_step')
+    graph_builder.add_edge('execute_plan_step', 'check_plan')
     graph_builder.add_edge('llm', 'parse_final')
     graph_builder.add_edge('parse_final', END)
 
