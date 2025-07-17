@@ -8,3 +8,4 @@ from . import models
 from . import utils
 from . import llm
 from . import planner
+from . import instrment_rank

@@ -3,6 +3,7 @@ import os
 import re
 from tinkoff.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
 import hashlib
+import numpy as np
 from html import unescape
 from lib import date_utils, logger
 
@@ -89,7 +90,7 @@ def round_float(num: float, decimals: int = 10) -> float:
     except Exception as e:
         logger.log_error(method_name='round_float', error=e, is_telegram_send=False)
 
-    return num
+    return num.item() if isinstance(num, np.generic) else num
 
 
 def get_change_relative_by_price(main_price: float, next_price: float) -> float or None:
