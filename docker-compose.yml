@@ -82,6 +82,18 @@ services:
 #    ports:
 #      - "8090:8090"
 
+  ollama:
+    image: ollama/ollama:latest      # официальный образ
+    container_name: ollama
+    ports:
+      - "11434:11434"               # API наружу
+    volumes:
+      - ollama_data:/root/.ollama   # постоянное хранилище моделей
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434   # слушать на всех интерфейсах
+      - OLLAMA_KEEP_ALIVE=1h       # держать модель в памяти 1h
+    restart: unless-stopped
+
   ui:
     build:
       context: ./ui
@@ -137,3 +149,4 @@ volumes:
   pg_data:
   pgadmin_data:
   redis_data:
+  ollama_data:

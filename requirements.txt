@@ -25,10 +25,11 @@ langchain
 pydantic
 deprecation==2.1.0
 rich==14.0.0
-langgraph==0.4.8
-langchain-ollama==0.3.3
-langchain_community==0.3.25
-langchain_core==0.3.65
+langgraph==0.5.3
+langchain==0.3.26
+langchain-ollama==0.3.5
+langchain_community==0.3.27
+langchain_core==0.3.69
 langchain_experimental==0.3.4
 python-dotenv
-restrictedpython
+restrictedpython==8.0

@@ -29,3 +29,4 @@ COPY ./main.py /app/main.py
 COPY ./learn.py /app/learn.py
 COPY ./news_rate.py /app/news_rate.py
 COPY ./const.py /app/const.py
+COPY ./.env /app/.env
