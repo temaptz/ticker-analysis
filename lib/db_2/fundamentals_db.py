@@ -27,19 +27,19 @@ def init_table() -> None:
 
 
 @logger.error_logger
-def get_fundamentals() -> list[Type[Fundamental]]:
+def get_fundamentals() -> list[Fundamental]:
     with Session(engine) as session:
         return session.query(Fundamental).all()
 
 
 @logger.error_logger
-def get_fundamentals_by_asset_uid(asset_uid: str) -> list[Type[Fundamental]]:
+def get_fundamentals_by_asset_uid(asset_uid: str) -> list[Fundamental]:
     with Session(engine) as session:
         return session.query(Fundamental).filter(Fundamental.asset_uid == asset_uid).all()
 
 
 @logger.error_logger
-def get_fundamentals_by_asset_uid_date(asset_uid: str, date: datetime.datetime) -> Type[Fundamental] or None:
+def get_fundamentals_by_asset_uid_date(asset_uid: str, date: datetime.datetime) -> Fundamental or None:
     with Session(engine) as session:
         results = session.query(Fundamental).filter(Fundamental.asset_uid == asset_uid).order_by(
             func.abs(func.extract('epoch', Fundamental.date) - func.extract('epoch', date))

@@ -21,6 +21,7 @@ import { ComplexGraphComponent } from '../../entities/complex-graph/complex-grap
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
+import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
 
 
 @Component({
@@ -42,6 +43,7 @@ import { BalanceComponent } from '../../entities/balance/balance.component';
     NewsComplexComponent,
     PreloaderComponent,
     BalanceComponent,
+    LlmBuySellRateComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',
@@ -64,6 +66,7 @@ export class TableFullComponent {
     'forecast',
     'prediction',
     'news',
+    'llm_buy_sell_rate',
   ];
 
   private appService = inject(ApiService);

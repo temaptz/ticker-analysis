@@ -121,7 +121,7 @@ def get_instrument_human_name(uid: str) -> Optional[str]:
 
     if instrument := get_instrument_by_uid(uid=uid):
         if yandex_value := yandex.get_human_name(legal_name=instrument.name):
-            db_2.instrument_tags_db.upsert_tag(
+            db_2.instrument_tags_db.upset_tag(
                 instrument_uid=uid,
                 tag_name=tag_name,
                 tag_value=yandex_value,
@@ -150,7 +150,7 @@ def get_instrument_keywords(uid: str) -> list[str]:
     if instrument := get_instrument_by_uid(uid=uid):
         if yandex_value := yandex.get_keywords(legal_name=instrument.name):
             if yandex_value and len(yandex_value) > 0:
-                db_2.instrument_tags_db.upsert_tag(
+                db_2.instrument_tags_db.upset_tag(
                     instrument_uid=uid,
                     tag_name=tag_name,
                     tag_value=tag_join_symbol.join(yandex_value),

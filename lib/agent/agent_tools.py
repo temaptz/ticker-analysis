@@ -8,7 +8,7 @@ from langchain_core.tools import tool
 from contextlib import redirect_stdout
 from RestrictedPython import compile_restricted
 from RestrictedPython.Guards import safe_builtins
-from lib import instruments, fundamentals, predictions, users, invest_calc, news, agent
+from lib import instruments, fundamentals, predictions, users, invest_calc, news, agent, db_2, logger
 
 TIME_LIMIT = 2          # сек
 MEM_LIMIT_MB = 64       # МБ
@@ -162,3 +162,24 @@ def run_python_code(code: str) -> dict:
     except Exception as e:
         print('ERROR run_python_code', e)
         return agent.models.PythonExecutionResult(ok=False, output='Неизвестная ошибка выполнения').model_dump()
+
+
+@tool
+def get_instrument_buy_rate(instrument_uid: str) -> dict or None:
+    """
+    Возвращает оценку привлекательности покупки биржевого инструмента для последующей выгодной продажи.
+    На выходе: оценка привлекательности от 0 до 100.
+    На входе: UID инструмента.
+    """
+    try:
+        if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument_uid, tag_name='llm_buy_rate'):
+            if tag_value := tag.tag_value:
+                return tag_value
+    except Exception as e:
+        logger.log_error(
+            method_name='get_instrument_buy_rate',
+            error=e,
+            is_telegram_send=False,
+        )
+
+    return None

@@ -1,6 +1,7 @@
 import datetime
 import uuid
 from typing import Optional, Sequence
+import sqlalchemy
 from sqlalchemy import String, UUID, UniqueConstraint, func, text, select
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, sessionmaker
 from sqlalchemy.dialects.postgresql import insert as pg_insert, TIMESTAMP
@@ -26,7 +27,7 @@ class TagDB(Base):
     )
     instrument_uid: Mapped[str] = mapped_column(String(64), nullable=False)
     tag_name:       Mapped[str] = mapped_column(String(64), nullable=False)
-    tag_value:      Mapped[str] = mapped_column(String(256), nullable=False)
+    tag_value:      Mapped[str] = mapped_column(sqlalchemy.Text, nullable=False)
     date:           Mapped[datetime.datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         server_default=func.now(),
@@ -60,7 +61,7 @@ def get_tag(instrument_uid: str, tag_name: str) -> Optional[TagDB]:
 
 
 @logger.error_logger
-def upsert_tag(instrument_uid: str, tag_name: str, tag_value: str) -> None:
+def upset_tag(instrument_uid: str, tag_name: str, tag_value: str) -> None:
     stmt = (
         pg_insert(TagDB)
         .values(

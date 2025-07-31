@@ -31,7 +31,15 @@ def get_db_fundamentals_by_asset_uid_date(
     return asset_uid, fundamentals, date
 
 
-# @cache.ttl_cache(ttl=3600 * 24 * 7)
+def get_db_fundamentals_by_asset_uid_date_2(asset_uid: str, date: datetime.datetime) -> StatisticResponse or None:
+    db_data = fundamentals_db.get_fundamentals_by_asset_uid_date(asset_uid, date=date)
+
+    if fundamentals := serializer.db_deserialize(db_data.fundamentals):
+        return fundamentals
+
+    return None
+
+
 def get_db_fundamentals_history_by_uid(asset_uid: str):
     result = list()
 

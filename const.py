@@ -80,5 +80,8 @@ TICKER_LIST: list[str] = [
     'MSTT',
     'KROT',
     'RKKE',
+    'AFKS',
+    'IRAO',
+    'VKCO',
 ]
 IS_NEWS_CLASSIFY_ENABLED = True

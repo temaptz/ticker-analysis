@@ -20,6 +20,10 @@
         >
         <span class="ticker">[{{ instrument.ticker}}]</span>
         </a>
+
+        @if (instrument.for_qual_investor_flag) {
+          <span title="for_qual_investor_flag - Для квалифицированных инвесторов">🚩</span>
+        }
       </div>
     </td>
   </ng-container>
@@ -93,6 +97,13 @@
     <th mat-header-cell *matHeaderCellDef>Новости</th>
     <td mat-cell *matCellDef="let instrument">
       <news-complex [instrumentUid]="instrument.uid"></news-complex>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="llm_buy_sell_rate">
+    <th mat-header-cell *matHeaderCellDef>Рейтинг покупки</th>
+    <td mat-cell *matCellDef="let instrument">
+      <llm-buy-sell-rate [instrumentUid]="instrument.uid"></llm-buy-sell-rate>
     </td>
   </ng-container>
 

@@ -1,12 +1,13 @@
 import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
-from lib.learn import ta_1_1, ta_1_2, ta_2, ta_2_1, model
+from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model
 from lib import date_utils, logger, utils, instruments, cache
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_ta_1_by_uid(uid: str) -> float or None:
     c = LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -19,6 +20,7 @@ def get_prediction_ta_1_by_uid(uid: str) -> float or None:
         return None
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_relative_prediction_ta_1_by_uid(uid: str) -> float or None:
     c = LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -37,6 +39,7 @@ def get_relative_prediction_ta_1_by_uid(uid: str) -> float or None:
     return None
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     c = ta_1_1.LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -49,6 +52,7 @@ def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
         return None
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_relative_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     c = ta_1_1.LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -67,6 +71,7 @@ def get_relative_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     return None
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
@@ -88,6 +93,7 @@ def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: d
         return []
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
@@ -109,6 +115,7 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
         return []
 
 
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
@@ -157,6 +164,7 @@ def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime
 
 
 @logger.error_logger
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_history_graph(
         uid: str,
         model_name: str,
@@ -190,6 +198,54 @@ def get_prediction_history_graph(
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
 @logger.error_logger
 def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
+    pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
+    pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
+    pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
+    pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target)
+
+    if pred_ta_2_1 or pred_ta_2 or pred_ta_1_2:
+        weights = {
+            'pred_ta_1': 1,
+            'pred_ta_1_1': 1,
+            'pred_ta_1_2': 5,
+            'pred_ta_2': 3,
+            'pred_ta_2_1': 7,
+        }
+
+        # Собираем значения и веса
+        pred_values = [
+            (pred_ta_1, weights['pred_ta_1']),
+            (pred_ta_1_1, weights['pred_ta_1_1']),
+            (pred_ta_1_2, weights['pred_ta_1_2']),
+            (pred_ta_2, weights['pred_ta_2']),
+            (pred_ta_2_1, weights['pred_ta_2_1']),
+        ]
+
+        # Считаем взвешенное среднее только по существующим значениям
+        weighted_sum = 0
+        total_weight = 0
+        for value, weight in pred_values:
+            if value is not None:
+                weighted_sum += value * weight
+                total_weight += weight
+
+        if total_weight > 0:
+            return weighted_sum / total_weight
+
+    return None
+
+
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+@logger.error_logger
+def get_prediction_by_date(instrument_uid: str, date_target: datetime.datetime, model_name: str) -> float or None:
+    p_db = predictions_db.get_predictions_by_uid_date(
+        uid=instrument_uid,
+        date_from=date_target - datetime.timedelta(days=10),
+        date_to=date_target + datetime.timedelta(days=10),
+        model_name=model_name,
+    )
+
     pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
     pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
     pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)

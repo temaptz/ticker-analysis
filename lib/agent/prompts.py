@@ -1,0 +1,317 @@
+import datetime
+
+from lib import instruments, fundamentals, predictions, news, invest_calc, users
+
+
+def get_system_invest_prompt() -> str:
+    return f'''
+    1. Ты полезный ИИ помощник.
+    2. Ты эксперт в трейдинге.
+    3. Даешь взвешенные и продуманные инвестиционные рекомендации.
+    4. Ты анализируешь различные показатели и помогаешь принимать финансовые решения.
+    5. Инструментом называют акции компании.
+    '''
+
+
+def get_missed_data_prompt() -> str:
+    return f'''
+    1. "Unknown" или "None" считай отсутствующими данными.
+    2. Если данные не полные или частично отсутствуют, то нужно снижать за это оценку.
+    3. Если данные отсутствуют полностью, то за это оценка 0.
+    4. Отсутствие каких либо данных приравнивается к их нулевой оценке.
+    '''
+
+
+def get_thinking_prompt() -> str:
+    return f'''
+    Решай поставленную задачу используя Program of Thought.
+    
+    Инструкции:
+    1. Сначала запиши задачу в виде переменных и уравнений.
+    2. Затем реализуй решение в виде кода (Python или псевдокод).
+    3. Выполни код шаг за шагом, показывая результаты каждой операции.
+    4. В конце дай окончательный ответ с пояснениями.
+    '''
+
+
+def get_instrument_info_prompt(instrument_uid: str) -> str:
+    try:
+        if instrument := instruments.get_instrument_by_uid(uid=instrument_uid):
+            return f'''
+            # НАЗВАНИЕ ИНСТРУМЕНТА
+            {instrument.name}
+            
+            # ТИКЕР ИНСТРУМЕНТА
+            {instrument.ticker}
+            
+            # UID ИНСТРУМЕНТА
+            {instrument.uid}
+            '''
+    except Exception as e:
+        print('ERROR get_price_prediction_prompt', e)
+
+    return 'Инструмент не найден. Инструмент - Unknown'
+
+
+def get_fundamental_prompt(instrument_uid: str) -> str:
+    try:
+        if i := instruments.get_instrument_by_uid(instrument_uid):
+            if f := fundamentals.get_fundamentals_by_asset_uid(i.asset_uid)[0]:
+                f_6_months = fundamentals.get_db_fundamentals_by_asset_uid_date_2(
+                    asset_uid=i.asset_uid,
+                    date=datetime.datetime.now() - datetime.timedelta(days=30 * 6)
+                )
+                f_12_months = fundamentals.get_db_fundamentals_by_asset_uid_date_2(
+                    asset_uid=i.asset_uid,
+                    date=datetime.datetime.now() - datetime.timedelta(days=30 * 12)
+                )
+
+                result = f'''
+                # ТЕКУЩИЕ АКТУАЛЬНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ
+                                    
+                Валюта: {f.currency or 'Unknown'}
+                Выручка: {f.revenue_ttm or 'Unknown'}
+                EBITDA: {f.ebitda_ttm or 'Unknown'}
+                Капитализация: {f.market_capitalization or 'Unknown'}
+                Долг: {f.total_debt_mrq or 'Unknown'}
+                EPS - прибыль на акцию: {f.eps_ttm or 'Unknown'}
+                P/E - цена/прибыль: {f.pe_ratio_ttm or 'Unknown'}
+                EV/EBITDA - стоимость компании / EBITDA: {f.ev_to_ebitda_mrq or 'Unknown'}
+                DPR - коэффициент выплаты дивидендов: {f.dividend_payout_ratio_fy or 'Unknown'}
+                
+                # АРХИВНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ 6 МЕСЕЦЕВ НАЗАД
+                '''
+
+                if f_6_months:
+                    result += f'''
+                    
+                    Выручка: {f_6_months.revenue_ttm or 'Unknown'}
+                    EBITDA: {f_6_months.ebitda_ttm or 'Unknown'}
+                    Капитализация: {f_6_months.market_capitalization or 'Unknown'}
+                    Долг: {f_6_months.total_debt_mrq or 'Unknown'}
+                    EPS - прибыль на акцию: {f_6_months.eps_ttm or 'Unknown'}
+                    P/E - цена/прибыль: {f_6_months.pe_ratio_ttm or 'Unknown'}
+                    EV/EBITDA - стоимость компании / EBITDA: {f_6_months.ev_to_ebitda_mrq or 'Unknown'}
+                    DPR - коэффициент выплаты дивидендов: {f_6_months.dividend_payout_ratio_fy or 'Unknown'}
+                    '''
+                else:
+                    result += 'Нет данных'
+
+                result += f'''
+                # АРХИВНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ 12 МЕСЕЦЕВ НАЗАД
+                '''
+
+                if f_12_months:
+                    result += f'''
+                    
+                    Выручка: {f_12_months.revenue_ttm or 'Unknown'}
+                    EBITDA: {f_12_months.ebitda_ttm or 'Unknown'}
+                    Капитализация: {f_12_months.market_capitalization or 'Unknown'}
+                    Долг: {f_12_months.total_debt_mrq or 'Unknown'}
+                    EPS - прибыль на акцию: {f_12_months.eps_ttm or 'Unknown'}
+                    P/E - цена/прибыль: {f_12_months.pe_ratio_ttm or 'Unknown'}
+                    EV/EBITDA - стоимость компании / EBITDA: {f_12_months.ev_to_ebitda_mrq or 'Unknown'}
+                    DPR - коэффициент выплаты дивидендов: {f_12_months.dividend_payout_ratio_fy or 'Unknown'}
+                    '''
+                else:
+                    result += 'Нет данных'
+
+                result += f'''
+                # ИНСТРУКЦИЯ
+
+                1. **Выручка и EBITDA** — оцени динамику за 6 и 12 месяцев:
+                   - Сравни текущие значения с прошлыми периодами.
+                   - Если наблюдается устойчивый рост, это признак расширения бизнеса.
+                   - Снижение или стагнация — потенциальный сигнал замедления развития.
+                
+                2. **Маржинальность** — сравни EBITDA с выручкой во всех периодах:
+                   - Рост маржи (отношения EBITDA к выручке) = повышение операционной эффективности.
+                   - Падение маржи может сигнализировать о росте издержек или снижении ценовой силы.
+                
+                3. **Капитализация** — оцени, как изменилась рыночная стоимость компании за год и полгода:
+                   - Рост капитализации при стабильных или снижающихся показателях — возможный признак переоценки.
+                   - Снижение капитализации при стабильной прибыли — может говорить о рыночной недооценке.
+                
+                4. **Долг** — анализируй его динамику относительно EBITDA:
+                   - Если долг растёт быстрее, чем прибыль, это тревожный сигнал.
+                   - Снижение долга — положительный фактор, особенно при стабильной выручке.
+                
+                5. **EPS (прибыль на акцию)** — ключевой показатель для акционеров:
+                   - Сравни тренд: если EPS растёт, это усиливает инвестиционную привлекательность.
+                   - При стагнации или снижении стоит оценить причины и риски.
+                
+                6. **P/E (Price-to-Earnings)** — обрати внимание на изменение:
+                   - Рост P/E при падении EPS — сигнал переоценки.
+                   - Снижение P/E при росте прибыли — потенциальная возможность для покупки.
+                
+                7. **EV/EBITDA** — сравни по трем периодам:
+                   - Если EV/EBITDA растёт быстрее, чем EBITDA — компания может становиться дороже без роста эффективности.
+                   - Снижение мультипликатора на фоне стабильной или растущей EBITDA — позитивный сигнал.
+                
+                8. **DPR (коэффициент выплаты дивидендов)** — оцени изменение политики:
+                   - Рост DPR при падающем EPS может быть устойчиво опасным для будущих дивидендов.
+                   - Снижение DPR может означать стремление к реинвестициям или консервативный подход.
+                
+                9. **Сравнение трендов**:
+                   - Зафиксируй, какие показатели демонстрируют позитивную динамику (рост), а какие — ухудшение.
+                   - Выдели ключевые сдвиги за последние 6 и 12 месяцев.
+                
+                10. **Финальный вывод**:
+                   - Насколько сбалансированы текущие показатели?
+                   - Есть ли устойчивые сигналы роста или признаки замедления/рисков?
+                   - Оцени, являются ли акции компании перспективными для покупки или, наоборот, подвержены падению в ближайшие 6–12 месяцев.
+                '''
+
+                return result
+    except Exception as e:
+        print('ERROR get_fundamental_prompt', e)
+
+    return 'Фундаментальные показатели не найдены. Фундаментальные показатели - Unknown'
+
+
+def get_price_prediction_prompt(instrument_uid: str) -> str:
+    try:
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
+        prediction_week = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=7)
+        )
+        prediction_2_weeks = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=14)
+        )
+        prediction_3_weeks = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=21)
+        )
+        prediction_month = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=30)
+        )
+        prediction_2_months = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=60)
+        )
+        prediction_3_months = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=90)
+        )
+        prediction_6_months = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=180)
+        )
+        prediction_year = predictions.get_relative_predictions_consensus(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=365)
+        )
+
+        print('PRICE PREDICTION PROMPT DATA current_price', current_price)
+        print('PRICE PREDICTION PROMPT DATA prediction_week', prediction_week)
+        print('PRICE PREDICTION PROMPT DATA prediction_2_weeks', prediction_2_weeks)
+        print('PRICE PREDICTION PROMPT DATA prediction_3_weeks', prediction_3_weeks)
+        print('PRICE PREDICTION PROMPT DATA prediction_month', prediction_month)
+        print('PRICE PREDICTION PROMPT DATA prediction_2_months', prediction_2_months)
+        print('PRICE PREDICTION PROMPT DATA prediction_3_months', prediction_3_months)
+        print('PRICE PREDICTION PROMPT DATA prediction_6_months', prediction_6_months)
+        print('PRICE PREDICTION PROMPT DATA prediction_year', prediction_year)
+
+        if current_price and (
+                prediction_week
+                or prediction_2_weeks
+                or prediction_month
+                or prediction_3_months
+                or prediction_6_months
+                or prediction_year
+        ):
+            return f'''
+            # ТЕКУЩАЯ РЫНОЧНАЯ ЦЕНА ИНСТРУМЕНТА
+            
+            {current_price}
+            
+            # ПРОГНОЗ ОТНОСИТЕЛЬНОГО ИЗМЕНЕНИЯ ЦЕНЫ - price_prediction
+    
+            Через 1 неделю: {prediction_week}
+            Через 2 недели: {prediction_2_weeks}
+            Через 3 недели: {prediction_3_weeks}
+            Через 1 месяц: {prediction_month}
+            Через 2 месяца: {prediction_2_months}
+            Через 3 месяца: {prediction_3_months}
+            Через 6 месяцев: {prediction_6_months}
+            Через 1 год: {prediction_year}
+            
+            # ПРИМЕЧАНИЕ
+            1. Прогноз относительного изменения цены вычисляется по формуле: ([прогнозируемая цена] - [текущая цена]) / [текущая цена]);
+            2. Прогноз относительного изменения цены является точным прогнозом цены в будущем;
+            3. Прогноз относительного изменения цены является точным, его можно и нужно использовать в финансовых решениях.
+            '''
+    except Exception as e:
+        print('ERROR get_price_prediction_prompt', e)
+
+    return 'Прогноз цены не найден. Прогноз цены - Unknown'
+
+
+def get_news_prompt(instrument_uid: str) -> str:
+    try:
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        news_rate_week = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=now - datetime.timedelta(days=7),
+            end_date=now,
+        )
+        news_2_weeks = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=now - datetime.timedelta(days=14),
+            end_date=now,
+        )
+        news_month = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=now - datetime.timedelta(days=30),
+            end_date=now,
+        )
+
+        print('NEWS PROMPT DATA news_rate_week', news_rate_week)
+        print('NEWS PROMPT DATA news_2_weeks', news_2_weeks)
+        print('NEWS PROMPT DATA news_month', news_month)
+
+        if news_rate_week or news_2_weeks or news_month:
+            return f'''
+            # РЕЙТИНГ НОВОСТНОГО ФОНА
+    
+            За последнюю неделю: {news_rate_week}
+            За последние 2 недели: {news_2_weeks}
+            За последний месяц: {news_month}
+            
+            # ПРИМЕЧАНИЕ
+            
+            Рейтинг новостного фона вычисляется путем сложения вычисленного influence_score каждой новости имеющей отношение к субъекту за указанный временной период.
+            Рейтинг новостного фона influence_score для каждой новости вычисляется по формуле influence_score = sentiment * impact_strength * mention_focus, где
+            sentiment - отношение новости по отношению к субъекту от -1 до 1,
+            impact_strength - силу влияния новости на цену акции от 0 до 1,
+            mention_focus - сфокусированность новости на субъекте от 0 до 1.
+            '''
+    except Exception as e:
+        print('ERROR get_news_prompt', e)
+
+    return 'Оценка рейтинга новостного фона отсутствует. Рейтинг новостного фона - Unknown'
+
+
+def get_profit_calc_prompt(instrument_uid: str) -> str:
+    try:
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument_uid, account_id=users.get_analytics_account().id)
+
+        if calc:
+            return f'''
+            # ПОТЕНЦИАЛЬНАЯ ВЫГОДА ОТ ПРОДАЖИ ИНСТРУМЕНТА
+            
+            Текущая цена - current_price: {calc['current_price'] or 'Unknown'}
+            Баланс - balance: {calc['balance'] or 'Unknown'}
+            Общая стоимость бумаг - market_value: {calc['market_value'] or 'Unknown'}
+            Потенциальная прибыль при продаже всех бумаг - potential_profit: {calc['potential_profit'] or 'Unknown'}
+            Потенциальная прибыль в процентах при продаже всех бумаг - potential_profit_percent: {calc['potential_profit_percent'] or 'Unknown'}
+            Средняя цена покупки - avg_price: {calc['avg_price'] or 'Unknown'}
+            '''
+    except Exception as e:
+        print('ERROR get_invest_recommendation_prompt', e)
+
+    return 'Оценка потенциальной выгоды от продажи инструмента отсутствует. Оценка - Unknown'

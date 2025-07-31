@@ -1,6 +1,9 @@
 import datetime
 import os
 import re
+import math
+import functools
+import time
 from tinkoff.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
 import hashlib
 import numpy as np
@@ -24,6 +27,21 @@ def get_price_by_quotation(price: Quotation or MoneyValue) -> float or None:
 
     except Exception as e:
         print('ERROR get_price_by_quotation', e, price)
+
+    return None
+
+
+def get_quotation_by_price(price: float) -> Quotation or None:
+    try:
+        frac_part, int_part = math.modf(price)
+
+        return Quotation(
+            units=int(int_part),
+            nano=int(frac_part * 1_000_000_000),
+        )
+
+    except Exception as e:
+        print('ERROR get_quotation_by_price', e, price)
 
     return None
 
@@ -154,3 +172,19 @@ def clean_news_text_for_llm(title: str, text: str, max_chars: int = 28000) -> st
         result = result[:max_chars].rsplit(' ', 1)[0]  # чтобы не обрывать слово посередине
 
     return result
+
+
+def measure_time(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        duration = end - start
+        print(f"Время выполнения функции '{func.__name__}': {duration:.4f} секунд")
+        return result
+    return wrapper
+
+
+def get_lots_qty(qty: int, instrument_lot: int = 1) -> int:
+    return qty // instrument_lot

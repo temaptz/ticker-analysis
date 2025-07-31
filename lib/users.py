@@ -1,4 +1,4 @@
-import datetime
+import math
 from tinkoff.invest import (
     Client,
     constants,
@@ -8,22 +8,23 @@ from tinkoff.invest import (
     OperationState,
     OperationType,
     Instrument,
-    Account,
+    Account, PostOrderResponse, OrderType, OrderDirection,
 )
 from const import TINKOFF_INVEST_TOKEN
-from lib import cache, instruments, utils, logger, invest_calc, predictions
+from lib import cache, instruments, utils, logger, invest_calc, predictions, db_2, agent, serializer
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_balance(instrument_uid: str) -> int:
+def get_user_instrument_balance(instrument_uid: str, account_id: int = None) -> int:
     result = 0
 
     try:
         for account in get_accounts():
-            positions = get_positions(account_id=account.id)
-            for instrument in positions.securities:
-                if instrument and instrument.instrument_uid == instrument_uid:
-                    result += instrument.balance
+            if account_id is None or account.id == account_id:
+                positions = get_positions(account_id=account.id)
+                for instrument in positions.securities:
+                    if instrument and instrument.instrument_uid == instrument_uid:
+                        result += instrument.balance
 
     except Exception as e:
         logger.log_error(method_name='get_user_instrument_balance', error=e)
@@ -31,13 +32,76 @@ def get_user_instrument_balance(instrument_uid: str) -> int:
     return result
 
 
+def get_user_money_rub() -> int:
+    result = 0
+
+    try:
+        if account := get_analytics_account():
+            if positions := get_positions(account_id=account.id):
+                if positions.money and len(positions.money) > 0:
+                    for m in positions.money:
+                        if m.currency == 'rub':
+                            result += utils.get_price_by_quotation(m)
+
+    except Exception as e:
+        logger.log_error(method_name='get_user_money_rub', error=e)
+
+    return result
+
+
+def post_buy_order(instrument_uid: str, quantity: int, price_rub: float) -> PostOrderResponse or None:
+    try:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            price_increment = utils.get_price_by_quotation(
+                price=instruments.get_instrument_by_uid(uid=instrument_uid).min_price_increment
+            )
+
+            if order := client.orders.post_order(
+                instrument_id=instrument_uid,
+                quantity=quantity,
+                price=utils.get_quotation_by_price(math.floor(price_rub / price_increment) * price_increment),
+                account_id=get_analytics_account().id,
+                order_type=OrderType.ORDER_TYPE_LIMIT,
+                direction=OrderDirection.ORDER_DIRECTION_BUY,
+            ):
+                return order
+
+    except Exception as e:
+        logger.log_error(method_name='post_buy_order', error=e)
+
+    return None
+
+
+def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -> PostOrderResponse or None:
+    try:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            price_increment = utils.get_price_by_quotation(
+                price=instruments.get_instrument_by_uid(uid=instrument_uid).min_price_increment
+            )
+
+            if order := client.orders.post_order(
+                instrument_id=instrument_uid,
+                quantity=quantity_lots,
+                price=utils.get_quotation_by_price(math.ceil(price_rub / price_increment) * price_increment),
+                account_id=get_analytics_account().id,
+                order_type=OrderType.ORDER_TYPE_LIMIT,
+                direction=OrderDirection.ORDER_DIRECTION_SELL,
+            ):
+                return order
+
+    except Exception as e:
+        logger.log_error(method_name='post_sell_order', error=e)
+
+    return None
+
+
 @cache.ttl_cache(ttl=3600)
-def get_user_instruments_list() -> list[Instrument]:
+def get_user_instruments_list(account_id: int = None) -> list[Instrument]:
     result = []
 
     try:
         for instrument in instruments.get_instruments_white_list():
-            if get_user_instrument_balance(instrument_uid=instrument.uid) > 0:
+            if get_user_instrument_balance(instrument_uid=instrument.uid, account_id=account_id) > 0:
                 result.append(instrument)
 
     except Exception as e:
@@ -69,6 +133,8 @@ def get_accounts() -> GetAccountsResponse.accounts:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             for a in client.users.get_accounts().accounts:
+                print('ACCOUNT', a)
+                agent.utils.output_json(a)
                 if a.name in ['Основной', 'Аналитический']:
                     result.append(a)
 
@@ -137,11 +203,11 @@ def sort_instruments_by_balance(instruments_list: list[Instrument]) -> list[Inst
 
 
 def sort_instruments_for_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_potential_perspective_for_sort, reverse=True)
+    return sorted(instruments_list, key=get_instrument_buy_rate_for_sort, reverse=True)
 
 
 def sort_instruments_for_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_profit_percent_for_sort, reverse=True)
+    return sorted(instruments_list, key=get_instrument_sell_rate_for_sort, reverse=True)
 
 
 def sort_instruments_cost(instruments_list: list[Instrument]) -> list[Instrument]:
@@ -171,33 +237,27 @@ def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_profit_percent_for_sort(instrument: Instrument) -> float:
+def get_instrument_sell_rate_for_sort(instrument: Instrument) -> float:
     try:
-        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
-
-        if calc and calc['potential_profit_percent'] is not None:
-            return calc['potential_profit_percent']
+        if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_sell_rate'):
+            if tag_value := tag.tag_value:
+                return int(tag_value)
 
     except Exception as e:
-        logger.log_error(method_name='get_instrument_profit_for_sort', error=e)
+        logger.log_error(method_name='get_instrument_sell_rate_for_sort', error=e)
 
     return float('-inf')
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_potential_perspective_for_sort(instrument: Instrument) -> float:
+def get_instrument_buy_rate_for_sort(instrument: Instrument) -> float:
     try:
-        last_price = instruments.get_instrument_last_price_by_uid(uid=instrument.uid)
-        prediction_consensus = predictions.get_predictions_consensus(
-            instrument_uid=instrument.uid,
-            date_target=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=30)
-        )
-
-        if last_price and prediction_consensus:
-            return prediction_consensus - last_price
+        if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_buy_rate'):
+            if tag_value := tag.tag_value:
+                return int(tag_value)
 
     except Exception as e:
-        logger.log_error(method_name='get_instrument_potential_perspective_for_sort', error=e)
+        logger.log_error(method_name='get_instrument_buy_rate_for_sort', error=e)
 
     return float('-inf')
 

@@ -64,7 +64,7 @@ class InvestCalc:
 
 
 @logger.error_logger
-def get_invest_calc_by_instrument_uid(instrument_uid: str) -> dict or None:
+def get_invest_calc_by_instrument_uid(instrument_uid: str, account_id: int = None) -> dict or None:
     result = {
         'balance': None,
         'current_price': None,
@@ -79,7 +79,7 @@ def get_invest_calc_by_instrument_uid(instrument_uid: str) -> dict or None:
     current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
 
     if instrument and current_price:
-        balance_qty = users.get_user_instrument_balance(instrument_uid=instrument_uid)
+        balance_qty = users.get_user_instrument_balance(instrument_uid=instrument_uid, account_id=account_id)
 
         if balance_qty:
             operations = users.get_user_instrument_operations(instrument_figi=instrument.figi)

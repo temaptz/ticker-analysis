@@ -214,4 +214,12 @@ export class ApiService {
     return this.http.get<RecommendationResp>(`${this.apiUrl}/instrument/recommendation`, {params: params});
   }
 
+  getInstrumentTag(uid: string, tagName: string): Observable<string> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('tag_name', tagName);
+
+    return this.http.get<string>(`${this.apiUrl}/instrument/tag`, {params: params});
+  }
+
 }

@@ -11,7 +11,7 @@ $drawer-width: 950px;
   height: 30px;
   cursor: pointer;
   background-color: lightgray;
-  z-index: 100;
+  z-index: 101;
 }
 
 .drawer {
@@ -24,6 +24,7 @@ $drawer-width: 950px;
   overflow-x: hidden;
   background-color: #fff;
   transition: margin-right .3s ease-in-out;
+  z-index: 100;
 
   &.hidden {
     margin-right: -$drawer-width;

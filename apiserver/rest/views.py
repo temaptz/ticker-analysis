@@ -5,7 +5,7 @@ from django.utils.cache import patch_cache_control
 from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
-from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis
+from lib import serializer, instruments, forecasts, predictions, users, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2
 from lib.learn import ta_1_2, ta_2, ta_2_1, model
 import json
 
@@ -360,7 +360,7 @@ def instrument_invest_calc(request):
     uid = request.GET.get('uid')
 
     if uid:
-        resp = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid)
+        resp = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid, account_id=users.get_analytics_account().id)
 
     response = HttpResponse(serializer.to_json(resp))
 
@@ -510,6 +510,26 @@ def gpt(request):
 
     # if resp:
     #     patch_cache_control(response, public=True, max_age=3600 * 24 * 30)
+
+    return response
+
+
+@api_view(['GET'])
+def instrument_tag(request):
+    response = None
+    uid = request.GET.get('uid')
+    tag_name = request.GET.get('tag_name')
+
+    if uid and tag_name:
+        if tag := db_2.instrument_tags_db.get_tag(
+            instrument_uid=uid,
+            tag_name=tag_name,
+        ):
+            if tag.tag_value:
+                response = HttpResponse(serializer.to_json(tag.tag_value))
+
+    if response:
+        patch_cache_control(response, public=True, max_age=60)
 
     return response
 

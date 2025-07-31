@@ -8,6 +8,7 @@ from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
 from langgraph.constants import END
+from lib import docker
 from lib.agent import agent_tools, models, utils
 from langchain_experimental.plan_and_execute import load_chat_planner
 
@@ -16,12 +17,19 @@ tools = [
     agent_tools.get_user_instruments_list,
     agent_tools.get_instrument_info,
     agent_tools.get_instrument_balance,
+    agent_tools.get_instrument_buy_rate,
     agent_tools.run_python_code,
 ]
 
 checkpointer = InMemorySaver()
 
-llm = ChatOllama(model='PetrosStav/gemma3-tools:12b', verbose=True, name='llm_ollama', num_ctx=16384)
+llm = ChatOllama(
+    base_url=f'http://{'ollama' if docker.is_docker() else 'localhost'}:11434',
+    model='PetrosStav/gemma3-tools:12b',
+    verbose=True, name='llm_ollama',
+    num_ctx=16384,
+    temperature=0.01,
+)
 llm_with_tools = llm.bind_tools(tools=tools)
 llm_agent = create_react_agent(
     model=llm,

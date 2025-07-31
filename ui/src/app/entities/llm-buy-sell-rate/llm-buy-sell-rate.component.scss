@@ -1,0 +1,16 @@
+.rate {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 1em;
+}
+
+.buy {
+  color: green;
+  white-space: nowrap;
+}
+
+.sell {
+  color: red;
+  white-space: nowrap;
+}

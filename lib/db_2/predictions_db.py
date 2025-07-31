@@ -54,6 +54,27 @@ def get_predictions_by_uid_date(
 
 
 @logger.error_logger
+def get_predictions_relative(
+        uid: str,
+        date_from: datetime.datetime,
+        date_to: datetime.datetime,
+        model_name: str = None
+) -> list[PredictionDB]:
+    with (Session(engine) as session):
+        query = session.query(PredictionDB).filter(
+            and_(
+                PredictionDB.instrument_uid == uid,
+                PredictionDB.target_date.between(date_from, date_to),
+                PredictionDB.model_name == model_name,
+                )
+        )
+
+        res = query.all()
+
+        return res
+
+
+@logger.error_logger
 def get_unique_dates() -> set[datetime.datetime]:
     with Session(engine) as session:
         return {date_utils.parse_date(date) for date, in session.query(PredictionDB.date).distinct()}
