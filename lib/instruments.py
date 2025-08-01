@@ -3,7 +3,7 @@ from typing import Optional
 from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils, db_2, yandex
+from lib import cache, utils, date_utils, db_2, yandex, serializer
 
 
 @cache.ttl_cache(ttl=3600 * 24, is_convert_object=True, is_skip_empty=True)

@@ -22,6 +22,7 @@ import { NewsComplexComponent } from '../../entities/news-complex/news-complex.c
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
+import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/prediction-dynamic.component';
 
 
 @Component({
@@ -44,6 +45,7 @@ import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-bu
     PreloaderComponent,
     BalanceComponent,
     LlmBuySellRateComponent,
+    PredictionDynamicComponent,
   ],
   providers: [],
   templateUrl: './table-full.component.html',

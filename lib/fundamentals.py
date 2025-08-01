@@ -22,13 +22,14 @@ def get_fundamentals_by_asset_uid(asset_uid: str) -> list[StatisticResponse]:
 def get_db_fundamentals_by_asset_uid_date(
         asset_uid: str,
         date: datetime.datetime
-) -> (str, GetAssetFundamentalsResponse.fundamentals, str):
-    db_data = fundamentals_db.get_fundamentals_by_asset_uid_date(asset_uid, date=date)
-    asset_uid = db_data.asset_uid
-    date = db_data.date
-    fundamentals = serializer.db_deserialize(db_data.fundamentals)
+) -> (str, GetAssetFundamentalsResponse.fundamentals or None, str):
+    if db_data := fundamentals_db.get_fundamentals_by_asset_uid_date(asset_uid, date=date):
+        asset_uid = db_data.asset_uid
+        date = db_data.date
+        fundamentals = serializer.db_deserialize(db_data.fundamentals)
 
-    return asset_uid, fundamentals, date
+        return asset_uid, fundamentals, date
+    return asset_uid, None, date
 
 
 def get_db_fundamentals_by_asset_uid_date_2(asset_uid: str, date: datetime.datetime) -> StatisticResponse or None:

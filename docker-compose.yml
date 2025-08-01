@@ -45,7 +45,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - local_llm
+      - ollama
     restart: no
 
   apiserver:
@@ -71,14 +71,14 @@ services:
       - postgres
     restart: unless-stopped
 
-  local_llm:
-    build:
-      context: .
-      dockerfile: ./local_llm/Dockerfile
-    container_name: local_llm
-    volumes:
-      - ./local_llm/models_cache:/app/models_cache
-    restart: no
+#  local_llm:
+#    build:
+#      context: .
+#      dockerfile: ./local_llm/Dockerfile
+#    container_name: local_llm
+#    volumes:
+#      - ./local_llm/models_cache:/app/models_cache
+#    restart: no
 #    ports:
 #      - "8090:8090"
 
@@ -122,6 +122,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    command: postgres -c max_connections=256
     restart: unless-stopped
 
   pgadmin:

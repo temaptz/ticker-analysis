@@ -198,11 +198,12 @@ def get_prediction_history_graph(
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
 @logger.error_logger
 def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    date_target_utc = date_utils.convert_to_utc(date_target)
     pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
     pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
-    pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
-    pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
-    pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target)
+    pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target_utc)
+    pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target_utc)
+    pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target_utc)
 
     if pred_ta_2_1 or pred_ta_2 or pred_ta_1_2:
         weights = {

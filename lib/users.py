@@ -111,14 +111,15 @@ def get_user_instruments_list(account_id: int = None) -> list[Instrument]:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_operations(instrument_figi: str) -> list[Operation]:
+def get_user_instrument_operations(instrument_figi: str, account_id: int = None) -> list[Operation]:
     result = []
 
     try:
         for account in get_accounts():
-            operations = get_operations(account_id=account.id, figi=instrument_figi)
-            if operations and len(operations) > 0:
-                result.extend(operations)
+            if account_id is None or account.id == account_id:
+                operations = get_operations(account_id=account.id, figi=instrument_figi)
+                if operations and len(operations) > 0:
+                    result.extend(operations)
 
     except Exception as e:
         logger.log_error(method_name='get_user_instrument_operations', error=e)

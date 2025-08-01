@@ -23,7 +23,13 @@ def get_price_by_candle(candle: HistoricCandle) -> float or None:
 
 def get_price_by_quotation(price: Quotation or MoneyValue) -> float or None:
     try:
-        return float(str(price.units)+'.'+str(abs(price.nano)))
+        units = price.units or 0
+        nano = price.nano or 0
+
+        if units == 0 and nano == 0:
+            return 0
+
+        return units + nano / 1e9
 
     except Exception as e:
         print('ERROR get_price_by_quotation', e, price)
@@ -37,7 +43,7 @@ def get_quotation_by_price(price: float) -> Quotation or None:
 
         return Quotation(
             units=int(int_part),
-            nano=int(frac_part * 1_000_000_000),
+            nano=int(frac_part * 1e9),
         )
 
     except Exception as e:
@@ -100,7 +106,7 @@ def round_float(num: float, decimals: int = 10) -> float:
         float_str = str(num)[0:int_len+decimals+5]
         float_only_digits_str = re.sub(r'[^0-9\.,]', '', float_str)
 
-        if not float_only_digits_str:
+        if float_only_digits_str:
             return round(
                 float(float_only_digits_str) * (1 if (num > 0) else -1),
                 decimals

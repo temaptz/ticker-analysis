@@ -1,0 +1,17 @@
+@defer (when currentPrice.hasValue() && predictions.hasValue()) {
+  @let price = currentPrice.value();
+
+  @if (price) {
+    @for (i of predictions.value(); track i.date) {
+      <div>
+        [{{ i.date | date : 'yyyy-MM-dd' }}]:
+        <span
+          [class.plus]="i.prediction > 0"
+          [class.minus]="i.prediction <= 0"
+        >{{ i.prediction }}</span>
+      </div>
+    }
+  }
+} @placeholder {
+  <preloader></preloader>
+}

@@ -82,7 +82,7 @@ def get_invest_calc_by_instrument_uid(instrument_uid: str, account_id: int = Non
         balance_qty = users.get_user_instrument_balance(instrument_uid=instrument_uid, account_id=account_id)
 
         if balance_qty:
-            operations = users.get_user_instrument_operations(instrument_figi=instrument.figi)
+            operations = users.get_user_instrument_operations(instrument_figi=instrument.figi, account_id=account_id)
 
             if operations and len(operations) > 0:
                 calc = InvestCalc(

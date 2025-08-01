@@ -19,7 +19,7 @@ def from_json(json_str: str) -> dict or None:
         return get_dict_by_object_recursive(json.loads(json_str))
     except Exception as e:
         print('ERROR from_json', e)
-        return None
+    return None
 
 
 def get_dict_by_object_recursive(data):

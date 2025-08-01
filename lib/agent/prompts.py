@@ -1,6 +1,6 @@
 import datetime
 
-from lib import instruments, fundamentals, predictions, news, invest_calc, users
+from lib import instruments, fundamentals, predictions, news, invest_calc, users, utils
 
 
 def get_system_invest_prompt() -> str:
@@ -173,38 +173,38 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
     try:
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
-        prediction_week = predictions.get_relative_predictions_consensus(
+        prediction_week = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=7)
-        )
-        prediction_2_weeks = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_2_weeks = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=14)
-        )
-        prediction_3_weeks = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_3_weeks = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=21)
-        )
-        prediction_month = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_month = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=30)
-        )
-        prediction_2_months = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_2_months = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=60)
-        )
-        prediction_3_months = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_3_months = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=90)
-        )
-        prediction_6_months = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_6_months = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=180)
-        )
-        prediction_year = predictions.get_relative_predictions_consensus(
+        ), 4)
+        prediction_year = utils.round_float(predictions.get_relative_predictions_consensus(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=365)
-        )
+        ), 4)
 
         print('PRICE PREDICTION PROMPT DATA current_price', current_price)
         print('PRICE PREDICTION PROMPT DATA prediction_week', prediction_week)

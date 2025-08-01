@@ -50,6 +50,10 @@ class Ta2LearningCard:
         self.date = date
         self.target_date = target_date
 
+        if not self.instrument or not self.date or not self.target_date:
+            self.is_ok = False
+            return
+
         try:
             self.fill_card(fill_empty=fill_empty)
             self.check_x()
@@ -69,15 +73,24 @@ class Ta2LearningCard:
             )[1].consensus.current_price
         )
 
-        f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]
-        self.revenue_ttm = f.revenue_ttm
-        self.ebitda_ttm = f.ebitda_ttm
-        self.market_capitalization = f.market_capitalization
-        self.total_debt_mrq = f.total_debt_mrq
-        self.eps_ttm = f.eps_ttm
-        self.pe_ratio_ttm = f.pe_ratio_ttm
-        self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
-        self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
+            self.revenue_ttm = f.revenue_ttm
+            self.ebitda_ttm = f.ebitda_ttm
+            self.market_capitalization = f.market_capitalization
+            self.total_debt_mrq = f.total_debt_mrq
+            self.eps_ttm = f.eps_ttm
+            self.pe_ratio_ttm = f.pe_ratio_ttm
+            self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
+            self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        elif fill_empty:
+            self.revenue_ttm = 0
+            self.ebitda_ttm = 0
+            self.market_capitalization = 0
+            self.total_debt_mrq = 0
+            self.eps_ttm = 0
+            self.pe_ratio_ttm = 0
+            self.ev_to_ebitda_mrq = 0
+            self.dividend_payout_ratio_fy = 0
 
         news_rated_0 = self.get_news_rated(days_from=0, days_to=7)
         news_rated_1 = self.get_news_rated(days_from=8, days_to=14)
@@ -88,21 +101,37 @@ class Ta2LearningCard:
             self.news_positive_percent_0 = news_rated_0.positive_percent
             self.news_negative_percent_0 = news_rated_0.negative_percent
             self.news_neutral_percent_0 = news_rated_0.neutral_percent
+        elif fill_empty:
+            self.news_positive_percent_0 = 0
+            self.news_negative_percent_0 = 0
+            self.news_neutral_percent_0 = 0
 
         if news_rated_1:
             self.news_positive_percent_1 = news_rated_1.positive_percent
             self.news_negative_percent_1 = news_rated_1.negative_percent
             self.news_neutral_percent_1 = news_rated_1.neutral_percent
+        elif fill_empty:
+            self.news_positive_percent_1 = 0
+            self.news_negative_percent_1 = 0
+            self.news_neutral_percent_1 = 0
 
         if news_rated_2:
             self.news_positive_percent_2 = news_rated_2.positive_percent
             self.news_negative_percent_2 = news_rated_2.negative_percent
             self.news_neutral_percent_2 = news_rated_2.neutral_percent
+        elif fill_empty:
+            self.news_positive_percent_2 = 0
+            self.news_negative_percent_2 = 0
+            self.news_neutral_percent_2 = 0
 
         if news_rated_3:
             self.news_positive_percent_3 = news_rated_3.positive_percent
             self.news_negative_percent_3 = news_rated_3.negative_percent
             self.news_neutral_percent_3 = news_rated_3.neutral_percent
+        elif fill_empty:
+            self.news_positive_percent_3 = 0
+            self.news_negative_percent_3 = 0
+            self.news_neutral_percent_3 = 0
 
     # Проверка карточки
     def check_x(self):

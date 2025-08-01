@@ -35,7 +35,7 @@ class State(TypedDict, total=False):
     structured_response: StructuredResult
 
 
-def run():
+def create_orders():
     graph = get_buy_graph()
     # agent.utils.draw_graph(graph)
 

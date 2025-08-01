@@ -249,6 +249,24 @@ def instrument_prediction(request):
 
 
 @api_view(['GET'])
+def instrument_prediction_consensus(request):
+    resp = None
+    uid = request.GET.get('uid')
+    date = utils.parse_json_date(request.GET.get('date'))
+
+    if uid and date:
+        if consensus := predictions.get_relative_predictions_consensus(instrument_uid=uid, date_target=date):
+            resp = utils.round_float(num=consensus, decimals=4)
+
+    response = HttpResponse(json.dumps(resp))
+
+    if resp:
+        patch_cache_control(response, public=True, max_age=3600)
+
+    return response
+
+
+@api_view(['GET'])
 def instrument_prediction_graph(request):
     resp = {}
     uid = request.GET.get('uid')

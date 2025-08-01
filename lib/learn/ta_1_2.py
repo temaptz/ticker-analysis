@@ -52,6 +52,10 @@ class Ta12LearningCard:
         self.date = date
         self.target_date = target_date
 
+        if not self.instrument or not self.date or not self.target_date:
+            self.is_ok = False
+            return
+
         try:
             self.fill_card(is_fill_empty=fill_empty)
             self.check_x(is_fill_empty=fill_empty)
@@ -64,15 +68,24 @@ class Ta12LearningCard:
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price_change = self.get_target_change_relative()
         self.forecast_price_change = self.get_forecast_change()
-        f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]
-        self.revenue_ttm = f.revenue_ttm
-        self.ebitda_ttm = f.ebitda_ttm
-        self.market_capitalization = f.market_capitalization
-        self.total_debt_mrq = f.total_debt_mrq
-        self.eps_ttm = f.eps_ttm
-        self.pe_ratio_ttm = f.pe_ratio_ttm
-        self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
-        self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
+            self.revenue_ttm = f.revenue_ttm
+            self.ebitda_ttm = f.ebitda_ttm
+            self.market_capitalization = f.market_capitalization
+            self.total_debt_mrq = f.total_debt_mrq
+            self.eps_ttm = f.eps_ttm
+            self.pe_ratio_ttm = f.pe_ratio_ttm
+            self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
+            self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        elif is_fill_empty:
+            self.revenue_ttm = 0
+            self.ebitda_ttm = 0
+            self.market_capitalization = 0
+            self.total_debt_mrq = 0
+            self.eps_ttm = 0
+            self.pe_ratio_ttm = 0
+            self.ev_to_ebitda_mrq = 0
+            self.dividend_payout_ratio_fy = 0
 
         self.price_change_2_days = self.get_price_change_days(days_count=2)
         self.price_change_1_week = self.get_price_change_days(days_count=7)

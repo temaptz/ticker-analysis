@@ -145,3 +145,20 @@ def get_news_by_instrument_uid(
         end_date=end_date,
         keywords=keywords
     ) or []
+
+
+def get_last_unrated_news_by_instrument_uid(
+        instrument_uid: str,
+) -> news_db.News or None:
+    for n in get_news_by_instrument_uid(
+        instrument_uid=instrument_uid,
+        start_date=datetime.datetime.now() - datetime.timedelta(days=30),
+        end_date=datetime.datetime.now(),
+    ):
+        if not news_rate_v2.get_news_rate_db(
+            news_uid=n.news_uid,
+            instrument_uid=instrument_uid,
+        ):
+            return n
+
+    return None

@@ -23,9 +23,10 @@ tools = [
 
 checkpointer = InMemorySaver()
 
+model_name = 'PetrosStav/gemma3-tools:12b'
 llm = ChatOllama(
     base_url=f'http://{'ollama' if docker.is_docker() else 'localhost'}:11434',
-    model='PetrosStav/gemma3-tools:12b',
+    model=model_name,
     verbose=True, name='llm_ollama',
     num_ctx=16384,
     temperature=0.01,

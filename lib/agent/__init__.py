@@ -13,3 +13,4 @@ from . import instrument_rank_sell
 from . import buy
 from . import sell
 from . import prompts
+from . import news_rank

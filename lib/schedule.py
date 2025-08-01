@@ -1,6 +1,6 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 import pytz
-from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent
 
 
 def start_schedule() -> None:
@@ -64,16 +64,15 @@ def start_schedule() -> None:
         timezone=timezone
     )
 
-    # Инвестиционные рекомендации
-    # scheduler.add_job(
-    #     process_task.send_invest_recommendations,
-    #     'cron',
-    #     day_of_week='mon',
-    #     day_of_month=1,
-    #     hour=15,
-    #     minute=0,
-    #     timezone=timezone
-    # )
+    # LLM Задачи
+    scheduler.add_job(
+        process_llm_tasks,
+        trigger='cron',
+        day_of_week='mon-fri',
+        hour=11,
+        minute=0,
+        timezone=timezone
+    )
 
     # Проверка сообщений в телеге
     scheduler.add_job(
@@ -83,3 +82,13 @@ def start_schedule() -> None:
     )
 
     scheduler.start()
+
+
+def process_llm_tasks() -> None:
+    agent.sell.create_orders()
+    agent.buy.create_orders()
+    agent.news_rank.rank_last_news()
+    agent.news_rank.rank_last_news()
+    agent.news_rank.rank_last_news()
+    agent.instrument_rank_sell.update_recommendations()
+    agent.instrument_rank_buy.update_recommendations()

@@ -1,0 +1,18 @@
+div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+.plus {
+  color: green;
+
+  &:before {
+    content: '+';
+  }
+}
+
+.minus {
+  color: red;
+}

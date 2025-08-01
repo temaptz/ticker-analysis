@@ -124,7 +124,15 @@ export class ApiService {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
-    return this.http.get<Fundamentals>(`${this.apiUrl}/instrument/prediction`, {params: params});
+    return this.http.get<PredictionResp>(`${this.apiUrl}/instrument/prediction`, {params: params});
+  }
+
+  getInstrumentPredictionConsensus(uid: string, date: Date): Observable<number> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('date', date.toJSON());
+
+    return this.http.get<number>(`${this.apiUrl}/instrument/prediction/consensus`, {params: params});
   }
 
   getInstrumentPredictionGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionGraphResp> {

@@ -20,6 +20,7 @@ urlpatterns = [
     path('instrument/prediction/graph', views.instrument_prediction_graph),
     path('instrument/prediction/history_graph', views.instrument_prediction_history_graph),
     path('instrument/prediction', views.instrument_prediction),
+    path('instrument/prediction/consensus', views.instrument_prediction_consensus),
     path('instrument/balance', views.instrument_balance),
     path('instrument/operations', views.instrument_operations),
     path('instrument/news/list_rated', views.instrument_news_list_rated),

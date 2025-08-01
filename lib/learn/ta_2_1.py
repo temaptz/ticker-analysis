@@ -58,6 +58,10 @@ class Ta21LearningCard:
         self.date = date
         self.target_date = target_date
 
+        if not self.instrument or not self.date or not self.target_date:
+            self.is_ok = False
+            return
+
         try:
             self.fill_card(is_fill_empty=fill_empty)
             self.check_x(is_fill_empty=fill_empty)
@@ -69,25 +73,34 @@ class Ta21LearningCard:
     def fill_card(self, is_fill_empty=False):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price_change = self.get_target_change_relative()
-        self.forecast_price_change = self.get_forecast_change()
-        f = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]
-        self.revenue_ttm = f.revenue_ttm
-        self.ebitda_ttm = f.ebitda_ttm
-        self.market_capitalization = f.market_capitalization
-        self.total_debt_mrq = f.total_debt_mrq
-        self.eps_ttm = f.eps_ttm
-        self.pe_ratio_ttm = f.pe_ratio_ttm
-        self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
-        self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
+        if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
+            self.revenue_ttm = f.revenue_ttm
+            self.ebitda_ttm = f.ebitda_ttm
+            self.market_capitalization = f.market_capitalization
+            self.total_debt_mrq = f.total_debt_mrq
+            self.eps_ttm = f.eps_ttm
+            self.pe_ratio_ttm = f.pe_ratio_ttm
+            self.ev_to_ebitda_mrq = f.ev_to_ebitda_mrq
+            self.dividend_payout_ratio_fy = f.dividend_payout_ratio_fy
+        elif is_fill_empty:
+            self.revenue_ttm = 0
+            self.ebitda_ttm = 0
+            self.market_capitalization = 0
+            self.total_debt_mrq = 0
+            self.eps_ttm = 0
+            self.pe_ratio_ttm = 0
+            self.ev_to_ebitda_mrq = 0
+            self.dividend_payout_ratio_fy = 0
 
-        self.price_change_2_days = self.get_price_change_days(days_count=2)
-        self.price_change_1_week = self.get_price_change_days(days_count=7)
-        self.price_change_1_month = self.get_price_change_days(days_count=30)
-        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3)
-        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6)
-        self.price_change_1_year = self.get_price_change_days(days_count=365)
-        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2)
-        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3)
+        self.price_change_2_days = self.get_price_change_days(days_count=2, is_fill_empty=is_fill_empty)
+        self.price_change_1_week = self.get_price_change_days(days_count=7, is_fill_empty=is_fill_empty)
+        self.price_change_1_month = self.get_price_change_days(days_count=30, is_fill_empty=is_fill_empty)
+        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3, is_fill_empty=is_fill_empty)
+        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6, is_fill_empty=is_fill_empty)
+        self.price_change_1_year = self.get_price_change_days(days_count=365, is_fill_empty=is_fill_empty)
+        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2, is_fill_empty=is_fill_empty)
+        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3, is_fill_empty=is_fill_empty)
 
         news_rated = self.get_news_rated()
 
@@ -95,6 +108,10 @@ class Ta21LearningCard:
             self.news_positive_percent = news_rated.positive_percent
             self.news_negative_percent = news_rated.negative_percent
             self.news_neutral_percent = news_rated.neutral_percent
+        elif is_fill_empty:
+            self.news_positive_percent = 0
+            self.news_negative_percent = 0
+            self.news_neutral_percent = 0
 
     # Проверка карточки
     def check_x(self, is_fill_empty=False):
@@ -126,7 +143,7 @@ class Ta21LearningCard:
             self.is_ok = False
             return
 
-    def get_price_change_days(self, days_count: int) -> float or None:
+    def get_price_change_days(self, days_count: int, is_fill_empty=False) -> float or None:
         target_date = self.date - datetime.timedelta(days=days_count)
         if current_price := self.price:
             delta_hours = 24 * 10 if days_count > 300 else 24
@@ -138,9 +155,9 @@ class Ta21LearningCard:
                 if price_change := utils.get_change_relative_by_price(main_price=target_price, next_price=current_price):
                     return price_change
 
-        return None
+        return 0 if is_fill_empty else None
 
-    def get_forecast_change(self) -> float or None:
+    def get_forecast_change(self, is_fill_empty=False) -> float or None:
         try:
             if current_price := self.price:
                 if price := forecasts.get_db_forecast_by_uid_date(
@@ -155,6 +172,9 @@ class Ta21LearningCard:
                                 return price_change
         except Exception as e:
             logger.log_error(method_name='Ta21LearningCard.get_forecast_change', error=e, is_telegram_send=False)
+
+        if is_fill_empty:
+            return 0
 
         return None
 
@@ -449,7 +469,7 @@ def cache_record(card: Ta21LearningCard) -> None:
         date=card.date,
         target_date=card.target_date,
     )
-    redis_utils.storage_set(key=cache_key, value=card, ttl_sec=3600 * 24 * 30)
+    redis_utils.storage_set(key=cache_key, value=serializer.to_json(card), ttl_sec=3600 * 24 * 30)
 
 
 def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
@@ -462,16 +482,18 @@ def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.date
 
 
 def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> Ta21LearningCard or None:
-    return redis_utils.storage_get(key=get_record_cache_key(
-        ticker=ticker,
-        date=date,
-        target_date=target_date,
-    ))
+    if record := redis_utils.storage_get(key=get_record_cache_key(
+            ticker=ticker,
+            date=date,
+            target_date=target_date,
+    )):
+        return serializer.from_json(record)
+    return None
 
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key_____',
+        'method': 'ta_2_1_get_record_cache_key_____1',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

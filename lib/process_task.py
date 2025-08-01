@@ -63,5 +63,5 @@ def process_single_update(text: str = None) -> None:
 
     elif text == '/trade':
         telegram.send_message('Создание торговых заявок')
-        agent.sell.run()
-        agent.buy.run()
+        agent.sell.create_orders()
+        agent.buy.create_orders()
