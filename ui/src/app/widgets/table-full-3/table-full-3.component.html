@@ -1,0 +1,132 @@
+<cdk-virtual-scroll-viewport
+  *ngIf="dataSource"
+  headerHeight="50"
+  class="table-container"
+  appendOnly
+  [tvsItemSize]="tableItemHeightPx"
+  [headerEnabled]="true"
+>
+  <table
+    mat-table
+    matSort
+    [dataSource]="dataSource"
+  >
+
+    <ng-container matColumnDef="logo" sticky>
+      <th mat-header-cell *matHeaderCellDef>Название</th>
+      <td mat-cell *matCellDef="let instrument">
+        <div class="logo">
+          <instrument-logo
+            [instrumentUid]="instrument.uid"
+          ></instrument-logo>
+          <span class="instrument-name">{{ instrument.name }}</span>
+          <a
+            class="logo"
+            [routerLink]="['/ticker', instrument.ticker]"
+          >
+            <span class="ticker">[{{ instrument.ticker}}]</span>
+          </a>
+
+          @if (instrument.for_qual_investor_flag) {
+            <span title="for_qual_investor_flag - Для квалифицированных инвесторов">🚩</span>
+          }
+        </div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="fundamental">
+      <th mat-header-cell *matHeaderCellDef>Фундаментальные показатели</th>
+      <td mat-cell *matCellDef="let instrument">
+        <fundamentals
+          [instrumentUid]="instrument.uid"
+          [ticker]="instrument.ticker"
+        ></fundamentals>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="complex">
+      <th mat-header-cell *matHeaderCellDef>Год истории + полгода прогнозов</th>
+      <td mat-cell *matCellDef="let instrument">
+        <complex-graph
+          width="700px"
+          height="250px"
+          [instrumentUid]="instrument.uid"
+          [instrumentTicker]="instrument.ticker"
+          [interval]="CandleInterval.CANDLE_INTERVAL_WEEK"
+          [historyDaysCount]="365"
+          [futureDaysCount]="180"
+          [isShowForecasts]="true"
+          [isShowLegend]="false"
+        ></complex-graph>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="balance">
+      <th mat-header-cell *matHeaderCellDef>Баланс</th>
+      <td mat-cell *matCellDef="let instrument">
+        <balance
+          [instrumentUid]="instrument.uid"
+          [instrumentFigi]="instrument.figi"
+        ></balance>
+        <!--        <br>-->
+        <!--        <br>-->
+        <!--        <recommendation-->
+        <!--          [instrumentUid]="instrument.uid"-->
+        <!--          [isLong]="false"-->
+        <!--        ></recommendation>-->
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="forecast">
+      <th mat-header-cell *matHeaderCellDef>Прогноз аналитиков</th>
+      <td mat-cell *matCellDef="let instrument">
+        <forecast [instrumentUid]="instrument.uid"></forecast>
+        <br>
+        <br>
+        <forecast-history [instrumentUid]="instrument.uid"></forecast-history>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="prediction">
+      <th mat-header-cell *matHeaderCellDef>Цена + прогноз на месяц</th>
+      <td mat-cell *matCellDef="let instrument">
+        <div>
+          Текущая: <b>{{ instrument.uid | currentPriceByUid | async | priceFormat }}</b>
+        </div>
+        <br>
+        <br>
+        <prediction-dynamic [instrumentUid]="instrument.uid"></prediction-dynamic>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="news">
+      <th mat-header-cell *matHeaderCellDef>Новости</th>
+      <td mat-cell *matCellDef="let instrument">
+        <news-complex [instrumentUid]="instrument.uid"></news-complex>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="llm_buy_sell_rate">
+      <th mat-header-cell *matHeaderCellDef>Рейтинг покупки</th>
+      <td mat-cell *matCellDef="let instrument">
+        <llm-buy-sell-rate [instrumentUid]="instrument.uid"></llm-buy-sell-rate>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+
+    <tr
+      *matRowDef="let row; columns: displayedColumns;"
+      mat-row
+      [style.height.px]="tableItemHeightPx"
+    ></tr>
+
+
+  </table>
+</cdk-virtual-scroll-viewport>
+
+
+<drawer
+  [(sort)]="sortTickers"
+  (sortChange)="handleChangeSort()"
+></drawer>

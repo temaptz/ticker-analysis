@@ -224,21 +224,23 @@ def instrument_prediction(request):
 
     if uid:
         date_target = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days_future)
-
-        resp[model.TA_1] = predictions.get_prediction_ta_1_by_uid(uid)
-        resp[model.TA_1_1] = predictions.get_prediction_ta_1_1_by_uid(uid)
-        resp[model.TA_1_2] = ta_1_2.predict_future(instrument_uid=uid, date_target=date_target)
-        resp[model.TA_2] = ta_2.predict_future(instrument_uid=uid, date_target=date_target)
-        resp[model.TA_2_1] = ta_2_1.predict_future(instrument_uid=uid, date_target=date_target)
-        resp['consensus'] = predictions.get_predictions_consensus(instrument_uid=uid, date_target=date_target)
+        current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
 
         resp['relative'] = {}
-        resp['relative'][model.TA_1] = predictions.get_relative_prediction_ta_1_by_uid(uid)
-        resp['relative'][model.TA_1_1] = predictions.get_relative_prediction_ta_1_1_by_uid(uid)
-        resp['relative'][model.TA_1_2] = ta_1_2.predict_future_relative_change(instrument_uid=uid, date_target=date_target)
-        resp['relative'][model.TA_2] = ta_2.predict_future_relative_change(instrument_uid=uid, date_target=date_target)
-        resp['relative'][model.TA_2_1] = ta_2_1.predict_future_relative_change(instrument_uid=uid, date_target=date_target)
-        resp['relative']['consensus'] = predictions.get_relative_predictions_consensus(instrument_uid=uid, date_target=date_target)
+        resp['relative'][model.TA_1] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_1)
+        resp['relative'][model.TA_1_1] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_1)
+        resp['relative'][model.TA_1_2] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_2)
+        resp['relative'][model.TA_2] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_2)
+        resp['relative'][model.TA_2_1] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_2_1)
+        resp['relative'][model.CONSENSUS] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.CONSENSUS)
+
+
+        resp[model.TA_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1])
+        resp[model.TA_1_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1_1])
+        resp[model.TA_1_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1_2])
+        resp[model.TA_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_2])
+        resp[model.TA_2_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_2_1])
+        resp[model.CONSENSUS] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.CONSENSUS])
 
     response = HttpResponse(json.dumps(resp))
 
@@ -255,7 +257,7 @@ def instrument_prediction_consensus(request):
     date = utils.parse_json_date(request.GET.get('date'))
 
     if uid and date:
-        if consensus := predictions.get_relative_predictions_consensus(instrument_uid=uid, date_target=date):
+        if consensus := predictions.get_prediction(instrument_uid=uid, date_target=date, model_name=model.CONSENSUS):
             resp = utils.round_float(num=consensus, decimals=4)
 
     response = HttpResponse(json.dumps(resp))

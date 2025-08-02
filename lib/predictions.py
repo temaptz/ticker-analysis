@@ -2,9 +2,32 @@ import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model
-from lib import date_utils, logger, utils, instruments, cache
+from lib import date_utils, logger, utils, instruments, cache, logger
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
+
+
+def get_prediction(instrument_uid: str, date_target: datetime.datetime, model_name: model = model.CONSENSUS) -> float or None:
+    try:
+        date = date_utils.convert_to_utc(date_target).replace(hour=12, minute=0, second=0, microsecond=0)
+
+        if model_name == model.TA_1:
+            return get_relative_prediction_ta_1_by_uid(uid=instrument_uid)
+        elif model_name == model.TA_1_1:
+            return get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid)
+        elif model_name == model.TA_1_2:
+            return ta_1_2.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date)
+        elif model_name == model.TA_2:
+            return ta_2.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date)
+        elif model_name == model.TA_2_1:
+            return ta_2_1.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date)
+        elif model_name == model.CONSENSUS:
+            return get_relative_predictions_consensus(instrument_uid=instrument_uid, date_target=date)
+
+    except Exception as e:
+        logger.log_error(method_name='get_prediction', error=e)
+
+    return None
 
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
@@ -20,7 +43,7 @@ def get_prediction_ta_1_by_uid(uid: str) -> float or None:
         return None
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
 def get_relative_prediction_ta_1_by_uid(uid: str) -> float or None:
     c = LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -52,7 +75,7 @@ def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
         return None
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
 def get_relative_prediction_ta_1_1_by_uid(uid: str) -> float or None:
     c = ta_1_1.LearningCard()
     c.load_by_uid(uid=uid, fill_empty=True)
@@ -116,7 +139,7 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
 
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
-def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
+def get_prediction_graph(uid: str, model_name: model, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
         date_from_utc = date_utils.convert_to_utc(
@@ -132,23 +155,7 @@ def get_prediction_graph(uid: str, model_name: str, date_from: datetime.datetime
                 date_to=date_to_utc,
                 interval_seconds=date_utils.get_interval_sec_by_candle(interval)
         ):
-            prediction_item = None
-
-            if model_name == model.TA_1_2:
-                prediction_item = ta_1_2.predict_future(
-                    instrument_uid=uid,
-                    date_target=date,
-                )
-            elif model_name == model.TA_2:
-                prediction_item = ta_2.predict_future(
-                    instrument_uid=uid,
-                    date_target=date,
-                )
-            elif model_name == model.TA_2_1:
-                prediction_item = ta_2_1.predict_future(
-                    instrument_uid=uid,
-                    date_target=date,
-                )
+            prediction_item = get_prediction(instrument_uid=uid, date_target=date, model_name=model_name)
 
             if prediction_item is not None:
                 result.append({

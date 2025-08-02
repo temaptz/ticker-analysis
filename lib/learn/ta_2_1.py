@@ -49,16 +49,22 @@ class Ta21LearningCard:
     price_change_2_years: float = None # Изменение цены за 2 года
     price_change_3_years: float = None # Изменение цены за 3 года
 
-    def __init__(self, instrument: Instrument, date: datetime.datetime, target_date: datetime.datetime, fill_empty=False):
-        if date > target_date:
-            self.is_ok = False
-            return
-
+    def __init__(
+            self,
+            instrument: Instrument = None,
+            date: datetime.datetime = None,
+            target_date: datetime.datetime = None,
+            fill_empty=False
+    ):
         self.instrument = instrument
         self.date = date
         self.target_date = target_date
 
         if not self.instrument or not self.date or not self.target_date:
+            self.is_ok = False
+            return
+
+        if date > target_date:
             self.is_ok = False
             return
 
@@ -281,17 +287,18 @@ def generate_data():
             print('DATE', date)
 
             for target_date in date_utils.get_dates_interval_list(date_from=date, date_to=date_end, is_skip_holidays=True):
-                cached_record = get_record_cache(
+                cached_csv_record = get_record_cache(
                     ticker=instrument.ticker,
                     date=date,
                     target_date=target_date,
                 )
 
-                if cached_record:
-                    if cached_record != 'error':
-                        if cached_csv := cached_record.get_csv_record():
+                if cached_csv_record:
+                    if cached_csv_record != 'error':
+                        if cached_csv_record.get('result', None):
+                            counter_added += 1
                             counter_cached += 1
-                            records.append(cached_csv)
+                            records.append(cached_csv_record)
                 else:
                     card = Ta21LearningCard(
                         instrument=instrument,
@@ -301,9 +308,10 @@ def generate_data():
                     )
 
                     if card.is_ok and card.get_y() and card.get_y() != 0:
-                        cache_record(card=card)
-                        counter_added += 1
-                        records.append(card.get_csv_record())
+                        if csv_record := card.get_csv_record():
+                            cache_record(card=card)
+                            counter_added += 1
+                            records.append(csv_record)
 
                     else:
                         cache_error(
@@ -411,7 +419,7 @@ def learn():
 
     y_pred_test = model_cb.predict(test_pool)
     mse_test = mean_squared_error(y_test, y_pred_test)
-    rmse_test = mean_squared_error(y_test, y_pred_test, squared=False)
+    rmse_test = numpy.sqrt(mse_test)
 
     logger.log_info(message=f'{MODEL_NAME} LEARN RESULT. RMSE: {rmse_test}, MSE: {mse_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
 
@@ -469,7 +477,7 @@ def cache_record(card: Ta21LearningCard) -> None:
         date=card.date,
         target_date=card.target_date,
     )
-    redis_utils.storage_set(key=cache_key, value=serializer.to_json(card), ttl_sec=3600 * 24 * 30)
+    redis_utils.storage_set(key=cache_key, value=serializer.to_json(card.get_csv_record()), ttl_sec=3600 * 24 * 30)
 
 
 def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
@@ -481,19 +489,20 @@ def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.date
     redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24 * 3)
 
 
-def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> Ta21LearningCard or None:
+def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> dict or None:
     if record := redis_utils.storage_get(key=get_record_cache_key(
             ticker=ticker,
             date=date,
             target_date=target_date,
     )):
-        return serializer.from_json(record)
+        if parsed_record := serializer.from_json(record):
+            return parsed_record
     return None
 
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key_____1',
+        'method': 'ta_2_1_get_record_cache_key___001',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

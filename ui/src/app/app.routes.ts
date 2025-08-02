@@ -3,6 +3,10 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
+    loadComponent: () => import('./pages/list/list.component').then(c => c.ListComponent)
+  },
+  {
+    path: 'full',
     loadComponent: () => import('./pages/list-full/list-full.component').then(c => c.ListFullComponent)
   },
   {

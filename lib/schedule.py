@@ -1,6 +1,8 @@
-from apscheduler.schedulers.blocking import BlockingScheduler
+import datetime
+import time
 import pytz
-from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent
+from apscheduler.schedulers.blocking import BlockingScheduler
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent, logger
 
 
 def start_schedule() -> None:
@@ -87,8 +89,17 @@ def start_schedule() -> None:
 def process_llm_tasks() -> None:
     agent.sell.create_orders()
     agent.buy.create_orders()
-    agent.news_rank.rank_last_news()
-    agent.news_rank.rank_last_news()
-    agent.news_rank.rank_last_news()
     agent.instrument_rank_sell.update_recommendations()
     agent.instrument_rank_buy.update_recommendations()
+
+    while True:
+        if datetime.datetime.now().hour >= 10:
+            print('⏹️ Завершение цикла rank_last_news — наступило 10:00.')
+            break
+
+        try:
+            agent.news_rank.rank_last_news()
+        except Exception as e:
+            logger.log_error(method_name='rank_last_news', error=e)
+
+        time.sleep(5)
