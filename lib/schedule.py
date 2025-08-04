@@ -2,7 +2,7 @@ import datetime
 import time
 import pytz
 from apscheduler.schedulers.blocking import BlockingScheduler
-from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent, logger
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent, logger, telegram
 
 
 def start_schedule() -> None:
@@ -72,7 +72,7 @@ def start_schedule() -> None:
         trigger='cron',
         day_of_week='mon-fri',
         hour=11,
-        minute=0,
+        minute=00,
         timezone=timezone
     )
 
@@ -87,6 +87,7 @@ def start_schedule() -> None:
 
 
 def process_llm_tasks() -> None:
+    telegram.send_message('Начало обработки LLM задач')
     agent.sell.create_orders()
     agent.buy.create_orders()
     agent.instrument_rank_sell.update_recommendations()

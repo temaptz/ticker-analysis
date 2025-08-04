@@ -142,28 +142,36 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
 def get_prediction_graph(uid: str, model_name: model, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
-        date_from_utc = date_utils.convert_to_utc(
-            datetime.datetime.combine(
-                date_from,
-                datetime.time(hour=12, minute=0, second=0, microsecond=0)
+        current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
+
+        if current_price is not None:
+            date_from_utc = date_utils.convert_to_utc(
+                datetime.datetime.combine(
+                    date_from,
+                    datetime.time(hour=12, minute=0, second=0, microsecond=0)
+                )
             )
-        )
-        date_to_utc = date_utils.convert_to_utc(date_to)
+            date_to_utc = date_utils.convert_to_utc(date_to)
 
-        for date in date_utils.get_dates_interval_list(
-                date_from=date_from_utc,
-                date_to=date_to_utc,
-                interval_seconds=date_utils.get_interval_sec_by_candle(interval)
-        ):
-            prediction_item = get_prediction(instrument_uid=uid, date_target=date, model_name=model_name)
 
-            if prediction_item is not None:
-                result.append({
-                    'prediction': prediction_item,
-                    'date': date,
-                })
+            for date in date_utils.get_dates_interval_list(
+                    date_from=date_from_utc,
+                    date_to=date_to_utc,
+                    interval_seconds=date_utils.get_interval_sec_by_candle(interval)
+            ):
+                prediction_item = get_prediction(instrument_uid=uid, date_target=date, model_name=model_name)
 
-        return result
+                if prediction_item is not None:
+                    if prediction_price := utils.get_price_by_change_relative(
+                            current_price=current_price,
+                            relative_change=prediction_item,
+                    ):
+                        result.append({
+                            'prediction': prediction_price,
+                            'date': date,
+                        })
+
+            return result
     except Exception as e:
         print('ERROR get_prediction_graph_by_uid', e)
 

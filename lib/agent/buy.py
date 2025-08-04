@@ -47,8 +47,12 @@ def create_orders():
         for instrument in top_instruments:
             if not instrument.for_qual_investor_flag:
                 if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_buy_rate'):
-                    if tag.tag_value and int(tag.tag_value) > 75:
+                    if tag.tag_value and int(tag.tag_value) > 50:
                         available_instruments_uids.append(instrument.uid)
+
+        if len(available_instruments_uids) == 0:
+            print('NO AVAILABLE INSTRUMENTS FOR BUY')
+            return
 
         result = graph.invoke(
             input={'instruments_uids': available_instruments_uids[:5]},
@@ -129,7 +133,8 @@ def instrument_recommendation_create(state: State) -> State:
     if uid:
         prompt = f'''
         # ЗАДАНИЕ
-        Дай совет по созданию торговой заявки для покупки инструмента. 
+        Ты специалист по биржевой торговле. 
+        Создай оптимальную и выгодную торговую заявку для покупки инструмента. 
         
         # ДОСТУПНО СРЕДСТВ
         {users.get_user_money_rub()} RUB

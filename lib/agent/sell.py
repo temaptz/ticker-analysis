@@ -49,6 +49,10 @@ def create_orders():
                 if tag.tag_value and int(tag.tag_value) > 75:
                     available_instruments_uids.append(instrument.uid)
 
+        if len(available_instruments_uids) == 0:
+            print('NO AVAILABLE INSTRUMENTS')
+            return
+
         result = graph.invoke(
             input={'instruments_uids': available_instruments_uids[:3]},
             debug=True,
@@ -133,10 +137,11 @@ def instrument_recommendation_create(state: State) -> State:
     if uid:
         prompt = f'''
         # ЗАДАНИЕ
-        Дай совет по созданию торговой заявки для продажи инструмента.
+        Ты специалист по биржевой торговле. 
+        Создай оптимальную выгодную торговую заявку для продажи инструмента.
         
         # БАЛАНС ИНСТРУМЕНТА В ПОРТФЕЛЕ (шт.)
-        {users.get_user_instrument_balance(instrument_uid=uid)}
+        {users.get_user_instrument_balance(instrument_uid=uid, account_id=users.get_analytics_account().id)}
         
         # ИНСТРУКЦИЯ
         1. Проанализируй текущую стоимость и прогнозируемые изменения цены инструмента.
@@ -146,7 +151,7 @@ def instrument_recommendation_create(state: State) -> State:
         5. Подбери оптимальную выгодную стоимость продажи инструмента. 
         6. Стоимость продажи должна быть выше текущей рыночной стоимости более 3% с учетом максимальной выгоды при недельном колебании.
         7. Подбери количество единиц инструмента, которое сейчас выгодно продать.
-        8. Продаваемое количество должно составлять не более половины баланса, если баланс больше единицы.
+        8. Если баланс больше единицы, то количество должно быть не больше половины баланса.
         '''
 
         print('RECOMMENDATION CREATE PROMPT', prompt)

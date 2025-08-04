@@ -109,7 +109,7 @@ def get_instrument_balance(uid: str) -> dict or None:
     """
     instrument_uid = uid
 
-    if balance := users.get_user_instrument_balance(instrument_uid=instrument_uid):
+    if balance := users.get_user_instrument_balance(instrument_uid=instrument_uid, account_id=users.get_analytics_account().id):
         if invest_calc_info := invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument_uid):
             return {
                 'balance': balance,
