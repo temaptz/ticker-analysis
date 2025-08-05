@@ -94,7 +94,9 @@ def process_llm_tasks() -> None:
     agent.instrument_rank_buy.update_recommendations()
 
     while True:
-        if datetime.datetime.now().hour >= 10:
+        hour = datetime.datetime.now().hour
+
+        if 0 <= hour < 11:
             print('⏹️ Завершение цикла rank_last_news — наступило 10:00.')
             break
 
