@@ -80,10 +80,10 @@ def create_orders():
                         if users.post_sell_order(
                             instrument_uid=rec.instrument_uid,
                             price_rub=price,
-                                quantity_lots=utils.get_lots_qty(
-                                    qty=rec.qty,
-                                    instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
-                                ),
+                            quantity_lots=utils.get_lots_qty(
+                                qty=rec.qty,
+                                instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
+                            ),
                         ):
                             instrument = instruments.get_instrument_by_uid(rec.instrument_uid)
                             telegram.send_message(

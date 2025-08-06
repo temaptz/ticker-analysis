@@ -49,7 +49,7 @@ def get_user_money_rub() -> int:
     return result
 
 
-def post_buy_order(instrument_uid: str, quantity: int, price_rub: float) -> PostOrderResponse or None:
+def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float) -> PostOrderResponse or None:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             price_increment = utils.get_price_by_quotation(
@@ -58,7 +58,7 @@ def post_buy_order(instrument_uid: str, quantity: int, price_rub: float) -> Post
 
             if order := client.orders.post_order(
                 instrument_id=instrument_uid,
-                quantity=quantity,
+                quantity=quantity_lots,
                 price=utils.get_quotation_by_price(math.floor(price_rub / price_increment) * price_increment),
                 account_id=get_analytics_account().id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
