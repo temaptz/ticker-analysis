@@ -15,7 +15,7 @@ from lib import cache, instruments, utils, logger, invest_calc, predictions, db_
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_balance(instrument_uid: str, account_id: int = None) -> int:
+def get_user_instrument_balance(instrument_uid: str, account_id: int = None, is_with_blocked: bool = True) -> int:
     result = 0
 
     try:
@@ -24,7 +24,7 @@ def get_user_instrument_balance(instrument_uid: str, account_id: int = None) -> 
                 positions = get_positions(account_id=account.id)
                 for instrument in positions.securities:
                     if instrument and instrument.instrument_uid == instrument_uid:
-                        result += instrument.balance
+                        result += instrument.balance + instrument.blocked
 
     except Exception as e:
         logger.log_error(method_name='get_user_instrument_balance', error=e)
@@ -42,6 +42,9 @@ def get_user_money_rub() -> int:
                     for m in positions.money:
                         if m.currency == 'rub':
                             result += utils.get_price_by_quotation(m)
+                    for b in positions.blocked:
+                        if b.currency == 'rub':
+                            result -= utils.get_price_by_quotation(b)
 
     except Exception as e:
         logger.log_error(method_name='get_user_money_rub', error=e)
@@ -134,7 +137,6 @@ def get_accounts() -> GetAccountsResponse.accounts:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             for a in client.users.get_accounts().accounts:
-                print('ACCOUNT', a)
                 agent.utils.output_json(a)
                 if a.name in ['Основной', 'Аналитический']:
                     result.append(a)
@@ -165,7 +167,7 @@ def get_portfolio(account_id: str):
 
 
 @cache.ttl_cache(ttl=3600)
-def get_positions(account_id: str) -> PositionsResponse or None:
+def get_positions(account_id: int) -> PositionsResponse or None:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             return client.operations.get_positions(account_id=account_id)
@@ -175,7 +177,7 @@ def get_positions(account_id: str) -> PositionsResponse or None:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_operations(account_id: str, figi: str) -> list[Operation] or None:
+def get_operations(account_id: int, figi: str) -> list[Operation] or None:
     try:
         resp = list()
 

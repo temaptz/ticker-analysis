@@ -71,7 +71,7 @@ def rank_last_news():
                             )
 
                             logger.log_info(
-                                message=f'Сохранена оценка новости с заголовком:\n{n.title}\nНа организацию:\n{human_name}\nОценка: {serializer.to_json(n_rate)}',
+                                message=f'Оценена новость для:\n{human_name}\nЗаголовок: {n.title}\nОценка: {serializer.to_json(n_rate)}',
                                 is_send_telegram=True,
                             )
         except Exception as e:
