@@ -85,8 +85,8 @@ services:
   ollama:
     image: ollama/ollama:latest      # официальный образ
     container_name: ollama
-    ports:
-      - "11434:11434"               # API наружу
+#    ports:
+#      - "11434:11434"               # API наружу
     volumes:
       - ollama_data:/root/.ollama   # постоянное хранилище моделей
     environment:
