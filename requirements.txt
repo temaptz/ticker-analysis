@@ -2,6 +2,7 @@ Django==5.2.3
 djangorestframework
 django-cors-headers
 tinkoff==0.1.1
+grpcio
 numpy
 pandas
 scikit-learn

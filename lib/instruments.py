@@ -1,3 +1,5 @@
+import time
+import grpc
 from typing import Optional
 
 from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
@@ -71,7 +73,7 @@ def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: Can
         print('ERROR get_instrument_history_price_by_uid', e)
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=24) -> float or None:
     if date.date() == datetime.datetime.now().date():
         return get_instrument_last_price_by_uid(uid=uid)
@@ -104,8 +106,11 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=
             if nearest:
                 return utils.get_price_by_candle(nearest)
 
-    except Exception as e:
+    except grpc.RpcError as e:                              # ловим gRPC-ошибку
         print('ERROR get_instrument_price_by_date', e)
+
+        if e.code() == grpc.StatusCode.RESOURCE_EXHAUSTED:
+            time.sleep(1)
 
     return None
 
