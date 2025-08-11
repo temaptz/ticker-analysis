@@ -155,10 +155,10 @@ def get_last_unrated_news_by_instrument_uid(
         start_date=datetime.datetime.now() - datetime.timedelta(days=30),
         end_date=datetime.datetime.now(),
     ):
-        if not news_rate_v2.get_news_rate_db(
+        if news_rate_v2.get_news_rate_db(
             news_uid=n.news_uid,
             instrument_uid=instrument_uid,
-        ):
+        ) is None:
             return n
 
     return None
