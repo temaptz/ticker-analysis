@@ -24,8 +24,8 @@ def start_schedule() -> None:
         forecasts_save.save_forecasts,
         'cron',
         day_of_week='mon',
-        hour=11,
-        minute=0,
+        hour=10,
+        minute=30,
         timezone=timezone
     )
 
