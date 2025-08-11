@@ -1,5 +1,5 @@
 import datetime
-from tinkoff.invest import Operation, OperationType, Instrument
+from tinkoff.invest import Operation, OperationType, Instrument, OperationState
 from lib import utils, instruments, users, logger, predictions
 
 class InvestCalc:
@@ -19,33 +19,52 @@ class InvestCalc:
         self.balance_qty = balance_qty
 
     def get_average_price(self) -> float:
-        # Храним "открытые лоты"
-        open_positions = []  # каждый элемент: {'quantity': int, 'cost_per_share': float}
+        # 1) Берём только исполненные BUY/SELL и сортируем по возрастанию даты
+        ops = [
+            o for o in self.operations
+            if o.state == OperationState.OPERATION_STATE_EXECUTED
+               and o.operation_type in (OperationType.OPERATION_TYPE_BUY, OperationType.OPERATION_TYPE_SELL)
+        ]
+        ops.sort(key=lambda o: o.date)  # важно: по возрастанию!
 
-        for o in self.operations:
+        # 2) FIFO-учёт открытых лотов
+        open_positions = []  # элементы: {'quantity': int, 'cost_per_share': float}
+
+        for o in ops:
             if o.operation_type == OperationType.OPERATION_TYPE_BUY:
+                qty = int(o.quantity or 0)
+                if qty <= 0:
+                    continue
 
-                open_positions.append({
-                    'quantity': o.quantity,
-                    'cost_per_share': abs(utils.get_price_by_quotation(price=o.payment)) / o.quantity or 0
-                })
+                # Предпочитаем цену за 1 шт из o.price; если вдруг её нет — fallback на payment/qty
+                if getattr(o, 'price', None):
+                    cost_per_share = float(utils.get_price_by_quotation(price=o.price))
+                else:
+                    total_payment = abs(float(utils.get_price_by_quotation(price=o.payment)))
+                    cost_per_share = total_payment / qty if qty else 0.0
+
+                open_positions.append({'quantity': qty, 'cost_per_share': cost_per_share})
 
             elif o.operation_type == OperationType.OPERATION_TYPE_SELL:
-                remain_to_sell = o.quantity
-
-                while remain_to_sell > 0 and open_positions:
-                    first_pos = open_positions[0]
-
-                    if first_pos['quantity'] <= remain_to_sell:
-                        remain_to_sell -= first_pos['quantity']
+                remain = int(o.quantity or 0)
+                # Снимаем из начала списка (FIFO)
+                while remain > 0 and open_positions:
+                    first = open_positions[0]
+                    if first['quantity'] <= remain:
+                        remain -= first['quantity']
                         open_positions.pop(0)
                     else:
-                        first_pos['quantity'] -= remain_to_sell
-                        remain_to_sell = 0
+                        first['quantity'] -= remain
+                        remain = 0
+                # Если remain > 0 и лотов нет — игнорируем 'излишнюю' продажу для avg (ничего не осталось списывать)
 
-        total_cost = sum(pos['quantity'] * pos['cost_per_share'] for pos in open_positions)
+        # 3) Средняя по оставшимся лотам
+        total_qty = sum(p['quantity'] for p in open_positions)
+        if total_qty == 0:
+            return 0.0
 
-        return total_cost / self.balance_qty if self.balance_qty > 0 else 0
+        total_cost = sum(p['quantity'] * p['cost_per_share'] for p in open_positions)
+        return total_cost / total_qty
 
     def get_market_value(self) -> float:
         return self.balance_qty * self.current_price
