@@ -31,7 +31,10 @@ import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
 import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
-import { ComplexGraphControlComponent } from '../complex-graph-control/complex-graph-control.component';
+import {
+  ComplexGraphControlComponent,
+  ComplexGraphControlOptions
+} from '../complex-graph-control/complex-graph-control.component';
 import { NewsGraphComponent } from '../news-graph/news-graph.component';
 
 
@@ -56,12 +59,16 @@ export class ComplexGraphComponent {
   isShowTechAnalysis = input<boolean>(false);
   isShowLegend = input<boolean>(false);
   isShowControl = input<boolean>(true);
-  isShowPredictionsHistory = input<boolean>(false);
-  isShowNewsGraph = input<boolean>(false);
+  isShowPredictionsHistoryInput = input<boolean>(false);
+  isShowNewsGraphInput = input<boolean>(false);
+  isShowModelsGraphInput = input<boolean>(false);
 
   historyInterval = signal<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
   daysHistory = signal<number>(90);
   daysFuture = signal<number>(90);
+  isShowNewsGraph = signal<boolean>(false);
+  isShowPredictionsHistory = signal<boolean>(false);
+  isShowModelsGraph = signal<boolean>(false);
   isLoadedHistoryPrice = signal<boolean>(true);
   isLoadedPredictions = signal<boolean>(true);
   isLoadedOperations = signal<boolean>(true);
@@ -369,6 +376,33 @@ export class ComplexGraphComponent {
     } as echarts.SeriesOption;
   });
 
+  seriesConsensus = computed<echarts.SeriesOption>(() => {
+    const predictions = this.predictionResp()?.[ModelNameEnum.Consensus] ?? [];
+
+    return {
+      name: 'Предсказания CONSENSUS',
+      type: 'line',
+      showSymbol: true,
+      symbol: 'circle',
+      symbolSize: 2.5,
+      itemStyle: {
+        color: GRAPH_COLORS.consensus
+      },
+      lineStyle: {
+        width: 3,
+      },
+      encode: {
+        x: 0,
+        y: 1
+      },
+      data: predictions?.map(i => [
+          parseJSON(i.date),
+          getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        ]
+      ) ?? []
+    } as echarts.SeriesOption;
+  });
+
   seriesOperations = computed<echarts.SeriesOption>(() => {
     const operations = this.operations() ?? [];
 
@@ -594,12 +628,18 @@ export class ComplexGraphComponent {
 
     if (this.isLoadedPredictions()) {
       series.push(
-        this.seriesTa_1(),
-        this.seriesTa_1_1(),
-        this.seriesTa_1_2(),
-        this.seriesTa_2(),
-        this.seriesTa_2_1(),
+        this.seriesConsensus(),
       );
+
+      if (this.isShowModelsGraph()) {
+        series.push(
+          this.seriesTa_1(),
+          this.seriesTa_1_1(),
+          this.seriesTa_1_2(),
+          this.seriesTa_2(),
+          this.seriesTa_2_1(),
+        );
+      }
     }
 
     if (this.isShowOperations() && this.isLoadedOperations()) {
@@ -635,20 +675,35 @@ export class ComplexGraphComponent {
       this.daysHistory.set(this.historyDaysCount());
       this.historyInterval.set(this.interval());
       this.daysFuture.set(this.futureDaysCount());
+      this.isShowNewsGraph.set(this.isShowNewsGraphInput());
+      this.isShowPredictionsHistory.set(this.isShowPredictionsHistoryInput());
+      this.isShowModelsGraph.set(this.isShowModelsGraphInput());
     });
   }
 
-  handleChangeControl(event: {historyDaysCount: number, interval: CandleInterval, futureDaysCount: number}): void {
-    if (event.historyDaysCount !== this.daysHistory()) {
-      this.daysHistory.set(event.historyDaysCount);
+  handleChangeControl(options: ComplexGraphControlOptions): void {
+    if (options.historyDaysCount !== this.daysHistory()) {
+      this.daysHistory.set(options.historyDaysCount);
     }
 
-    if (event.interval !== this.historyInterval()) {
-      this.historyInterval.set(event.interval);
+    if (options.interval !== this.historyInterval()) {
+      this.historyInterval.set(options.interval);
     }
 
-    if (event.futureDaysCount !== this.daysFuture()) {
-      this.daysFuture.set(event.futureDaysCount);
+    if (options.futureDaysCount !== this.daysFuture()) {
+      this.daysFuture.set(options.futureDaysCount);
+    }
+
+    if (options.isShowNews !== this.isShowNewsGraph()) {
+      this.isShowNewsGraph.set(options.isShowNews);
+    }
+
+    if (options.isShowPredictionsHistory !== this.isShowPredictionsHistory()) {
+      this.isShowPredictionsHistory.set(options.isShowPredictionsHistory);
+    }
+
+    if (options.isShowModels !== this.isShowModelsGraph()) {
+      this.isShowModelsGraph.set(options.isShowModels);
     }
   }
 

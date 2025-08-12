@@ -32,11 +32,13 @@
             <div class="header">
               <span>{{ n.date | date: 'yyyy-MM-dd HH:mm' }}</span>
               <span class="source">{{ n.source }}</span>
-              @if (n.rate_percent) {
+              @if (n.rate_v2) {
                 <div class="rate-v2">
                   <rate-v2 [rate_v2]="n.rate_v2"></rate-v2>
                 </div>
+              }
 
+              @if (n.rate_percent) {
                 <div class="rate">
                   <news-bar
                     [positivePercent]="n.rate_percent.positive_percent"

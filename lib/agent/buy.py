@@ -10,7 +10,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 from tinkoff.invest import Instrument, StatisticResponse
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, telegram
+from lib import instruments, fundamentals, users, predictions, news, serializer, agent, db_2, logger, telegram
 from lib.agent import models, llm, planner, instrument_rank_buy
 
 
@@ -44,10 +44,10 @@ def create_orders():
     ):
         available_instruments_uids: list[str] = []
 
-        for instrument in top_instruments:
+        for instrument in top_instruments[:5]:
             if not instrument.for_qual_investor_flag:
-                if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_buy_rate'):
-                    if tag.tag_value and int(tag.tag_value) > 50:
+                if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
+                    if buy_rate > 50:
                         available_instruments_uids.append(instrument.uid)
 
         if len(available_instruments_uids) == 0:
@@ -55,7 +55,7 @@ def create_orders():
             return
 
         result = graph.invoke(
-            input={'instruments_uids': available_instruments_uids[:5]},
+            input={'instruments_uids': available_instruments_uids},
             debug=True,
             config=llm.config,
         )
@@ -79,7 +79,7 @@ def create_orders():
                         if users.post_buy_order(
                             instrument_uid=rec.instrument_uid,
                             price_rub=price,
-                            quantity_lots=utils.get_lots_qty(
+                            quantity_lots=agent.utils.get_lots_qty(
                                 qty=rec.qty,
                                 instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
                             ),
@@ -143,12 +143,17 @@ def instrument_recommendation_create(state: State) -> State:
         # ДОСТУПНО СРЕДСТВ
         {users.get_user_money_rub()} RUB
         
+        # ОЦЕНКА ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ ИНСТРУМЕНТА
+        buy_rate[0-100]: {agent.utils.get_buy_rate(instrument_uid=uid) or 'Unknown'}
+        
         # ИНСТРУКЦИЯ
         1. Проанализируй текущую цену и прогнозируемое изменение цены инструмента.
         2. Цена покупки должна быть на 0.5% ниже текущей стоимости.
         3. Подбери количество единиц инструмента по формуле: общая стоимость покупки / цена единицы инструмента.
-        4. Общая стоимость покупки должна быть меньше 25% от всех доступных средств.
-        5. Если покупка нецелесообразна, то создай торговую заявку с количество единиц 0.
+        4. Чем выше buy_rate, тем больше количество единиц инструмента.
+        5. Если buy_rate больше 75, то общая стоимость покупки должна быть меньше 25% от всех доступных средств.
+        6. Если buy_rate меньше 75, то общая стоимость покупки должна быть меньше 10% от всех доступных средств.
+        7. Если покупка нецелесообразна, то создай торговую заявку с количество единиц 0.
         '''
 
         print('RECOMMENDATION CREATE PROMPT', prompt)

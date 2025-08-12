@@ -79,6 +79,11 @@ export class TableFull3Component {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
+    const ls = this.ls.getItem(this.lsKey);
+    if (ls) {
+      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.PotentialPerspective);
+    }
+
     effect(() => {
       this.isLoaded.set(false);
       this.subscription?.unsubscribe();

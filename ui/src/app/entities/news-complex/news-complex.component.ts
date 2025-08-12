@@ -29,7 +29,9 @@ export class NewsComplexComponent {
       forkJoin([
         ...this.weeks.map(([from, to]) => this.apiService.getInstrumentNewsListRated(params.request, from, to)
         )
-      ])
+      ]).pipe(
+        map((list: NewsListRatedResponse[]) => list?.sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())),
+      )
     )
   });
 

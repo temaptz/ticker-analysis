@@ -70,10 +70,10 @@ def rank_last_news():
                                 generation_time_sec=(end - start),
                             )
 
-                            logger.log_info(
-                                message=f'Оценена новость для:\n{human_name}\nЗаголовок: {n.title}\nОценка: {serializer.to_json(n_rate)}',
-                                is_send_telegram=True,
-                            )
+                            # logger.log_info(
+                            #     message=f'Оценена новость для:\n{human_name}\nЗаголовок: {n.title}\nОценка: {serializer.to_json(n_rate)}',
+                            #     is_send_telegram=True,
+                            # )
         except Exception as e:
             logger.log_error(method_name='rank_last_news_item', error=e)
 

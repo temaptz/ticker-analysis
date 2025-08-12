@@ -100,6 +100,32 @@
           /> MACD
         </div>
       </label>
+
+      <label>
+        Графики
+        <br>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowNews()"
+            (change)="handleToggleBoolean('isShowNews', $event)"
+          /> Новости
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowPredictionsHistory()"
+            (change)="handleToggleBoolean('isShowPredictionsHistory', $event)"
+          /> История предсказаний
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowModels()"
+            (change)="handleToggleBoolean('isShowModels', $event)"
+          /> Отдельные модели
+        </div>
+      </label>
     </div>
   }
 </div>

@@ -310,6 +310,13 @@ def instrument_prediction_graph(request):
             date_to=date_to,
             interval=interval,
         )
+        resp[model.CONSENSUS] = predictions.get_prediction_graph(
+            uid=uid,
+            model_name=model.CONSENSUS,
+            date_from=datetime.datetime.now(datetime.timezone.utc),
+            date_to=date_to,
+            interval=interval,
+        )
     response = HttpResponse(serializer.to_json(resp))
 
     if resp:

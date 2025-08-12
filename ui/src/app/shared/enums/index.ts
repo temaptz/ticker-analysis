@@ -22,4 +22,5 @@ export enum ModelNameEnum {
   Ta_1_2 =  'ta_1_2',
   Ta_2 =  'ta_2',
   Ta_2_1 =  'ta_2_1',
+  Consensus =  'consensus',
 }
