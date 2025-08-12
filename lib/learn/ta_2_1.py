@@ -1,16 +1,53 @@
 import numpy
-from tinkoff.invest import InstrumentResponse, Instrument
+from tinkoff.invest import InstrumentResponse, Instrument, CandleInterval
 import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types_util, yandex_disk, docker, logger, yandex
+from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types_util, yandex_disk, docker, logger
 from lib.news import news_rate_v1
 from lib.learn import learn_utils, model
 
 
 def get_feature_names() -> list:
-    return ['target_date_days', 'news_positive_percent', 'news_negative_percent', 'news_neutral_percent', 'name', 'currency', 'country_of_risk', 'forecast_price_change', 'revenue_ttm', 'ebitda_ttm', 'market_capitalization', 'total_debt_mrq', 'eps_ttm', 'pe_ratio_ttm', 'ev_to_ebitda_mrq', 'dividend_payout_ratio_fy', 'price_change_2_days', 'price_change_1_week', 'price_change_1_month', 'price_change_3_months', 'price_change_6_months', 'price_change_1_year', 'price_change_2_years', 'price_change_3_years']
+    return [
+        'target_date_days',
+        'news_positive_percent',
+        'news_negative_percent',
+        'news_neutral_percent',
+        'name',
+        'currency',
+        'country_of_risk',
+        'forecast_price_change',
+        'revenue_ttm',
+        'ebitda_ttm',
+        'market_capitalization',
+        'total_debt_mrq',
+        'eps_ttm',
+        'pe_ratio_ttm',
+        'ev_to_ebitda_mrq',
+        'dividend_payout_ratio_fy',
+        'price_change_2_days_min',
+        'price_change_2_days_max',
+        'price_change_1_week_min',
+        'price_change_1_week_max',
+        'price_change_2_week_min',
+        'price_change_2_week_max',
+        'price_change_3_week_min',
+        'price_change_3_week_max',
+        'price_change_1_month_min',
+        'price_change_1_month_max',
+        'price_change_3_months_min',
+        'price_change_3_months_max',
+        'price_change_6_months_min',
+        'price_change_6_months_max',
+        'price_change_1_year_min',
+        'price_change_1_year_max',
+        'price_change_2_years_min',
+        'price_change_2_years_max',
+        'price_change_3_years_min',
+        'price_change_3_years_max',
+    ]
 
 
 def to_numpy_float(num: float) -> float:
@@ -40,14 +77,26 @@ class Ta21LearningCard:
     pe_ratio_ttm: float = None  # P/E — цена/прибыль
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
-    price_change_2_days: float = None # Изменение цены за 2 дня
-    price_change_1_week: float = None # Изменение цены за 1 неделю
-    price_change_1_month: float = None # Изменение цены за 1 месяц
-    price_change_3_months: float = None # Изменение цены за 3 месяца
-    price_change_6_months: float = None # Изменение цены за 6 месяцев
-    price_change_1_year: float = None # Изменение цены за 1 год
-    price_change_2_years: float = None # Изменение цены за 2 года
-    price_change_3_years: float = None # Изменение цены за 3 года
+    price_change_2_days_min: float = None # Изменение цены за 2 дня
+    price_change_2_days_max: float = None # Изменение цены за 2 дня
+    price_change_1_week_min: float = None # Изменение цены за 1 неделю
+    price_change_1_week_max: float = None # Изменение цены за 1 неделю
+    price_change_2_week_min: float = None # Изменение цены за 2 недели
+    price_change_2_week_max: float = None # Изменение цены за 2 недели
+    price_change_3_week_min: float = None # Изменение цены за 3 недели
+    price_change_3_week_max: float = None # Изменение цены за 3 недели
+    price_change_1_month_min: float = None # Изменение цены за 1 месяц
+    price_change_1_month_max: float = None # Изменение цены за 1 месяц
+    price_change_3_months_min: float = None # Изменение цены за 3 месяца
+    price_change_3_months_max: float = None # Изменение цены за 3 месяца
+    price_change_6_months_min: float = None # Изменение цены за 6 месяцев
+    price_change_6_months_max: float = None # Изменение цены за 6 месяцев
+    price_change_1_year_min: float = None # Изменение цены за 1 год
+    price_change_1_year_max: float = None # Изменение цены за 1 год
+    price_change_2_years_min: float = None # Изменение цены за 2 года
+    price_change_2_years_max: float = None # Изменение цены за 2 года
+    price_change_3_years_min: float = None # Изменение цены за 3 года
+    price_change_3_years_max: float = None # Изменение цены за 3 года
 
     def __init__(
             self,
@@ -99,14 +148,26 @@ class Ta21LearningCard:
             self.ev_to_ebitda_mrq = 0
             self.dividend_payout_ratio_fy = 0
 
-        self.price_change_2_days = self.get_price_change_days(days_count=2, is_fill_empty=is_fill_empty)
-        self.price_change_1_week = self.get_price_change_days(days_count=7, is_fill_empty=is_fill_empty)
-        self.price_change_1_month = self.get_price_change_days(days_count=30, is_fill_empty=is_fill_empty)
-        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3, is_fill_empty=is_fill_empty)
-        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6, is_fill_empty=is_fill_empty)
-        self.price_change_1_year = self.get_price_change_days(days_count=365, is_fill_empty=is_fill_empty)
-        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2, is_fill_empty=is_fill_empty)
-        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3, is_fill_empty=is_fill_empty)
+        self.price_change_2_days_min = self.get_price_change_days(days_count=2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_days_max = self.get_price_change_days(days_count=2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_1_week_min = self.get_price_change_days(days_count=7, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_1_week_max = self.get_price_change_days(days_count=7, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_2_week_min = self.get_price_change_days(days_count=7 * 2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_week_max = self.get_price_change_days(days_count=7 * 2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_week_min = self.get_price_change_days(days_count=7 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_week_max = self.get_price_change_days(days_count=7 * 3, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_1_month_min = self.get_price_change_days(days_count=30, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_1_month_max = self.get_price_change_days(days_count=30, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_months_min = self.get_price_change_days(days_count=30 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_months_max = self.get_price_change_days(days_count=30 * 3, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_6_months_min = self.get_price_change_days(days_count=30 * 6, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_6_months_max = self.get_price_change_days(days_count=30 * 6, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_1_year_min = self.get_price_change_days(days_count=365, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_1_year_max = self.get_price_change_days(days_count=365, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_2_years_min = self.get_price_change_days(days_count=365 * 2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_years_max = self.get_price_change_days(days_count=365 * 2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_years_min = self.get_price_change_days(days_count=365 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_years_max = self.get_price_change_days(days_count=365 * 3, is_max=True, is_fill_empty=is_fill_empty)
 
         news_rated = self.get_news_rated()
 
@@ -149,18 +210,34 @@ class Ta21LearningCard:
             self.is_ok = False
             return
 
-    def get_price_change_days(self, days_count: int, is_fill_empty=False) -> float or None:
-        target_date = self.date - datetime.timedelta(days=days_count)
+    def get_price_change_days(self, days_count: int, is_max: bool, is_fill_empty=False) -> float or None:
         if current_price := self.price:
-            delta_hours = 24 * 10 if days_count > 300 else 24
-            if target_price := instruments.get_instrument_price_by_date(
-                    uid=self.instrument.uid,
-                    date=target_date,
-                    delta_hours=delta_hours,
-            ):
-                if price_change := utils.get_change_relative_by_price(main_price=target_price, next_price=current_price):
-                    return price_change
+            interval = CandleInterval.CANDLE_INTERVAL_DAY
+            if days_count > 30:
+                interval = CandleInterval.CANDLE_INTERVAL_WEEK
+            if days_count > 300:
+                interval = CandleInterval.CANDLE_INTERVAL_MONTH
 
+            if candles := instruments.get_instrument_history_price_by_uid(
+                uid=self.instrument.uid,
+                days_count=days_count,
+                interval=interval,
+                to_date=self.date,
+            ):
+                if len(candles) > 0:
+                    extreme_price = None
+
+                    if is_max:
+                        extreme_price = max(candles, key=lambda x: x.close).close
+                    else:
+                        extreme_price = min(candles, key=lambda x: x.close).close
+
+                    if extreme_price:
+                        if price_change := utils.get_change_relative_by_price(
+                                main_price=current_price,
+                                next_price=utils.get_price_by_quotation(extreme_price),
+                        ):
+                            return price_change
         return 0 if is_fill_empty else None
 
     def get_forecast_change(self, is_fill_empty=False) -> float or None:
@@ -235,14 +312,26 @@ class Ta21LearningCard:
             to_numpy_float(self.pe_ratio_ttm),
             to_numpy_float(self.ev_to_ebitda_mrq),
             to_numpy_float(self.dividend_payout_ratio_fy),
-            to_numpy_float(self.price_change_2_days),
-            to_numpy_float(self.price_change_1_week),
-            to_numpy_float(self.price_change_1_month),
-            to_numpy_float(self.price_change_3_months),
-            to_numpy_float(self.price_change_6_months),
-            to_numpy_float(self.price_change_1_year),
-            to_numpy_float(self.price_change_2_years),
-            to_numpy_float(self.price_change_3_years),
+            to_numpy_float(self.price_change_2_days_min),
+            to_numpy_float(self.price_change_2_days_max),
+            to_numpy_float(self.price_change_1_week_min),
+            to_numpy_float(self.price_change_1_week_max),
+            to_numpy_float(self.price_change_2_week_min),
+            to_numpy_float(self.price_change_2_week_max),
+            to_numpy_float(self.price_change_3_week_min),
+            to_numpy_float(self.price_change_3_week_max),
+            to_numpy_float(self.price_change_1_month_min),
+            to_numpy_float(self.price_change_1_month_max),
+            to_numpy_float(self.price_change_3_months_min),
+            to_numpy_float(self.price_change_3_months_max),
+            to_numpy_float(self.price_change_6_months_min),
+            to_numpy_float(self.price_change_6_months_max),
+            to_numpy_float(self.price_change_1_year_min),
+            to_numpy_float(self.price_change_1_year_max),
+            to_numpy_float(self.price_change_2_years_min),
+            to_numpy_float(self.price_change_2_years_max),
+            to_numpy_float(self.price_change_3_years_min),
+            to_numpy_float(self.price_change_3_years_max),
         ]
 
     # Выходные данные для обучения
@@ -502,7 +591,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key___001',
+        'method': 'ta_2_1_get_record_cache_key___003',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

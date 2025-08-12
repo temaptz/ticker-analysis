@@ -58,7 +58,7 @@ def get_instrument_last_price_by_uid(uid: str) -> float or None:
     return None
 
 
-@cache.ttl_cache(ttl=3600 * 4, is_skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
 def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime) -> list[HistoricCandle]:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
