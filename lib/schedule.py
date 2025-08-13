@@ -2,7 +2,7 @@ import datetime
 import time
 import pytz
 from apscheduler.schedulers.blocking import BlockingScheduler
-from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent, logger, telegram
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent, logger, telegram, schedule_llm
 
 
 def start_schedule() -> None:
@@ -25,7 +25,7 @@ def start_schedule() -> None:
         'cron',
         day_of_week='mon',
         hour=10,
-        minute=30,
+        minute=20,
         timezone=timezone
     )
 
@@ -66,16 +66,6 @@ def start_schedule() -> None:
         timezone=timezone
     )
 
-    # LLM Задачи
-    scheduler.add_job(
-        process_llm_tasks,
-        trigger='cron',
-        day_of_week='mon-fri',
-        hour=11,
-        minute=00,
-        timezone=timezone
-    )
-
     # Проверка сообщений в телеге
     scheduler.add_job(
         process_task.process_updates,
@@ -83,26 +73,6 @@ def start_schedule() -> None:
         seconds=30
     )
 
+    schedule_llm.register_scheduler_jobs(scheduler=scheduler)
+
     scheduler.start()
-
-
-def process_llm_tasks() -> None:
-    telegram.send_message('Начало обработки LLM задач')
-    agent.sell.create_orders()
-    agent.buy.create_orders()
-    agent.instrument_rank_sell.update_recommendations()
-    agent.instrument_rank_buy.update_recommendations()
-
-    while True:
-        hour = datetime.datetime.now().hour
-
-        if 0 <= hour < 11:
-            print('⏹️ Завершение цикла rank_last_news — наступило 10:00.')
-            break
-
-        try:
-            agent.news_rank.rank_last_news()
-        except Exception as e:
-            logger.log_error(method_name='rank_last_news', error=e)
-
-        time.sleep(5)

@@ -226,55 +226,7 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
             'pred_ta_1_1': 1,
             'pred_ta_1_2': 5,
             'pred_ta_2': 3,
-            'pred_ta_2_1': 7,
-        }
-
-        # Собираем значения и веса
-        pred_values = [
-            (pred_ta_1, weights['pred_ta_1']),
-            (pred_ta_1_1, weights['pred_ta_1_1']),
-            (pred_ta_1_2, weights['pred_ta_1_2']),
-            (pred_ta_2, weights['pred_ta_2']),
-            (pred_ta_2_1, weights['pred_ta_2_1']),
-        ]
-
-        # Считаем взвешенное среднее только по существующим значениям
-        weighted_sum = 0
-        total_weight = 0
-        for value, weight in pred_values:
-            if value is not None:
-                weighted_sum += value * weight
-                total_weight += weight
-
-        if total_weight > 0:
-            return weighted_sum / total_weight
-
-    return None
-
-
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
-@logger.error_logger
-def get_prediction_by_date(instrument_uid: str, date_target: datetime.datetime, model_name: str) -> float or None:
-    p_db = predictions_db.get_predictions_by_uid_date(
-        uid=instrument_uid,
-        date_from=date_target - datetime.timedelta(days=10),
-        date_to=date_target + datetime.timedelta(days=10),
-        model_name=model_name,
-    )
-
-    pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
-    pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
-    pred_ta_1_2 = ta_1_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
-    pred_ta_2 = ta_2.predict_future(instrument_uid=instrument_uid, date_target=date_target)
-    pred_ta_2_1 = ta_2_1.predict_future(instrument_uid=instrument_uid, date_target=date_target)
-
-    if pred_ta_2_1 or pred_ta_2 or pred_ta_1_2:
-        weights = {
-            'pred_ta_1': 1,
-            'pred_ta_1_1': 1,
-            'pred_ta_1_2': 5,
-            'pred_ta_2': 3,
-            'pred_ta_2_1': 7,
+            'pred_ta_2_1': 9,
         }
 
         # Собираем значения и веса
