@@ -39,18 +39,21 @@ def get_instrument_info_prompt(instrument_uid: str) -> str:
         if instrument := instruments.get_instrument_by_uid(uid=instrument_uid):
             return f'''
             # НАЗВАНИЕ ИНСТРУМЕНТА
-            {instrument.name}
+            name: {instrument.name}
             
             # ТИКЕР ИНСТРУМЕНТА
-            {instrument.ticker}
+            ticker: {instrument.ticker}
             
             # UID ИНСТРУМЕНТА
-            {instrument.uid}
+            instrument_uid: {instrument.uid}
+            
+            # РАЗМЕР ЛОТА
+            lot_size: {instruments.get_instrument_by_uid(instrument_uid).lot or 1}
             '''
     except Exception as e:
         print('ERROR get_price_prediction_prompt', e)
 
-    return 'Инструмент не найден. Инструмент - Unknown'
+    return 'Инструмент не найден. Инструмент - Unknown'
 
 
 def get_fundamental_prompt(instrument_uid: str) -> str:
@@ -231,14 +234,14 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             
             # ПРОГНОЗ ОТНОСИТЕЛЬНОГО ИЗМЕНЕНИЯ ЦЕНЫ - price_prediction
     
-            Через 1 неделю: {prediction_week}
-            Через 2 недели: {prediction_2_weeks}
-            Через 3 недели: {prediction_3_weeks}
-            Через 1 месяц: {prediction_month}
-            Через 2 месяца: {prediction_2_months}
-            Через 3 месяца: {prediction_3_months}
-            Через 6 месяцев: {prediction_6_months}
-            Через 1 год: {prediction_year}
+            Через 1 неделю: {'+' if prediction_week > 0 else ''}{prediction_week * 100}%
+            Через 2 недели: {'+' if prediction_2_weeks > 0 else ''}{prediction_2_weeks * 100}%
+            Через 3 недели: {'+' if prediction_3_weeks > 0 else ''}{prediction_3_weeks * 100}%
+            Через 1 месяц: {'+' if prediction_month > 0 else ''}{prediction_month * 100}%
+            Через 2 месяца: {'+' if prediction_2_months > 0 else ''}{prediction_2_months * 100}%
+            Через 3 месяца: {'+' if prediction_3_months > 0 else ''}{prediction_3_months * 100}%
+            Через 6 месяцев: {'+' if prediction_6_months > 0 else ''}{prediction_6_months * 100}%
+            Через 1 год: {'+' if prediction_year > 0 else ''}{prediction_year * 100}%
             
             # ПРИМЕЧАНИЕ
             1. Прогноз относительного изменения цены вычисляется по формуле: ([прогнозируемая цена] - [текущая цена]) / [текущая цена]);

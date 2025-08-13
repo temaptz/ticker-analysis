@@ -225,8 +225,8 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
             'pred_ta_1': 1,
             'pred_ta_1_1': 1,
             'pred_ta_1_2': 5,
-            'pred_ta_2': 3,
-            'pred_ta_2_1': 9,
+            'pred_ta_2': 2,
+            'pred_ta_2_1': 11,
         }
 
         # Собираем значения и веса

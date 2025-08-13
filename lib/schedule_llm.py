@@ -17,16 +17,15 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import time
 import signal
 import multiprocessing as mp
 from typing import Optional, Dict
 
 import pytz
-from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
 from lib import agent, logger, telegram
 
 # === НАСТРОЙКИ ВРЕМЕНИ ===
@@ -73,7 +72,14 @@ def _start_proc(name: str, target, *args, **kwargs) -> Optional[mp.Process]:
     if p and p.is_alive():
         print(f"[SKIP] {name} уже запущен (pid={p.pid})")
         return p
-    p = mp.Process(target=target, name=name, args=args, kwargs=kwargs, daemon=True)
+    env_snapshot = dict(os.environ)
+    p = mp.Process(
+        target=target,
+        name=name,
+        args=(target, env_snapshot, *args),
+        kwargs=kwargs,
+        daemon=True,
+    )
     p.start()
     RUNNING[name] = p
     print(f"[START] {name} pid={p.pid}")
