@@ -10,7 +10,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 from tinkoff.invest import Instrument, StatisticResponse
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, db_2, logger, telegram
+from lib import instruments, fundamentals, users, predictions, news, serializer, agent, db_2, logger, telegram, utils
 from lib.agent import models, llm, planner, instrument_rank_buy
 
 
@@ -79,7 +79,7 @@ def create_orders():
                         if users.post_buy_order(
                             instrument_uid=rec.instrument_uid,
                             price_rub=price,
-                            quantity_lots=agent.utils.get_lots_qty(
+                            quantity_lots=utils.get_lots_qty(
                                 qty=rec.qty,
                                 instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
                             ),

@@ -150,9 +150,9 @@ def weekday_11_pipeline() -> None:
     deadline = _next_monday_10() if wd == 4 else _next_weekday_cutoff_10()
     deadline_ts = deadline.timestamp()
 
-    if wd in (0, 4):  # Пн/Пт — рекомендации
+    if wd in (1, 4):  # Вт/Пт — рекомендации
         _start_proc('RECS', _worker_update_recommendations, deadline_ts)
-    elif wd in (1, 2, 3):  # Вт/Ср/Чт — новости
+    elif wd in (0, 2, 3):  # Пн/Ср/Чт — новости
         _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
     else:
         # Если вдруг попали сюда (на всякий), запускаем новостной цикл
