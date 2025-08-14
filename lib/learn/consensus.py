@@ -307,6 +307,17 @@ def predict_future_relative_change(instrument_uid: str, date_target: datetime.da
             prediction = model.predict(data=card.get_x())
 
             if prediction:
+                if prediction > 2 or prediction < -2:
+                    logger.log_error(
+                        method_name='ANOMALY CONSENSUS.PREDICT_FUTURE_RELATIVE_CHANGE',
+                        debug_info=serializer.to_json({
+                            'instrument_ticker': card.instrument.ticker,
+                            'prediction': prediction,
+                            'csv_record': card.get_csv_record(),
+                        }),
+                        is_telegram_send=True,
+                    )
+
                 return utils.round_float(prediction)
         except Exception as e:
             logger.log_error(

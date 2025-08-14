@@ -245,35 +245,35 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             
             {{
                 "1_week": {{
-                    "prediction_relative": "{'+' if prediction_week > 0 else ''}{prediction_week * 100}%",
+                    "prediction_relative": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 неделю"
                 }},
                 "2_weeks": {{
-                    "prediction_relative": "{'+' if prediction_2_weeks > 0 else ''}{prediction_2_weeks * 100}%",
+                    "prediction_relative": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 2 недели"
                 }},
                 "3_weeks": {{
-                    "prediction_relative": "{'+' if prediction_3_weeks > 0 else ''}{prediction_3_weeks * 100}%",
+                    "prediction_relative": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 3 недели"
                 }},
                 "1_month": {{
-                    "prediction_relative": "{'+' if prediction_month > 0 else ''}{prediction_month * 100}%",
+                    "prediction_relative": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 месяц"
                 }},
                 "2_months": {{
-                    "prediction_relative": "{'+' if prediction_2_months > 0 else ''}{prediction_2_months * 100}%",
+                    "prediction_relative": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 2 месяца"
                 }},
                 "3_months": {{
-                    "prediction_relative": "{'+' if prediction_3_months > 0 else ''}{prediction_3_months * 100}%",
+                    "prediction_relative": "{'+' if prediction_3_months > 0 else ''}{utils.round_float(prediction_3_months, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 3 месяца"
                 }},
                 "6_months": {{
-                    "prediction_relative": "{'+' if prediction_6_months > 0 else ''}{prediction_6_months * 100}%",
+                    "prediction_relative": "{'+' if prediction_6_months > 0 else ''}{utils.round_float(prediction_6_months, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 6 месяцев"
                 }},
                 "1_year": {{
-                    "prediction_relative": "{'+' if prediction_year > 0 else ''}{prediction_year * 100}%",
+                    "prediction_relative": "{'+' if prediction_year > 0 else ''}{utils.round_float(prediction_year, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 год"
                 }}
             }}

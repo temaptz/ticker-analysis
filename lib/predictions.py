@@ -153,7 +153,6 @@ def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to:
         return []
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_graph(uid: str, model_name: model, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
     try:
         result = list()
