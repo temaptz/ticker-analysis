@@ -423,12 +423,12 @@ def predict(data: list) -> float or None:
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
-def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+def predict_future(instrument_uid: str, date_target: datetime.datetime, date_current: datetime.datetime = None) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
 
     card = Ta2LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
-        date=datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0),
+        date=(date_current or datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)),
         target_date=prediction_target_date,
         fill_empty=True,
     )
@@ -442,12 +442,16 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
     return None
 
 
-def predict_future_relative_change(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+def predict_future_relative_change(
+        instrument_uid: str,
+        date_target: datetime.datetime,
+        date_current: datetime.datetime = None,
+) -> float or None:
     try:
         current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
 
         if current_price:
-            if prediction := predict_future(instrument_uid=instrument_uid, date_target=date_target):
+            if prediction := predict_future(instrument_uid=instrument_uid, date_target=date_target, date_current=date_current):
                 return utils.get_change_relative_by_price(
                     main_price=current_price,
                     next_price=prediction,

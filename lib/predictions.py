@@ -1,28 +1,43 @@
 import datetime
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
-from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model
+from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model, consensus
 from lib import date_utils, logger, utils, instruments, cache, logger
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
 
-def get_prediction(instrument_uid: str, date_target: datetime.datetime, model_name: model = model.CONSENSUS) -> float or None:
+def get_prediction(instrument_uid: str, date_target: datetime.datetime, model_name: model = model.CONSENSUS, date_current: datetime.datetime = None) -> float or None:
     try:
         date = date_utils.convert_to_utc(date_target).replace(hour=12, minute=0, second=0, microsecond=0)
 
         if model_name == model.TA_1:
-            return get_relative_prediction_ta_1_by_uid(uid=instrument_uid)
+            return get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current)
         elif model_name == model.TA_1_1:
-            return get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid)
+            return get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current)
         elif model_name == model.TA_1_2:
-            return ta_1_2.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date)
+            return ta_1_2.predict_future_relative_change(
+                instrument_uid=instrument_uid,
+                date_target=date,
+                date_current=date_current,
+            )
         elif model_name == model.TA_2:
-            return ta_2.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date)
+            return ta_2.predict_future_relative_change(
+                instrument_uid=instrument_uid,
+                date_target=date,
+                date_current=date_current,
+            )
         elif model_name == model.TA_2_1:
-            return ta_2_1.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date)
+            return ta_2_1.predict_future_relative_change(
+                instrument_uid=instrument_uid,
+                date_target=date,
+                date_current=date_current,
+            )
         elif model_name == model.CONSENSUS:
-            return get_relative_predictions_consensus(instrument_uid=instrument_uid, date_target=date)
+            return consensus.predict_future_relative_change(
+                instrument_uid=instrument_uid,
+                date_target=date_target,
+            )
 
     except Exception as e:
         logger.log_error(method_name='get_prediction', error=e)
@@ -44,9 +59,9 @@ def get_prediction_ta_1_by_uid(uid: str) -> float or None:
 
 
 @cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
-def get_relative_prediction_ta_1_by_uid(uid: str) -> float or None:
+def get_relative_prediction_ta_1_by_uid(uid: str, date_current: datetime.datetime = None) -> float or None:
     c = LearningCard()
-    c.load_by_uid(uid=uid, fill_empty=True)
+    c.load_by_uid(uid=uid, fill_empty=True, date_current=date_current)
     x = c.get_x()
 
     try:
@@ -76,9 +91,9 @@ def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
 
 
 @cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
-def get_relative_prediction_ta_1_1_by_uid(uid: str) -> float or None:
+def get_relative_prediction_ta_1_1_by_uid(uid: str, date_current: datetime.datetime = None) -> float or None:
     c = ta_1_1.LearningCard()
-    c.load_by_uid(uid=uid, fill_empty=True)
+    c.load_by_uid(uid=uid, fill_empty=True, date_current=date_current)
     x = c.get_x()
 
     try:
@@ -212,7 +227,7 @@ def get_prediction_history_graph(
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
 @logger.error_logger
-def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+def calculate_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     date_target_utc = date_utils.convert_to_utc(date_target)
     pred_ta_1 = get_prediction_ta_1_by_uid(uid=instrument_uid)
     pred_ta_1_1 = get_prediction_ta_1_1_by_uid(uid=instrument_uid)
@@ -252,12 +267,16 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
     return None
 
 
-def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     if current_price := instruments.get_instrument_last_price_by_uid(uid=instrument_uid):
-        if consensus := get_predictions_consensus(instrument_uid=instrument_uid, date_target=date_target):
-            return utils.get_change_relative_by_price(
-                main_price=current_price,
-                next_price=consensus,
+        if c := consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target):
+            return utils.get_price_by_change_relative(
+                current_price=current_price,
+                relative_change=c,
             )
 
     return None
+
+
+def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+    return consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)

@@ -29,18 +29,18 @@ class LearningCard:
     def __init__(self):
         return
 
-    def load_by_uid(self, uid: str, fill_empty=False):
+    def load_by_uid(self, uid: str, fill_empty = False, date_current: datetime.datetime = None):
         try:
-            return self._load_by_uid(uid=uid, fill_empty=fill_empty)
+            self._load_by_uid(uid=uid, fill_empty=fill_empty, date_current=date_current)
         except Exception as e:
             print('ERROR TA-1 LearningCard load_by_uid', e)
             self.is_ok = False
 
     # uid, дата когда делается прогноз, кол-во дней от этой даты до прогноза
-    def _load_by_uid(self, uid: str, fill_empty=False):
+    def _load_by_uid(self, uid: str, fill_empty=False, date_current: datetime.datetime = None):
         self.uid = uid
         self.asset_uid = instruments.get_instrument_by_uid(uid).asset_uid
-        self.date = datetime.datetime.now()
+        self.date = date_current or datetime.datetime.now()
         self.ticker = instruments.get_instrument_by_uid(uid=self.uid).ticker
         self.history = self.get_history(candles=instruments.get_instrument_history_price_by_uid(
             uid=self.uid,

@@ -141,20 +141,24 @@ def instrument_recommendation_create(state: State) -> State:
         Подбери количество инструмента и цену покупки.
         
         # ДОСТУПНО СРЕДСТВ
-        {users.get_user_money_rub()} RUB
+        balance_rub: {users.get_user_money_rub()}
         
         # ОЦЕНКА ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ ИНСТРУМЕНТА
         buy_rate[0-100]: {agent.utils.get_buy_rate(instrument_uid=uid) or 'Unknown'}
         
+        # КОММЕНТАРИЙ ОБ ОЦЕНКЕ ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ ИНСТРУМЕНТА
+        buy_rate_conclusion: {agent.utils.get_buy_conclusion(instrument_uid=uid) or 'Unknown'}
+        
         # ИНСТРУКЦИЯ
         1. Проанализируй текущую цену и прогнозируемое изменение цены инструмента.
-        2. Цена покупки должна быть на 0.5% ниже текущей стоимости.
-        3. Подбери количество единиц инструмента по формуле: общая стоимость покупки / цена единицы инструмента.
-        4. Чем выше buy_rate, тем больше количество единиц инструмента.
-        5. Если buy_rate больше 75, то общая стоимость покупки должна быть меньше 25% от всех доступных средств.
-        6. Если buy_rate меньше 75, то общая стоимость покупки должна быть меньше 10% от всех доступных средств.
-        7. Количество единиц инструмента должно быть кратно размеру лота.
-        8. Если покупка нецелесообразна, то создай торговую заявку с количество единиц 0.
+        2. Цена покупки target_price должна быть на 0.5% ниже текущей стоимости.
+        3. Подбери количество единиц инструмента qty по формуле: total_price / target_price.
+        4. Общая стоимость покупки total_price = target_price * qty.
+        4. Чем выше buy_rate, тем больше должно быть qty и total_price.
+        5. Если buy_rate больше 75, то total_price должна быть меньше 25% balance_rub.
+        6. Если buy_rate меньше 75, то total_price должна быть меньше 10% balance_rub.
+        7. qty должно быть больше lot_size.
+        8. Если покупка нецелесообразна, то qty = 0.
         '''
 
         print('RECOMMENDATION CREATE PROMPT', prompt)
@@ -172,12 +176,8 @@ def instrument_recommendation_create(state: State) -> State:
                 config=llm.config,
         ):
             print('RECOMMENDATION CREATE RESPONSE', response)
-            instrument = instruments.get_instrument_by_uid(uid)
-            instrument_lot = instrument.lot or 1
-            response.qty = response.qty // instrument_lot
             agent.utils.output_json(response)
             result['instruments_recommendations'] = recommendations_list + [response]
-
 
     return result
 

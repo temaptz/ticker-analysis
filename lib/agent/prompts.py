@@ -10,6 +10,7 @@ def get_system_invest_prompt() -> str:
     3. Даешь взвешенные и продуманные инвестиционные рекомендации.
     4. Ты анализируешь различные показатели и помогаешь принимать финансовые решения.
     5. Инструментом называют акции компании.
+    6. Рассуждай пошагово.
     '''
 
 
@@ -71,55 +72,61 @@ def get_fundamental_prompt(instrument_uid: str) -> str:
 
                 result = f'''
                 # ТЕКУЩИЕ АКТУАЛЬНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ
-                                    
-                Валюта: {f.currency or 'Unknown'}
-                Выручка: {f.revenue_ttm or 'Unknown'}
-                EBITDA: {f.ebitda_ttm or 'Unknown'}
-                Капитализация: {f.market_capitalization or 'Unknown'}
-                Долг: {f.total_debt_mrq or 'Unknown'}
-                EPS - прибыль на акцию: {f.eps_ttm or 'Unknown'}
-                P/E - цена/прибыль: {f.pe_ratio_ttm or 'Unknown'}
-                EV/EBITDA - стоимость компании / EBITDA: {f.ev_to_ebitda_mrq or 'Unknown'}
-                DPR - коэффициент выплаты дивидендов: {f.dividend_payout_ratio_fy or 'Unknown'}
                 
-                # АРХИВНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ 6 МЕСЕЦЕВ НАЗАД
-                '''
-
-                if f_6_months:
-                    result += f'''
-                    
-                    Выручка: {f_6_months.revenue_ttm or 'Unknown'}
-                    EBITDA: {f_6_months.ebitda_ttm or 'Unknown'}
-                    Капитализация: {f_6_months.market_capitalization or 'Unknown'}
-                    Долг: {f_6_months.total_debt_mrq or 'Unknown'}
-                    EPS - прибыль на акцию: {f_6_months.eps_ttm or 'Unknown'}
-                    P/E - цена/прибыль: {f_6_months.pe_ratio_ttm or 'Unknown'}
-                    EV/EBITDA - стоимость компании / EBITDA: {f_6_months.ev_to_ebitda_mrq or 'Unknown'}
-                    DPR - коэффициент выплаты дивидендов: {f_6_months.dividend_payout_ratio_fy or 'Unknown'}
-                    '''
-                else:
-                    result += 'Нет данных'
-
-                result += f'''
-                # АРХИВНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ 12 МЕСЕЦЕВ НАЗАД
-                '''
-
-                if f_12_months:
-                    result += f'''
-                    
-                    Выручка: {f_12_months.revenue_ttm or 'Unknown'}
-                    EBITDA: {f_12_months.ebitda_ttm or 'Unknown'}
-                    Капитализация: {f_12_months.market_capitalization or 'Unknown'}
-                    Долг: {f_12_months.total_debt_mrq or 'Unknown'}
-                    EPS - прибыль на акцию: {f_12_months.eps_ttm or 'Unknown'}
-                    P/E - цена/прибыль: {f_12_months.pe_ratio_ttm or 'Unknown'}
-                    EV/EBITDA - стоимость компании / EBITDA: {f_12_months.ev_to_ebitda_mrq or 'Unknown'}
-                    DPR - коэффициент выплаты дивидендов: {f_12_months.dividend_payout_ratio_fy or 'Unknown'}
-                    '''
-                else:
-                    result += 'Нет данных'
-
-                result += f'''
+                [
+                    {{
+                        "date": "{datetime.datetime.now().strftime('%Y-%m-%d')}",
+                        "date_description": "Текущие фундаментальные показатели",
+                        "currency": "{f.currency}",
+                        "revenue_ttm": "{f.revenue_ttm}",
+                        "ebitda_ttm": "{f.ebitda_ttm}",
+                        "market_capitalization": "{f.market_capitalization}",
+                        "total_debt_mrq": "{f.total_debt_mrq}",
+                        "eps_ttm": "{f.eps_ttm}",
+                        "pe_ratio_ttm": "{f.pe_ratio_ttm}",
+                        "ev_to_ebitda_mrq": "{f.ev_to_ebitda_mrq}",
+                        "dividend_payout_ratio_fy": "{f.dividend_payout_ratio_fy}",
+                    }},
+                    {{
+                        "date": "{(datetime.datetime.now() - datetime.timedelta(days=30 * 6)).strftime('%Y-%m-%d')}",
+                        "date_description": "Фундаментальные показатели 6 месяцев назад",
+                        "currency": "{getattr(f_6_months, 'currency')}",
+                        "revenue_ttm": "{getattr(f_6_months, 'revenue_ttm')}",
+                        "ebitda_ttm": "{getattr(f_6_months, 'ebitda_ttm')}",
+                        "market_capitalization": "{getattr(f_6_months, 'market_capitalization')}",
+                        "total_debt_mrq": "{getattr(f_6_months, 'total_debt_mrq')}",
+                        "eps_ttm": "{getattr(f_6_months, 'eps_ttm')}",
+                        "pe_ratio_ttm": "{getattr(f_6_months, 'pe_ratio_ttm')}",
+                        "ev_to_ebitda_mrq": "{getattr(f_6_months, 'ev_to_ebitda_mrq')}",
+                        "dividend_payout_ratio_fy": "{getattr(f_6_months, 'dividend_payout_ratio_fy')}",
+                    }},
+                    {{
+                        "date": "{(datetime.datetime.now() - datetime.timedelta(days=30 * 12)).strftime('%Y-%m-%d')}",
+                        "date_description": "Фундаментальные показатели 12 месяцев назад",
+                        "currency": "{getattr(f_12_months, 'currency')}",
+                        "revenue_ttm": "{getattr(f_12_months, 'revenue_ttm')}",
+                        "ebitda_ttm": "{getattr(f_12_months, 'ebitda_ttm')}",
+                        "market_capitalization": "{getattr(f_12_months, 'market_capitalization')}",
+                        "total_debt_mrq": "{getattr(f_12_months, 'total_debt_mrq')}",
+                        "eps_ttm": "{getattr(f_12_months, 'eps_ttm')}",
+                        "pe_ratio_ttm": "{getattr(f_12_months, 'pe_ratio_ttm')}",
+                        "ev_to_ebitda_mrq": "{getattr(f_12_months, 'ev_to_ebitda_mrq')}",
+                        "dividend_payout_ratio_fy": "{getattr(f_12_months, 'dividend_payout_ratio_fy')}",
+                    }}
+                ]
+                
+                # РАСШИФРОВКА
+                
+                currency - валюта
+                revenue_ttm - выручка
+                ebitda_ttm - EBITDA
+                market_capitalization - капитализация
+                total_debt_mrq - долг
+                eps_ttm - EPS - прибыль на акцию
+                pe_ratio_ttm - P/E - цена/прибыль
+                ev_to_ebitda_mrq - EV/EBITDA - стоимость компании / EBITDA
+                dividend_payout_ratio_fy - DPR - коэффициент выплаты дивидендов
+                                    
                 # ИНСТРУКЦИЯ
 
                 1. **Выручка и EBITDA** — оцени динамику за 6 и 12 месяцев:
@@ -222,7 +229,9 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
         if current_price and (
                 prediction_week
                 or prediction_2_weeks
+                or prediction_3_weeks
                 or prediction_month
+                or prediction_2_months
                 or prediction_3_months
                 or prediction_6_months
                 or prediction_year
@@ -230,23 +239,50 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             return f'''
             # ТЕКУЩАЯ РЫНОЧНАЯ ЦЕНА ИНСТРУМЕНТА
             
-            {current_price}
+            current_price: {current_price}
             
             # ПРОГНОЗ ОТНОСИТЕЛЬНОГО ИЗМЕНЕНИЯ ЦЕНЫ - price_prediction
-    
-            Через 1 неделю: {'+' if prediction_week > 0 else ''}{prediction_week * 100}%
-            Через 2 недели: {'+' if prediction_2_weeks > 0 else ''}{prediction_2_weeks * 100}%
-            Через 3 недели: {'+' if prediction_3_weeks > 0 else ''}{prediction_3_weeks * 100}%
-            Через 1 месяц: {'+' if prediction_month > 0 else ''}{prediction_month * 100}%
-            Через 2 месяца: {'+' if prediction_2_months > 0 else ''}{prediction_2_months * 100}%
-            Через 3 месяца: {'+' if prediction_3_months > 0 else ''}{prediction_3_months * 100}%
-            Через 6 месяцев: {'+' if prediction_6_months > 0 else ''}{prediction_6_months * 100}%
-            Через 1 год: {'+' if prediction_year > 0 else ''}{prediction_year * 100}%
+            
+            {{
+                "1_week": {{
+                    "prediction_relative": "{'+' if prediction_week > 0 else ''}{prediction_week * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 1 неделю"
+                }},
+                "2_weeks": {{
+                    "prediction_relative": "{'+' if prediction_2_weeks > 0 else ''}{prediction_2_weeks * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 2 недели"
+                }},
+                "3_weeks": {{
+                    "prediction_relative": "{'+' if prediction_3_weeks > 0 else ''}{prediction_3_weeks * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 3 недели"
+                }},
+                "1_month": {{
+                    "prediction_relative": "{'+' if prediction_month > 0 else ''}{prediction_month * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 1 месяц"
+                }},
+                "2_months": {{
+                    "prediction_relative": "{'+' if prediction_2_months > 0 else ''}{prediction_2_months * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 2 месяца"
+                }},
+                "3_months": {{
+                    "prediction_relative": "{'+' if prediction_3_months > 0 else ''}{prediction_3_months * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 3 месяца"
+                }},
+                "6_months": {{
+                    "prediction_relative": "{'+' if prediction_6_months > 0 else ''}{prediction_6_months * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 6 месяцев"
+                }},
+                "1_year": {{
+                    "prediction_relative": "{'+' if prediction_year > 0 else ''}{prediction_year * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 1 год"
+                }}
+            }}
             
             # ПРИМЕЧАНИЕ
-            1. Прогноз относительного изменения цены вычисляется по формуле: ([прогнозируемая цена] - [текущая цена]) / [текущая цена]);
-            2. Прогноз относительного изменения цены является точным прогнозом цены в будущем;
-            3. Прогноз относительного изменения цены является точным, его можно и нужно использовать в финансовых решениях.
+            
+            1. Прогноз относительного изменения цены вычисляется по формуле: prediction_relative = ([прогнозируемая_цена] - [текущая_цена]) / [текущая_цена]) * 100%;
+            2. Прогноз относительного изменения цены prediction_relative является точным прогнозом цены в будущем;
+            3. prediction_relative надежная оценка которую нужно опираться при принятии финансового решения.
             '''
     except Exception as e:
         print('ERROR get_price_prediction_prompt', e)
@@ -257,41 +293,64 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
 def get_news_prompt(instrument_uid: str) -> str:
     try:
         now = datetime.datetime.now(tz=datetime.timezone.utc)
-        news_rate_week = news.news.get_influence_score(
+        news_rate_week_0 = news.news.get_influence_score(
             instrument_uid=instrument_uid,
             start_date=now - datetime.timedelta(days=7),
             end_date=now,
         )
-        news_2_weeks = news.news.get_influence_score(
+        news_rate_week_1 = news.news.get_influence_score(
             instrument_uid=instrument_uid,
             start_date=now - datetime.timedelta(days=14),
-            end_date=now,
+            end_date=now - datetime.timedelta(days=8),
         )
-        news_month = news.news.get_influence_score(
+        news_rate_week_2 = news.news.get_influence_score(
             instrument_uid=instrument_uid,
-            start_date=now - datetime.timedelta(days=30),
-            end_date=now,
+            start_date=now - datetime.timedelta(days=21),
+            end_date=now - datetime.timedelta(days=15),
+        )
+        news_rate_week_3 = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=now - datetime.timedelta(days=28),
+            end_date=now - datetime.timedelta(days=22),
         )
 
-        print('NEWS PROMPT DATA news_rate_week', news_rate_week)
-        print('NEWS PROMPT DATA news_2_weeks', news_2_weeks)
-        print('NEWS PROMPT DATA news_month', news_month)
+        print('NEWS PROMPT DATA news_rate_week_1', news_rate_week_0)
+        print('NEWS PROMPT DATA news_rate_week_1', news_rate_week_1)
+        print('NEWS PROMPT DATA news_rate_week_2', news_rate_week_2)
+        print('NEWS PROMPT DATA news_rate_week_3', news_rate_week_3)
 
-        if news_rate_week or news_2_weeks or news_month:
+        if news_rate_week_0 or news_rate_week_1 or news_rate_week_2 or news_rate_week_3:
             return f'''
             # РЕЙТИНГ НОВОСТНОГО ФОНА
-    
-            За последнюю неделю: {news_rate_week}
-            За последние 2 недели: {news_2_weeks}
-            За последний месяц: {news_month}
+            {{
+                "d0_7": {{
+                    "influence_score": {news_rate_week_0},
+                    "description": "Рейтинг новостного фона за период от 0 до 7 дней до текущей даты"
+                }},
+                "d8_14": {{
+                    "influence_score": {news_rate_week_1},
+                    "description": "Рейтинг новостного фона за период от 8 до 14 дней до текущей даты"
+                }},
+                "d15_21": {{
+                    "influence_score": {news_rate_week_2},
+                    "description": "Рейтинг новостного фона за период от 15 до 21 дней до текущей даты"
+                }},
+                "d22_28": {{
+                    "influence_score": {news_rate_week_3},
+                    "description": "Рейтинг новостного фона за период от 22 до 28 дней до текущей даты"
+                }}
+            }}
+            
             
             # ПРИМЕЧАНИЕ
             
-            Рейтинг новостного фона вычисляется путем сложения вычисленного influence_score каждой новости имеющей отношение к субъекту за указанный временной период.
-            Рейтинг новостного фона influence_score для каждой новости вычисляется по формуле influence_score = sentiment * impact_strength * mention_focus, где
-            sentiment - отношение новости по отношению к субъекту от -1 до 1,
-            impact_strength - силу влияния новости на цену акции от 0 до 1,
-            mention_focus - сфокусированность новости на субъекте от 0 до 1.
+            1. Рейтинг новостного фона influence_score - вещественное число
+            2. influence_score вычисляется путем сложения вычисленного influence_score_item каждой отдельной новости имеющей отношение к субъекту за указанный период времени.
+            3. Рейтинг новостного фона influence_score_item для каждой отдельной новости вычисляется по формуле influence_score_item = sentiment * impact_strength * mention_focus, где:
+             - sentiment - отношение новости по отношению к субъекту от -1 до 1;
+             - impact_strength - силу влияния новости на цену акции от 0 до 1;
+             - mention_focus - сфокусированность новости на субъекте от 0 до 1.
+             4. influence_score отражает силу и направление(положительное или отрицательное) влияния новостного фона за период времени на цену акции.
             '''
     except Exception as e:
         print('ERROR get_news_prompt', e)

@@ -26,6 +26,8 @@ from typing import Optional, Dict
 import pytz
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.cron import CronTrigger
+from dotenv import load_dotenv, find_dotenv
+
 from lib import agent, logger, telegram
 
 # === НАСТРОЙКИ ВРЕМЕНИ ===
@@ -34,6 +36,14 @@ TZ = pytz.timezone('Europe/Moscow')
 # === РЕЕСТР ЗАПУЩЕННЫХ ДОЛГИХ ПРОЦЕССОВ ===
 # Ключи: 'RECS', 'NEWS_WEEKDAY'
 RUNNING: Dict[str, Optional[mp.Process]] = {'RECS': None, 'NEWS_WEEKDAY': None}
+
+
+dotenv_path = find_dotenv()
+
+def _load_worker_env():
+    print('WILL OVERRIDE DOTENV', dotenv_path)
+    load_dotenv(dotenv_path=dotenv_path, override=True)
+    print('DOTENV LOADED langsmith_tracing', os.getenv('LANGSMITH_TRACING'))
 
 
 def _now() -> dt.datetime:
@@ -70,26 +80,25 @@ def _next_monday_10() -> dt.datetime:
 def _start_proc(name: str, target, *args, **kwargs) -> Optional[mp.Process]:
     p = RUNNING.get(name)
     if p and p.is_alive():
-        print(f"[SKIP] {name} уже запущен (pid={p.pid})")
+        print(f'[SKIP] {name} уже запущен (pid={p.pid})')
         return p
-    env_snapshot = dict(os.environ)
     p = mp.Process(
         target=target,
         name=name,
-        args=(target, env_snapshot, *args),
+        args=args,
         kwargs=kwargs,
         daemon=True,
     )
     p.start()
     RUNNING[name] = p
-    print(f"[START] {name} pid={p.pid}")
+    print(f'[START] {name} pid={p.pid}')
     return p
 
 
 def _kill_proc(name: str, reason: str) -> None:
     p = RUNNING.get(name)
     if p and p.is_alive():
-        print(f"[KILL] {name} pid={p.pid} — причина: {reason}")
+        print(f'[KILL] {name} pid={p.pid} — причина: {reason}')
         try:
             # сначала мягко
             p.terminate()
@@ -100,7 +109,7 @@ def _kill_proc(name: str, reason: str) -> None:
                 os.kill(p.pid, signal.SIGKILL)
                 p.join(timeout=5)
         except Exception as e:
-            logger.log_error(method_name=f"kill_{name}", error=e)
+            logger.log_error(method_name=f'kill_{name}', error=e)
     RUNNING[name] = None
 
 
@@ -109,6 +118,7 @@ def _kill_proc(name: str, reason: str) -> None:
 def _worker_update_recommendations(deadline_ts: float) -> None:
     """Обновление рекомендаций до дедлайна. Если не успеет — будет убит снаружи в 10:00."""
     try:
+        _load_worker_env()
         telegram.send_message('Старт обновления рекомендаций')
         agent.instrument_rank_sell.update_recommendations()
         agent.instrument_rank_buy.update_recommendations()
@@ -123,6 +133,7 @@ def _worker_news_loop(deadline_ts: float) -> None:
     deadline = dt.datetime.fromtimestamp(deadline_ts, tz=TZ)
     telegram.send_message('Старт оценки новостей')
     try:
+        _load_worker_env()
         while _now() < deadline:
             try:
                 agent.news_rank.rank_last_news()

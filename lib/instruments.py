@@ -1,4 +1,6 @@
 import time
+from functools import wraps
+
 import grpc
 from typing import Optional
 
@@ -6,6 +8,25 @@ from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, 
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
 from lib import cache, utils, date_utils, db_2, yandex, serializer
+
+
+def catch_exhaused():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+
+                return result
+
+            except Exception as e:
+                if e.code == grpc.StatusCode.RESOURCE_EXHAUSTED:
+                    print(f'ERROR EXHAUSTED in function {func.__name__}, kwargs: {kwargs}', e)
+                    time.sleep(1)
+                    return func(*args, **kwargs)
+
+        return wrapper
+    return decorator
 
 
 @cache.ttl_cache(ttl=3600 * 24, is_convert_object=True, is_skip_empty=True)
@@ -41,6 +62,7 @@ def get_instrument_by_ticker(ticker: str) -> Instrument:
 
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
+@catch_exhaused()
 def get_instrument_last_price_by_uid(uid: str) -> float or None:
     try:
         with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
@@ -59,58 +81,49 @@ def get_instrument_last_price_by_uid(uid: str) -> float or None:
 
 
 @cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
+@catch_exhaused()
 def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime) -> list[HistoricCandle]:
-    try:
-        with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            return client.market_data.get_candles(
-                instrument_id=uid,
-                from_=(to_date - datetime.timedelta(days=days_count)),
-                to=to_date,
-                interval=interval
-            ).candles or []
-
-    except Exception as e:
-        print('ERROR get_instrument_history_price_by_uid', e)
+    with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.market_data.get_candles(
+            instrument_id=uid,
+            from_=(to_date - datetime.timedelta(days=days_count)),
+            to=to_date,
+            interval=interval
+        ).candles or []
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
+@catch_exhaused()
 def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=24) -> float or None:
     if date.date() == datetime.datetime.now().date():
         return get_instrument_last_price_by_uid(uid=uid)
 
-    try:
-        with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            date_local = date_utils.convert_to_local(date=date)
-            date_utc = date_utils.convert_to_utc(date=date)
-            candles = client.market_data.get_candles(
-                instrument_id=uid,
-                from_=date_utc - datetime.timedelta(hours=delta_hours),
-                to=date_utc + datetime.timedelta(hours=delta_hours),
-                interval=(CandleInterval.CANDLE_INTERVAL_HOUR if delta_hours < 48 else CandleInterval.CANDLE_INTERVAL_DAY)
-            ).candles
+    with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+        date_local = date_utils.convert_to_local(date=date)
+        date_utc = date_utils.convert_to_utc(date=date)
+        candles = client.market_data.get_candles(
+            instrument_id=uid,
+            from_=date_utc - datetime.timedelta(hours=delta_hours),
+            to=date_utc + datetime.timedelta(hours=delta_hours),
+            interval=(CandleInterval.CANDLE_INTERVAL_HOUR if delta_hours < 48 else CandleInterval.CANDLE_INTERVAL_DAY)
+        ).candles
 
-            nearest: HistoricCandle or None = None
+        nearest: HistoricCandle or None = None
 
-            for i in candles:
-                time_local = date_utils.convert_to_local(i.time)
-
-                if nearest:
-                    delta_sec_i = (date_local - time_local).total_seconds()
-                    delta_sec_nearest = (date_local - date_utils.convert_to_local(nearest.time)).total_seconds()
-
-                    if delta_sec_i < delta_sec_nearest:
-                        nearest = i
-                else:
-                    nearest = i
+        for i in candles:
+            time_local = date_utils.convert_to_local(i.time)
 
             if nearest:
-                return utils.get_price_by_candle(nearest)
+                delta_sec_i = (date_local - time_local).total_seconds()
+                delta_sec_nearest = (date_local - date_utils.convert_to_local(nearest.time)).total_seconds()
 
-    except grpc.RpcError as e:                              # ловим gRPC-ошибку
-        print('ERROR get_instrument_price_by_date', e)
+                if delta_sec_i < delta_sec_nearest:
+                    nearest = i
+            else:
+                nearest = i
 
-        if e.code() == grpc.StatusCode.RESOURCE_EXHAUSTED:
-            time.sleep(1)
+        if nearest:
+            return utils.get_price_by_candle(nearest)
 
     return None
 

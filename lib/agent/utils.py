@@ -35,3 +35,21 @@ def get_buy_rate(instrument_uid: str) -> int or None:
         if tag.tag_value:
             return int(tag.tag_value)
     return None
+
+def get_buy_conclusion(instrument_uid: str) -> int or None:
+    if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument_uid, tag_name='llm_buy_conclusion'):
+        if tag.tag_value:
+            return tag.tag_value
+    return None
+
+def get_sell_rate(instrument_uid: str) -> int or None:
+    if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument_uid, tag_name='llm_sell_rate'):
+        if tag.tag_value:
+            return int(tag.tag_value)
+    return None
+
+def get_sell_conclusion(instrument_uid: str) -> int or None:
+    if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument_uid, tag_name='llm_sell_conclusion'):
+        if tag.tag_value:
+            return tag.tag_value
+    return None

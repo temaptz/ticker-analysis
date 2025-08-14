@@ -364,12 +364,16 @@ def mean_absolute_percentage_error(y_true, y_pred):
 
 
 @cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
-def predict_future_relative_change(instrument_uid: str, date_target: datetime.datetime) -> float or None:
+def predict_future_relative_change(
+        instrument_uid: str,
+        date_target: datetime.datetime,
+        date_current: datetime.datetime = None,
+) -> float or None:
     prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
 
     card = Ta12LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
-        date=datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0),
+        date=(date_current or datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)),
         target_date=prediction_target_date,
         fill_empty=True,
     )

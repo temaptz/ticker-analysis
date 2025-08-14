@@ -13,6 +13,7 @@ def save_weekly_predictions():
     save_predictions(model_name=model.TA_1_2)
     save_predictions(model_name=model.TA_2)
     save_predictions(model_name=model.TA_2_1)
+    save_predictions(model_name=model.CONSENSUS)
 
 
 def save_predictions_ta_1():
@@ -82,14 +83,11 @@ def save_predictions(model_name: str):
                 date_to=date_to,
                 interval_seconds=3600 * 24 * 7
         ):
-            prediction = None
-
-            if model_name == model.TA_1_2:
-                prediction = ta_1_2.predict_future(instrument_uid=instrument.uid, date_target=date)
-            elif model_name == model.TA_2:
-                prediction = ta_2.predict_future(instrument_uid=instrument.uid, date_target=date)
-            elif model_name == model.TA_2_1:
-                prediction = ta_2_1.predict_future(instrument_uid=instrument.uid, date_target=date)
+            prediction = predictions.get_prediction(
+                instrument_uid=instrument.uid,
+                date_target=date,
+                model_name=model_name,
+            )
 
             if prediction is not None:
                 logger.log_info(f'PREDICTION {model_name}: {prediction}')
