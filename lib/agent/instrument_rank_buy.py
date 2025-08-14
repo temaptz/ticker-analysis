@@ -243,12 +243,6 @@ def llm_news_rate(state: State):
 
 def llm_total_buy_rate(state: State):
     if instrument_uid := state.get('instrument_uid', None):
-        fundamental_rate = state.get('fundamental_rate', 'Unknown')
-        price_prediction_rate = state.get('price_prediction_rate', 'Unknown')
-        news_rate = state.get('news_rate', 'Unknown')
-        comment_fundamental = state.get('comment_fundamental', 'Unknown')
-        comment_price_prediction = state.get('comment_price_prediction', 'Unknown')
-
         f = state.get('fundamental_rate', None)
         price_prediction = state.get('price_prediction_rate', None)
         n = state.get('news_rate', None)
@@ -263,15 +257,15 @@ def llm_total_buy_rate(state: State):
             human_message = HumanMessage(content=f'''
             # ПРЕДВАРИТЕЛЬНЫЕ ОЦЕНКИ
 
-            1. Прогноз изменения цены - price_prediction_rate: {price_prediction_rate or 'Unknown'} (0-100) #Самый важный
-            2. Фундаментальные показатели - fundamental_rate: {fundamental_rate or 'Unknown'} (0-100) #Второй по значимости
-            3. Новостной фон - news_rate: {news_rate or 'Unknown'} (0-100) #Может быть не точным, должен учитываться третьим по значению 
+            1. Прогноз изменения цены - price_prediction_rate: {price_prediction_rate or 'Unknown'} [0-100] #Самый важный
+            2. Фундаментальные показатели - fundamental_rate: {fundamental_rate or 'Unknown'} [0-100] #Второй по значимости
+            3. Новостной фон - news_rate: {news_rate or 'Unknown'} [0-100] #Может быть не точным, должен учитываться третьим по значению 
             
             # КОММЕНТАРИЙ О ФУНДАМЕНТАЛЬНЫХ ПОКАЗАТЕЛЯХ
-            {comment_fundamental}
+            {fundamental_conclusion}
             
             # КОММЕНТАРИЙ О ПРОГНОЗЕ ИЗМЕНЕНИЯ ЦЕНЫ
-            {comment_price_prediction}
+            {price_prediction_conclusion}
             
             # КОММЕНТАРИЙ О НОВОСТНОМ ФОНЕ
             {news_conclusion}
