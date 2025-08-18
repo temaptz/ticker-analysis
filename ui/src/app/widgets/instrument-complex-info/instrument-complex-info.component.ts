@@ -18,11 +18,12 @@ import { NewsComplexComponent } from '../../entities/news-complex/news-complex.c
 import { BalanceComponent } from '../../entities/balance/balance.component';
 import { RecommendationComponent } from '../../entities/recommendation/recommendation.component';
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
+import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/prediction-dynamic.component';
 
 
 @Component({
   selector: 'instrument-complex-info',
-  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent, BalanceComponent, RecommendationComponent, LlmBuySellRateComponent],
+  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent, BalanceComponent, RecommendationComponent, LlmBuySellRateComponent, PredictionDynamicComponent],
   providers: [],
   templateUrl: './instrument-complex-info.component.html',
   styleUrl: './instrument-complex-info.component.scss'

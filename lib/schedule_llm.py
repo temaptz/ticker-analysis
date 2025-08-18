@@ -16,7 +16,7 @@
 """
 from __future__ import annotations
 
-import datetime as dt
+import datetime
 import os
 import time
 import signal
@@ -46,11 +46,11 @@ def _load_worker_env():
     print('DOTENV LOADED langsmith_tracing', os.getenv('LANGSMITH_TRACING'))
 
 
-def _now() -> dt.datetime:
-    return dt.datetime.now(TZ)
+def _now() -> datetime.datetime:
+    return datetime.datetime.now(TZ)
 
 
-def _next_weekday_cutoff_10() -> dt.datetime:
+def _next_weekday_cutoff_10() -> datetime.datetime:
     """Возвращает ближайший дедлайн 10:00 следующего буднего дня.
     Например, если сейчас вт 11:15 — дедлайн будет ср 10:00.
     Если сегодня пт 12:00 — дедлайн будет пн 10:00.
@@ -58,24 +58,27 @@ def _next_weekday_cutoff_10() -> dt.datetime:
     now = _now()
     d = now
     # шаг до следующего дня
-    d = d + dt.timedelta(days=1)
+    d = d + datetime.timedelta(days=1)
     # Прокрутим до ближайшего буднего дня (0=Пн..6=Вс)
     while d.weekday() >= 5:  # 5=Сб, 6=Вс
-        d = d + dt.timedelta(days=1)
+        d = d + datetime.timedelta(days=1)
     return d.replace(hour=10, minute=0, second=0, microsecond=0)
 
 
-def _next_monday_10() -> dt.datetime:
+def _next_monday_10() -> datetime.datetime:
     now = _now()
     # 0=Пн..6=Вс, надо добраться до Пн
     days_ahead = (0 - now.weekday()) % 7
-    target = (now + dt.timedelta(days=days_ahead)).replace(hour=10, minute=0, second=0, microsecond=0)
+    target = (now + datetime.timedelta(days=days_ahead)).replace(hour=10, minute=0, second=0, microsecond=0)
     if target <= now:
-        target = target + dt.timedelta(days=7)
+        target = target + datetime.timedelta(days=7)
     return target
 
 
-# === УТИЛИТЫ ДЛЯ ПРОЦЕССОВ ===
+def _get_deadline():
+    wd = _now().weekday()
+    return _next_monday_10() if wd == 4 else _next_weekday_cutoff_10()
+
 
 def _start_proc(name: str, target, *args, **kwargs) -> Optional[mp.Process]:
     p = RUNNING.get(name)
@@ -105,7 +108,6 @@ def _kill_proc(name: str, reason: str) -> None:
             p.join(timeout=30)
             if p.is_alive():
                 # жёсткая остановка
-                import os
                 os.kill(p.pid, signal.SIGKILL)
                 p.join(timeout=5)
         except Exception as e:
@@ -130,7 +132,7 @@ def _worker_update_recommendations(deadline_ts: float) -> None:
 
 def _worker_news_loop(deadline_ts: float) -> None:
     """Цикл оценки новостей до дедлайна. В будни — до ближайших 10:00, на выходных — до пн 10:00."""
-    deadline = dt.datetime.fromtimestamp(deadline_ts, tz=TZ)
+    deadline = datetime.datetime.fromtimestamp(deadline_ts, tz=TZ)
     telegram.send_message('Старт оценки новостей')
     try:
         _load_worker_env()
@@ -164,7 +166,7 @@ def weekday_11_pipeline() -> None:
 
     # 2) Ветка в зависимости от дня
     wd = _now().weekday()  # 0=Пн..6=Вс
-    deadline = _next_monday_10() if wd == 4 else _next_weekday_cutoff_10()
+    deadline = _get_deadline()
     deadline_ts = deadline.timestamp()
 
     if wd in (1, 4):  # Вт/Пт — рекомендации
@@ -200,3 +202,14 @@ def register_scheduler_jobs(scheduler: BaseScheduler):
         id='weekday_11_pipeline',
         replace_existing=True,
     )
+
+
+def start_available_job():
+    print('LLM START AVAILABLE JOB')
+    deadline = _get_deadline()
+    
+    if deadline > _now():
+        logger.log_info(message='Начало выполнения LLM задач')
+
+        deadline_ts = deadline.timestamp()
+        _start_proc('RECS', _worker_update_recommendations, deadline_ts)

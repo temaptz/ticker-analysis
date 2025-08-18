@@ -3,12 +3,12 @@
 
   @if (price) {
     @for (i of predictions.value(); track i.date) {
-      <div>
-        [{{ i.date | date : 'yyyy-MM-dd' }}]:
+      <div [title]="i.date | date : 'yyyy-MM-dd'">
+        [Через {{ i.date | dateDurationDays }} дней]:
         <span
           [class.plus]="i.prediction > 0"
           [class.minus]="i.prediction <= 0"
-        >{{ i.prediction }}</span>
+        >{{ i.prediction | relativeChangeToPercent }}</span>
       </div>
     }
   }

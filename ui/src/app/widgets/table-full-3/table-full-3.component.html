@@ -77,15 +77,15 @@
       </td>
     </ng-container>
 
-    <ng-container matColumnDef="forecast">
-      <th mat-header-cell *matHeaderCellDef>Прогноз аналитиков</th>
-      <td mat-cell *matCellDef="let instrument">
-        <forecast [instrumentUid]="instrument.uid"></forecast>
-        <br>
-        <br>
-        <forecast-history [instrumentUid]="instrument.uid"></forecast-history>
-      </td>
-    </ng-container>
+<!--    <ng-container matColumnDef="forecast">-->
+<!--      <th mat-header-cell *matHeaderCellDef>Прогноз аналитиков</th>-->
+<!--      <td mat-cell *matCellDef="let instrument">-->
+<!--        <forecast [instrumentUid]="instrument.uid"></forecast>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <forecast-history [instrumentUid]="instrument.uid"></forecast-history>-->
+<!--      </td>-->
+<!--    </ng-container>-->
 
     <ng-container matColumnDef="prediction">
       <th mat-header-cell *matHeaderCellDef>Цена + прогноз на месяц</th>

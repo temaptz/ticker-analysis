@@ -15,25 +15,25 @@
         }
       </div>
 
-      @if (week?.total_percent) {
-        <div class="bar">
-          <news-bar
-            [positivePercent]="week.total_percent.positive_percent"
-            [negativePercent]="week.total_percent.negative_percent"
-            [neutralPercent]="week.total_percent.neutral_percent"
-            [absolute]="week.total_absolute"
-          ></news-bar>
-        </div>
-      } @else {
-        <div class="bar">
-          <p>-</p>
-          <news-bar
-            [positivePercent]="0"
-            [negativePercent]="0"
-            [neutralPercent]="100"
-          ></news-bar>
-        </div>
-      }
+<!--      @if (week?.total_percent) {-->
+<!--        <div class="bar">-->
+<!--          <news-bar-->
+<!--            [positivePercent]="week.total_percent.positive_percent"-->
+<!--            [negativePercent]="week.total_percent.negative_percent"-->
+<!--            [neutralPercent]="week.total_percent.neutral_percent"-->
+<!--            [absolute]="week.total_absolute"-->
+<!--          ></news-bar>-->
+<!--        </div>-->
+<!--      } @else {-->
+<!--        <div class="bar">-->
+<!--          <p>-</p>-->
+<!--          <news-bar-->
+<!--            [positivePercent]="0"-->
+<!--            [negativePercent]="0"-->
+<!--            [neutralPercent]="100"-->
+<!--          ></news-bar>-->
+<!--        </div>-->
+<!--      }-->
     </div>
   }
 } @placeholder {

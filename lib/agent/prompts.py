@@ -245,44 +245,72 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             
             {{
                 "1_week": {{
-                    "prediction_relative": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 неделю"
                 }},
                 "2_weeks": {{
-                    "prediction_relative": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 2 недели"
                 }},
                 "3_weeks": {{
-                    "prediction_relative": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 3 недели"
                 }},
                 "1_month": {{
-                    "prediction_relative": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 месяц"
                 }},
                 "2_months": {{
-                    "prediction_relative": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 2 месяца"
                 }},
                 "3_months": {{
-                    "prediction_relative": "{'+' if prediction_3_months > 0 else ''}{utils.round_float(prediction_3_months, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_3_months > 0 else ''}{utils.round_float(prediction_3_months, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 3 месяца"
                 }},
                 "6_months": {{
-                    "prediction_relative": "{'+' if prediction_6_months > 0 else ''}{utils.round_float(prediction_6_months, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_6_months > 0 else ''}{utils.round_float(prediction_6_months, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 6 месяцев"
                 }},
                 "1_year": {{
-                    "prediction_relative": "{'+' if prediction_year > 0 else ''}{utils.round_float(prediction_year, 5) * 100}%",
+                    "prediction_relative_percent": "{'+' if prediction_year > 0 else ''}{utils.round_float(prediction_year, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 год"
                 }}
             }}
             
             # ПРИМЕЧАНИЕ
             
-            1. Прогноз относительного изменения цены вычисляется по формуле: prediction_relative = ([прогнозируемая_цена] - [текущая_цена]) / [текущая_цена]) * 100%;
-            2. Прогноз относительного изменения цены prediction_relative является точным прогнозом цены в будущем;
-            3. prediction_relative надежная оценка которую нужно опираться при принятии финансового решения.
+            1. Прогноз относительного изменения цены вычисляется по формуле: prediction_relative_percent = ([прогнозируемая_цена] - [текущая_цена]) / [текущая_цена]) * 100%;
+            2. Прогноз относительного изменения цены prediction_relative_percent является точным прогнозом цены в будущем;
+            3. prediction_relative_percent надежная оценка которую нужно опираться при принятии финансового решения.
+            
+            # ИДЕАЛЬНЫЙ ПРИМЕР ДЛЯ ПОКУПКИ
+            Пример, за который можно ставить высшую оценку по критерию прогноза цены если цель - выгодная покупка
+            
+            {{ 
+                "1_week": {{ "prediction_relative_percent": "5%" }}, 
+                "2_weeks": {{ "prediction_relative_percent": "7.5%" }}, 
+                "3_weeks": {{ "prediction_relative_percent": "10%" }}, 
+                "1_month": {{ "prediction_relative_percent": "12.5%" }}, 
+                "2_months": {{ "prediction_relative_percent": "15%" }}, 
+                "3_months": {{ "prediction_relative_percent": "17.5%" }}, 
+                "6_months": {{ "prediction_relative_percent": "20%" }}, 
+                "1_year": {{ "prediction_relative_percent": "22.5%" }}
+            }}
+            
+            # ИДЕАЛЬНЫЙ ПРИМЕР ДЛЯ ПРОДАЖИ
+            Пример, за который можно ставить высшую оценку по критерию прогноза цены если цель - выгодная продажа
+            
+            {{ 
+                "1_week": {{ "prediction_relative_percent": "-5%" }}, 
+                "2_weeks": {{ "prediction_relative_percent": "-7.5%" }}, 
+                "3_weeks": {{ "prediction_relative_percent": "-10%" }}, 
+                "1_month": {{ "prediction_relative_percent": "-12.5%" }}, 
+                "2_months": {{ "prediction_relative_percent": "-15%" }}, 
+                "3_months": {{ "prediction_relative_percent": "-17.5%" }}, 
+                "6_months": {{ "prediction_relative_percent": "-20%" }}, 
+                "1_year": {{ "prediction_relative_percent": "-22.5%" }}
+            }}
             '''
     except Exception as e:
         print('ERROR get_price_prediction_prompt', e)
@@ -350,7 +378,43 @@ def get_news_prompt(instrument_uid: str) -> str:
              - sentiment - отношение новости по отношению к субъекту от -1 до 1;
              - impact_strength - силу влияния новости на цену акции от 0 до 1;
              - mention_focus - сфокусированность новости на субъекте от 0 до 1.
-             4. influence_score отражает силу и направление(положительное или отрицательное) влияния новостного фона за период времени на цену акции.
+            4. influence_score отражает силу и направление(положительное или отрицательное) влияния новостного фона за период времени на цену акции.
+            
+            # ИДЕАЛЬНЫЙ ПРИМЕР ДЛЯ ПОКУПКИ
+            Пример, за который можно ставить высшую оценку по критерию оценки новостного фона если цель - выгодная покупка
+            
+            {{
+                "d0_7": {{
+                    "influence_score": 5,
+                }},
+                "d8_14": {{
+                    "influence_score": 3.7,
+                }},
+                "d15_21": {{
+                    "influence_score": 3,
+                }},
+                "d22_28": {{
+                    "influence_score": 1.5,
+                }}
+            }}
+            
+            # ИДЕАЛЬНЫЙ ПРИМЕР ДЛЯ ПРОДАЖИ
+            Пример, за который можно ставить высшую оценку по критерию оценки новостного фона если цель - выгодная продажа
+            
+            {{
+                "d0_7": {{
+                    "influence_score": -5,
+                }},
+                "d8_14": {{
+                    "influence_score": -3.5,
+                }},
+                "d15_21": {{
+                    "influence_score": -1.7,
+                }},
+                "d22_28": {{
+                    "influence_score": -1,
+                }}
+            }} 
             '''
     except Exception as e:
         print('ERROR get_news_prompt', e)
@@ -372,6 +436,30 @@ def get_profit_calc_prompt(instrument_uid: str) -> str:
             Потенциальная прибыль при продаже всех бумаг - potential_profit: {calc['potential_profit'] or 'Unknown'}
             Потенциальная прибыль в процентах при продаже всех бумаг - potential_profit_percent: {calc['potential_profit_percent'] or 'Unknown'}
             Средняя цена покупки - avg_price: {calc['avg_price'] or 'Unknown'}
+            
+            # ИДЕАЛЬНЫЙ ПРИМЕР ДЛЯ ПРОДАЖИ
+            Пример за который нужно ставить высшую оценку по критерию потенциальной выгоды если цель - выгодная продажа
+            
+            {{
+                "current_price": 105,
+                "balance": 500,
+                "market_value": 52500,
+                "potential_profit": 45500,
+                "potential_profit_percent": 50,
+                "avg_price": 70
+            }}
+            
+            # НЕВЫГОДНЫЙ ПРИМЕР ДЛЯ ПРОДАЖИ
+            Пример за который нужно ставить низшую оценку по критерию потенциальной выгоды если цель - выгодная продажа
+            
+            {{
+                "current_price": 30,
+                "balance": 500,
+                "market_value": 15000,
+                "potential_profit": -20000,
+                "potential_profit_percent": -55,
+                "avg_price": 70
+            }}
             '''
     except Exception as e:
         print('ERROR get_invest_recommendation_prompt', e)

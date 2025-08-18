@@ -10,8 +10,8 @@ import { ApiService } from '../../shared/services/api.service';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
-import { ForecastComponent } from '../../entities/forecast/forecast.component';
-import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
+// import { ForecastComponent } from '../../entities/forecast/forecast.component';
+// import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
@@ -32,8 +32,8 @@ import { DrawerComponent } from '../../entities/drawer/drawer.component';
     InstrumentLogoComponent,
     FundamentalsComponent,
     BalanceComponent,
-    ForecastComponent,
-    ForecastHistoryComponent,
+    // ForecastComponent,
+    // ForecastHistoryComponent,
     ComplexGraphComponent,
     MatSortModule,
     RouterModule,
@@ -63,7 +63,7 @@ export class TableFull3Component {
     'fundamental',
     'complex',
     'balance',
-    'forecast',
+    // 'forecast',
     'prediction',
     'news',
     'llm_buy_sell_rate',

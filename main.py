@@ -1,24 +1,28 @@
-import datetime
-import os
+# import datetime
+# import os
 from dotenv import load_dotenv
 
 from lib import (
     telegram,
     docker,
     schedule,
-    users,
-    serializer,
-    news,
-    fundamentals_save,
-    predictions,
-    predictions_save,
-    utils,
-    date_utils,
-    yandex_disk,
+    # users,
+    # serializer,
+    # news,
+    # fundamentals_save,
+    # predictions,
+    # predictions_save,
+    # utils,
+    # date_utils,
+    # yandex_disk,
+    # agent,
+    # invest_calc,
+    # learn,
+    schedule_llm,
 )
 from lib.db_2 import init, db_utils, predictions_db
-from lib.learn import model
-import pandas
+# from lib.learn import model
+# import pandas
 
 load_dotenv()
 
@@ -30,12 +34,18 @@ print('IS PROD', docker.is_prod())
 
 if docker.is_docker():
     telegram.send_message('Скрипт ticker-analysis main запущен')
+    schedule_llm.start_available_job()
     schedule.start_schedule()
 else:
     print('NOT DOCKER')
 
+    # schedule_llm.test_run()
+
+    # learn.consensus.learn()
+
     # agent.get_invest_recommendation()
-    # agent.agent_3.run()
+    # agent.instrument_rank_buy.update_recommendations()
+    # agent.news_rank.rank_last_news()
 
     # news_500 =pandas.read_csv('./local_llm/news_500.csv')
     #

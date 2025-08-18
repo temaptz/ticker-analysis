@@ -6,6 +6,8 @@ import { InstrumentInList } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
 import { CurrentPriceService } from '../../shared/services/current-price.service';
 import { PreloaderComponent } from '../preloader/preloader.component';
+import { RelativeChangeToPercentPipe } from '../../shared/pipes/relative-change-to-percent.pipe';
+import { DateDurationDaysPipe } from '../../shared/pipes/date-duration-days.pipe';
 
 interface PredictionDynamicItem {
   prediction: number;
@@ -15,7 +17,7 @@ interface PredictionDynamicItem {
 
 @Component({
   selector: 'prediction-dynamic',
-  imports: [CommonModule, PreloaderComponent],
+  imports: [CommonModule, PreloaderComponent, RelativeChangeToPercentPipe, DateDurationDaysPipe],
   providers: [],
   templateUrl: './prediction-dynamic.component.html',
   styleUrl: './prediction-dynamic.component.scss'

@@ -50,7 +50,7 @@ def create_orders():
                     available_instruments_uids.append(instrument.uid)
 
         if len(available_instruments_uids) == 0:
-            print('NO AVAILABLE INSTRUMENTS')
+            logger.log_info(message='Нет инструментов для продажи > 75', is_send_telegram=True)
             return
 
         result = graph.invoke(
@@ -86,8 +86,9 @@ def create_orders():
                             ),
                         ):
                             instrument = instruments.get_instrument_by_uid(rec.instrument_uid)
-                            telegram.send_message(
-                                message=f'Создана заявка на продажу для: "{instrument.name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей'
+                            logger.log_info(
+                                message=f'Создана заявка на продажу для: "{instrument.name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей',
+                                is_send_telegram=True,
                             )
 
 
