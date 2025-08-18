@@ -212,4 +212,4 @@ def start_available_job():
         logger.log_info(message='Начало выполнения LLM задач')
 
         deadline_ts = deadline.timestamp()
-        _start_proc('RECS', _worker_update_recommendations, deadline_ts)
+        _start_proc('RECS', _worker_news_loop, deadline_ts)
