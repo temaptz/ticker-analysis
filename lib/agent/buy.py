@@ -22,6 +22,7 @@ class BuyRecommendation(BaseModel):
     instrument_uid: str
     target_price: float
     qty: int
+    total_price: float
 
 
 class StructuredResult(BaseModel):
@@ -152,14 +153,17 @@ def instrument_recommendation_create(state: State) -> State:
         
         # ИНСТРУКЦИЯ
         1. Проанализируй текущую цену и прогнозируемое изменение цены инструмента.
-        2. Цена покупки target_price должна быть на 0.5% ниже текущей стоимости.
-        3. Подбери количество единиц инструмента qty по формуле: total_price / target_price.
-        4. Общая стоимость покупки total_price = target_price * qty.
-        4. Чем выше buy_rate, тем больше должно быть qty и total_price.
-        5. Если buy_rate больше 75, то total_price должна быть меньше 25% balance_rub.
-        6. Если buy_rate меньше 75, то total_price должна быть меньше 10% balance_rub.
-        7. qty должно быть больше или равно lot_size.
-        8. Если покупка нецелесообразна, то qty = 0.
+        2. Подбери общую стоимость покупки total_price = target_price * qty учитывая следующие правила:
+         - Чем выше buy_rate, тем больше должно быть total_price;
+         - Если buy_rate больше 75, то total_price должна составлять меньше 25% balance_rub;
+         - Если buy_rate меньше 75, то total_price должна составлять меньше 10% balance_rub.
+        3. Подбери цену покупки target_price она должна быть на 0.5% ниже текущей стоимости.
+        4. Подбери количество единиц инструмента qty = total_price / target_price.
+        5. Округли qty чтобы оно было кратно lot_size.
+        6. Если покупка нецелесообразна, в соответствии со здравым смыслом или со следующими критериями, то qty = 0:
+         - Если при данном qty total_price будет больше половины balance_rub при buy_rate < 75;
+         - Если при данном qty total_price будет больше 30% от balance_rub при buy_rate < 70;
+         - Если при данном qty total_price будет больше 15% от balance_rub при buy_rate < 60.
         '''
 
         print('RECOMMENDATION CREATE PROMPT', prompt)
