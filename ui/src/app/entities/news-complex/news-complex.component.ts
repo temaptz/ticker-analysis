@@ -40,7 +40,6 @@ export class NewsComplexComponent {
     [startOfDay(subDays(new Date(), 13)), endOfDay(subDays(new Date(), 7))],
     [startOfDay(subDays(new Date(), 20)), endOfDay(subDays(new Date(), 14))],
     [startOfDay(subDays(new Date(), 27)), endOfDay(subDays(new Date(), 21))],
-    [startOfDay(subDays(new Date(), 27)), endOfDay(new Date())],
   ];
 
   private apiService = inject(ApiService);

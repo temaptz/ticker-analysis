@@ -158,7 +158,7 @@ def instrument_recommendation_create(state: State) -> State:
         4. Чем выше buy_rate, тем больше должно быть qty и total_price.
         5. Если buy_rate больше 75, то total_price должна быть меньше 25% balance_rub.
         6. Если buy_rate меньше 75, то total_price должна быть меньше 10% balance_rub.
-        7. qty должно быть больше lot_size.
+        7. qty должно быть больше или равно lot_size.
         8. Если покупка нецелесообразна, то qty = 0.
         '''
 
