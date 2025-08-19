@@ -45,6 +45,11 @@ def _load_worker_env():
     load_dotenv(dotenv_path=dotenv_path, override=True)
     print('DOTENV LOADED langsmith_tracing', os.getenv('LANGSMITH_TRACING'))
 
+    os.environ['LANGSMITH_TRACING'] = os.getenv('LANGSMITH_TRACING')
+    os.environ['LANGSMITH_ENDPOINT'] = os.getenv('LANGSMITH_ENDPOINT')
+    os.environ['LANGSMITH_API_KEY'] = os.getenv('LANGSMITH_API_KEY')
+    os.environ['LANGSMITH_PROJECT'] = os.getenv('LANGSMITH_PROJECT')
+
 
 def _now() -> datetime.datetime:
     return datetime.datetime.now(TZ)
