@@ -58,11 +58,12 @@ def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float) ->
             price_increment = utils.get_price_by_quotation(
                 price=instruments.get_instrument_by_uid(uid=instrument_uid).min_price_increment
             )
+            price = utils.get_quotation_by_price(math.floor(price_rub / price_increment) * price_increment)
 
             if order := client.orders.post_order(
                 instrument_id=instrument_uid,
                 quantity=quantity_lots,
-                price=utils.get_quotation_by_price(math.floor(price_rub / price_increment) * price_increment),
+                price=price,
                 account_id=get_analytics_account().id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
                 direction=OrderDirection.ORDER_DIRECTION_BUY,
@@ -70,7 +71,17 @@ def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float) ->
                 return order
 
     except Exception as e:
-        logger.log_error(method_name='post_buy_order', error=e)
+        logger.log_error(
+            method_name='post_buy_order',
+            error=e,
+            debug_info=serializer.to_json({
+                'instrument_name': instruments.get_instrument_by_uid(instrument_uid).name,
+                'quantity_lots': quantity_lots,
+                'price_rub': price_rub,
+                'price_increment': price_increment,
+                'price_quotation': price,
+            }),
+        )
 
     return None
 
@@ -81,11 +92,12 @@ def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -
             price_increment = utils.get_price_by_quotation(
                 price=instruments.get_instrument_by_uid(uid=instrument_uid).min_price_increment
             )
+            price = utils.get_quotation_by_price(math.ceil(price_rub / price_increment) * price_increment)
 
             if order := client.orders.post_order(
                 instrument_id=instrument_uid,
                 quantity=quantity_lots,
-                price=utils.get_quotation_by_price(math.ceil(price_rub / price_increment) * price_increment),
+                price=price,
                 account_id=get_analytics_account().id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
                 direction=OrderDirection.ORDER_DIRECTION_SELL,
@@ -93,7 +105,17 @@ def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -
                 return order
 
     except Exception as e:
-        logger.log_error(method_name='post_sell_order', error=e)
+        logger.log_error(
+            method_name='post_sell_order',
+            error=e,
+            debug_info=serializer.to_json({
+                'instrument_name': instruments.get_instrument_by_uid(instrument_uid).name,
+                'quantity_lots': quantity_lots,
+                'price_rub': price_rub,
+                'price_increment': price_increment,
+                'price_quotation': price,
+            }),
+        )
 
     return None
 

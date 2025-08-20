@@ -152,18 +152,22 @@ def instrument_recommendation_create(state: State) -> State:
         buy_rate_conclusion: {agent.utils.get_buy_conclusion(instrument_uid=uid) or 'Unknown'}
         
         # ИНСТРУКЦИЯ
-        1. Проанализируй текущую цену и прогнозируемое изменение цены инструмента.
-        2. Подбери общую стоимость покупки total_price = target_price * qty учитывая следующие правила:
+        1. Проанализируй текущую цену - current_price, баланс - balance_rub, прогнозируемое изменение цены инструмента - predicted_price, оценку привлекательности покупки инструмента - buy_rate.
+        2. Подбери цену покупки target_price она должна быть на 0.5% ниже current_price.
+        3. Подбери общую стоимость покупки total_price учитывая следующие условия:
          - Чем выше buy_rate, тем больше должно быть total_price;
-         - Если buy_rate больше 75, то total_price должна составлять меньше 25% balance_rub;
-         - Если buy_rate меньше 75, то total_price должна составлять меньше 10% balance_rub.
-        3. Подбери цену покупки target_price она должна быть на 0.5% ниже текущей стоимости.
-        4. Подбери количество единиц инструмента qty = total_price / target_price.
-        5. Округли qty чтобы оно было кратно lot_size.
-        6. Если покупка нецелесообразна, в соответствии со здравым смыслом или со следующими критериями, то qty = 0:
-         - Если при данном qty total_price будет больше половины balance_rub при buy_rate < 75;
-         - Если при данном qty total_price будет больше 30% от balance_rub при buy_rate < 70;
-         - Если при данном qty total_price будет больше 15% от balance_rub при buy_rate < 60.
+         - Если buy_rate от 70 до 100, то total_price должно быть меньше balance_rub * 0.25;
+         - Если buy_rate от 60 до 70, то total_price должно быть меньше balance_rub * 0.15;
+         - Если buy_rate от 50 до 60, то total_price должно быть меньше balance_rub * 0.05;
+         - Если buy_rate меньше 50, то total_price должно быть меньше balance_rub * 0.03.
+        4. Посчитай количество единиц инструмента qty = total_price / target_price.
+        5. Округли qty в большую сторону чтобы оно делилось без остатка на lot_size.
+        6. Посчитай новую общую стоимость покупки total_price = target_price * qty.
+        7. Установи qty = 0 если не выполняется одно из условий:
+         - Если buy_rate от 70 до 100, то total_price должно быть меньше balance_rub * 0.5;
+         - Если buy_rate от 60 до 70, то total_price должно быть меньше balance_rub * 0.3;
+         - Если buy_rate от 50 до 60, то total_price должно быть меньше balance_rub * 0.2;
+         - Если buy_rate меньше 50, то total_price должно быть меньше balance_rub * 0.2.
         '''
 
         print('RECOMMENDATION CREATE PROMPT', prompt)
