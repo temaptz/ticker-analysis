@@ -1,6 +1,7 @@
 # import datetime
 # import os
 from dotenv import load_dotenv
+load_dotenv()
 
 from lib import (
     telegram,
@@ -23,8 +24,6 @@ from lib import (
 from lib.db_2 import init, db_utils, predictions_db
 # from lib.learn import model
 # import pandas
-
-load_dotenv()
 
 init.init_db()
 db_utils.optimize_db()

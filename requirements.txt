@@ -30,5 +30,6 @@ langchain==0.3.27
 langchain-ollama==0.3.6
 langchain_community==0.3.27
 langchain_core==0.3.74
+langsmith==0.4.15
 python-dotenv
 restrictedpython==8.0

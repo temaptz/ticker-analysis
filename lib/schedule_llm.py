@@ -26,7 +26,7 @@ from typing import Optional, Dict
 import pytz
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.cron import CronTrigger
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv
 
 from lib import agent, logger, telegram
 
@@ -41,14 +41,11 @@ RUNNING: Dict[str, Optional[mp.Process]] = {'RECS': None, 'NEWS_WEEKDAY': None}
 dotenv_path = find_dotenv()
 
 def _load_worker_env():
-    print('WILL OVERRIDE DOTENV', dotenv_path)
+    from dotenv import load_dotenv
+    from langsmith import utils as _ls_utils
     load_dotenv(dotenv_path=dotenv_path, override=True)
-    print('DOTENV LOADED langsmith_tracing', os.getenv('LANGSMITH_TRACING'))
-
-    os.environ['LANGSMITH_TRACING'] = os.getenv('LANGSMITH_TRACING')
-    os.environ['LANGSMITH_ENDPOINT'] = os.getenv('LANGSMITH_ENDPOINT')
-    os.environ['LANGSMITH_API_KEY'] = os.getenv('LANGSMITH_API_KEY')
-    os.environ['LANGSMITH_PROJECT'] = os.getenv('LANGSMITH_PROJECT')
+    _ls_utils.get_env_var.cache_clear()
+    os.environ.setdefault('LANGCHAIN_CALLBACKS_BACKGROUND', 'false')
 
 
 def _now() -> datetime.datetime:
@@ -156,6 +153,8 @@ def _worker_news_loop(deadline_ts: float) -> None:
 
 def weekday_11_pipeline() -> None:
     """Будничный цикл: 11:00 — создать заявки, затем старт длинной задачи по дню недели."""
+    _load_worker_env()
+
     # На всякий случай, перед началом чистим возможные хвосты
     _kill_proc('RECS', 'weekday-11-start')
     _kill_proc('NEWS_WEEKDAY', 'weekday-11-start')
@@ -210,11 +209,13 @@ def register_scheduler_jobs(scheduler: BaseScheduler):
 
 
 def start_available_job():
-    print('LLM START AVAILABLE JOB')
-    deadline = _get_deadline()
-    
-    if deadline > _now():
-        logger.log_info(message='Начало выполнения LLM задач')
+    if _now().hour != 10:
+        print('LLM START AVAILABLE JOB')
 
-        deadline_ts = deadline.timestamp()
-        _start_proc('RECS', _worker_news_loop, deadline_ts)
+        deadline = _get_deadline()
+
+        if deadline > _now():
+            logger.log_info(message='Начало выполнения LLM задач')
+
+            deadline_ts = deadline.timestamp()
+            _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
