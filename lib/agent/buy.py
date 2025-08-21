@@ -1,17 +1,15 @@
 import datetime
 from typing import TypedDict, Annotated
 
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_experimental.plan_and_execute import PlanAndExecute, load_chat_planner, load_agent_executor
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
-from tinkoff.invest import Instrument, StatisticResponse
 from lib import instruments, fundamentals, users, predictions, news, serializer, agent, db_2, logger, telegram, utils
-from lib.agent import models, llm, planner, instrument_rank_buy
+from lib.agent import llm
 
 
 class StructuredList(BaseModel):

@@ -290,7 +290,7 @@ def get_instrument_buy_rate_for_sort(instrument: Instrument) -> float:
 @cache.ttl_cache(ttl=3600)
 def get_instrument_profit_for_sort(instrument: Instrument) -> float:
     try:
-        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid, account_id=get_analytics_account().id)
 
         if calc and calc['potential_profit'] is not None:
             return calc['potential_profit']
@@ -304,7 +304,7 @@ def get_instrument_profit_for_sort(instrument: Instrument) -> float:
 @cache.ttl_cache(ttl=3600)
 def get_instrument_cost_for_sort(instrument: Instrument) -> float:
     try:
-        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid)
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid, account_id=get_analytics_account().id)
 
         if calc and calc['market_value'] is not None:
             return calc['market_value']

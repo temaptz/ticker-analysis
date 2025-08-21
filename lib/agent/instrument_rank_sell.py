@@ -1,17 +1,12 @@
-import datetime
-from typing import TypedDict, Annotated
-
+from typing import TypedDict
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_experimental.plan_and_execute import PlanAndExecute, load_chat_planner, load_agent_executor
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.graph.message import add_messages
 from pydantic import BaseModel
-from tinkoff.invest import Instrument, StatisticResponse
 from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts
-from lib.agent import models, llm, planner
+from lib.agent import llm
 
 
 class RatePercentWithConclusion(BaseModel):
@@ -146,14 +141,16 @@ def llm_price_prediction_rate(state: State):
         # ИНСТРУКЦИЯ
         
         1. Проанализируй изменение цены на каждом интервале времени.
-        2. Учитывай что акции выгоднее продавать при высокой цене.
-        3. Прогноз цены на длительный период может быть менее точным.
-        4. Если в будущем согласно прогнозу цена будет расти, то продажа сейчас менее выгодна.
+        2. Учитывай что акции выгоднее продавать при высокой цене и перед трендом на снижение.
+        3. Если в ближайшем будущем согласно прогнозу цена будет расти, то продажа сейчас менее выгодна.
+        4. Достаточный тренд на снижение в ближайшем будущем не меньше месяца увеличивает вероятность выгодной продажи и оценку.
         5. Оцени, насколько выгодна продажа акций именно сейчас.
-        4. Присвой итоговую числовую оценку от 0 до 100, где:
-           - 0-25 - прогноз изменения цены указывает на стабильный рост, продажа в ближайшее время не выгодна;
+        6. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
+           - 0-25 - прогноз изменения цены на ближайший месяц указывает на стабильный рост, продажа в ближайшее время не выгодна;
            - 26-74 - в ближайший месяц возможен потенциал роста, сейчас продажа может быть не выгодна;
            - 75-100 - прогноз изменения цены на ближайший месяц стабильно отрицательный, сейчас оптимальный момент для продажи.
+        7. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
+        8. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
         
         
         # ФОРМАТ ОТВЕТА

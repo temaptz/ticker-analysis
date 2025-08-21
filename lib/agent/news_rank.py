@@ -1,19 +1,13 @@
-import datetime
 import time
-from typing import TypedDict, Annotated
-
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_experimental.graph_transformers.llm import system_prompt
-from langchain_experimental.plan_and_execute import PlanAndExecute, load_chat_planner, load_agent_executor
+from typing import TypedDict
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.graph.message import add_messages
 from pydantic import BaseModel
-from tinkoff.invest import Instrument, StatisticResponse
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts, types_util
-from lib.agent import models, llm, planner
+from lib import instruments, news, db_2, logger, types_util, users
+from lib.agent import llm
 
 
 class Value(BaseModel):
@@ -31,7 +25,9 @@ class State(TypedDict, total=False):
 def rank_last_news():
     graph = get_news_rank_graph()
 
-    for i in instruments.get_instruments_white_list():
+    for i in users.sort_instruments_cost(
+            instruments_list=instruments.get_instruments_white_list()
+    ):
         try:
             if human_name := instruments.get_instrument_human_name(uid=i.uid):
                 if n := news.news.get_last_unrated_news_by_instrument_uid(instrument_uid=i.uid):

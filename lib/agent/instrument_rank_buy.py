@@ -1,17 +1,12 @@
-import datetime
-from typing import TypedDict, Annotated
-
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_experimental.plan_and_execute import PlanAndExecute, load_chat_planner, load_agent_executor
+from typing import TypedDict
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.graph.message import add_messages
 from pydantic import BaseModel
-from tinkoff.invest import Instrument, StatisticResponse
 from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts
-from lib.agent import models, llm, planner
+from lib.agent import llm
 
 
 class RatePercentWithConclusion(BaseModel):
@@ -152,12 +147,16 @@ def llm_price_prediction_rate(state: State):
         1. Проанализируй прогноз изменения цены на каждом интервале времени.
         2. Оцени стабильность и направление ожидаемой динамики.
         3. На основе анализа, прими решение о привлекательности покупки.
-        4. Присвой итоговую числовую оценку от 0 до 100, где:
+        4. Учти что акции выгоднее покупать по низкой цене перед трендом на рост в ближайший месяц.
+        5. Чем выше тренд на рост, тем выше должна быть твоя оценка.
+        6. Присвой итоговую числовую оценку выгодности покупки от 0 до 100, где:
            - 0-25 - прогноз цены стабильно отрицательный, покупка убыточна;
            - 26-50 - в ближайший месяц прогнозируется незначительный рост, покупка мало привлекательна;
            - 51-75 - прогноз цены в ближайший месяц стабильно положительный, покупка привлекательна;
-           - 76-100 - в ближайшие несколько месяцев прогнозируется высокий рост, покупка максимально привлекательна.
-        5. Если в ближайшие несколько месяцев прогнозируется стабильный высокий рост, а в ближайшие пару недель прогнозируется небольшое краткосрочное снижение, то оценивай рост в перспективе как более важный и считай покупку на падении привлекательной и выгодной.
+           - 76-100 - в ближайшее время больше месяца прогнозируется высокий рост, покупка максимально привлекательна.
+        7. Если в ближайшие несколько месяцев прогнозируется стабильный высокий рост, а в ближайшие пару недель прогнозируется небольшое краткосрочное снижение, то оценивай рост в перспективе как более важный и считай покупку на падении привлекательной и выгодной.
+        8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
+        9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
         
         # ФОРМАТ ОТВЕТА
         
