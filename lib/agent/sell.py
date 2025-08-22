@@ -168,7 +168,6 @@ def instrument_recommendation_create(state: State) -> State:
                     SystemMessage(content=agent.prompts.get_thinking_prompt()),
                     HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=uid)),
                     HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=uid)),
-                    HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=uid)),
                     HumanMessage(content=agent.prompts.get_profit_calc_prompt(instrument_uid=uid)),
                     HumanMessage(content=prompt),
                 ],

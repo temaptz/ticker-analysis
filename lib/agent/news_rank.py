@@ -35,6 +35,7 @@ def rank_last_news():
                         'human_name': human_name,
                         'news_text': f'Заголовок:\n{n.title}\n\nТекст:\n{n.text}',
                     }
+                    print('BEFORE GRAPH RUN', human_name)
                     start = time.time()
                     result = graph.invoke(
                         input=graph_input,

@@ -134,10 +134,10 @@ def _worker_update_recommendations(deadline_ts: float) -> None:
 
 def _worker_news_loop(deadline_ts: float) -> None:
     """Цикл оценки новостей до дедлайна. В будни — до ближайших 10:00, на выходных — до пн 10:00."""
+    _load_worker_env()
     deadline = datetime.datetime.fromtimestamp(deadline_ts, tz=TZ)
     telegram.send_message('Старт оценки новостей')
     try:
-        _load_worker_env()
         while _now() < deadline:
             try:
                 agent.news_rank.rank_last_news()

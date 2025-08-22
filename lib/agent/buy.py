@@ -166,6 +166,7 @@ def instrument_recommendation_create(state: State) -> State:
          - Если buy_rate от 60 до 70, то total_price должно быть меньше balance_rub * 0.3;
          - Если buy_rate от 50 до 60, то total_price должно быть меньше balance_rub * 0.2;
          - Если buy_rate меньше 50, то total_price должно быть меньше balance_rub * 0.2.
+         8. Желательно чтобы qty > 0. Если qty = 0, то попробуй пройти инструкцию еще раз с учетом полученного опыта, если это не помогло, то оставь qty = 0.
         '''
 
         print('RECOMMENDATION CREATE PROMPT', prompt)
@@ -176,8 +177,6 @@ def instrument_recommendation_create(state: State) -> State:
                     SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                     SystemMessage(content=agent.prompts.get_thinking_prompt()),
                     HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=uid)),
-                    HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=uid)),
-                    HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=uid)),
                     HumanMessage(content=prompt),
                 ],
                 config=llm.config,
