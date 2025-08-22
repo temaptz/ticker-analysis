@@ -27,8 +27,9 @@ def update_recommendations():
     for i in users.sort_instruments_for_buy(
             instruments_list=instruments.get_instruments_white_list()
     ):
-        if not i.for_qual_investor_flag:
-            try:
+
+        try:
+            if not i.for_qual_investor_flag:
                 result = graph_buy.invoke(
                     input={'instrument_uid': i.uid},
                     debug=True,
@@ -54,8 +55,8 @@ def update_recommendations():
                             tag_name='llm_buy_conclusion',
                             tag_value=structured_response.final_conclusion,
                         )
-            except Exception as e:
-                logger.log_error(method_name='update_recommendations_item buy', error=e)
+        except Exception as e:
+            logger.log_error(method_name='update_recommendations_item buy', error=e)
 
 
 def get_buy_rank_graph() -> CompiledStateGraph:
