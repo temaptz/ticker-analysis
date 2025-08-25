@@ -137,6 +137,9 @@ def instrument_recommendation_create(state: State) -> State:
         Ты специалист по биржевой торговле. 
         Создай оптимальную выгодную торговую заявку для продажи инструмента.
         
+        # ТЕКУЩАЯ ЦЕНА
+        current_price: {instruments.get_instrument_last_price_by_uid(uid=uid)}
+        
         # БАЛАНС ИНСТРУМЕНТА В ПОРТФЕЛЕ (шт.)
         balance_qty: {users.get_user_instrument_balance(instrument_uid=uid, account_id=users.get_analytics_account().id)}
         

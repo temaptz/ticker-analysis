@@ -7,37 +7,56 @@ from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
 
-def get_prediction(instrument_uid: str, date_target: datetime.datetime, model_name: model = model.CONSENSUS, date_current: datetime.datetime = None) -> float or None:
+def get_prediction(
+        instrument_uid: str,
+        date_target: datetime.datetime,
+        model_name: model = model.CONSENSUS,
+        date_current: datetime.datetime = None,
+        period_days: int = 1,
+) -> float or None:
     try:
-        date = date_utils.convert_to_utc(date_target).replace(hour=12, minute=0, second=0, microsecond=0)
+        days = [date_target + datetime.timedelta(days=o) for o in ([0] + [d for k in range(1, period_days) for d in (-k, k)])][:period_days]
+        day_results: list[float] = []
 
-        if model_name == model.TA_1:
-            return get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current)
-        elif model_name == model.TA_1_1:
-            return get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current)
-        elif model_name == model.TA_1_2:
-            return ta_1_2.predict_future_relative_change(
-                instrument_uid=instrument_uid,
-                date_target=date,
-                date_current=date_current,
-            )
-        elif model_name == model.TA_2:
-            return ta_2.predict_future_relative_change(
-                instrument_uid=instrument_uid,
-                date_target=date,
-                date_current=date_current,
-            )
-        elif model_name == model.TA_2_1:
-            return ta_2_1.predict_future_relative_change(
-                instrument_uid=instrument_uid,
-                date_target=date,
-                date_current=date_current,
-            )
-        elif model_name == model.CONSENSUS:
-            return consensus.predict_future_relative_change(
-                instrument_uid=instrument_uid,
-                date_target=date_target,
-            )
+        for day in days:
+            date = date_utils.convert_to_utc(day).replace(hour=12, minute=0, second=0, microsecond=0)
+
+            if model_name == model.TA_1:
+                if p := get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current):
+                    day_results.append(p)
+            elif model_name == model.TA_1_1:
+                if p:= get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current):
+                    day_results.append(p)
+            elif model_name == model.TA_1_2:
+                if p:= ta_1_2.predict_future_relative_change(
+                    instrument_uid=instrument_uid,
+                    date_target=date,
+                    date_current=date_current,
+                ):
+                    day_results.append(p)
+            elif model_name == model.TA_2:
+                if p:= ta_2.predict_future_relative_change(
+                    instrument_uid=instrument_uid,
+                    date_target=date,
+                    date_current=date_current,
+                ):
+                    day_results.append(p)
+            elif model_name == model.TA_2_1:
+                if p:= ta_2_1.predict_future_relative_change(
+                    instrument_uid=instrument_uid,
+                    date_target=date,
+                    date_current=date_current,
+                ):
+                    day_results.append(p)
+            elif model_name == model.CONSENSUS:
+                if p := consensus.predict_future_relative_change(
+                    instrument_uid=instrument_uid,
+                    date_target=date,
+                ):
+                    day_results.append(p)
+
+        if len(day_results) > 0:
+            return sum(day_results) / len(day_results)
 
     except Exception as e:
         logger.log_error(method_name='get_prediction', error=e)

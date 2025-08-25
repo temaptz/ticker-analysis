@@ -1,3 +1,4 @@
+import os
 import time
 from typing import TypedDict
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -23,6 +24,16 @@ class State(TypedDict, total=False):
 
 
 def rank_last_news():
+    logger.log_info(
+        message='LANGSMITH DEBUG NEWS RANKING',
+        output={
+            'LANGSMITH_TRACING': os.getenv('LANGSMITH_TRACING'),
+            'LANGSMITH_ENDPOINT': os.getenv('LANGSMITH_ENDPOINT'),
+            'LANGSMITH_API_KEY': os.getenv('LANGSMITH_API_KEY'),
+            'LANGSMITH_PROJECT': os.getenv('LANGSMITH_PROJECT'),
+        },
+        is_send_telegram=True,
+    )
     graph = get_news_rank_graph()
 
     for i in users.sort_instruments_cost(
@@ -53,19 +64,20 @@ def rank_last_news():
                         mention_focus = structured_response.get('mention_focus', None)
 
                         if sentiment is not None and impact_strength is not None and mention_focus is not None:
-                            n_rate = types_util.NewsRate2(
+                            if n_rate := types_util.NewsRate2(
                                 sentiment=sentiment,
                                 impact_strength=impact_strength,
                                 mention_focus=mention_focus,
-                            )
+                            ):
+                                db_2.news_rate_2_db.insert_or_update_rate(
+                                    news_uid=n.news_uid,
+                                    instrument_uid=i.uid,
+                                    news_rate=n_rate,
+                                    model_name=llm.model_name,
+                                    generation_time_sec=(end - start),
+                                )
 
-                            db_2.news_rate_2_db.insert_or_update_rate(
-                                news_uid=n.news_uid,
-                                instrument_uid=i.uid,
-                                news_rate=n_rate,
-                                model_name=llm.model_name,
-                                generation_time_sec=(end - start),
-                            )
+                                logger.log_info(message=f'RANKED NEWS for {human_name}. NEWS DATE: {n.date}', is_send_telegram=False)
 
                             # logger.log_info(
                             #     message=f'Оценена новость для:\n{human_name}\nЗаголовок: {n.title}\nОценка: {serializer.to_json(n_rate)}',

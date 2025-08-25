@@ -1,3 +1,4 @@
+import os
 from typing import TypedDict
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
@@ -22,6 +23,17 @@ class State(TypedDict, total=False):
 
 
 def update_recommendations():
+    logger.log_info(
+        message='LANGSMITH DEBUG RECOMMENDATIONS BUY',
+        output={
+            'LANGSMITH_TRACING': os.environ['LANGSMITH_TRACING'],
+            'LANGSMITH_ENDPOINT': os.environ['LANGSMITH_ENDPOINT'],
+            'LANGSMITH_API_KEY': os.environ['LANGSMITH_API_KEY'],
+            'LANGSMITH_PROJECT': os.environ['LANGSMITH_PROJECT'],
+        },
+        is_send_telegram=True,
+    )
+
     graph_buy = get_buy_rank_graph()
 
     for i in users.sort_instruments_for_buy(
@@ -38,6 +50,8 @@ def update_recommendations():
 
                 if structured_response := result.get('structured_response', None):
                     if structured_response.rate:
+                        previous_rate = agent.utils.get_buy_rate(instrument_uid=i.uid)
+
                         db_2.instrument_tags_db.upset_tag(
                             instrument_uid=i.uid,
                             tag_name='llm_buy_rate',
@@ -45,7 +59,7 @@ def update_recommendations():
                         )
 
                         logger.log_info(
-                            message=f'Сохранена оценка покупки {i.name}\nОценка: {structured_response.rate}\nКомментарий: {structured_response.final_conclusion}',
+                            message=f'Сохранена оценка покупки {i.name}\nОценка: {structured_response.rate}\nКомментарий: {structured_response.final_conclusion}\nПрошлая оценка: {previous_rate}',
                             is_send_telegram=True,
                         )
 
@@ -142,7 +156,7 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу оцени насколько выгодна покупка акции сейчас с целью её продажи в течение следующих 0-24 месяцев.
+        Как специалист по трейдингу проанализируй и оцени насколько выгодна покупка акции сейчас с целью её продажи в течение следующих 0-24 месяцев.
         
         # ИНСТРУКЦИЯ
         
@@ -277,7 +291,7 @@ def llm_total_buy_rate(state: State):
             
             # ЗАДАНИЕ
             
-            Как специалист по биржевой торговле оцени насколько выгодна покупка этого инструмента именно сейчас с целью последующей продажи.
+            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна покупка этого инструмента именно сейчас с целью последующей продажи. Для оценки составь сложную независимую шкалу на основе инструкции.
 
             # ИНСТРУКЦИЯ
             

@@ -140,6 +140,9 @@ def instrument_recommendation_create(state: State) -> State:
         Создай оптимальную и выгодную торговую заявку для покупки инструмента. 
         Подбери количество инструмента и цену покупки.
         
+        # ТЕКУЩАЯ ЦЕНА
+        current_price: {instruments.get_instrument_last_price_by_uid(uid=uid)}
+        
         # ДОСТУПНО СРЕДСТВ
         balance_rub: {users.get_user_money_rub()}
         

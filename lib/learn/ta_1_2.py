@@ -111,7 +111,6 @@ class Ta12LearningCard:
 
         if not all(x is not None for x in self.get_x()):
             print(f'{model.TA_1_2} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
-            print(self.get_csv_record())
             self.is_ok = False
             return
 

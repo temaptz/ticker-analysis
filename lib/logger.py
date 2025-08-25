@@ -1,6 +1,6 @@
 import datetime
 from pytz import timezone
-from lib import docker, telegram
+from lib import docker, telegram, serializer
 
 def error_logger(func):
     def wrapper(*args, **kwargs):
@@ -31,11 +31,17 @@ def log_error(method_name: str, error: Exception = None, debug_info: str = None,
 
 def log_info(message: str, output: any = None, is_send_telegram=False) -> None:
     date_str = get_local_time_log_str()
+    json = ''
+    try:
+        json = serializer.to_json(output)
+    except Exception as e:
+        print('ERROR LOG_INFO', e)
+        json = ''
     out_str = f'\033[94m[{date_str}] {message}\033[0m'
     print(out_str, output)
 
     if is_send_telegram and docker.is_prod():
-        telegram.send_message(message=out_str)
+        telegram.send_message(message=f'{out_str}\nOUTPUT_JSON:{json}')
 
 
 def get_local_time_log_str() -> str:

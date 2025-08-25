@@ -183,40 +183,54 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
     try:
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
-        prediction_week = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_3_days = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=7)
+            date_target=now + datetime.timedelta(days=3),
+            period_days=1,
         ), 4)
-        prediction_2_weeks = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_week = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=14)
+            date_target=now + datetime.timedelta(days=7),
+            period_days=3,
         ), 4)
-        prediction_3_weeks = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_2_weeks = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=21)
+            date_target=now + datetime.timedelta(days=14),
+            period_days=3,
         ), 4)
-        prediction_month = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_3_weeks = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=30)
+            date_target=now + datetime.timedelta(days=21),
+            period_days=7,
         ), 4)
-        prediction_2_months = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_month = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=60)
+            date_target=now + datetime.timedelta(days=30),
+            period_days=7,
         ), 4)
-        prediction_3_months = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_2_months = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=90)
+            date_target=now + datetime.timedelta(days=60),
+            period_days=14,
         ), 4)
-        prediction_6_months = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_3_months = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=180)
+            date_target=now + datetime.timedelta(days=90),
+            period_days=14,
         ), 4)
-        prediction_year = utils.round_float(predictions.get_relative_predictions_consensus(
+        prediction_6_months = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=365)
+            date_target=now + datetime.timedelta(days=180),
+            period_days=30,
+        ), 4)
+        prediction_year = utils.round_float(predictions.get_prediction(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=365),
+            period_days=30,
         ), 4)
 
         print('PRICE PREDICTION PROMPT DATA current_price', current_price)
+        print('PRICE PREDICTION PROMPT DATA prediction_3_days', prediction_3_days)
         print('PRICE PREDICTION PROMPT DATA prediction_week', prediction_week)
         print('PRICE PREDICTION PROMPT DATA prediction_2_weeks', prediction_2_weeks)
         print('PRICE PREDICTION PROMPT DATA prediction_3_weeks', prediction_3_weeks)
@@ -227,7 +241,8 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
         print('PRICE PREDICTION PROMPT DATA prediction_year', prediction_year)
 
         if current_price and (
-                prediction_week
+                prediction_3_days
+                or prediction_week
                 or prediction_2_weeks
                 or prediction_3_weeks
                 or prediction_month
@@ -244,6 +259,10 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             # ПРОГНОЗ ОТНОСИТЕЛЬНОГО ИЗМЕНЕНИЯ ЦЕНЫ - price_prediction
             
             {{
+                "3_days": {{
+                    "prediction_relative_percent": "{'+' if prediction_3_days > 0 else ''}{utils.round_float(prediction_3_days, 5) * 100}%",
+                    "description": "Прогноз относительного изменения цены акции через 3 дня"
+                }},
                 "1_week": {{
                     "prediction_relative_percent": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week, 5) * 100}%",
                     "description": "Прогноз относительного изменения цены акции через 1 неделю"
@@ -288,6 +307,7 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             Пример, за который можно ставить высшую оценку по критерию прогноза цены если цель - выгодная покупка
             
             {{ 
+                "3_days": {{ "prediction_relative_percent": "1%" }}, 
                 "1_week": {{ "prediction_relative_percent": "5%" }}, 
                 "2_weeks": {{ "prediction_relative_percent": "7.5%" }}, 
                 "3_weeks": {{ "prediction_relative_percent": "10%" }}, 
@@ -297,11 +317,24 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
                 "6_months": {{ "prediction_relative_percent": "20%" }}, 
                 "1_year": {{ "prediction_relative_percent": "22.5%" }}
             }}
+            или
+            {{ 
+                "3_days": {{ "prediction_relative_percent": "-1%" }},
+                "1_week": {{ "prediction_relative_percent": "1%" }}, 
+                "2_weeks": {{ "prediction_relative_percent": "5%" }}, 
+                "3_weeks": {{ "prediction_relative_percent": "7%" }}, 
+                "1_month": {{ "prediction_relative_percent": "12.5%" }}, 
+                "2_months": {{ "prediction_relative_percent": "12%" }}, 
+                "3_months": {{ "prediction_relative_percent": "15%" }}, 
+                "6_months": {{ "prediction_relative_percent": "17%" }}, 
+                "1_year": {{ "prediction_relative_percent": "19%" }}
+            }}
             
             # ИДЕАЛЬНЫЙ ПРИМЕР ДЛЯ ПРОДАЖИ
             Пример, за который можно ставить высшую оценку по критерию прогноза цены если цель - выгодная продажа
             
             {{ 
+                "3_days": {{ "prediction_relative_percent": "-3%" }}, 
                 "1_week": {{ "prediction_relative_percent": "-5%" }}, 
                 "2_weeks": {{ "prediction_relative_percent": "-7.5%" }}, 
                 "3_weeks": {{ "prediction_relative_percent": "-10%" }}, 
@@ -310,6 +343,18 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
                 "3_months": {{ "prediction_relative_percent": "-17.5%" }}, 
                 "6_months": {{ "prediction_relative_percent": "-20%" }}, 
                 "1_year": {{ "prediction_relative_percent": "-22.5%" }}
+            }}
+            или
+            {{ 
+                "3_days": {{ "prediction_relative_percent": "1%" }}, 
+                "1_week": {{ "prediction_relative_percent": "-3%" }}, 
+                "2_weeks": {{ "prediction_relative_percent": "-7%" }}, 
+                "3_weeks": {{ "prediction_relative_percent": "-10%" }}, 
+                "1_month": {{ "prediction_relative_percent": "-12%" }}, 
+                "2_months": {{ "prediction_relative_percent": "-15%" }}, 
+                "3_months": {{ "prediction_relative_percent": "-16%" }}, 
+                "6_months": {{ "prediction_relative_percent": "-18%" }}, 
+                "1_year": {{ "prediction_relative_percent": "-17%" }}
             }}
             '''
     except Exception as e:

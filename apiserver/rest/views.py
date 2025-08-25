@@ -36,7 +36,7 @@ def instruments_list(request):
     response = HttpResponse(serializer.to_json(sorted_list))
 
     if len(sorted_list) > 0:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
+        patch_cache_control(response, public=True, max_age=3600)
 
     return response
 
@@ -110,7 +110,7 @@ def instrument_history_prices(request):
                 uid=uid,
                 days_count=int(days),
                 interval=CandleInterval(int(interval)),
-                to_date=datetime.datetime.now()
+                to_date=date_utils.get_day_11()
         ):
             resp.append(serializer.get_dict_by_object_recursive(i))
 
@@ -257,7 +257,22 @@ def instrument_prediction_consensus(request):
     date = utils.parse_json_date(request.GET.get('date'))
 
     if uid and date:
-        if consensus := predictions.get_prediction(instrument_uid=uid, date_target=date, model_name=model.CONSENSUS):
+        days = (date - datetime.datetime.now(tz=datetime.timezone.utc)).days
+        period_days = 3
+
+        if days >= 21:
+            period_days = 7
+        if days >= 60:
+            period_days = 14
+        if days >= 180:
+            period_days = 30
+
+        if consensus := predictions.get_prediction(
+                instrument_uid=uid,
+                date_target=date,
+                model_name=model.CONSENSUS,
+                period_days=period_days,
+        ):
             resp = utils.round_float(num=consensus, decimals=4)
 
     response = HttpResponse(json.dumps(resp))
@@ -275,48 +290,26 @@ def instrument_prediction_graph(request):
     date_from = date_utils.parse_date(request.GET.get('date_from'))
     date_to = date_utils.parse_date(request.GET.get('date_to'))
     interval = CandleInterval(int(request.GET.get('interval')))
+    models = (request.GET.get('models') or '').split(',') or []
 
     if uid and date_from and date_to and interval:
-        resp[model.TA_1] = predictions.get_prediction_ta_1_graph(
-            uid=uid,
-            date_from=date_from,
-            date_to=date_to,
-            interval=interval,
-        )
-        resp[model.TA_1_1] = predictions.get_prediction_ta_1_1_graph(
-            uid=uid,
-            date_from=date_from,
-            date_to=date_to,
-            interval=interval,
-        )
-        resp[model.TA_1_2] = predictions.get_prediction_graph(
-            uid=uid,
-            model_name=model.TA_1_2,
-            date_from=datetime.datetime.now(datetime.timezone.utc),
-            date_to=date_to,
-            interval=interval,
-        )
-        resp[model.TA_2] = predictions.get_prediction_graph(
-            uid=uid,
-            model_name=model.TA_2,
-            date_from=datetime.datetime.now(datetime.timezone.utc),
-            date_to=date_to,
-            interval=interval,
-        )
-        resp[model.TA_2_1] = predictions.get_prediction_graph(
-            uid=uid,
-            model_name=model.TA_2_1,
-            date_from=datetime.datetime.now(datetime.timezone.utc),
-            date_to=date_to,
-            interval=interval,
-        )
-        resp[model.CONSENSUS] = predictions.get_prediction_graph(
-            uid=uid,
-            model_name=model.CONSENSUS,
-            date_from=datetime.datetime.now(datetime.timezone.utc),
-            date_to=date_to,
-            interval=interval,
-        )
+        model_names = models if len(models) else [
+            model.TA_1,
+            model.TA_1_1,
+            model.TA_1_2,
+            model.TA_2,
+            model.TA_2_1,
+            model.CONSENSUS
+        ]
+
+        for model_name in model_names:
+            resp[model_name] = predictions.get_prediction_graph(
+                uid=uid,
+                model_name=model_name,
+                date_from=datetime.datetime.now(datetime.timezone.utc),
+                date_to=date_to,
+                interval=interval,
+            )
     response = HttpResponse(serializer.to_json(resp))
 
     if resp:
@@ -336,7 +329,7 @@ def instrument_prediction_history_graph(request):
     if uid and date_from and date_to and interval:
         resp = predictions.get_prediction_history_graph(
             uid=uid,
-            model_name=model.TA_2,
+            model_name=model.TA_2_1,
             date_from=date_from,
             date_to=date_to,
             interval=interval,
@@ -371,7 +364,7 @@ def instrument_operations(request):
     figi = request.GET.get('figi')
 
     if figi:
-        resp = users.get_user_instrument_operations(instrument_figi=figi)
+        resp = users.get_user_instrument_operations(instrument_figi=figi, account_id=users.get_analytics_account().id)
 
     response = HttpResponse(serializer.to_json(resp))
 

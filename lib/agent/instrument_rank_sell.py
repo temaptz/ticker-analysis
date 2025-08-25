@@ -1,3 +1,4 @@
+import os
 from typing import TypedDict
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
@@ -21,6 +22,17 @@ class State(TypedDict, total=False):
 
 
 def update_recommendations():
+    logger.log_info(
+        message='LANGSMITH DEBUG RECOMMENDATIONS SELL',
+        output={
+            'LANGSMITH_TRACING': os.environ['LANGSMITH_TRACING'],
+            'LANGSMITH_ENDPOINT': os.environ['LANGSMITH_ENDPOINT'],
+            'LANGSMITH_API_KEY': os.environ['LANGSMITH_API_KEY'],
+            'LANGSMITH_PROJECT': os.environ['LANGSMITH_PROJECT'],
+        },
+        is_send_telegram=True,
+    )
+
     graph_sell = get_sell_rank_graph()
 
     for i in users.sort_instruments_for_sell(
@@ -35,6 +47,8 @@ def update_recommendations():
 
             if structured_response := result.get('structured_response', None):
                 if structured_response.rate:
+                    previous_rate = agent.utils.get_sell_rate(instrument_uid=i.uid)
+
                     db_2.instrument_tags_db.upset_tag(
                         instrument_uid=i.uid,
                         tag_name='llm_sell_rate',
@@ -42,7 +56,7 @@ def update_recommendations():
                     )
 
                     logger.log_info(
-                        message=f'Сохранена оценка продажи {i.name}\nОценка: {structured_response.rate}\nКомментарий: {structured_response.final_conclusion}',
+                        message=f'Сохранена оценка продажи {i.name}\nОценка: {structured_response.rate}\nКомментарий: {structured_response.final_conclusion}\nПрошлая оценка: {previous_rate}',
                         is_send_telegram=True,
                     )
 
@@ -83,7 +97,7 @@ def llm_invest_calc_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по биржевой торговле проанализируй потенциальную выгоду при продаже инструмента.
+        Как специалист по биржевой торговле проанализируй и оцени потенциальную выгоду при продаже инструмента.
         
         # ИНСТРУКЦИЯ
         
@@ -137,7 +151,7 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу оцени насколько выгодна продажа акций именно сейчас.
+        Как специалист по трейдингу проанализируй и оцени насколько выгодна продажа акций именно сейчас.
         
         # ИНСТРУКЦИЯ
         
@@ -214,7 +228,7 @@ def llm_total_sell_rate(state: State):
             
             # ЗАДАНИЕ
             
-            Как специалист по биржевой торговле оцени насколько выгодна продажа этого инструмента именно сейчас.
+            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна продажа этого инструмента именно сейчас.
 
             # ИНСТРУКЦИЯ
             

@@ -103,7 +103,7 @@ export class ApiService {
       params = params.set('interval', interval.toString());
     }
 
-    return this.http.get<InstrumentForecastsGraphItem[]>(`${this.apiUrl}/instrument/history_forecasts/graph`, {params: params});
+    return this.http.get<InstrumentForecastsGraphItem[]>(`${this.apiUrl}/instrument/history_forecasts_graph`, {params: params});
   }
 
   getInstrumentFundamentals(uid: string): Observable<Fundamentals> {
@@ -117,7 +117,7 @@ export class ApiService {
     let params = new HttpParams();
     params = params.set('asset_uid', assetUid);
 
-    return this.http.get<FundamentalsHistory[]>(`${this.apiUrl}/instrument/fundamentals/history`, {params: params});
+    return this.http.get<FundamentalsHistory[]>(`${this.apiUrl}/instrument/fundamentals_history`, {params: params});
   }
 
   getInstrumentPrediction(uid: string): Observable<PredictionResp> {
@@ -132,17 +132,18 @@ export class ApiService {
     params = params.set('uid', uid);
     params = params.set('date', date.toJSON());
 
-    return this.http.get<number>(`${this.apiUrl}/instrument/prediction/consensus`, {params: params});
+    return this.http.get<number>(`${this.apiUrl}/instrument/prediction_consensus`, {params: params});
   }
 
-  getInstrumentPredictionGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionGraphResp> {
+  getInstrumentPredictionGraph(uid: string, from: Date, to: Date, interval: CandleInterval, model_names: string[]): Observable<PredictionGraphResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
     params = params.set('date_from', from.toJSON());
     params = params.set('date_to', to.toJSON());
     params = params.set('interval', interval);
+    params = params.set('models', model_names.join(','));
 
-    return this.http.get<PredictionGraphResp>(`${this.apiUrl}/instrument/prediction/graph`, {params: params});
+    return this.http.get<PredictionGraphResp>(`${this.apiUrl}/instrument/prediction_graph`, {params: params});
   }
 
   getInstrumentPredictionHistoryGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionHistoryGraphResp> {
@@ -152,7 +153,7 @@ export class ApiService {
     params = params.set('date_to', to.toJSON());
     params = params.set('interval', interval);
 
-    return this.http.get<PredictionHistoryGraphResp>(`${this.apiUrl}/instrument/prediction/history_graph`, {params: params});
+    return this.http.get<PredictionHistoryGraphResp>(`${this.apiUrl}/instrument/prediction_history_graph`, {params: params});
   }
 
   getInstrumentOperations(figi: string): Observable<Operation[]> {
@@ -182,7 +183,7 @@ export class ApiService {
       params = params.set('interval', interval.toString());
     }
 
-    return this.http.get<TechAnalysisResp>(`${this.apiUrl}/instrument/tech_analysis/graph`, {params: params});
+    return this.http.get<TechAnalysisResp>(`${this.apiUrl}/instrument/tech_analysis_graph`, {params: params});
   }
 
   getInstrumentNewsListRated(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsListRatedResponse> {
@@ -191,7 +192,7 @@ export class ApiService {
     params = params.set('start_date', startDate.toJSON());
     params = params.set('end_date', endDate.toJSON());
 
-    return this.http.get<NewsListRatedResponse>(`${this.apiUrl}/instrument/news/list_rated`, {params: params});
+    return this.http.get<NewsListRatedResponse>(`${this.apiUrl}/instrument/news_list_rated`, {params: params});
   }
 
   getInstrumentNewsGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<NewsGraphItem[]> {
@@ -201,7 +202,7 @@ export class ApiService {
     params = params.set('date_to', to.toJSON());
     params = params.set('interval', interval);
 
-    return this.http.get<NewsGraphItem[]>(`${this.apiUrl}/instrument/news/graph`, {params: params});
+    return this.http.get<NewsGraphItem[]>(`${this.apiUrl}/instrument/news_graph`, {params: params});
   }
 
   getInstrumentBrand(uid: string): Observable<InstrumentBrandResponse> {

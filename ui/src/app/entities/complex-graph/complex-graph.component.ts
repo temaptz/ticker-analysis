@@ -103,15 +103,26 @@ export class ComplexGraphComponent {
       toObservable(this.daysHistory),
       toObservable(this.daysFuture),
       toObservable(this.historyInterval),
+      toObservable(this.isShowModelsGraph),
     ])
       .pipe(
         debounceTime(0),
         tap(() => this.isLoadedPredictions.set(false)),
-        switchMap(([uid, historyDays, futureDays, interval]) => this.appService.getInstrumentPredictionGraph(
+        switchMap(([uid, historyDays, futureDays, interval, isShowModels]) => this.appService.getInstrumentPredictionGraph(
           uid,
           startOfDay(subDays(new Date(), historyDays)),
           endOfDay(addDays(new Date(), futureDays)),
           interval,
+          isShowModels
+            ? [
+              ModelNameEnum.Ta_1,
+              ModelNameEnum.Ta_1_1,
+              ModelNameEnum.Ta_1_2,
+              ModelNameEnum.Ta_2,
+              ModelNameEnum.Ta_2_1,
+              ModelNameEnum.Consensus,
+            ]
+            : [ModelNameEnum.Consensus]
         )),
         tap(() => this.isLoadedPredictions.set(true)),
       )
