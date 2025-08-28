@@ -1,4 +1,5 @@
 import datetime
+import math
 from typing import TypedDict, Annotated
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -34,6 +35,42 @@ class State(TypedDict, total=False):
     structured_response: StructuredResult
 
 
+def create_orders_2():
+    recommendations: list[BuyRecommendation] = []
+
+    for instrument in users.sort_instruments_for_buy(
+            instruments_list=instruments.get_instruments_white_list()
+    ):
+        if len(recommendations) < 5:
+            if not instrument.for_qual_investor_flag:
+                if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
+                    if buy_rate > 50:
+                        if rec := get_buy_recommendation_by_uid(
+                                instrument_uid=instrument.uid,
+                        ):
+                            recommendations.append(rec)
+
+    for recommendation in recommendations:
+        rec: BuyRecommendation = recommendation
+        print('CREATE ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
+        print('CREATE ORDER', rec)
+        if rec.qty > 0:
+            price = round(rec.target_price, 1)
+            if users.post_buy_order(
+                    instrument_uid=rec.instrument_uid,
+                    price_rub=price,
+                    quantity_lots=utils.get_lots_qty(
+                        qty=rec.qty,
+                        instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
+                    ),
+            ):
+                name = instruments.get_instrument_human_name(rec.instrument_uid)
+                logger.log_info(
+                    message=f'Создана заявка на покупку v2 для: "{name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей',
+                    is_send_telegram=True,
+                )
+
+
 def create_orders():
     graph = get_buy_graph()
     # agent.utils.draw_graph(graph)
@@ -50,7 +87,7 @@ def create_orders():
                         available_instruments_uids.append(instrument.uid)
 
         if len(available_instruments_uids) == 0:
-            logger.log_info(message='Нет инструментов для покупки > 50', is_send_telegram=True)
+            logger.log_info(message='Нет активов для покупки > 50', is_send_telegram=True)
             return
 
         result = graph.invoke(
@@ -137,23 +174,26 @@ def instrument_recommendation_create(state: State) -> State:
         prompt = f'''
         # ЗАДАНИЕ
         Ты специалист по биржевой торговле. 
-        Создай оптимальную и выгодную торговую заявку для покупки инструмента. 
-        Подбери количество инструмента и цену покупки.
+        Создай оптимальную и выгодную торговую заявку для покупки актива. 
+        Подбери количество актива и цену покупки.
         
-        # ТЕКУЩАЯ ЦЕНА
+        # НАЗВАНИЕ АКТИВА
+        human_name: {instruments.get_instrument_human_name(uid=uid)}
+        
+        # ТЕКУЩАЯ ЦЕНА АКТИВА
         current_price: {instruments.get_instrument_last_price_by_uid(uid=uid)}
         
         # ДОСТУПНО СРЕДСТВ
         balance_rub: {users.get_user_money_rub()}
         
-        # ОЦЕНКА ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ ИНСТРУМЕНТА
+        # ОЦЕНКА ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ АКТИВА
         buy_rate[0-100]: {agent.utils.get_buy_rate(instrument_uid=uid) or 'Unknown'}
         
-        # КОММЕНТАРИЙ ОБ ОЦЕНКЕ ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ ИНСТРУМЕНТА
+        # КОММЕНТАРИЙ ОБ ОЦЕНКЕ ПРИВЛЕКАТЕЛЬНОСТИ ПОКУПКИ АКТИВА
         buy_rate_conclusion: {agent.utils.get_buy_conclusion(instrument_uid=uid) or 'Unknown'}
         
         # ИНСТРУКЦИЯ
-        1. Проанализируй текущую цену - current_price, баланс - balance_rub, прогнозируемое изменение цены инструмента - predicted_price, оценку привлекательности покупки инструмента - buy_rate.
+        1. Проанализируй текущую цену - current_price, баланс - balance_rub, прогнозируемое изменение цены актива - predicted_price, оценку привлекательности покупки актива - buy_rate.
         2. Подбери цену покупки target_price она должна быть на 0.5% ниже current_price.
         3. Подбери общую стоимость покупки total_price учитывая следующие условия:
          - Чем выше buy_rate, тем больше должно быть total_price;
@@ -161,7 +201,7 @@ def instrument_recommendation_create(state: State) -> State:
          - Если buy_rate от 60 до 70, то total_price должно быть меньше balance_rub * 0.15;
          - Если buy_rate от 50 до 60, то total_price должно быть меньше balance_rub * 0.05;
          - Если buy_rate меньше 50, то total_price должно быть меньше balance_rub * 0.03.
-        4. Посчитай количество единиц инструмента qty = total_price / target_price.
+        4. Посчитай количество единиц актива qty = total_price / target_price.
         5. Округли qty в большую сторону чтобы оно делилось без остатка на lot_size.
         6. Посчитай новую общую стоимость покупки total_price = target_price * qty.
         7. Установи qty = 0 если не выполняется одно из условий:
@@ -179,7 +219,7 @@ def instrument_recommendation_create(state: State) -> State:
                     SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                     SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                     SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                    HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=uid)),
+                    HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=uid, is_for_sell=False)),
                     HumanMessage(content=prompt),
                 ],
                 config=llm.config,
@@ -203,3 +243,33 @@ def final_parser(state: State) -> State:
         agent.utils.output_json(response)
 
     return result
+
+
+def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or None:
+    try:
+        target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
+        balance_rub = users.get_user_money_rub()
+        buy_rate = agent.utils.get_buy_rate(instrument_uid=instrument_uid)
+        lot_size = instruments.get_instrument_by_uid(instrument_uid).lot or 1
+        total_price_calc = balance_rub * 0.001
+
+        if buy_rate > 75:
+            total_price_calc = balance_rub * 0.01
+
+        if buy_rate > 90:
+            total_price_calc = balance_rub * 0.02
+
+        qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
+        total_price = target_price * qty
+        
+        if total_price <= total_price_calc * 1.3:
+            return BuyRecommendation(
+                instrument_uid=instrument_uid,
+                target_price=target_price,
+                qty=qty,
+                total_price=total_price_calc,
+            )
+    except Exception as e:
+        print('ERROR get_buy_recommendation_by_uid', e)
+
+    return None

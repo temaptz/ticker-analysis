@@ -6,8 +6,7 @@ from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts
-from lib.agent import llm
+from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts, invest_calc
 
 
 class RatePercentWithConclusion(BaseModel):
@@ -15,6 +14,7 @@ class RatePercentWithConclusion(BaseModel):
     final_conclusion: str
 
 class State(TypedDict, total=False):
+    human_name: str
     instrument_uid: str
     invest_calc_rate: RatePercentWithConclusion
     price_prediction_rate: RatePercentWithConclusion
@@ -39,10 +39,15 @@ def update_recommendations():
             instruments_list=users.get_user_instruments_list(account_id=users.get_analytics_account().id)
     ):
         try:
+            input_state: State = {
+                'human_name': instruments.get_instrument_human_name(i.uid),
+                'instrument_uid': i.uid,
+            }
+
             result = graph_sell.invoke(
-                input={'instrument_uid': i.uid},
+                input=input_state,
                 debug=True,
-                config=llm.config,
+                config=agent.llm.config,
             )
 
             if structured_response := result.get('structured_response', None):
@@ -93,57 +98,48 @@ def get_sell_rank_graph() -> CompiledStateGraph:
 
 
 def llm_invest_calc_rate(state: State):
-    if instrument_uid := state.get('instrument_uid', None):
-        prompt = f'''
-        # ЗАДАНИЕ
-        
-        Как специалист по биржевой торговле проанализируй и оцени потенциальную выгоду при продаже инструмента.
-        
-        # ИНСТРУКЦИЯ
-        
-        1. Главный критерий оценки - потенциальная прибыль в абсолютном и процентном выражении (potential_profit, potential_profit_percent).
-        2. Для средней оценки потенциальная прибыль должна быть строго положительной.
-        2. Для хорошей оценки потенциальная прибыль должна быть очень высокой.
-        3. Для хорошей оценки важно чтобы текущая цена (current_price) была значительно выше средней цены покупки инструмента (avg_price).
-        4. Итоговая оценка - одно число от 0 до 100, где:
-           - 0-10 - отрицательна потенциальная прибыль, продажа с убытком;
-           - 11-25 - потенциальная прибыль меньше 5%, продажа с малой прибылью;
-           - 26-50 - низкая потенциальная прибыль, продажа с умеренной прибылью;
-           - 51-75 - умеренная потенциальная прибыть, выгодная продажа с высокой прибылью;
-           - 76-100 - высокая потенциальная прибыть, выгодная продажа с очень высокой прибылью.   
-        5. Снижай оценку при отсутствии информации, если данные полностью отсутствуют, от оценка 0.
-        6. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
-           
-        # ФОРМАТ ОТВЕТА
-        
-        Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
-        '''
+    state: State = {}
 
-
-        print('HUMAN MESSAGE invest_calc_rate', prompt)
-
-        try:
-            if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
-                    [
-                        SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                        SystemMessage(content=agent.prompts.get_missed_data_prompt()),
-                        SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_profit_calc_prompt(instrument_uid=instrument_uid)),
-                        HumanMessage(content=prompt),
-                    ],
-                    config=llm.config
+    try:
+        if instrument_uid := state.get('instrument_uid', None):
+            if calc := invest_calc.get_invest_calc_by_instrument_uid(
+                    instrument_uid=instrument_uid,
+                    account_id=users.get_analytics_account().id,
             ):
-                if result and result.rate is not None:
-                    logger.log_info(message=f'LLM INVEST CALC RATE IS: {result}')
-                    return {'invest_calc_rate': result}
+                if p := calc['potential_profit_percent']:
+                    def lerp(x, a, b, y0, y1):
+                        return y0 + (0 if b == a else (x - a) / (b - a)) * (y1 - y0)
 
-        except Exception as e:
-            logger.log_error(
-                method_name='llm_invest_calc_rate',
-                error=e,
-                is_telegram_send=False,
-            )
-    return {}
+                    rate = 0
+
+                    if p <= 0:
+                        rate = 0
+                    elif 0 < p <= 5:
+                        rate = round(lerp(p, 0, 5, 11, 49))
+                    elif 5 < p <= 10:
+                        rate = round(lerp(p, 5, 10, 50, 69))
+                    elif 10 < p <= 20:
+                        rate = round(lerp(p, 10, 20, 70, 79))
+                    elif 20 < p <= 30:
+                        rate = round(lerp(p, 20, 30, 80, 89))
+                    else:
+                        rate = min(100, round(lerp(p, 30, 60, 90, 100)))
+
+                    if rate or rate == 0:
+                        state = {
+                            'invest_calc_rate': RatePercentWithConclusion(
+                                rate=rate,
+                                final_conclusion='',
+                            )
+                        }
+
+    except Exception as e:
+        logger.log_error(
+            method_name='llm_invest_calc_rate',
+            error=e,
+            is_telegram_send=False,
+        )
+    return state
 
 
 def llm_price_prediction_rate(state: State):
@@ -151,15 +147,15 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу проанализируй и оцени насколько выгодна продажа акций именно сейчас.
+        Как специалист по трейдингу проанализируй и оцени насколько выгодна продажа актива именно сейчас.
         
         # ИНСТРУКЦИЯ
         
         1. Проанализируй изменение цены на каждом интервале времени.
-        2. Учитывай что акции выгоднее продавать при высокой цене и перед трендом на снижение.
+        2. Учитывай что актив выгоднее продавать при высокой цене и перед трендом на снижение.
         3. Если в ближайшем будущем согласно прогнозу цена будет расти, то продажа сейчас менее выгодна.
         4. Достаточный тренд на снижение в ближайшем будущем не меньше месяца увеличивает вероятность выгодной продажи и оценку.
-        5. Оцени, насколько выгодна продажа акций именно сейчас.
+        5. Оцени, насколько выгодна продажа актива именно сейчас.
         6. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
            - 0-25 - прогноз изменения цены на ближайший месяц указывает на стабильный рост, продажа в ближайшее время не выгодна;
            - 26-74 - в ближайший месяц возможен потенциал роста, сейчас продажа может быть не выгодна;
@@ -177,15 +173,15 @@ def llm_price_prediction_rate(state: State):
         print('HUMAN MESSAGE price_prediction', prompt)
 
         try:
-            if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
+            if result := agent.llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
                     [
                         SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                         SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                         SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
+                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=True)),
                         HumanMessage(content=prompt),
                     ],
-                    config=llm.config,
+                    config=agent.llm.config,
             ):
                 if result and result.rate is not None:
                     logger.log_info(message=f'LLM PRICE PREDICTION RATE IS: {result.rate}')
@@ -228,7 +224,7 @@ def llm_total_sell_rate(state: State):
             
             # ЗАДАНИЕ
             
-            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна продажа этого инструмента именно сейчас.
+            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна продажа этого актива именно сейчас.
 
             # ИНСТРУКЦИЯ
             
@@ -240,7 +236,7 @@ def llm_total_sell_rate(state: State):
                - 26-50 - оценки ниже среднего, продажа сейчас умеренно выгодна, момент продажи не удачный;
                - 51-74 - оценки выше среднего, продажа сейчас выгодна, момент для продажи средне удачный.
                - 75-100 - все оценки высокие, сейчас выгодный и удачный момент для продажи.
-            5. Итоговая оценка будет использоваться для сравнения между инструментами.
+            5. Итоговая оценка будет использоваться для сравнения между активами.
             6. Отсутствующие данные приравниваются к 0 оценке.
             7. Учитывай полученные ранее сырые данные.
             4. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
@@ -254,17 +250,17 @@ def llm_total_sell_rate(state: State):
             print('HUMAN MESSAGE total_buy_rate', prompt)
 
             try:
-                if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
+                if result := agent.llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
                         [
                             SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                             SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                             SystemMessage(content=agent.prompts.get_thinking_prompt()),
                             HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
+                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=True)),
                             HumanMessage(content=agent.prompts.get_profit_calc_prompt(instrument_uid=instrument_uid)),
                             HumanMessage(content=prompt),
                         ],
-                        config=llm.config
+                        config=agent.llm.config
                 ):
                     if result and result.rate is not None:
                         logger.log_info(message=f'LLM TOTAL SELL RATE IS: {result.rate}')

@@ -1,3 +1,4 @@
+import math
 from typing import TypedDict, Annotated
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
@@ -31,6 +32,42 @@ class State(TypedDict, total=False):
     structured_response: StructuredResult
 
 
+def create_orders_2():
+    recommendations: list[SellRecommendation] = []
+
+    for instrument in users.sort_instruments_for_sell(
+            instruments_list=users.get_user_instruments_list(account_id=users.get_analytics_account().id)
+    ):
+        if len(recommendations) < 5:
+            if sell_rate := agent.utils.get_sell_rate(instrument_uid=instrument.uid):
+                if sell_rate > 70:
+                    if rec := get_sell_recommendation_by_uid(
+                        instrument_uid=instrument.uid,
+                    ):
+                        recommendations.append(rec)
+
+    for rec in recommendations:
+        print('CREATE ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
+        print('CREATE ORDER', rec)
+
+        if rec.qty > 0:
+            price = round(rec.target_price, 1)
+
+            if users.post_sell_order(
+                    instrument_uid=rec.instrument_uid,
+                    price_rub=price,
+                    quantity_lots=utils.get_lots_qty(
+                        qty=rec.qty,
+                        instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
+                    ),
+            ):
+                name = instruments.get_instrument_human_name(rec.instrument_uid)
+                logger.log_info(
+                    message=f'Создана заявка на продажу для: "{name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей',
+                    is_send_telegram=True,
+                )
+
+
 def create_orders():
     graph = get_buy_graph()
     # agent.utils.draw_graph(graph)
@@ -46,7 +83,7 @@ def create_orders():
                     available_instruments_uids.append(instrument.uid)
 
         if len(available_instruments_uids) == 0:
-            logger.log_info(message='Нет инструментов для продажи > 75', is_send_telegram=True)
+            logger.log_info(message='Нет активов для продажи > 75', is_send_telegram=True)
             return
 
         result = graph.invoke(
@@ -135,29 +172,32 @@ def instrument_recommendation_create(state: State) -> State:
         prompt = f'''
         # ЗАДАНИЕ
         Ты специалист по биржевой торговле. 
-        Создай оптимальную выгодную торговую заявку для продажи инструмента.
+        Создай оптимальную выгодную торговую заявку для продажи актива.
         
-        # ТЕКУЩАЯ ЦЕНА
+        # НАЗВАНИЕ АКТИВА
+        human_name: {instruments.get_instrument_human_name(uid=uid)}
+        
+        # ТЕКУЩАЯ ЦЕНА АКТИВА
         current_price: {instruments.get_instrument_last_price_by_uid(uid=uid)}
         
-        # БАЛАНС ИНСТРУМЕНТА В ПОРТФЕЛЕ (шт.)
+        # БАЛАНС АКТИВА В ПОРТФЕЛЕ (шт.)
         balance_qty: {users.get_user_instrument_balance(instrument_uid=uid, account_id=users.get_analytics_account().id)}
         
-        # ОЦЕНКА ПРИВЛЕКАТЕЛЬНОСТИ ПРОДАЖИ ИНСТРУМЕНТА
+        # ОЦЕНКА ПРИВЛЕКАТЕЛЬНОСТИ ПРОДАЖИ АКТИВА
         sell_rate[0-100]: {agent.utils.get_sell_rate(instrument_uid=uid) or 'Unknown'}
         
-        # КОММЕНТАРИЙ ОБ ОЦЕНКЕ ПРИВЛЕКАТЕЛЬНОСТИ ПРОДАЖИ ИНСТРУМЕНТА
+        # КОММЕНТАРИЙ ОБ ОЦЕНКЕ ПРИВЛЕКАТЕЛЬНОСТИ ПРОДАЖИ АКТИВА
         sell_rate_conclusion: {agent.utils.get_sell_conclusion(instrument_uid=uid) or 'Unknown'}
         
         # ИНСТРУКЦИЯ
-        1. Проанализируй текущую стоимость и прогнозируемые изменения цены инструмента.
+        1. Проанализируй текущую стоимость и прогнозируемые изменения цены актива.
         2. Проанализируй информацию о потенциальной выгоде при продаже.
         3. Проанализируй sell_rate, sell_rate_conclusion.
         4. Продажа должна быть строго выгодной. 
         5. Цена продажи должна быть строго выше средней цены покупки.
-        6. Подбери оптимальную выгодную стоимость продажи инструмента. 
+        6. Подбери оптимальную выгодную стоимость продажи актива. 
         7. Стоимость продажи должна быть выше текущей рыночной стоимости на 0.5%.
-        8. Подбери количество единиц инструмента, которое сейчас выгодно продать.
+        8. Подбери количество единиц актива, которое сейчас выгодно продать.
         9. Если balance_qty больше единицы, то количество должно быть не больше половины balance_qty.
         10. Если sell_rate меньше 70 то количество должно быть не больше четверти balance_qty.
         '''
@@ -169,8 +209,8 @@ def instrument_recommendation_create(state: State) -> State:
                     SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                     SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                     SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                    HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=uid)),
-                    HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=uid)),
+                    HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=uid, is_for_sell=True)),
+                    HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=uid, is_for_sell=True)),
                     HumanMessage(content=agent.prompts.get_profit_calc_prompt(instrument_uid=uid)),
                     HumanMessage(content=prompt),
                 ],
@@ -195,3 +235,34 @@ def final_parser(state: State) -> State:
         agent.utils.output_json(response)
 
     return result
+
+
+def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or None:
+    try:
+        target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 1.005
+        balance_qty = users.get_user_instrument_balance(
+            instrument_uid=instrument_uid,
+            account_id=users.get_analytics_account().id,
+        )
+        sell_rate = agent.utils.get_sell_rate(instrument_uid=instrument_uid)
+        lot_size = instruments.get_instrument_by_uid(instrument_uid).lot or 1
+        qty_calc = balance_qty * 0.001
+
+        if sell_rate > 75:
+            qty_calc = balance_qty * 0.01
+
+        if sell_rate > 90:
+            qty_calc = balance_qty * 0.02
+
+        qty_round = math.ceil(qty_calc / lot_size) * lot_size
+
+        if 0 < qty_round <= qty_calc * 1.5:
+            return SellRecommendation(
+                instrument_uid=instrument_uid,
+                target_price=target_price,
+                qty=qty_round,
+            )
+    except Exception as e:
+        print('ERROR get_sell_recommendation_by_uid', e)
+
+    return None

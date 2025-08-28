@@ -300,8 +300,8 @@ class Ta21LearningCard:
             self.news_positive_percent,
             self.news_negative_percent,
             self.news_neutral_percent,
-            self.instrument.name, # Название инструмента.
-            self.instrument.currency, # Валюта инструмента.
+            self.instrument.name, # Название актива.
+            self.instrument.currency, # Валюта актива.
             self.instrument.country_of_risk, # Код страны
             to_numpy_float(self.forecast_price_change),
             to_numpy_float(self.revenue_ttm),
@@ -573,7 +573,11 @@ def cache_record(card: Ta21LearningCard) -> None:
     redis_utils.storage_set(key=cache_key, value=serializer.to_json(card.get_csv_record()), ttl_sec=3600 * 24 * 30)
 
 
-def cache_error(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> None:
+def cache_error(
+        ticker: str,
+        date: datetime.datetime,
+        target_date: datetime.datetime,
+) -> None:
     cache_key = get_record_cache_key(
         ticker=ticker,
         date=date,

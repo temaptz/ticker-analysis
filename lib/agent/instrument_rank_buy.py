@@ -15,6 +15,7 @@ class RatePercentWithConclusion(BaseModel):
     final_conclusion: str
 
 class State(TypedDict, total=False):
+    human_name: str
     instrument_uid: str
     fundamental_rate: RatePercentWithConclusion
     price_prediction_rate: RatePercentWithConclusion
@@ -42,8 +43,13 @@ def update_recommendations():
 
         try:
             if not i.for_qual_investor_flag:
+                input_state: State = {
+                    'human_name': instruments.get_instrument_human_name(i.uid),
+                    'instrument_uid': i.uid,
+                }
+
                 result = graph_buy.invoke(
-                    input={'instrument_uid': i.uid},
+                    input=input_state,
                     debug=True,
                     config=llm.config,
                 )
@@ -103,19 +109,19 @@ def llm_fundamental_rate(state: State):
         # ЗАДАНИЕ
         
         Как специалист по инвестициям проанализируй фундаментальные показатели компании и дай оценку от 0 до 100, 
-        насколько фундаментальные показатели компании указывают на перспективу роста цены её акций 
+        насколько фундаментальные показатели компании указывают на перспективу роста цены её актива 
         в среднесрочной перспективе (0-24 месяцев). 
         
         # ИНСТРУКЦИЯ
         
         1. Проанализируй каждую метрику и оцени её влияние на инвестиционную привлекательность.
-        2. Сформируй общее впечатление о потенциале роста акций.
+        2. Сформируй общее впечатление о потенциале роста актива.
         3. Присвой компании итоговую оценку от 0 до 100, где:
            - 0-25 - фундаментальные показатели слабые, рост маловероятен;
            - 26-50 - умеренные показатели, рост возможен;
            - 51-74 - хорошие показатели, рост вероятен;
-           - 75-90 - отличные показатели, высокая вероятность роста цены акций.
-           - 91-100 - отличные показатели и хорошая динамика, высокая вероятность роста цены акций.   
+           - 75-90 - отличные показатели, высокая вероятность роста цены актива.
+           - 91-100 - отличные показатели и хорошая динамика, высокая вероятность роста цены актива.   
         4. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
         
         # ФОРМАТ ОТВЕТА
@@ -156,14 +162,14 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу проанализируй и оцени насколько выгодна покупка акции сейчас с целью её продажи в течение следующих 0-24 месяцев.
+        Как специалист по трейдингу проанализируй и оцени насколько выгодна покупка актива сейчас с целью её продажи в течение следующих 0-24 месяцев.
         
         # ИНСТРУКЦИЯ
         
         1. Проанализируй прогноз изменения цены на каждом интервале времени.
         2. Оцени стабильность и направление ожидаемой динамики.
         3. На основе анализа, прими решение о привлекательности покупки.
-        4. Учти что акции выгоднее покупать по низкой цене перед трендом на рост в ближайший месяц.
+        4. Учти что актив выгоднее покупать по низкой цене перед трендом на рост в ближайший месяц.
         5. Чем выше тренд на рост, тем выше должна быть твоя оценка.
         6. Присвой итоговую числовую оценку выгодности покупки от 0 до 100, где:
            - 0-25 - прогноз цены стабильно отрицательный, покупка убыточна;
@@ -188,7 +194,7 @@ def llm_price_prediction_rate(state: State):
                         SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                         SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                         SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
+                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=False)),
                         HumanMessage(content=prompt),
                     ],
                     config=llm.config,
@@ -213,12 +219,12 @@ def llm_news_rate(state: State):
         # ЗАДАНИЕ
         
         Как специалист по медиа проанализируй рейтинг новостного фона за указанные периоды.  
-        Оцени, насколько текущие значения новостного рейтинга могут способствовать росту цены акции.
+        Оцени, насколько текущие значения новостного рейтинга могут способствовать росту цены актива.
         
         # ИНСТРУКЦИЯ
         
         1. Проанализируй динамику рейтинга новостного фона по периодам.
-        2. Оцени силу и стабильность позитивного влияния новостей на цену акции.
+        2. Оцени силу и стабильность позитивного влияния новостей на цену актива.
         4. Итоговая оценка - одно число от 0 до 100, где:
            - 0-25 - негативный рейтинг новостного фона;
            - 26-50 - умеренно негативная динамика новостного фона;
@@ -241,7 +247,7 @@ def llm_news_rate(state: State):
                     [
                         SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                         SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_news_prompt(instrument_uid=instrument_uid)),
+                        HumanMessage(content=agent.prompts.get_news_prompt(instrument_uid=instrument_uid, is_for_sell=False)),
                         HumanMessage(content=prompt),
                     ],
                     config=llm.config
@@ -291,7 +297,7 @@ def llm_total_buy_rate(state: State):
             
             # ЗАДАНИЕ
             
-            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна покупка этого инструмента именно сейчас с целью последующей продажи. Для оценки составь сложную независимую шкалу на основе инструкции.
+            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна покупка этого актива именно сейчас с целью последующей продажи. Для оценки составь сложную независимую шкалу на основе инструкции.
 
             # ИНСТРУКЦИЯ
             
@@ -304,8 +310,8 @@ def llm_total_buy_rate(state: State):
                - 0-25 - оценки низкие, покупка нецелесообразна;
                - 26-50 - оценки ниже среднего, покупка рискованна;
                - 51-75 - оценки выше среднего, момент для выгодной покупки;
-               - 76-100 - все оценки высоки, это максимально выгодный момент для покупки инструмента.
-            7. Эта оценка будет использоваться для сравнения между инструментами.
+               - 76-100 - все оценки высоки, это максимально выгодный момент для покупки актива.
+            7. Эта оценка будет использоваться для сравнения между активами.
             8. Высокая итоговая оценка возможна только если есть все данные и все оценки высоки.
             9. Если нет прогнозов цен, то то итоговая оценка должна быть низкой или нулевой.
             10. Учитывай комментарии, в них содержатся важные выводы которые следует учесть.
@@ -328,7 +334,7 @@ def llm_total_buy_rate(state: State):
                             SystemMessage(content=agent.prompts.get_thinking_prompt()),
                             HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=instrument_uid)),
                             HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
+                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=False)),
                             human_message
                         ],
                         config=llm.config

@@ -158,8 +158,8 @@ class Ta12LearningCard:
 
         return [
             target_days_count,
-            self.instrument.name, # Название инструмента.
-            self.instrument.currency, # Валюта инструмента.
+            self.instrument.name, # Название актива.
+            self.instrument.currency, # Валюта актива.
             self.instrument.country_of_risk, # Код страны
             to_numpy_float(self.forecast_price_change),
             to_numpy_float(self.revenue_ttm),

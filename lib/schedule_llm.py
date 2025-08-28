@@ -47,6 +47,8 @@ def _load_worker_env():
     _ls_utils.get_env_var.cache_clear()
     os.environ.setdefault('LANGCHAIN_CALLBACKS_BACKGROUND', 'false')
 
+_load_worker_env()
+
 
 def _now() -> datetime.datetime:
     return datetime.datetime.now(TZ)
@@ -122,7 +124,6 @@ def _kill_proc(name: str, reason: str) -> None:
 def _worker_update_recommendations(deadline_ts: float) -> None:
     """Обновление рекомендаций до дедлайна. Если не успеет — будет убит снаружи в 10:00."""
     try:
-        _load_worker_env()
         telegram.send_message('Старт обновления рекомендаций')
         agent.instrument_rank_sell.update_recommendations()
         agent.instrument_rank_buy.update_recommendations()
@@ -134,7 +135,6 @@ def _worker_update_recommendations(deadline_ts: float) -> None:
 
 def _worker_news_loop(deadline_ts: float) -> None:
     """Цикл оценки новостей до дедлайна. В будни — до ближайших 10:00, на выходных — до пн 10:00."""
-    _load_worker_env()
     deadline = datetime.datetime.fromtimestamp(deadline_ts, tz=TZ)
     telegram.send_message('Старт оценки новостей')
     try:
@@ -153,8 +153,6 @@ def _worker_news_loop(deadline_ts: float) -> None:
 
 def weekday_11_pipeline() -> None:
     """Будничный цикл: 11:00 — создать заявки, затем старт длинной задачи по дню недели."""
-    _load_worker_env()
-
     # На всякий случай, перед началом чистим возможные хвосты
     _kill_proc('RECS', 'weekday-11-start')
     _kill_proc('NEWS_WEEKDAY', 'weekday-11-start')
@@ -163,8 +161,8 @@ def weekday_11_pipeline() -> None:
 
     # 1) Создание заявок — выполняется до конца (блокирующе)
     try:
-        agent.sell.create_orders()
-        agent.buy.create_orders()
+        agent.sell.create_orders_2()
+        agent.buy.create_orders_2()
     except Exception as e:
         logger.log_error(method_name='create_orders', error=e)
 

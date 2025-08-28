@@ -18,7 +18,7 @@ MEM_LIMIT = MEM_LIMIT_MB * 1024 * 1024
 @tool
 def get_instruments_list() -> list[str]:
     """
-    Получает список UID биржевых инструментов
+    Получает список UID биржевых активов
     """
     return [instrument.uid for instrument in instruments.get_instruments_white_list()][:10]
 
@@ -26,7 +26,7 @@ def get_instruments_list() -> list[str]:
 @tool
 def get_user_instruments_list() -> list[str]:
     """
-    Возвращает список UID биржевых инструментов, которые есть в портфеле
+    Возвращает список UID биржевых активов, которые есть в портфеле
     """
     return [instrument.uid for instrument in users.get_user_instruments_list()]
 
@@ -34,7 +34,7 @@ def get_user_instruments_list() -> list[str]:
 @tool
 def get_instrument_info(uid: str) -> dict or None:
     """
-    Возвращает подробную информацию о единичном биржевом инструменте. На выходе: фундаментальные показатели, текущая цена, прогноз изменения цены, оценка новостного фона относительно инструмента. На входе: UID инструмента.
+    Возвращает подробную информацию о единичном биржевом активе. На выходе: фундаментальные показатели, текущая цена, прогноз изменения цены, оценка новостного фона относительно актива. На входе: UID актива.
     """
     instrument_uid = uid
 
@@ -105,7 +105,7 @@ def get_instrument_info(uid: str) -> dict or None:
 @tool
 def get_instrument_balance(uid: str) -> dict or None:
     """
-    Возвращает баланс единичного биржевого инструмента. На выходе: баланс инструмента в портфеле, среднюю цена покупки, потенциальная прибыль, рыночная стоимость. На входе: UID инструмента.
+    Возвращает баланс единичного биржевого актива. На выходе: баланс актива в портфеле, среднюю цена покупки, потенциальная прибыль, рыночная стоимость. На входе: UID актива.
     """
     instrument_uid = uid
 
@@ -167,9 +167,9 @@ def run_python_code(code: str) -> dict:
 @tool
 def get_instrument_buy_rate(instrument_uid: str) -> dict or None:
     """
-    Возвращает оценку привлекательности покупки биржевого инструмента для последующей выгодной продажи.
+    Возвращает оценку привлекательности покупки биржевого актива для последующей выгодной продажи.
     На выходе: оценка привлекательности от 0 до 100.
-    На входе: UID инструмента.
+    На входе: UID актива.
     """
     try:
         if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument_uid, tag_name='llm_buy_rate'):
