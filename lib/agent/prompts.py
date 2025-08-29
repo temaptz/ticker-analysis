@@ -310,13 +310,13 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
                 {{ 
                     "3_days": {{ "price_prediction": "-3%" }}, 
                     "1_week": {{ "price_prediction": "-5%" }}, 
-                    "2_weeks": {{ "price_prediction": "-7.5%" }}, 
-                    "3_weeks": {{ "price_prediction": "-10%" }}, 
-                    "1_month": {{ "price_prediction": "-12.5%" }}, 
-                    "2_months": {{ "price_prediction": "-15%" }}, 
-                    "3_months": {{ "price_prediction": "-17.5%" }}, 
-                    "6_months": {{ "price_prediction": "-20%" }}, 
-                    "1_year": {{ "price_prediction": "-22.5%" }}
+                    "2_weeks": {{ "price_prediction": "-17%" }}, 
+                    "3_weeks": {{ "price_prediction": "-19%" }}, 
+                    "1_month": {{ "price_prediction": "-23%" }}, 
+                    "2_months": {{ "price_prediction": "-25%" }}, 
+                    "3_months": {{ "price_prediction": "-27%" }}, 
+                    "6_months": {{ "price_prediction": "-30%" }}, 
+                    "1_year": {{ "price_prediction": "-37%" }}
                 }}
                 В этом примере устойчивый тренд на снижение говорит что от актива нужно избавляться пока он не упал еще ниже.
                 Отсутствие перспективы роста в будущем подтверждает выгодность продажи.
@@ -329,10 +329,10 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
                     "2_weeks": {{ "price_prediction": "-7%" }}, 
                     "3_weeks": {{ "price_prediction": "-10%" }}, 
                     "1_month": {{ "price_prediction": "-12%" }}, 
-                    "2_months": {{ "price_prediction": "-15%" }}, 
-                    "3_months": {{ "price_prediction": "-16%" }}, 
-                    "6_months": {{ "price_prediction": "-18%" }}, 
-                    "1_year": {{ "price_prediction": "-17%" }}
+                    "2_months": {{ "price_prediction": "-25%" }}, 
+                    "3_months": {{ "price_prediction": "-26%" }}, 
+                    "6_months": {{ "price_prediction": "-32%" }}, 
+                    "1_year": {{ "price_prediction": "-27%" }}
                 }}
                 В этом примере рост в ближайшие дни сменяется устойчивым трендом на снижение.
                 Устойчивый тренд на снижение в ближайшем будущем говорит о том что активы нужно продавать сейчас.
@@ -362,12 +362,12 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
                 {{ 
                     "3_days": {{ "price_prediction": "1%" }},
                     "1_week": {{ "price_prediction": "5%" }},
-                    "2_weeks": {{ "price_prediction": "7%" }},
-                    "3_weeks": {{ "price_prediction": "12%" }},
-                    "1_month": {{ "price_prediction": "14%" }},
-                    "2_months": {{ "price_prediction": "15%" }},
-                    "3_months": {{ "price_prediction": "17.5%" }},
-                    "6_months": {{ "price_prediction": "20%" }},
+                    "2_weeks": {{ "price_prediction": "17%" }},
+                    "3_weeks": {{ "price_prediction": "22%" }},
+                    "1_month": {{ "price_prediction": "24%" }},
+                    "2_months": {{ "price_prediction": "35%" }},
+                    "3_months": {{ "price_prediction": "37%" }},
+                    "6_months": {{ "price_prediction": "30%" }},
                     "1_year": {{ "price_prediction": "23%" }}
                 }}
                 В этом примере в ближайший месяц ожидается устойчивый постепенный тренд на рост, что говорит о выгодной покупке.
@@ -377,14 +377,14 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
                 
                 {{ 
                     "3_days": {{ "price_prediction": "-1%" }},
-                    "1_week": {{ "price_prediction": "1%" }}, 
-                    "2_weeks": {{ "price_prediction": "7%" }}, 
-                    "3_weeks": {{ "price_prediction": "9%" }}, 
-                    "1_month": {{ "price_prediction": "14%" }}, 
-                    "2_months": {{ "price_prediction": "12%" }}, 
-                    "3_months": {{ "price_prediction": "15%" }}, 
-                    "6_months": {{ "price_prediction": "17%" }}, 
-                    "1_year": {{ "price_prediction": "19%" }}
+                    "1_week": {{ "price_prediction": "5%" }}, 
+                    "2_weeks": {{ "price_prediction": "17%" }}, 
+                    "3_weeks": {{ "price_prediction": "29%" }}, 
+                    "1_month": {{ "price_prediction": "34%" }}, 
+                    "2_months": {{ "price_prediction": "32%" }}, 
+                    "3_months": {{ "price_prediction": "25%" }}, 
+                    "6_months": {{ "price_prediction": "27%" }}, 
+                    "1_year": {{ "price_prediction": "29%" }}
                 }}
                 В этом примере небольшое колебание около нуля в ближайшие три дня сменяются устойчивым ростом в ближайший месяц.
                 Это говорит о выгодной покупке.
