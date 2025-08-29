@@ -44,16 +44,17 @@ def create_orders_2():
         if len(recommendations) < 5:
             if not instrument.for_qual_investor_flag:
                 if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
-                    if buy_rate > 50:
+                    if buy_rate > 60:
                         if rec := get_buy_recommendation_by_uid(
                                 instrument_uid=instrument.uid,
                         ):
                             recommendations.append(rec)
+                            logger.log_info(message='CREATED BUY RECOMMENDATION', output=rec, is_send_telegram=False)
 
     for recommendation in recommendations:
         rec: BuyRecommendation = recommendation
-        print('CREATE ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
-        print('CREATE ORDER', rec)
+        print('CREATE BUY ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
+        print('CREATE BUY ORDER', rec)
         if rec.qty > 0:
             price = round(rec.target_price, 1)
             if users.post_buy_order(

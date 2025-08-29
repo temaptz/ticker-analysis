@@ -45,10 +45,11 @@ def create_orders_2():
                         instrument_uid=instrument.uid,
                     ):
                         recommendations.append(rec)
+                        logger.log_info(message='CREATED SELL RECOMMENDATION', output=rec, is_send_telegram=False)
 
     for rec in recommendations:
-        print('CREATE ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
-        print('CREATE ORDER', rec)
+        print('CREATE SELL ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
+        print('CREATE SELL ORDER', rec)
 
         if rec.qty > 0:
             price = round(rec.target_price, 1)
@@ -78,12 +79,12 @@ def create_orders():
         available_instruments_uids: list[str] = []
 
         for instrument in top_instruments:
-            if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_sell_rate'):
-                if tag.tag_value and int(tag.tag_value) > 75:
+            if sell_rate := agent.utils.get_sell_rate(instrument_uid=instrument.uid):
+                if sell_rate > 70:
                     available_instruments_uids.append(instrument.uid)
 
         if len(available_instruments_uids) == 0:
-            logger.log_info(message='Нет активов для продажи > 75', is_send_telegram=True)
+            logger.log_info(message='Нет активов для продажи > 70', is_send_telegram=True)
             return
 
         result = graph.invoke(
