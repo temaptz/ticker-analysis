@@ -362,13 +362,13 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
                 {{ 
                     "3_days": {{ "price_prediction": "1%" }},
                     "1_week": {{ "price_prediction": "5%" }},
-                    "2_weeks": {{ "price_prediction": "7.5%" }},
-                    "3_weeks": {{ "price_prediction": "10%" }},
-                    "1_month": {{ "price_prediction": "12.5%" }},
+                    "2_weeks": {{ "price_prediction": "7%" }},
+                    "3_weeks": {{ "price_prediction": "12%" }},
+                    "1_month": {{ "price_prediction": "14%" }},
                     "2_months": {{ "price_prediction": "15%" }},
                     "3_months": {{ "price_prediction": "17.5%" }},
                     "6_months": {{ "price_prediction": "20%" }},
-                    "1_year": {{ "price_prediction": "22.5%" }}
+                    "1_year": {{ "price_prediction": "23%" }}
                 }}
                 В этом примере в ближайший месяц ожидается устойчивый постепенный тренд на рост, что говорит о выгодной покупке.
                 Более долгосрочный тренд на рост подтверждает потенциальную выгоду от покупки.
@@ -378,9 +378,9 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
                 {{ 
                     "3_days": {{ "price_prediction": "-1%" }},
                     "1_week": {{ "price_prediction": "1%" }}, 
-                    "2_weeks": {{ "price_prediction": "5%" }}, 
-                    "3_weeks": {{ "price_prediction": "7%" }}, 
-                    "1_month": {{ "price_prediction": "12.5%" }}, 
+                    "2_weeks": {{ "price_prediction": "7%" }}, 
+                    "3_weeks": {{ "price_prediction": "9%" }}, 
+                    "1_month": {{ "price_prediction": "14%" }}, 
                     "2_months": {{ "price_prediction": "12%" }}, 
                     "3_months": {{ "price_prediction": "15%" }}, 
                     "6_months": {{ "price_prediction": "17%" }}, 
