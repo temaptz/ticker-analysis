@@ -313,3 +313,12 @@ def get_instrument_cost_for_sort(instrument: Instrument) -> float:
         logger.log_error(method_name='get_instrument_cost_for_sort', error=e)
 
     return float('-inf')
+
+
+@cache.ttl_cache(ttl=3600)
+def get_is_in_favorites(instrument_uid: str) -> bool:
+    for i in instruments.get_favorites() or []:
+        if i.uid == instrument_uid:
+            return True
+
+    return False

@@ -252,23 +252,36 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
         balance_rub = users.get_user_money_rub()
         buy_rate = agent.utils.get_buy_rate(instrument_uid=instrument_uid)
         lot_size = instruments.get_instrument_by_uid(instrument_uid).lot or 1
-        total_price_calc = balance_rub * 0.001
+        total_price_calc = balance_rub * 0.01
 
         if buy_rate > 75:
-            total_price_calc = balance_rub * 0.01
+            total_price_calc = balance_rub * 0.05
 
         if buy_rate > 90:
-            total_price_calc = balance_rub * 0.02
+            total_price_calc = balance_rub * 0.10
 
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
+
+        logger.log_info(
+            message='DEBUG BUY RECOMMENDATION',
+            output={
+                'qty': qty,
+                'lot_size': lot_size,
+                'target_price': target_price,
+                'total_price_calc': total_price_calc,
+                'total_price': total_price,
+                'is_ok': (total_price <= total_price_calc * 1.3),
+            },
+            is_send_telegram=True,
+        )
         
         if total_price <= total_price_calc * 1.3:
             return BuyRecommendation(
                 instrument_uid=instrument_uid,
                 target_price=target_price,
                 qty=qty,
-                total_price=total_price_calc,
+                total_price=total_price,
             )
     except Exception as e:
         print('ERROR get_buy_recommendation_by_uid', e)

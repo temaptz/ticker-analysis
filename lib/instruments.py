@@ -42,6 +42,13 @@ def get_instruments_white_list() -> list[Instrument]:
     return result
 
 
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
+def get_favorites():
+    with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.instruments.get_favorites().favorite_instruments
+
+
+
 @cache.ttl_cache(ttl=3600 * 24 * 10, is_convert_object=True, is_skip_empty=True)
 def get_instrument_by_uid(uid: str) -> Instrument:
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
