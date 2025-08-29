@@ -98,7 +98,7 @@ def get_sell_rank_graph() -> CompiledStateGraph:
 
 
 def llm_invest_calc_rate(state: State):
-    state: State = {}
+    result: State = {}
 
     try:
         if instrument_uid := state.get('instrument_uid', None):
@@ -110,26 +110,25 @@ def llm_invest_calc_rate(state: State):
                     def lerp(x, a, b, y0, y1):
                         return y0 + (0 if b == a else (x - a) / (b - a)) * (y1 - y0)
 
-                    rate = 0
-
                     if p <= 0:
                         rate = 0
                     elif 0 < p <= 5:
-                        rate = round(lerp(p, 0, 5, 11, 49))
+                        rate = round(lerp(p, 0, 5, 11, 29))
                     elif 5 < p <= 10:
-                        rate = round(lerp(p, 5, 10, 50, 69))
+                        rate = round(lerp(p, 5, 10, 30, 59))
                     elif 10 < p <= 20:
-                        rate = round(lerp(p, 10, 20, 70, 79))
+                        rate = round(lerp(p, 10, 20, 60, 79))
                     elif 20 < p <= 30:
                         rate = round(lerp(p, 20, 30, 80, 89))
                     else:
                         rate = min(100, round(lerp(p, 30, 60, 90, 100)))
 
+
                     if rate or rate == 0:
-                        state = {
+                        result = {
                             'invest_calc_rate': RatePercentWithConclusion(
                                 rate=rate,
-                                final_conclusion='',
+                                final_conclusion=f'Финальная оценка продажи: {rate} [0-100]. potential_profit_percent: {utils.round_float(calc['potential_profit_percent'], 4)}% - потенциальная выгода в процентах',
                             )
                         }
 
@@ -139,7 +138,7 @@ def llm_invest_calc_rate(state: State):
             error=e,
             is_telegram_send=False,
         )
-    return state
+    return result
 
 
 def llm_price_prediction_rate(state: State):
