@@ -198,61 +198,31 @@ def create_orders() -> None:
 
 def register_scheduler_jobs(scheduler: BaseScheduler):
     # 10:00 по будням — принудительный стоп
-    # scheduler.add_job(
-    #     daily_cutoff_10,
-    #     CronTrigger(day_of_week='mon-fri', hour=10, minute=0, timezone=TZ),
-    #     id='daily_cutoff_10',
-    #     replace_existing=True,
-    # )
-    #
-    # # 11:00 по будням — запуск конвейера
-    # scheduler.add_job(
-    #     weekday_11_pipeline,
-    #     CronTrigger(day_of_week='mon-fri', hour=11, minute=0, timezone=TZ),
-    #     id='weekday_11_pipeline',
-    #     replace_existing=True,
-    # )
     scheduler.add_job(
-        create_orders,
+        daily_cutoff_10,
+        CronTrigger(day_of_week='mon-fri', hour=10, minute=0, timezone=TZ),
+        id='daily_cutoff_10',
+        replace_existing=True,
+    )
+
+    # 11:00 по будням — запуск конвейера
+    scheduler.add_job(
+        weekday_11_pipeline,
         CronTrigger(day_of_week='mon-fri', hour=11, minute=0, timezone=TZ),
         id='weekday_11_pipeline',
         replace_existing=True,
     )
-    print('REGISTERED JOBS')
 
 
 def start_available_job():
-    infinite_loop()
-    # if _now().hour != 10:
-    #     print('LLM START AVAILABLE JOB')
-    #
-    #     deadline = _get_deadline()
-    #
-    #     if deadline > _now():
-    #         logger.log_info(message='Начало выполнения LLM задач')
-    #
-    #         deadline_ts = deadline.timestamp()
-    #         # _start_proc('RECS', _worker_update_recommendations, deadline_ts)
-    #         _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
+    if _now().hour != 10:
+        print('LLM START AVAILABLE JOB')
 
+        deadline = _get_deadline()
 
-def infinite_loop():
-    print('START INFINITE LOOP')
+        if deadline > _now():
+            logger.log_info(message='Начало выполнения LLM задач')
 
-    while True:
-        try:
-            logger.log_info(message='Старт оценки новостей', is_send_telegram=True)
-            agent.news_rank.rank_last_news()
-
-            logger.log_info(message='Старт обновления рекомендаций', is_send_telegram=True)
-            agent.instrument_rank_sell.update_recommendations()
-            agent.instrument_rank_buy.update_recommendations()
-
-            logger.log_info(message='Старт оценки новостей', is_send_telegram=True)
-            agent.news_rank.rank_last_news()
-            agent.news_rank.rank_last_news()
-            agent.news_rank.rank_last_news()
-            agent.news_rank.rank_last_news()
-
-        except Exception as e:
-            logger.log_error(method_name='infinite_loop', error=e)
+            deadline_ts = deadline.timestamp()
+            # _start_proc('RECS', _worker_update_recommendations, deadline_ts)
+            _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)

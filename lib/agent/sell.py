@@ -7,7 +7,7 @@ from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, telegram
+from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, telegram, invest_calc
 from lib.agent import models, llm, planner, instrument_rank_buy
 
 
@@ -41,11 +41,15 @@ def create_orders_2():
         if len(recommendations) < 5:
             if sell_rate := agent.utils.get_sell_rate(instrument_uid=instrument.uid):
                 if sell_rate > 70:
-                    if rec := get_sell_recommendation_by_uid(
-                        instrument_uid=instrument.uid,
+                    if calc := invest_calc.get_invest_calc_by_instrument_uid(
+                            instrument_uid=instrument.uid,
                     ):
-                        recommendations.append(rec)
-                        logger.log_info(message='CREATED SELL RECOMMENDATION', output=rec, is_send_telegram=False)
+                        if calc['potential_profit_percent'] > 3:
+                            if rec := get_sell_recommendation_by_uid(
+                                instrument_uid=instrument.uid,
+                            ):
+                                recommendations.append(rec)
+                                logger.log_info(message='CREATED SELL RECOMMENDATION', output=rec, is_send_telegram=False)
 
     for rec in recommendations:
         print('CREATE SELL ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
