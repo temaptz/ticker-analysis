@@ -268,12 +268,12 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
                 'qty_calc': qty_calc,
                 'lot_size': lot_size,
                 'target_price': target_price,
-                'is_ok': (0 < qty_round <= qty_calc * 1.5),
+                'is_ok': (0 < qty_round <= qty_calc * 1.7),
             },
             is_send_telegram=True,
         )
 
-        if 0 < qty_round <= qty_calc * 1.5:
+        if 0 < qty_round <= qty_calc * 1.7:
             return SellRecommendation(
                 instrument_uid=instrument_uid,
                 target_price=target_price,

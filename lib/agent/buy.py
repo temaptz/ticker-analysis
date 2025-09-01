@@ -271,12 +271,12 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
                 'target_price': target_price,
                 'total_price_calc': total_price_calc,
                 'total_price': total_price,
-                'is_ok': (total_price <= total_price_calc * 1.3),
+                'is_ok': (total_price <= total_price_calc * 1.5),
             },
             is_send_telegram=True,
         )
         
-        if total_price <= total_price_calc * 1.3:
+        if total_price <= total_price_calc * 1.5:
             return BuyRecommendation(
                 instrument_uid=instrument_uid,
                 target_price=target_price,
