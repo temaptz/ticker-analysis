@@ -209,8 +209,8 @@ def llm_total_sell_rate(state: State):
             prompt = f'''
             # ПРЕДВАРИТЕЛЬНЫЕ ОЦЕНКИ
 
-            Оценка потенциальной выгоды при продаже - invest_rate: {invest_rate or 'Unknown'} (0-100)
-            Оценка оптимального момента продажи - price_prediction_rate: {price_prediction_rate or 'Unknown'} (0-100)
+            Оценка потенциальной выгоды при продаже - invest_rate: {invest_rate} (0-100)
+            Оценка оптимального момента продажи - price_prediction_rate: {price_prediction_rate} (0-100)
             
             
             # КОММЕНТАРИИ ПО ОЦЕНКЕ ПОТЕНЦИАЛЬНОЙ ВЫГОДЫ

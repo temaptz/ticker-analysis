@@ -282,9 +282,9 @@ def llm_total_buy_rate(state: State):
             human_message = HumanMessage(content=f'''
             # ПРЕДВАРИТЕЛЬНЫЕ ОЦЕНКИ
 
-            1. Прогноз изменения цены - price_prediction_rate: {price_prediction_rate or 'Unknown'} [0-100] #Самый важный
-            2. Фундаментальные показатели - fundamental_rate: {fundamental_rate or 'Unknown'} [0-100] #Второй по значимости
-            3. Новостной фон - news_rate: {news_rate or 'Unknown'} [0-100] #Второй по значимости 
+            1. Прогноз изменения цены - price_prediction_rate: {price_prediction_rate} [0-100] #Самый важный
+            2. Фундаментальные показатели - fundamental_rate: {fundamental_rate} [0-100] #Второй по значимости
+            3. Новостной фон - news_rate: {news_rate} [0-100] #Второй по значимости 
             
             # КОММЕНТАРИЙ О ФУНДАМЕНТАЛЬНЫХ ПОКАЗАТЕЛЯХ
             {fundamental_conclusion}
