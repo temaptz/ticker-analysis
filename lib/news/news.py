@@ -6,6 +6,8 @@ from lib.db_2 import news_db
 from lib import instruments, yandex, cache, serializer, utils, logger, learn, types_util, date_utils
 from lib.news import news_rate_v1, news_rate_v2
 
+news_beginning_date = datetime.datetime(year=2025, month=2, day=17)
+
 
 class NewsSourceRated:
     def __init__(self):
@@ -35,20 +37,22 @@ def get_rated_news_by_instrument_uid(
     response: dict = {
         'list': [],
         'keywords': keywords,
-        'total_absolute': news_rate_v1.get_news_rate_absolute(
-            news_uid_list=news_ids_list,
-            instrument_uid=instrument_uid,
-        ),
-        'total_percent': news_rate_v1.get_news_rate(
-            news_uid_list=news_ids_list,
-            instrument_uid=instrument_uid,
-        ),
         'rate_v2': {
             'influence_score': utils.round_float(news_rate_v2.get_news_total_influence_score(
                 instrument_uid=instrument_uid,
                 news_ids=news_ids_list,
             ))
         },
+        'percent_rated': news_rate_v2.get_percent_rated(
+            instrument_uid=instrument_uid,
+            start_date=start_date,
+            end_date=end_date,
+        ),
+        'percent_rated_total': news_rate_v2.get_percent_rated(
+            instrument_uid=instrument_uid,
+            start_date=news_beginning_date,
+            end_date=datetime.datetime.now().replace(minute=0, second=0, microsecond=0),
+        ),
         'start_date': start_date,
         'end_date': end_date,
     }
@@ -60,14 +64,6 @@ def get_rated_news_by_instrument_uid(
             'text': n.text,
             'date': n.date,
             'source': n.source_name,
-            'rate_absolute': news_rate_v1.get_news_rate_absolute(
-                news_uid_list=[n.news_uid],
-                instrument_uid=instrument_uid,
-            ),
-            'rate_percent': news_rate_v1.get_news_rate(
-                news_uid_list=[n.news_uid],
-                instrument_uid=instrument_uid,
-            ),
             'rate_v2': news_rate_v2.get_news_rate_db(
                 news_uid=n.news_uid,
                 instrument_uid=instrument_uid,
@@ -152,7 +148,7 @@ def get_last_unrated_news_by_instrument_uid(
 ) -> news_db.News or None:
     for n in get_news_by_instrument_uid(
         instrument_uid=instrument_uid,
-        start_date=datetime.datetime(year=2025, month=2, day=17),
+        start_date=news_beginning_date,
         end_date=datetime.datetime.now(),
     ):
         if news_rate_v2.get_news_rate_db(

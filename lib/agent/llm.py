@@ -1,3 +1,5 @@
+from langchain_community.chat_models import ChatHuggingFace
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama

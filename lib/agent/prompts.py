@@ -177,7 +177,7 @@ def get_fundamental_prompt(instrument_uid: str) -> str:
     return 'Фундаментальные показатели не найдены. Фундаментальные показатели - Unknown'
 
 
-def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
+def get_price_prediction_prompt(instrument_uid: str) -> str:
     try:
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
@@ -298,116 +298,113 @@ def get_price_prediction_prompt(instrument_uid: str, is_for_sell=False) -> str:
             # ОПРЕДЕЛЕНИЯ
             
             1. Прогноз относительного изменения цены вычисляется по формуле: price_prediction = ([прогнозируемая_абсолютная_цена] - [текущая_абсолютная_цена]) / [текущая_абсолютная_цена]) * 100%;
-            2. Прогноз относительного изменения цены price_prediction является точным прогнозом цены в будущем;
-            3. price_prediction надежная оценка которую нужно опираться при принятии финансового решения.
-            
-            # ПРИМЕРЫ ОЦЕНОК ВЫГОДНОСТИ
-            
+            2. price_prediction является точным прогнозом относительного изменения цены в будущем;
+            3. price_prediction надежная оценка которую нужно опираться при принятии финансового решения.            
             '''
 
-            if is_for_sell:
-                result += f'''
-                {{ 
-                    "3_days": {{ "price_prediction": "-3%" }}, 
-                    "1_week": {{ "price_prediction": "-5%" }}, 
-                    "2_weeks": {{ "price_prediction": "-17%" }}, 
-                    "3_weeks": {{ "price_prediction": "-19%" }}, 
-                    "1_month": {{ "price_prediction": "-23%" }}, 
-                    "2_months": {{ "price_prediction": "-25%" }}, 
-                    "3_months": {{ "price_prediction": "-27%" }}, 
-                    "6_months": {{ "price_prediction": "-30%" }}, 
-                    "1_year": {{ "price_prediction": "-37%" }}
-                }}
-                В этом примере устойчивый тренд на снижение говорит что от актива нужно избавляться пока он не упал еще ниже.
-                Отсутствие перспективы роста в будущем подтверждает выгодность продажи.
-                Оценка выгоды продажи: 99 из 100
-                
-                
-                {{ 
-                    "3_days": {{ "price_prediction": "1%" }}, 
-                    "1_week": {{ "price_prediction": "-3%" }}, 
-                    "2_weeks": {{ "price_prediction": "-7%" }}, 
-                    "3_weeks": {{ "price_prediction": "-10%" }}, 
-                    "1_month": {{ "price_prediction": "-12%" }}, 
-                    "2_months": {{ "price_prediction": "-25%" }}, 
-                    "3_months": {{ "price_prediction": "-26%" }}, 
-                    "6_months": {{ "price_prediction": "-32%" }}, 
-                    "1_year": {{ "price_prediction": "-27%" }}
-                }}
-                В этом примере рост в ближайшие дни сменяется устойчивым трендом на снижение.
-                Устойчивый тренд на снижение в ближайшем будущем говорит о том что активы нужно продавать сейчас.
-                Краткосрочный рост в ближайшие несколько дней создает более комфортные условия для продажи перед падением.
-                Отсутствие перспективы роста в будущем подтверждает выгодность продажи.
-                Оценка выгоды продажи: 100 из 100
-                
-                
-                {{ 
-                    "3_days": {{ "price_prediction": "-1%" }}, 
-                    "1_week": {{ "price_prediction": "3%" }}, 
-                    "2_weeks": {{ "price_prediction": "5%" }}, 
-                    "3_weeks": {{ "price_prediction": "3%" }}, 
-                    "1_month": {{ "price_prediction": "12%" }}, 
-                    "2_months": {{ "price_prediction": "15%" }}, 
-                    "3_months": {{ "price_prediction": "16%" }}, 
-                    "6_months": {{ "price_prediction": "27%" }}, 
-                    "1_year": {{ "price_prediction": "17%" }}
-                }}
-                В этом примере снижение в ближайшие дни сменяется устойчивым трендом на рост.
-                Устойчивый тренд на рост в ближайшем будущем говорит о том что активы продавать сейчас не выгодно.
-                Устойчивая перспектива роста в будущем подтверждает не выгодность продажи в настоящем.
-                Оценка выгоды продажи: 0 из 100
-                '''
-            else:
-                result += f'''
-                {{ 
-                    "3_days": {{ "price_prediction": "1%" }},
-                    "1_week": {{ "price_prediction": "5%" }},
-                    "2_weeks": {{ "price_prediction": "17%" }},
-                    "3_weeks": {{ "price_prediction": "22%" }},
-                    "1_month": {{ "price_prediction": "24%" }},
-                    "2_months": {{ "price_prediction": "35%" }},
-                    "3_months": {{ "price_prediction": "37%" }},
-                    "6_months": {{ "price_prediction": "30%" }},
-                    "1_year": {{ "price_prediction": "23%" }}
-                }}
-                В этом примере в ближайший месяц ожидается устойчивый постепенный тренд на рост, что говорит о выгодной покупке.
-                Более долгосрочный тренд на рост подтверждает потенциальную выгоду от покупки.
-                Оценка выгоды покупки: 99 из 100
-                
-                
-                {{ 
-                    "3_days": {{ "price_prediction": "-1%" }},
-                    "1_week": {{ "price_prediction": "5%" }}, 
-                    "2_weeks": {{ "price_prediction": "17%" }}, 
-                    "3_weeks": {{ "price_prediction": "29%" }}, 
-                    "1_month": {{ "price_prediction": "34%" }}, 
-                    "2_months": {{ "price_prediction": "32%" }}, 
-                    "3_months": {{ "price_prediction": "25%" }}, 
-                    "6_months": {{ "price_prediction": "27%" }}, 
-                    "1_year": {{ "price_prediction": "29%" }}
-                }}
-                В этом примере небольшое колебание около нуля в ближайшие три дня сменяются устойчивым ростом в ближайший месяц.
-                Это говорит о выгодной покупке.
-                Более долгосрочный тренд на рост подтверждает перспективность покупки.
-                Оценка выгоды покупки: 100 из 100
-
-                
-                {{ 
-                    "3_days": {{ "price_prediction": "3%" }},
-                    "1_week": {{ "price_prediction": "-5%" }}, 
-                    "2_weeks": {{ "price_prediction": "-1%" }}, 
-                    "3_weeks": {{ "price_prediction": "-7%" }}, 
-                    "1_month": {{ "price_prediction": "-14%" }}, 
-                    "2_months": {{ "price_prediction": "-11%" }}, 
-                    "3_months": {{ "price_prediction": "-15%" }}, 
-                    "6_months": {{ "price_prediction": "-17%" }}, 
-                    "1_year": {{ "price_prediction": "-29%" }}
-                }}
-                В этом примере небольшое рост в ближайшие дни сменяется устойчивым снижением в ближайший месяц.
-                Это говорит о не выгодной покупке.
-                Более долгосрочный тренд на снижение подтверждает отсутствие перспективы покупки.
-                Оценка выгоды покупки: 0 из 100
-                '''
+            # if is_for_sell:
+            #     result += f'''
+            #     {{
+            #         "3_days": {{ "price_prediction": "-3%" }},
+            #         "1_week": {{ "price_prediction": "-5%" }},
+            #         "2_weeks": {{ "price_prediction": "-17%" }},
+            #         "3_weeks": {{ "price_prediction": "-19%" }},
+            #         "1_month": {{ "price_prediction": "-23%" }},
+            #         "2_months": {{ "price_prediction": "-25%" }},
+            #         "3_months": {{ "price_prediction": "-27%" }},
+            #         "6_months": {{ "price_prediction": "-30%" }},
+            #         "1_year": {{ "price_prediction": "-37%" }}
+            #     }}
+            #     В этом примере устойчивый тренд на снижение говорит что от актива нужно избавляться пока он не упал еще ниже.
+            #     Отсутствие перспективы роста в будущем подтверждает выгодность продажи.
+            #     Оценка выгоды продажи: 99 из 100
+            #
+            #
+            #     {{
+            #         "3_days": {{ "price_prediction": "1%" }},
+            #         "1_week": {{ "price_prediction": "-3%" }},
+            #         "2_weeks": {{ "price_prediction": "-7%" }},
+            #         "3_weeks": {{ "price_prediction": "-10%" }},
+            #         "1_month": {{ "price_prediction": "-12%" }},
+            #         "2_months": {{ "price_prediction": "-25%" }},
+            #         "3_months": {{ "price_prediction": "-26%" }},
+            #         "6_months": {{ "price_prediction": "-32%" }},
+            #         "1_year": {{ "price_prediction": "-27%" }}
+            #     }}
+            #     В этом примере рост в ближайшие дни сменяется устойчивым трендом на снижение.
+            #     Устойчивый тренд на снижение в ближайшем будущем говорит о том что активы нужно продавать сейчас.
+            #     Краткосрочный рост в ближайшие несколько дней создает более комфортные условия для продажи перед падением.
+            #     Отсутствие перспективы роста в будущем подтверждает выгодность продажи.
+            #     Оценка выгоды продажи: 100 из 100
+            #
+            #
+            #     {{
+            #         "3_days": {{ "price_prediction": "-1%" }},
+            #         "1_week": {{ "price_prediction": "3%" }},
+            #         "2_weeks": {{ "price_prediction": "5%" }},
+            #         "3_weeks": {{ "price_prediction": "3%" }},
+            #         "1_month": {{ "price_prediction": "12%" }},
+            #         "2_months": {{ "price_prediction": "15%" }},
+            #         "3_months": {{ "price_prediction": "16%" }},
+            #         "6_months": {{ "price_prediction": "27%" }},
+            #         "1_year": {{ "price_prediction": "17%" }}
+            #     }}
+            #     В этом примере снижение в ближайшие дни сменяется устойчивым трендом на рост.
+            #     Устойчивый тренд на рост в ближайшем будущем говорит о том что активы продавать сейчас не выгодно.
+            #     Устойчивая перспектива роста в будущем подтверждает не выгодность продажи в настоящем.
+            #     Оценка выгоды продажи: 0 из 100
+            #     '''
+            # else:
+            #     result += f'''
+            #     {{
+            #         "3_days": {{ "price_prediction": "1%" }},
+            #         "1_week": {{ "price_prediction": "5%" }},
+            #         "2_weeks": {{ "price_prediction": "17%" }},
+            #         "3_weeks": {{ "price_prediction": "22%" }},
+            #         "1_month": {{ "price_prediction": "24%" }},
+            #         "2_months": {{ "price_prediction": "35%" }},
+            #         "3_months": {{ "price_prediction": "37%" }},
+            #         "6_months": {{ "price_prediction": "30%" }},
+            #         "1_year": {{ "price_prediction": "23%" }}
+            #     }}
+            #     В этом примере в ближайший месяц ожидается устойчивый постепенный тренд на рост, что говорит о выгодной покупке.
+            #     Более долгосрочный тренд на рост подтверждает потенциальную выгоду от покупки.
+            #     Оценка выгоды покупки: 99 из 100
+            #
+            #
+            #     {{
+            #         "3_days": {{ "price_prediction": "-1%" }},
+            #         "1_week": {{ "price_prediction": "5%" }},
+            #         "2_weeks": {{ "price_prediction": "17%" }},
+            #         "3_weeks": {{ "price_prediction": "29%" }},
+            #         "1_month": {{ "price_prediction": "34%" }},
+            #         "2_months": {{ "price_prediction": "32%" }},
+            #         "3_months": {{ "price_prediction": "25%" }},
+            #         "6_months": {{ "price_prediction": "27%" }},
+            #         "1_year": {{ "price_prediction": "29%" }}
+            #     }}
+            #     В этом примере небольшое колебание около нуля в ближайшие три дня сменяются устойчивым ростом в ближайший месяц.
+            #     Это говорит о выгодной покупке.
+            #     Более долгосрочный тренд на рост подтверждает перспективность покупки.
+            #     Оценка выгоды покупки: 100 из 100
+            #
+            #
+            #     {{
+            #         "3_days": {{ "price_prediction": "3%" }},
+            #         "1_week": {{ "price_prediction": "-5%" }},
+            #         "2_weeks": {{ "price_prediction": "-1%" }},
+            #         "3_weeks": {{ "price_prediction": "-7%" }},
+            #         "1_month": {{ "price_prediction": "-14%" }},
+            #         "2_months": {{ "price_prediction": "-11%" }},
+            #         "3_months": {{ "price_prediction": "-15%" }},
+            #         "6_months": {{ "price_prediction": "-17%" }},
+            #         "1_year": {{ "price_prediction": "-29%" }}
+            #     }}
+            #     В этом примере небольшое рост в ближайшие дни сменяется устойчивым снижением в ближайший месяц.
+            #     Это говорит о не выгодной покупке.
+            #     Более долгосрочный тренд на снижение подтверждает отсутствие перспективы покупки.
+            #     Оценка выгоды покупки: 0 из 100
+            #     '''
 
             return result
     except Exception as e:

@@ -146,21 +146,24 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу проанализируй и оцени насколько выгодна продажа актива именно сейчас.
+        Как специалист по трейдингу проанализируй и оцени насколько потенциально выгодна продажа актива именно сейчас.
         
         # ИНСТРУКЦИЯ
         
-        1. Проанализируй изменение цены на каждом интервале времени.
-        2. Учитывай что актив выгоднее продавать при высокой цене и перед трендом на снижение.
-        3. Если в ближайшем будущем согласно прогнозу цена будет расти, то продажа сейчас менее выгодна.
-        4. Достаточный тренд на снижение в ближайшем будущем не меньше месяца увеличивает вероятность выгодной продажи и оценку.
-        5. Оцени, насколько выгодна продажа актива именно сейчас.
-        6. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
-           - 0-25 - прогноз изменения цены на ближайший месяц указывает на стабильный рост, продажа в ближайшее время не выгодна;
-           - 26-74 - в ближайший месяц возможен потенциал роста, сейчас продажа может быть не выгодна;
-           - 75-100 - прогноз изменения цены на ближайший месяц стабильно отрицательный, сейчас оптимальный момент для продажи.
-        7. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
-        8. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
+        1. Проанализируй изменение цены на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
+        2. Учитывай что актив выгоднее продавать при высокой цене и перед устойчивым трендом на снижение.
+        3. Оцени, насколько выгодна продажа актива именно сейчас.
+        4. Продажа выгодна если в ближайший месяц ожидается постепенный стабильный тренд на снижение, чем сильнее снижение, тем выше оценка.
+        5. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на снижение цены, то это увеличивает оценку.
+        6. Незначительный рост в течении нескольких дней перед стабильным снижением говорит о хорошем моменте для продажи и увеличивает оценку. 
+        7. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
+           - 0 - прогноз изменения цены на ближайший месяц указывает на стабильный рост, продажа в ближайшее время не выгодна;
+           - 1-49 - в ближайший месяц возможен рост, сейчас продажа может быть не выгодна;
+           - 50-74 - тренд изменения цены на ближайший месяц стабильно отрицательный, продажа позже может быть более выгодна;
+           - 75-89 - тренд изменения цены на ближайшие три месяца стабильно отрицательный, сейчас хороший момент для продажи.
+           - 90-100 - тренд изменения цены на ближайшие пол года стабильно отрицательный и постепенный, сейчас идеальный момент для продажи.
+        8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
+        9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
         
         
         # ФОРМАТ ОТВЕТА
@@ -177,12 +180,12 @@ def llm_price_prediction_rate(state: State):
                         SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                         SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                         SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=True)),
+                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
                     ],
                     config=agent.llm.config,
             ):
-                if result and result.rate is not None:
+                if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM PRICE PREDICTION RATE IS: {result.rate}')
                     return {'price_prediction_rate': result}
 
@@ -255,13 +258,13 @@ def llm_total_sell_rate(state: State):
                             SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                             SystemMessage(content=agent.prompts.get_thinking_prompt()),
                             HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=True)),
+                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                             HumanMessage(content=agent.prompts.get_profit_calc_prompt(instrument_uid=instrument_uid)),
                             HumanMessage(content=prompt),
                         ],
                         config=agent.llm.config
                 ):
-                    if result and result.rate is not None:
+                    if result and result.rate is not None and 0 <= result.rate <= 100:
                         logger.log_info(message=f'LLM TOTAL SELL RATE IS: {result.rate}')
                         return {'structured_response': result}
 

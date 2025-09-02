@@ -5,6 +5,7 @@ from lib.db_2 import news_db, news_rate_2_db
 from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types_util, local_llm
 
 
+@cache.ttl_cache(ttl=60*30)
 @logger.error_logger
 def get_news_rate_db(
         news_uid: str,
@@ -51,6 +52,27 @@ def get_news_total_influence_score(
         return result
 
     return None
+
+
+@cache.ttl_cache(ttl=3600)
+def get_percent_rated(
+        instrument_uid: str,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+) -> float or None:
+    count_total = 0
+    count_rated = 0
+
+    for n_uid in [i.news_uid for i in news_db.get_news_by_date_keywords_fts(
+            start_date=start_date,
+            end_date=end_date,
+            keywords=instruments.get_instrument_keywords(instrument_uid),
+    )]:
+        if get_news_rate_db(instrument_uid=instrument_uid, news_uid=n_uid):
+            count_rated += 1
+        count_total += 1
+
+    return utils.round_float(num=(count_rated / count_total * 100), decimals=2)
 
 
 @logger.error_logger

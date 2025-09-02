@@ -73,7 +73,7 @@ def rank_last_news():
                                     news_uid=n.news_uid,
                                     instrument_uid=i.uid,
                                     news_rate=n_rate,
-                                    model_name=llm.model_name,
+                                    model_name=llm.model_name_ollama,
                                     generation_time_sec=(end - start),
                                 )
 

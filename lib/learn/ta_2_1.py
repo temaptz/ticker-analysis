@@ -354,7 +354,7 @@ class Ta21LearningCard:
 
 def generate_data():
     news_beginning_date = datetime.datetime(year=2025, month=1, day=29)  # Самые первые новости
-    news_beginning_date2 = datetime.datetime(year=2025, month=2, day=17)  # По всем тикерам
+    news_beginning_date2 = news.news.news_beginning_date  # По всем тикерам
     date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(9), tzinfo=datetime.timezone.utc)
     date_start = datetime.datetime.combine((news_beginning_date2 + datetime.timedelta(days=30)), datetime.time(9), tzinfo=datetime.timezone.utc)
     instruments_list = instruments.get_instruments_white_list()

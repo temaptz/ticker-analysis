@@ -200,7 +200,7 @@ def register_scheduler_jobs(scheduler: BaseScheduler):
     # 10:00 по будням — принудительный стоп
     scheduler.add_job(
         daily_cutoff_10,
-        CronTrigger(day_of_week='mon-fri', hour=10, minute=0, timezone=TZ),
+        CronTrigger(day_of_week='mon-fri', hour=10, minute=30, timezone=TZ),
         id='daily_cutoff_10',
         replace_existing=True,
     )

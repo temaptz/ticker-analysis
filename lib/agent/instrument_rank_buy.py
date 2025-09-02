@@ -143,7 +143,7 @@ def llm_fundamental_rate(state: State):
                     ],
                     config=llm.config
             ):
-                if result and result.rate is not None:
+                if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM FUNDAMENTAL RATE IS: {result.rate}')
                     return {'fundamental_rate': result}
 
@@ -166,17 +166,18 @@ def llm_price_prediction_rate(state: State):
         
         # ИНСТРУКЦИЯ
         
-        1. Проанализируй прогноз изменения цены на каждом интервале времени.
-        2. Оцени стабильность и направление ожидаемой динамики.
-        3. На основе анализа, прими решение о привлекательности покупки.
-        4. Учти что актив выгоднее покупать по низкой цене перед трендом на рост в ближайший месяц.
-        5. Чем выше тренд на рост, тем выше должна быть твоя оценка.
-        6. Присвой итоговую числовую оценку выгодности покупки от 0 до 100, где:
-           - 0-25 - прогноз цены стабильно отрицательный, покупка убыточна;
-           - 26-50 - в ближайший месяц прогнозируется незначительный рост, покупка мало привлекательна;
-           - 51-75 - прогноз цены в ближайший месяц стабильно положительный, покупка привлекательна;
-           - 76-100 - в ближайшее время больше месяца прогнозируется высокий рост, покупка максимально привлекательна.
-        7. Если в ближайшие несколько месяцев прогнозируется стабильный высокий рост, а в ближайшие пару недель прогнозируется небольшое краткосрочное снижение, то оценивай рост в перспективе как более важный и считай покупку на падении привлекательной и выгодной.
+        1. Проанализируй прогноз изменения цены на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
+        2. Учитывай что актив выгоднее покупать при низкой цене и перед устойчивым трендом на рост.
+        3. Оцени, насколько выгодна покупка актива именно сейчас.
+        4. Покупка выгодна если в ближайший месяц ожидается постепенный стабильный тренд на рост, чем сильнее рост, тем выше оценка.
+        5. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на рост цены, то это увеличивает оценку.       
+        6. Незначительное снижение в течении нескольких дней перед стабильным ростом говорит о хорошем моменте для покупки и увеличивает оценку.
+        7. Присвой итоговую числовую оценку выгодной покупки целое число от 0 до 100, где:
+           - 0 - прогноз изменения цены на ближайший месяц указывает на стабильное снижение, покупка в ближайшее время не выгодна;
+           - 1-49 - в ближайший месяц возможно снижение, сейчас покупка может быть не выгодна;
+           - 50-74 - тренд изменения цены на ближайший месяц стабильно положительный, покупка позже может быть более выгодна;
+           - 75-89 - тренд изменения цены на ближайшие три месяца стабильно положительный, сейчас хороший момент для покупки.
+           - 90-100 - тренд изменения цены на ближайшие пол года стабильно положительный и постепенный, сейчас идеальный момент для покупки.
         8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
         9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
         
@@ -194,12 +195,12 @@ def llm_price_prediction_rate(state: State):
                         SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                         SystemMessage(content=agent.prompts.get_missed_data_prompt()),
                         SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=False)),
+                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
                     ],
                     config=llm.config,
             ):
-                if result and result.rate is not None:
+                if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM PRICE PREDICTION RATE IS: {result.rate}')
                     return {'price_prediction_rate': result}
 
@@ -252,7 +253,7 @@ def llm_news_rate(state: State):
                     ],
                     config=llm.config
             ):
-                if result and result.rate is not None:
+                if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM NEWS RATE IS: {result.rate}')
                     return {'news_rate': result}
 
@@ -338,12 +339,12 @@ def llm_total_buy_rate(state: State):
                             SystemMessage(content=agent.prompts.get_thinking_prompt()),
                             HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=instrument_uid)),
                             HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid, is_for_sell=False)),
+                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                             human_message
                         ],
                         config=llm.config
                 ):
-                    if result and result.rate is not None:
+                    if result and result.rate is not None and 0 <= result.rate <= 100:
                         logger.log_info(message=f'LLM TOTAL BUY RATE IS: {result.rate}')
                         return {'structured_response': result}
 
