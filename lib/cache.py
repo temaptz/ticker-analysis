@@ -27,13 +27,13 @@ def clean():
         print('ERROR cache clean', e)
 
 
-def ttl_cache(ttl: int = 3600, is_skip_empty: bool = False, is_convert_object: bool = False):
+def ttl_cache(ttl: int = 3600, is_skip_empty: bool = False, is_convert_object: bool = False, cache_salt=''):
     """Декоратор кэширования с временем жизни (ttl) и ограничением по размеру."""
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}_')
+                key_md5 = utils.get_md5(f'{func.__module__}.{func.__name__}:{args}:{kwargs}_{cache_salt}')
                 saved_cache = cache_get(key=key_md5)
 
                 if saved_cache:

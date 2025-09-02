@@ -160,7 +160,7 @@ def get_instrument_human_name(uid: str) -> Optional[str]:
     return None
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 10, is_skip_empty=True)
+@cache.ttl_cache(ttl=3600 * 24 * 10, is_skip_empty=True, cache_salt='__')
 def get_instrument_keywords(uid: str) -> list[str]:
     tag_name= 'keywords'
     tag_join_symbol = ','

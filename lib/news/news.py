@@ -33,6 +33,11 @@ def get_rated_news_by_instrument_uid(
         end_date=end_date,
     )
     news_ids_list = [n.news_uid for n in news_list or []]
+    news_ids_list_total = [n.news_uid for n in get_news_by_instrument_uid(
+        instrument_uid=instrument_uid,
+        start_date=news_beginning_date,
+        end_date=datetime.datetime.now().replace(minute=0, second=0, microsecond=0),
+    ) or []]
     keywords = instruments.get_instrument_keywords(uid=instrument_uid)
     response: dict = {
         'list': [],
@@ -45,13 +50,11 @@ def get_rated_news_by_instrument_uid(
         },
         'percent_rated': news_rate_v2.get_percent_rated(
             instrument_uid=instrument_uid,
-            start_date=start_date,
-            end_date=end_date,
+            news_ids=news_ids_list,
         ),
         'percent_rated_total': news_rate_v2.get_percent_rated(
             instrument_uid=instrument_uid,
-            start_date=news_beginning_date,
-            end_date=datetime.datetime.now().replace(minute=0, second=0, microsecond=0),
+            news_ids=news_ids_list_total,
         ),
         'start_date': start_date,
         'end_date': end_date,
