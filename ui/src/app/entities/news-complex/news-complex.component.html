@@ -3,6 +3,9 @@
 
   @if (weeksResp && weeksResp.length > 0) {
     <div class="keywords">Ключевые слова: {{ weeksResp[0].keywords.join('; ') }}</div>
+    @if (weeksResp[0]?.percent_rated_total != null) {
+      <div class="keywords-meta">Оценено всего: {{ weeksResp[0].percent_rated_total | number : '1.0-0' }}%</div>
+    }
   }
 
   @for (week of weeksResp; track week.start_date) {
@@ -12,6 +15,10 @@
 
         @if (week.rate_v2) {
           <rate-v2 [rate_v2]="week.rate_v2"></rate-v2>
+        }
+        
+        @if (week.percent_rated) {
+          <span class="meta" title="Процент оцененных новостей за неделю">· {{ week.percent_rated | number : '1.0-0' }}% оценено</span>
         }
       </div>
 

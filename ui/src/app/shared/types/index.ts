@@ -67,6 +67,8 @@ export interface NewsListRatedResponse {
   rate_v2: Partial<NewsRateV2>;
   start_date: string | Date;
   end_date: string | Date;
+  percent_rated: number | null;
+  percent_rated_total: number | null;
 }
 
 

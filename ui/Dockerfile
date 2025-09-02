@@ -14,9 +14,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-
+§
 # Nginx
-FROM nginx:stable-alpine
+FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Копируем файл с пользователями
@@ -24,3 +24,6 @@ COPY htpasswd /etc/nginx/.htpasswd
 
 # Копируем билд ангуляра
 COPY --from=build /app/dist/ui /usr/share/nginx/html
+
+# Директория для сертификатов (смонтируется в compose)
+RUN mkdir -p /etc/nginx/certs
