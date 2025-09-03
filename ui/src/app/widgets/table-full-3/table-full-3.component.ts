@@ -53,7 +53,7 @@ export class TableFull3Component {
 
   isLoaded = signal<boolean>(false);
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
-  sortTickers = signal<SortModeEnum>(SortModeEnum.PotentialPerspective)
+  sortTickers = signal<SortModeEnum>(SortModeEnum.BuyPerspective)
 
   protected readonly CandleInterval = CandleInterval;
   protected readonly tableItemHeightPx = 265;
@@ -81,7 +81,7 @@ export class TableFull3Component {
   constructor() {
     const ls = this.ls.getItem(this.lsKey);
     if (ls) {
-      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.PotentialPerspective);
+      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.BuyPerspective);
     }
 
     effect(() => {

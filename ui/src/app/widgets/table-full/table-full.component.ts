@@ -54,7 +54,7 @@ import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/pr
 export class TableFullComponent {
 
   isLoaded = signal<boolean>(false);
-  sortTickers = signal<SortModeEnum>(SortModeEnum.PotentialPerspective)
+  sortTickers = signal<SortModeEnum>(SortModeEnum.BuyPerspective)
   dataSource = new MatTableDataSource<InstrumentInList>([])
 
   protected readonly CandleInterval = CandleInterval;
@@ -89,7 +89,7 @@ export class TableFullComponent {
   constructor() {
     const ls = this.ls.getItem(this.lsKey);
     if (ls) {
-      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.PotentialPerspective);
+      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.BuyPerspective);
     }
 
     effect(() => {

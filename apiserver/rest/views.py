@@ -25,7 +25,7 @@ def instruments_list(request):
             instruments_list=sorted_list
         )
     elif sort and (sort == 3 or sort == '3'):
-        sorted_list = users.sort_instruments_profit(
+        sorted_list = users.sort_instruments_last_operation(
             instruments_list=sorted_list
         )
     elif sort and (sort == 4 or sort == '4'):

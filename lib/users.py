@@ -1,4 +1,6 @@
 import math
+from datetime import datetime
+import pytz
 from tinkoff.invest import (
     Client,
     constants,
@@ -238,8 +240,8 @@ def sort_instruments_cost(instruments_list: list[Instrument]) -> list[Instrument
     return sorted(instruments_list, key=get_instrument_cost_for_sort, reverse=True)
 
 
-def sort_instruments_profit(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_profit_for_sort, reverse=True)
+def sort_instruments_last_operation(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=get_instrument_last_operation_seconds, reverse=False)
 
 
 @cache.ttl_cache(ttl=3600)
@@ -287,17 +289,19 @@ def get_instrument_buy_rate_for_sort(instrument: Instrument) -> float:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_profit_for_sort(instrument: Instrument) -> float:
+def get_instrument_last_operation_seconds(instrument: Instrument) -> float:
     try:
-        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid, account_id=get_analytics_account().id)
+        if operations := get_operations(account_id=get_analytics_account().id, figi=instrument.figi):
+            now = datetime.now(pytz.utc)
+            closest_operation = min(operations, key=lambda op: abs(now - op.date))
+            time_diff = now - closest_operation.date
 
-        if calc and calc['potential_profit'] is not None:
-            return calc['potential_profit']
+            return time_diff.total_seconds()
 
     except Exception as e:
-        logger.log_error(method_name='get_instrument_profit_for_sort', error=e)
+        logger.log_error(method_name='get_instrument_last_operation_seconds', error=e)
 
-    return float('-inf')
+    return float('inf')
 
 
 @cache.ttl_cache(ttl=3600)
