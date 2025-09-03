@@ -7,8 +7,7 @@ from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
-from lib import instruments, news, db_2, logger, types_util, users
-from lib.agent import llm
+from lib import instruments, news, db_2, logger, types_util, users, agent
 
 
 class Value(BaseModel):
@@ -51,7 +50,7 @@ def rank_last_news():
                     result = graph.invoke(
                         input=graph_input,
                         debug=True,
-                        config=llm.config,
+                        config=agent.llm.config,
                     )
                     end = time.time()
 
@@ -73,7 +72,7 @@ def rank_last_news():
                                     news_uid=n.news_uid,
                                     instrument_uid=i.uid,
                                     news_rate=n_rate,
-                                    model_name=llm.model_name_ollama,
+                                    model_name=agent.llm.model_name,
                                     generation_time_sec=(end - start),
                                 )
 
@@ -147,12 +146,12 @@ def sentiment_rate(state: State):
                 {news_text}
                 '''
 
-                if result := llm.llm.with_structured_output(Value).invoke(
+                if result := agent.llm.llm.with_structured_output(Value).invoke(
                         [
                             SystemMessage(content=main_news_prompt),
                             HumanMessage(content=prompt),
                         ],
-                        config=llm.config
+                        config=agent.llm.config
                 ):
                     if result and result.value is not None:
                         return {'sentiment': result.value}
@@ -188,12 +187,12 @@ def impact_strength_rate(state: State):
                 {news_text}
                 '''
 
-                if result := llm.llm.with_structured_output(Value).invoke(
+                if result := agent.llm.llm.with_structured_output(Value).invoke(
                         [
                             SystemMessage(content=main_news_prompt),
                             HumanMessage(content=prompt),
                         ],
-                        config=llm.config
+                        config=agent.llm.config
                 ):
                     if result and result.value is not None:
                         return {'impact_strength': result.value}
@@ -231,12 +230,12 @@ def mention_focus_rate(state: State):
                 {news_text}
                 '''
 
-                if result := llm.llm.with_structured_output(Value).invoke(
+                if result := agent.llm.llm.with_structured_output(Value).invoke(
                         [
                             SystemMessage(content=main_news_prompt),
                             HumanMessage(content=prompt),
                         ],
-                        config=llm.config
+                        config=agent.llm.config
                 ):
                     if result and result.value is not None:
                         return {'mention_focus': result.value}

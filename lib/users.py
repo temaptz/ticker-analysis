@@ -152,14 +152,13 @@ def get_user_instrument_operations(instrument_figi: str, account_id: int = None)
     return result
 
 
-@cache.ttl_cache(ttl=3600)
+@cache.ttl_cache(ttl=3600 * 24)
 def get_accounts() -> GetAccountsResponse.accounts:
     result = []
 
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             for a in client.users.get_accounts().accounts:
-                agent.utils.output_json(a)
                 if a.name in ['Основной', 'Аналитический']:
                     result.append(a)
 
