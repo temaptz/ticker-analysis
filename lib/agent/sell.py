@@ -254,12 +254,13 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
         qty_calc = balance_qty * 0.01
 
         if sell_rate > 75:
-            qty_calc = balance_qty * 0.10
+            qty_calc = balance_qty * 0.15
 
         if sell_rate > 90:
             qty_calc = balance_qty * 0.50
 
         qty_round = math.ceil(qty_calc / lot_size) * lot_size
+        is_ok = (0 < qty_round <= qty_calc * 1.7)
 
         logger.log_info(
             message='DEBUG SELL RECOMMENDATION',
@@ -269,12 +270,12 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
                 'lot_size': lot_size,
                 'target_price': target_price,
                 'delta_percent': utils.round_float(num=((qty_round - qty_calc) / qty_calc * 100), decimals=2),
-                'is_ok': (0 < qty_round <= qty_calc * 1.7),
+                'is_ok': is_ok,
             },
             is_send_telegram=True,
         )
 
-        if 0 < qty_round <= qty_calc * 1.7:
+        if is_ok:
             return SellRecommendation(
                 instrument_uid=instrument_uid,
                 target_price=target_price,

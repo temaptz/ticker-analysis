@@ -22,17 +22,6 @@ class State(TypedDict, total=False):
 
 
 def update_recommendations():
-    logger.log_info(
-        message='LANGSMITH DEBUG RECOMMENDATIONS SELL',
-        output={
-            'LANGSMITH_TRACING': os.environ['LANGSMITH_TRACING'],
-            'LANGSMITH_ENDPOINT': os.environ['LANGSMITH_ENDPOINT'],
-            'LANGSMITH_API_KEY': os.environ['LANGSMITH_API_KEY'],
-            'LANGSMITH_PROJECT': os.environ['LANGSMITH_PROJECT'],
-        },
-        is_send_telegram=True,
-    )
-
     graph_sell = get_sell_rank_graph()
 
     for i in users.sort_instruments_for_sell(
@@ -148,6 +137,7 @@ def llm_price_prediction_rate(state: State):
         
         Как специалист по трейдингу проанализируй и оцени насколько потенциально выгодна продажа актива именно сейчас.
         
+        
         # ИНСТРУКЦИЯ
         
         1. Проанализируй изменение цены на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
@@ -157,14 +147,13 @@ def llm_price_prediction_rate(state: State):
         5. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на снижение цены, то это увеличивает оценку.
         6. Незначительный рост в течении нескольких дней перед стабильным снижением говорит о хорошем моменте для продажи и увеличивает оценку. 
         7. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
-           - 0 - прогноз изменения цены на ближайший месяц указывает на стабильный рост, продажа в ближайшее время не выгодна;
-           - 1-49 - в ближайший месяц возможен рост, сейчас продажа может быть не выгодна;
-           - 50-74 - тренд изменения цены на ближайший месяц стабильно отрицательный, продажа позже может быть более выгодна;
-           - 75-89 - тренд изменения цены на ближайшие три месяца стабильно отрицательный, сейчас хороший момент для продажи.
-           - 90-100 - тренд изменения цены на ближайшие пол года стабильно отрицательный и постепенный, сейчас идеальный момент для продажи.
+           - 0 - все price_prediction до месяца стабильно положительные, продажа в ближайшее время не выгодна;
+           - 1-49 - в ближайший месяц присутствуют положительные price_prediction, продажа не рекомендована;
+           - 50-74 - все price_prediction до месяца стабильно отрицательные, продажа возможна;
+           - 75-89 - все price_prediction до трех месяцев стабильно отрицательные, сейчас хороший момент для продажи.
+           - 90-100 - все price_prediction до пол года стабильно отрицательные, сейчас идеальный момент для продажи.
         8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
         9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
-        
         
         # ФОРМАТ ОТВЕТА
         
@@ -199,79 +188,30 @@ def llm_price_prediction_rate(state: State):
     return {}
 
 
-def llm_total_sell_rate(state: State):
-    if instrument_uid := state.get('instrument_uid', None):
-        invest_calc = state.get('invest_calc_rate', None)
-        price_prediction = state.get('price_prediction_rate', None)
-        invest_rate = invest_calc.rate if (invest_calc and invest_calc.rate) else None
-        invest_rate_conclusion = invest_calc.final_conclusion if (invest_calc and invest_calc.final_conclusion) else None
-        price_prediction_rate = price_prediction.rate if (price_prediction and price_prediction.rate) else None
-        price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
+def llm_total_sell_rate(state: State) -> State:
+    invest_c = state.get('invest_calc_rate', None)
+    price_prediction = state.get('price_prediction_rate', None)
+    invest_rate = invest_c.rate if (invest_c and invest_c.rate) else None
+    invest_rate_conclusion = invest_c.final_conclusion if (invest_c and invest_c.final_conclusion) else None
+    price_prediction_rate = price_prediction.rate if (price_prediction and price_prediction.rate) else None
+    price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
 
-        if invest_rate or price_prediction_rate:
-            prompt = f'''
-            # ПРЕДВАРИТЕЛЬНЫЕ ОЦЕНКИ
-
-            Оценка потенциальной выгоды при продаже - invest_rate: {invest_rate} (0-100)
-            Оценка оптимального момента продажи - price_prediction_rate: {price_prediction_rate} (0-100)
-            
-            
-            # КОММЕНТАРИИ ПО ОЦЕНКЕ ПОТЕНЦИАЛЬНОЙ ВЫГОДЫ
-                        
-            {invest_rate_conclusion or 'Unknown'}
-            
-            # КОММЕНТАРИИ ПО ОЦЕНКЕ ОПТИМАЛЬНОГО МОМЕНТА ПРОДАЖИ
-            
-            {price_prediction_conclusion or 'Unknown'}
-            
-            # ЗАДАНИЕ
-            
-            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна продажа этого актива именно сейчас.
-
-            # ИНСТРУКЦИЯ
-            
-            1. Учитывай все показатели: предварительные оценки и комментарии.
-            2. Самый важный показатель на который надо опираться в ответе - оценка потенциальной выгоды invest_rate.
-            3. Второй по значимости показатель - оценка оптимального момента продажи price_prediction_rate.
-            3. Присвой итоговую оценку от 0 до 100, где:
-               - 0-25 - все оценки низкие, продажа сейчас не выгодна;
-               - 26-50 - оценки ниже среднего, продажа сейчас умеренно выгодна, момент продажи не удачный;
-               - 51-74 - оценки выше среднего, продажа сейчас выгодна, момент для продажи средне удачный.
-               - 75-100 - все оценки высокие, сейчас выгодный и удачный момент для продажи.
-            5. Итоговая оценка будет использоваться для сравнения между активами.
-            6. Отсутствующие данные приравниваются к 0 оценке.
-            7. Учитывай полученные ранее сырые данные.
-            4. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
-            
-            # ФОРМАТ ОТВЕТА
-            
-            Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
-            '''
-
-
-            print('HUMAN MESSAGE total_buy_rate', prompt)
-
-            try:
-                if result := agent.llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
-                        [
-                            SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                            SystemMessage(content=agent.prompts.get_missed_data_prompt()),
-                            SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                            HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_profit_calc_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=prompt),
-                        ],
-                        config=agent.llm.config
-                ):
-                    if result and result.rate is not None and 0 <= result.rate <= 100:
-                        logger.log_info(message=f'LLM TOTAL SELL RATE IS: {result.rate}')
-                        return {'structured_response': result}
-
-            except Exception as e:
-                logger.log_error(
-                    method_name='llm_total_sell_rate',
-                    error=e,
-                    is_telegram_send=False,
+    if invest_rate or price_prediction_rate:
+        try:
+            weights = {'invest_rate': 2, 'price_prediction_rate': 1}
+            calc_rate = int(
+                (
+                        (invest_rate or 0) * weights['invest_rate']
+                        + (price_prediction_rate or 0) * weights['price_prediction_rate']
                 )
+                / (weights['invest_rate'] + weights['price_prediction_rate'])
+            )
+
+            if calc_rate or calc_rate == 0:
+                return {'structured_response': RatePercentWithConclusion(
+                    rate=calc_rate,
+                    final_conclusion=f'{invest_rate_conclusion}\n{price_prediction_conclusion}'
+                )}
+        except Exception as e:
+            print('ERROR llm_total_sell_rate', e)
     return {}

@@ -258,27 +258,27 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             
             {{
                 "3_days": {{
-                    "price_prediction": "{'+' if prediction_3_days > 0 else ''}{utils.round_float(prediction_3_days, 5) * 100}%",
+                    "price_prediction": "{'+' if prediction_3_days > 0 else ''}{utils.round_float(prediction_3_days * 100, 2)}%",
                     "description": "Прогноз относительного изменения цены актива через 3 дня"
                 }},
                 "1_week": {{
-                    "price_prediction": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week, 5) * 100}%",
+                    "price_prediction": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week * 100, 2)}%",
                     "description": "Прогноз относительного изменения цены актива через 1 неделю"
                 }},
                 "2_weeks": {{
-                    "price_prediction": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks, 5) * 100}%",
+                    "price_prediction": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks * 100, 2)}%",
                     "description": "Прогноз относительного изменения цены актива через 2 недели"
                 }},
                 "3_weeks": {{
-                    "price_prediction": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks, 5) * 100}%",
+                    "price_prediction": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks * 100, 2)}%",
                     "description": "Прогноз относительного изменения цены актива через 3 недели"
                 }},
                 "1_month": {{
-                    "price_prediction": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month, 5) * 100}%",
+                    "price_prediction": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month * 100, 2)}%",
                     "description": "Прогноз относительного изменения цены актива через 1 месяц"
                 }},
                 "2_months": {{
-                    "price_prediction": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months, 5) * 100}%",
+                    "price_prediction": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months * 100, 2)}%",
                     "description": "Прогноз относительного изменения цены актива через 2 месяца"
                 }},
                 "3_months": {{
@@ -473,52 +473,49 @@ def get_news_prompt(instrument_uid: str, is_for_sell=False) -> str:
              - sentiment - отношение новости по отношению к субъекту от -1 до 1;
              - impact_strength - силу влияния новости на цену акции от 0 до 1;
              - mention_focus - сфокусированность новости на субъекте от 0 до 1.
-            4. influence_score отражает силу и направление(положительное или отрицательное) влияния новостного фона за период времени на цену акции.
-            
-            # ПРИМЕРЫ ОЦЕНОК ВЫГОДНОСТИ
-             
+            4. influence_score отражает силу и направление(положительное или отрицательное) влияния новостного фона за период времени на цену акции.             
             '''
 
-            if is_for_sell:
-                result += f'''
-                {{
-                    "d0_7": {{
-                        "influence_score": -5,
-                    }},
-                    "d8_14": {{
-                        "influence_score": -3.5,
-                    }},
-                    "d15_21": {{
-                        "influence_score": -1.7,
-                    }},
-                    "d22_28": {{
-                        "influence_score": -1,
-                    }}
-                }}
-                В этом примере устойчивый отрицательный новостной фон с динамикой на еще большее снижение
-                говорит о возможном снижении в ближайшем будущем и потенциально более выгодной продаже чем покупке.
-                Оценка выгоды продажи: 100 из 100
-                '''
-            else:
-                result += f'''
-                {{
-                    "d0_7": {{
-                        "influence_score": 5,
-                    }},
-                    "d8_14": {{
-                        "influence_score": 3.7,
-                    }},
-                    "d15_21": {{
-                        "influence_score": 3,
-                    }},
-                    "d22_28": {{
-                        "influence_score": 1.5,
-                    }}
-                }}
-                В этом примере устойчивый положительный новостной фон с трендом на рост
-                говорит о возможном росте и потенциально выгодной покупке и менее выгодной продаже.
-                Оценка выгоды покупки: 100 из 100
-                '''
+            # if is_for_sell:
+            #     result += f'''
+            #     {{
+            #         "d0_7": {{
+            #             "influence_score": -5,
+            #         }},
+            #         "d8_14": {{
+            #             "influence_score": -3.5,
+            #         }},
+            #         "d15_21": {{
+            #             "influence_score": -1.7,
+            #         }},
+            #         "d22_28": {{
+            #             "influence_score": -1,
+            #         }}
+            #     }}
+            #     В этом примере устойчивый отрицательный новостной фон с динамикой на еще большее снижение
+            #     говорит о возможном снижении в ближайшем будущем и потенциально более выгодной продаже чем покупке.
+            #     Оценка выгоды продажи: 100 из 100
+            #     '''
+            # else:
+            #     result += f'''
+            #     {{
+            #         "d0_7": {{
+            #             "influence_score": 5,
+            #         }},
+            #         "d8_14": {{
+            #             "influence_score": 3.7,
+            #         }},
+            #         "d15_21": {{
+            #             "influence_score": 3,
+            #         }},
+            #         "d22_28": {{
+            #             "influence_score": 1.5,
+            #         }}
+            #     }}
+            #     В этом примере устойчивый положительный новостной фон с трендом на рост
+            #     говорит о возможном росте и потенциально выгодной покупке и менее выгодной продаже.
+            #     Оценка выгоды покупки: 100 из 100
+            #     '''
 
             return result
     except Exception as e:

@@ -1,3 +1,10 @@
+@if (!isLoaded()) {
+  <div class="preloader">
+    <preloader></preloader>
+  </div>
+}
+
+
 <cdk-virtual-scroll-viewport
   *ngIf="dataSource"
   headerHeight="50"

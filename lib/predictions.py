@@ -20,40 +20,39 @@ def get_prediction(
 
         for day in days:
             date = date_utils.convert_to_utc(day).replace(hour=12, minute=0, second=0, microsecond=0)
+            predict_day = None
 
             if model_name == model.TA_1:
-                if p := get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current):
-                    day_results.append(p)
+                predict_day = get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current)
             elif model_name == model.TA_1_1:
-                if p:= get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current):
-                    day_results.append(p)
+                predict_day = get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current)
             elif model_name == model.TA_1_2:
-                if p:= ta_1_2.predict_future_relative_change(
+                predict_day = ta_1_2.predict_future_relative_change(
                     instrument_uid=instrument_uid,
                     date_target=date,
                     date_current=date_current,
-                ):
-                    day_results.append(p)
+                )
             elif model_name == model.TA_2:
-                if p:= ta_2.predict_future_relative_change(
+                predict_day = ta_2.predict_future_relative_change(
                     instrument_uid=instrument_uid,
                     date_target=date,
                     date_current=date_current,
-                ):
-                    day_results.append(p)
+                )
             elif model_name == model.TA_2_1:
-                if p:= ta_2_1.predict_future_relative_change(
+                predict_day = ta_2_1.predict_future_relative_change(
                     instrument_uid=instrument_uid,
                     date_target=date,
                     date_current=date_current,
-                ):
-                    day_results.append(p)
+                )
             elif model_name == model.CONSENSUS:
-                if p := consensus.predict_future_relative_change(
+                predict_day = consensus.predict_future_relative_change(
                     instrument_uid=instrument_uid,
                     date_target=date,
-                ):
-                    day_results.append(p)
+                )
+
+            if predict_day:
+                if -3 < predict_day < 3:
+                    day_results.append(predict_day)
 
         if len(day_results) > 0:
             return sum(day_results) / len(day_results)
@@ -201,6 +200,7 @@ def get_prediction_graph(uid: str, model_name: model, date_from: datetime.dateti
                     ):
                         result.append({
                             'prediction': prediction_price,
+                            'prediction_relative': prediction_item,
                             'date': date,
                         })
 

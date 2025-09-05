@@ -24,17 +24,6 @@ class State(TypedDict, total=False):
 
 
 def update_recommendations():
-    logger.log_info(
-        message='LANGSMITH DEBUG RECOMMENDATIONS BUY',
-        output={
-            'LANGSMITH_TRACING': os.environ['LANGSMITH_TRACING'],
-            'LANGSMITH_ENDPOINT': os.environ['LANGSMITH_ENDPOINT'],
-            'LANGSMITH_API_KEY': os.environ['LANGSMITH_API_KEY'],
-            'LANGSMITH_PROJECT': os.environ['LANGSMITH_PROJECT'],
-        },
-        is_send_telegram=True,
-    )
-
     graph_buy = get_buy_rank_graph()
 
     for i in users.sort_instruments_for_buy(
@@ -164,20 +153,21 @@ def llm_price_prediction_rate(state: State):
         
         Как специалист по трейдингу проанализируй и оцени насколько выгодна покупка актива сейчас с целью её продажи в течение следующих 0-24 месяцев.
         
+        
         # ИНСТРУКЦИЯ
         
-        1. Проанализируй прогноз изменения цены на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
+        1. Проанализируй прогноз изменения цены price_prediction на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
         2. Учитывай что актив выгоднее покупать при низкой цене и перед устойчивым трендом на рост.
         3. Оцени, насколько выгодна покупка актива именно сейчас.
         4. Покупка выгодна если в ближайший месяц ожидается постепенный стабильный тренд на рост, чем сильнее рост, тем выше оценка.
         5. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на рост цены, то это увеличивает оценку.       
         6. Незначительное снижение в течении нескольких дней перед стабильным ростом говорит о хорошем моменте для покупки и увеличивает оценку.
         7. Присвой итоговую числовую оценку выгодной покупки целое число от 0 до 100, где:
-           - 0 - прогноз изменения цены на ближайший месяц указывает на стабильное снижение, покупка в ближайшее время не выгодна;
-           - 1-49 - в ближайший месяц возможно снижение, сейчас покупка может быть не выгодна;
-           - 50-74 - тренд изменения цены на ближайший месяц стабильно положительный, покупка позже может быть более выгодна;
-           - 75-89 - тренд изменения цены на ближайшие три месяца стабильно положительный, сейчас хороший момент для покупки.
-           - 90-100 - тренд изменения цены на ближайшие пол года стабильно положительный и постепенный, сейчас идеальный момент для покупки.
+           - 0 - все price_prediction на ближайший месяц и меньше стабильно отрицательные, покупка в ближайшее время не выгодна;
+           - 1-49 - в ближайший месяц и меньше присутствуют отрицательные price_prediction, покупка не рекомендована;
+           - 50-74 - все price_prediction до месяца стабильно положительные, покупка возможна;
+           - 75-89 - все price_prediction до трех месяцев стабильно положительные, сейчас хороший момент для покупки.
+           - 90-100 - все price_prediction до пол года стабильно положительные, сейчас идеальный момент для покупки.
         8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
         9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
         
@@ -227,11 +217,11 @@ def llm_news_rate(state: State):
         1. Проанализируй динамику рейтинга новостного фона по периодам.
         2. Оцени силу и стабильность позитивного влияния новостей на цену актива.
         4. Итоговая оценка - одно число от 0 до 100, где:
-           - 0-25 - негативный рейтинг новостного фона;
-           - 26-50 - умеренно негативная динамика новостного фона;
-           - 51-75 - умеренно позитивная динамика новостного фона;
-           - 76-90 - стабильно позитивный новостной фон;
-           - 91-100 - положительная динамика позитивного новостного фона;
+           - 0-10 - все influence_score отрицательные или часть отсутствует, негативный новостной фон;
+           - 11-30 - все -5 < influence_score < 0, умеренно негативный новостной фон;
+           - 31-75 - все influence_score > 0, динамика нестабильная, умеренно позитивный новостной фон;
+           - 76-90 - все influence_score > 0, некоторые influence_score > 3, есть положительная динамика, позитивный новостной фон;
+           - 91-100 - все influence_score > 0 большинство influence_score > 3, есть положительная динамика, позитивный новостной фон;
         5. Снижай оценку при нулевом или отсутствующем новостном фоне. Если данные полностью отсутствуют, оценка 0.
         6. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
            
@@ -248,7 +238,7 @@ def llm_news_rate(state: State):
                     [
                         SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                         SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                        HumanMessage(content=agent.prompts.get_news_prompt(instrument_uid=instrument_uid, is_for_sell=False)),
+                        HumanMessage(content=agent.prompts.get_news_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
                     ],
                     config=llm.config
@@ -268,90 +258,40 @@ def llm_news_rate(state: State):
 
 
 def llm_total_buy_rate(state: State):
-    if instrument_uid := state.get('instrument_uid', None):
-        f = state.get('fundamental_rate', None)
-        price_prediction = state.get('price_prediction_rate', None)
-        n = state.get('news_rate', None)
-        fundamental_rate = f.rate if (f and f.rate) else None
-        fundamental_conclusion = f.final_conclusion if (f and f.final_conclusion) else None
-        price_prediction_rate = price_prediction.rate if (price_prediction and price_prediction.rate) else None
-        price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
-        news_rate = n.rate if (n and n.rate) else None
-        news_conclusion = n.final_conclusion if (n and n.final_conclusion) else None
+    f = state.get('fundamental_rate', None)
+    price_prediction = state.get('price_prediction_rate', None)
+    n = state.get('news_rate', None)
+    fundamental_rate = f.rate if (f and f.rate) else None
+    fundamental_conclusion = f.final_conclusion if (f and f.final_conclusion) else None
+    price_prediction_rate = price_prediction.rate if (price_prediction and price_prediction.rate) else None
+    price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
+    news_rate = n.rate if (n and n.rate) else None
+    news_conclusion = n.final_conclusion if (n and n.final_conclusion) else None
+    is_in_favorites = users.get_is_in_favorites(instrument_uid=state.get('instrument_uid'))
 
-        if fundamental_rate or price_prediction_rate or news_rate:
-            human_message = HumanMessage(content=f'''
-            # ПРЕДВАРИТЕЛЬНЫЕ ОЦЕНКИ
-
-            1. Прогноз изменения цены - price_prediction_rate: {price_prediction_rate} [0-100] #Самый важный
-            2. Фундаментальные показатели - fundamental_rate: {fundamental_rate} [0-100] #Второй по значимости
-            3. Новостной фон - news_rate: {news_rate} [0-100] #Второй по значимости 
-            
-            # КОММЕНТАРИЙ О ФУНДАМЕНТАЛЬНЫХ ПОКАЗАТЕЛЯХ
-            {fundamental_conclusion}
-            
-            # КОММЕНТАРИЙ О ПРОГНОЗЕ ИЗМЕНЕНИЯ ЦЕНЫ
-            {price_prediction_conclusion}
-            
-            # КОММЕНТАРИЙ О НОВОСТНОМ ФОНЕ
-            {news_conclusion}
-            
-            # АКТИВ В ИЗБРАННОМ
-            is_in_favorites: {'True' if users.get_is_in_favorites(instrument_uid=instrument_uid) else 'False'}
-            
-            # ЗАДАНИЕ
-            
-            Как специалист по биржевой торговле проанализируй все показатели и оцени насколько выгодна покупка этого актива именно сейчас с целью последующей продажи. Для оценки составь сложную независимую шкалу на основе инструкции.
-
-            # ИНСТРУКЦИЯ
-            
-            1. Используй предварительные оценки, которые выражены числом от 0 до 100.
-            2. Самый главный показатель на который надо опираться в ответе - оценка прогноза изменения цены price_prediction_rate.
-            3. Второй по значимости показатель - фундаментальные показатели fundamental_rate.
-            4. Второй по значимости показатель - новостной фон news_rate, он может быть не точным.
-            5. Важный показатель - прогноз относительного изменения цены price_prediction, нужно его учитывать.
-            6. Присвой итоговую оценку от 0 до 100, где:
-               - 0-25 - оценки низкие, покупка нецелесообразна;
-               - 26-50 - оценки ниже среднего, покупка рискованна;
-               - 51-75 - оценки выше среднего, момент для выгодной покупки;
-               - 76-100 - все оценки высоки, это максимально выгодный момент для покупки актива.
-            7. Эта оценка будет использоваться для сравнения между активами.
-            8. Высокая итоговая оценка возможна только если есть все данные и все оценки высоки.
-            9. Если нет прогнозов цен, то то итоговая оценка должна быть низкой или нулевой.
-            10. Если инструмент в избранном, то это должно давать +5% к итоговой оценке, при условии что оценка выше среднего.
-            11. Учитывай комментарии, в них содержатся важные выводы которые следует учесть.
-            12. Учитывай всю собранную ранее информацию.
-            13. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
-            
-            # ФОРМАТ ОТВЕТА
-        
-            Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
-            ''')
-
-
-            print('HUMAN MESSAGE total_buy_rate', human_message.content)
-
-            try:
-                if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
-                        [
-                            SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                            SystemMessage(content=agent.prompts.get_missed_data_prompt()),
-                            SystemMessage(content=agent.prompts.get_thinking_prompt()),
-                            HumanMessage(content=agent.prompts.get_instrument_info_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=instrument_uid)),
-                            HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
-                            human_message
-                        ],
-                        config=llm.config
-                ):
-                    if result and result.rate is not None and 0 <= result.rate <= 100:
-                        logger.log_info(message=f'LLM TOTAL BUY RATE IS: {result.rate}')
-                        return {'structured_response': result}
-
-            except Exception as e:
-                logger.log_error(
-                    method_name='llm_total_buy_rate',
-                    error=e,
-                    is_telegram_send=False,
+    if fundamental_rate or price_prediction_rate:
+        try:
+            weights = {'fundamental_rate': 1, 'price_prediction_rate': 2, 'news_rate': 1, 'favorites': 0.05}
+            calc_rate = int(
+                (
+                        (fundamental_rate or 0) * weights['fundamental_rate']
+                        + (price_prediction_rate or 0) * weights['price_prediction_rate']
+                        + (news_rate or 0) * weights['news_rate']
+                        + (100 if is_in_favorites else 0) * weights['favorites']
                 )
+                / (
+                        weights['fundamental_rate']
+                        + weights['price_prediction_rate']
+                        + weights['news_rate']
+                        + weights['favorites']
+                )
+            )
+
+            if calc_rate or calc_rate == 0:
+                return {'structured_response': RatePercentWithConclusion(
+                    rate=calc_rate,
+                    final_conclusion=f'{fundamental_conclusion}\n{price_prediction_conclusion}\n{news_conclusion}'
+                )}
+        except Exception as e:
+            print('ERROR llm_total_buy_rate', e)
     return {}

@@ -1,10 +1,11 @@
-import { Component, effect, inject, signal, ViewChild } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { Subscription, tap } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { switchMap, tap } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
@@ -21,6 +22,7 @@ import { NewsComplexComponent } from '../../entities/news-complex/news-complex.c
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
 import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/prediction-dynamic.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
+import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 
 
 @Component({
@@ -43,7 +45,8 @@ import { DrawerComponent } from '../../entities/drawer/drawer.component';
     NewsComplexComponent,
     LlmBuySellRateComponent,
     PredictionDynamicComponent,
-    DrawerComponent
+    DrawerComponent,
+    PreloaderComponent
   ],
   providers: [],
   templateUrl: './table-full-3.component.html',
@@ -74,8 +77,6 @@ export class TableFull3Component {
   private ls = localStorage;
   private lsKey = 'sortTickers';
 
-  private subscription?: Subscription;
-
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
@@ -84,13 +85,13 @@ export class TableFull3Component {
       this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.BuyPerspective);
     }
 
-    effect(() => {
-      this.isLoaded.set(false);
-      this.subscription?.unsubscribe();
-      this.subscription = this.appService.getInstruments(this.sortTickers()).pipe(
+    toObservable(this.sortTickers)
+      .pipe(
+        tap(() => this.isLoaded.set(false)),
+        switchMap((sortTickers) => this.appService.getInstruments(sortTickers)),
         tap(() => this.isLoaded.set(true)),
-      ).subscribe(instruments => this.dataSource.data = instruments);
-    });
+      )
+      .subscribe(instruments => this.dataSource.data = instruments);
   }
 
   handleChangeSort(): void {

@@ -262,6 +262,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
 
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
+        is_ok = (total_price <= total_price_calc * 1.5)
 
         logger.log_info(
             message='DEBUG BUY RECOMMENDATION',
@@ -272,12 +273,12 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
                 'total_price_calc': total_price_calc,
                 'total_price': total_price,
                 'delta_percent': utils.round_float(num=((total_price - total_price_calc) / total_price_calc * 100), decimals=2),
-                'is_ok': (total_price <= total_price_calc * 1.5),
+                'is_ok': is_ok,
             },
             is_send_telegram=True,
         )
         
-        if total_price <= total_price_calc * 1.5:
+        if is_ok:
             return BuyRecommendation(
                 instrument_uid=instrument_uid,
                 target_price=target_price,
