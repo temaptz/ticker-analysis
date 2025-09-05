@@ -8,7 +8,7 @@
     <div class="total-news">
       <div>Общий новостной фон:</div>
 
-      @if (newsResp.rate_v2.influence_score) {
+      @if (newsResp?.rate_v2?.influence_score || newsResp?.rate_v2?.influence_score === 0) {
         <rate-v2
           [rate_v2]="newsResp.rate_v2"
         ></rate-v2>
