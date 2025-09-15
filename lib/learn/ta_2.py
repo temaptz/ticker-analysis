@@ -66,12 +66,19 @@ class Ta2LearningCard:
         self.history = self.get_history(fill_empty=fill_empty)
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price = self.get_target_price()
-        self.consensus_forecast_price = utils.get_price_by_quotation(
-            forecasts.get_db_forecast_by_uid_date(
-                uid=self.instrument.uid,
-                date=self.date
-            )[1].consensus.current_price
-        )
+
+        try:
+            self.consensus_forecast_price = utils.get_price_by_quotation(
+                forecasts.get_db_forecast_by_uid_date(
+                    uid=self.instrument.uid,
+                    date=self.date
+                )[1].consensus.current_price
+            )
+        except Exception as e:
+            if fill_empty:
+                self.consensus_forecast_price = 0
+            else:
+                print('ERROR Ta2LearningCard consensus_forecast_price', e)
 
         if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
             self.revenue_ttm = f.revenue_ttm

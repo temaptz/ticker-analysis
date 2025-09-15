@@ -1,6 +1,6 @@
 @let rate = rate_v2();
 
-@if (rate?.influence_score) {
+@if (rate?.influence_score || rate?.influence_score === 0) {
   <div
     class="rate"
     [title]="rate | json"
@@ -9,7 +9,11 @@
   >
     <b>{{ rate!.influence_score | number : '1.2-2' }}</b>
 
-    @if (rate?.sentiment && rate?.impact_strength && rate?.mention_focus) {
+    @if (
+      (rate?.sentiment || rate?.sentiment == 0)
+      && (rate?.impact_strength || rate?.impact_strength == 0)
+      && (rate?.mention_focus || rate?.mention_focus == 0)
+      ) {
       = {{ rate!.sentiment | number : '1.2-2' }} * {{ rate!.impact_strength | number : '1.2-2' }} * {{ rate!.mention_focus | number : '1.2-2' }}
     }
   </div>

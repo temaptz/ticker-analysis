@@ -199,8 +199,8 @@ def get_prediction_graph(uid: str, model_name: model, date_from: datetime.dateti
                             relative_change=prediction_item,
                     ):
                         result.append({
-                            'prediction': prediction_price,
-                            'prediction_relative': prediction_item,
+                            'prediction': utils.round_float(num=prediction_price, decimals=4),
+                            'prediction_percent': utils.round_float(num=(prediction_item * 100), decimals=2),
                             'date': date,
                         })
 

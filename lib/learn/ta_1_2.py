@@ -67,7 +67,7 @@ class Ta12LearningCard:
     def fill_card(self, is_fill_empty=False):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price_change = self.get_target_change_relative()
-        self.forecast_price_change = self.get_forecast_change()
+        self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
         if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
             self.revenue_ttm = f.revenue_ttm
             self.ebitda_ttm = f.ebitda_ttm
@@ -87,14 +87,14 @@ class Ta12LearningCard:
             self.ev_to_ebitda_mrq = 0
             self.dividend_payout_ratio_fy = 0
 
-        self.price_change_2_days = self.get_price_change_days(days_count=2)
-        self.price_change_1_week = self.get_price_change_days(days_count=7)
-        self.price_change_1_month = self.get_price_change_days(days_count=30)
-        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3)
-        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6)
-        self.price_change_1_year = self.get_price_change_days(days_count=365)
-        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2)
-        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3)
+        self.price_change_2_days = self.get_price_change_days(days_count=2, is_fill_empty=is_fill_empty)
+        self.price_change_1_week = self.get_price_change_days(days_count=7, is_fill_empty=is_fill_empty)
+        self.price_change_1_month = self.get_price_change_days(days_count=30, is_fill_empty=is_fill_empty)
+        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3, is_fill_empty=is_fill_empty)
+        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6, is_fill_empty=is_fill_empty)
+        self.price_change_1_year = self.get_price_change_days(days_count=365, is_fill_empty=is_fill_empty)
+        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2, is_fill_empty=is_fill_empty)
+        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3, is_fill_empty=is_fill_empty)
 
 
     # Проверка карточки
@@ -109,12 +109,16 @@ class Ta12LearningCard:
             self.is_ok = False
             return
 
-        if not all(x is not None for x in self.get_x()):
+        x_values = self.get_x()
+        if not all(x is not None for x in x_values):
+            feature_names = get_feature_names()
+            empty_fields = [name for name, value in zip(feature_names, x_values) if value is None]
             print(f'{model.TA_1_2} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
+            print(f'Empty fields: {empty_fields}')
             self.is_ok = False
             return
 
-    def get_price_change_days(self, days_count: int) -> float or None:
+    def get_price_change_days(self, days_count: int, is_fill_empty=False) -> float or None:
         target_date = self.date - datetime.timedelta(days=days_count)
         if current_price := self.price:
             delta_hours = 24 * 10 if days_count > 300 else 24
@@ -126,23 +130,37 @@ class Ta12LearningCard:
                 if price_change := utils.get_change_relative_by_price(main_price=target_price, next_price=current_price):
                     return price_change
 
-        return None
+        return 0 if is_fill_empty else None
 
-    def get_forecast_change(self) -> float or None:
+    def get_forecast_change(self, is_fill_empty=False) -> float or None:
         try:
-            if current_price := self.price:
-                if price_forecast := utils.get_price_by_quotation(
-                        price=forecasts.get_db_forecast_by_uid_date(
-                            uid=self.instrument.uid,
-                            date=self.date
-                        )[1].consensus.consensus
-                ):
-                    if price_change := utils.get_change_relative_by_price(main_price=current_price, next_price=price_forecast):
-                        return price_change
+            if not self.price:
+                return 0 if is_fill_empty else None
+                
+            forecast_data = forecasts.get_db_forecast_by_uid_date(
+                uid=self.instrument.uid,
+                date=self.date
+            )
+            
+            if not forecast_data or len(forecast_data) < 2 or not hasattr(forecast_data[1], 'consensus'):
+                return 0 if is_fill_empty else None
+                
+            consensus = forecast_data[1].consensus
+            if not consensus or not hasattr(consensus, 'consensus') or not consensus.consensus:
+                return 0 if is_fill_empty else None
+                
+            price_forecast = utils.get_price_by_quotation(consensus.consensus)
+            if not price_forecast:
+                return 0 if is_fill_empty else None
+                
+            return utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=price_forecast
+            )
+            
         except Exception as e:
             logger.log_error(method_name='Ta12LearningCard.get_forecast_change', error=e, is_telegram_send=False)
-
-        return None
+            return 0 if is_fill_empty else None
 
     def get_target_change_relative(self) -> float or None:
         if self.price:

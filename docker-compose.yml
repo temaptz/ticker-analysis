@@ -13,6 +13,9 @@ services:
     depends_on:
       - redis
       - postgres
+      - ollama
+    environment:
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     restart: unless-stopped
 
   learn:
@@ -29,6 +32,9 @@ services:
     depends_on:
       - redis
       - postgres
+      - ollama
+    environment:
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     restart: no
 
   # news_rate:
@@ -83,7 +89,9 @@ services:
 #      - "8090:8090"
 
   ollama:
-    image: ollama/ollama:latest      # официальный образ
+    build:
+      context: .
+      dockerfile: Dockerfile-ollama
     container_name: ollama
 #    ports:
 #      - "11434:11434"               # API наружу
@@ -92,6 +100,12 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0:11434   # слушать на всех интерфейсах
       - OLLAMA_KEEP_ALIVE=1h       # держать модель в памяти 1h
+      - MODEL_NAME=${OLLAMA_MODEL_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "OLLAMA_HOST=127.0.0.1:11434 ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     restart: unless-stopped
 
   ui:

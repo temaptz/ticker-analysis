@@ -84,4 +84,4 @@ TICKER_LIST: list[str] = [
     'IRAO',
     'VKCO',
 ]
-IS_NEWS_CLASSIFY_ENABLED = True
+IS_NEWS_CLASSIFY_ENABLED = False

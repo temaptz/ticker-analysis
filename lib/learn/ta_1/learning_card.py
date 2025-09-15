@@ -51,16 +51,24 @@ class LearningCard:
         self.price = instruments.get_instrument_last_price_by_uid(uid=self.uid)
         self.forecast_price = utils.get_price_by_quotation(forecasts.get_forecasts(instrument_uid=self.uid).consensus.consensus)
 
-        fundamentals_res = fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.asset_uid, date=self.date)[1]
-
-        self.revenue_ttm = fundamentals_res.revenue_ttm
-        self.ebitda_ttm = fundamentals_res.ebitda_ttm
-        self.market_capitalization = fundamentals_res.market_capitalization
-        self.total_debt_mrq = fundamentals_res.total_debt_mrq
-        self.eps_ttm = fundamentals_res.eps_ttm
-        self.pe_ratio_ttm = fundamentals_res.pe_ratio_ttm
-        self.ev_to_ebitda_mrq = fundamentals_res.ev_to_ebitda_mrq
-        self.dividend_payout_ratio_fy = fundamentals_res.dividend_payout_ratio_fy
+        if fundamentals_res := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.asset_uid, date=self.date)[1]:
+            self.revenue_ttm = fundamentals_res.revenue_ttm
+            self.ebitda_ttm = fundamentals_res.ebitda_ttm
+            self.market_capitalization = fundamentals_res.market_capitalization
+            self.total_debt_mrq = fundamentals_res.total_debt_mrq
+            self.eps_ttm = fundamentals_res.eps_ttm
+            self.pe_ratio_ttm = fundamentals_res.pe_ratio_ttm
+            self.ev_to_ebitda_mrq = fundamentals_res.ev_to_ebitda_mrq
+            self.dividend_payout_ratio_fy = fundamentals_res.dividend_payout_ratio_fy
+        elif fill_empty:
+            self.revenue_ttm = 0
+            self.ebitda_ttm = 0
+            self.market_capitalization = 0
+            self.total_debt_mrq = 0
+            self.eps_ttm = 0
+            self.pe_ratio_ttm = 0
+            self.ev_to_ebitda_mrq = 0
+            self.dividend_payout_ratio_fy = 0
 
         if fill_empty and len(self.history) < 52:
             padding = [0] * (52 - len(self.history))

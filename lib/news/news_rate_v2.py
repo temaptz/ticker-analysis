@@ -59,15 +59,18 @@ def get_percent_rated(
         instrument_uid: str,
         news_ids: list[str],
 ) -> float or None:
-    count_total = 0
-    count_rated = 0
+    if news_ids:
+        count_total = 0
+        count_rated = 0
 
-    for n_uid in news_ids:
-        if get_news_rate_db(instrument_uid=instrument_uid, news_uid=n_uid):
-            count_rated += 1
-        count_total += 1
+        for n_uid in news_ids:
+            if get_news_rate_db(instrument_uid=instrument_uid, news_uid=n_uid):
+                count_rated += 1
+            count_total += 1
 
-    return utils.round_float(num=(count_rated / count_total * 100), decimals=2)
+        return utils.round_float(num=(count_rated / count_total * 100), decimals=2)
+
+    return None
 
 
 @logger.error_logger

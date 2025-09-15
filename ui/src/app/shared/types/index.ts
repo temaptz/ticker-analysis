@@ -118,6 +118,7 @@ export interface PredictionHistoryGraphResp {
 }
 
 export interface PredictionGraph {
+  prediction_percent: number;
   prediction: number;
   date: string;
 }

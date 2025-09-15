@@ -8,12 +8,12 @@ def process_updates() -> None:
     updates = telegram.get_updates(offset_update_id=offset_update_id)
     for u in updates:
         update_id = u['update_id']
-        text = u['message']['text'].lower()
-        cache.cache_set(cache_key, update_id)
-        if update_id != offset_update_id:
-            print('TELEGRAM UPDATE_ID', update_id)
-            print('TELEGRAM UPDATE_TEXT', text)
-            process_single_update(text)
+        if text := (u.get('message', {}).get('text') or  '').lower():
+            cache.cache_set(cache_key, update_id)
+            if update_id != offset_update_id:
+                print('TELEGRAM UPDATE_ID', update_id)
+                print('TELEGRAM UPDATE_TEXT', text)
+                process_single_update(text)
 
 
 def process_single_update(text: str = None) -> None:

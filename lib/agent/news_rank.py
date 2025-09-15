@@ -7,7 +7,7 @@ from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
-from lib import instruments, news, db_2, logger, types_util, users, agent
+from lib import docker, instruments, news, db_2, logger, types_util, users, agent
 
 
 class Value(BaseModel):
@@ -103,7 +103,7 @@ def get_news_rank_graph() -> CompiledStateGraph:
 
     graph = graph_builder.compile(
         checkpointer=checkpointer,
-        debug=True,
+        debug=(not docker.is_prod()),
         name='news_rank_graph',
     )
 

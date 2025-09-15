@@ -61,7 +61,7 @@ class TaConsensusLearningCard:
 
         try:
             self.fill_card(is_fill_empty=fill_empty)
-            self.check_x()
+            self.check_x(is_fill_empty=fill_empty)
         except Exception as e:
             print('ERROR INIT TaConsensusLearningCard', e)
             self.is_ok = False
@@ -124,8 +124,8 @@ class TaConsensusLearningCard:
                 self.prediction_ta_2_1 = 0
 
     # Проверка карточки
-    def check_x(self):
-        if not all(x is not None for x in self.get_x()):
+    def check_x(self, is_fill_empty=False):
+        if not is_fill_empty and not all(x is not None for x in self.get_x()):
             print(f'ERROR {MODEL_NAME} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
             print(self.get_csv_record())
             self.is_ok = False

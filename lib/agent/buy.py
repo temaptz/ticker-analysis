@@ -44,7 +44,7 @@ def create_orders_2():
         if len(recommendations) < 5:
             if not instrument.for_qual_investor_flag:
                 if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
-                    if buy_rate > 60:
+                    if buy_rate > 70:
                         if rec := get_buy_recommendation_by_uid(
                                 instrument_uid=instrument.uid,
                         ):

@@ -17,13 +17,14 @@ import { GRAPH_COLORS } from '../../shared/const';
 import {
   Operation,
   Instrument,
+  PredictionGraph,
   InstrumentInList,
   TechAnalysisResp,
   TechAnalysisOptions,
   PredictionGraphResp,
   InstrumentHistoryPrice,
   PredictionHistoryGraphResp,
-  InstrumentForecastsGraphItem
+  InstrumentForecastsGraphItem,
 } from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
 import { CandleInterval, ModelNameEnum } from '../../shared/enums';
@@ -270,12 +271,13 @@ export class ComplexGraphComponent {
       encode: {
         x: 0,
         y: 1,
+        tooltip: 2,
       },
       data: predictions?.map(i => [
-          parseJSON(i.date),
-          getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        ]
-      ) ?? []
+        parseJSON(i.date),
+        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        this.formatPredictionTooltip(i)
+      ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -297,12 +299,13 @@ export class ComplexGraphComponent {
       encode: {
         x: 0,
         y: 1,
+        tooltip: 2,
       },
       data: predictions?.map(i => [
-          parseJSON(i.date),
-          getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        ]
-      ) ?? []
+        parseJSON(i.date),
+        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        this.formatPredictionTooltip(i)
+      ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -324,12 +327,13 @@ export class ComplexGraphComponent {
       encode: {
         x: 0,
         y: 1,
+        tooltip: 2,
       },
       data: predictions?.map(i => [
-          parseJSON(i.date),
-          getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        ]
-      ) ?? []
+        parseJSON(i.date),
+        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        this.formatPredictionTooltip(i)
+      ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -350,13 +354,14 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: 1
+        y: 1,
+        tooltip: 2,
       },
       data: predictions?.map(i => [
-          parseJSON(i.date),
-          getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        ]
-      ) ?? []
+        parseJSON(i.date),
+        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        this.formatPredictionTooltip(i)
+      ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -377,13 +382,14 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: 1
+        y: 1,
+        tooltip: 2,
       },
       data: predictions?.map(i => [
-          parseJSON(i.date),
-          getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        ]
-      ) ?? []
+        parseJSON(i.date),
+        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        this.formatPredictionTooltip(i)
+      ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -404,13 +410,14 @@ export class ComplexGraphComponent {
       },
       encode: {
         x: 0,
-        y: 1
+        y: 1,
+        tooltip: 2,
       },
       data: predictions?.map(i => [
           parseJSON(i.date),
           getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        ]
-      ) ?? []
+          this.formatPredictionTooltip(i)
+        ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -680,6 +687,10 @@ export class ComplexGraphComponent {
 
   private appService = inject(ApiService);
   private priceFormatPipe = inject(PriceFormatPipe);
+
+  private formatPredictionTooltip(prediction: PredictionGraph): string {
+    return `${prediction.prediction} (${(prediction.prediction_percent > 0) ? '+' : ''}${prediction.prediction_percent}%)`;
+  };
 
   constructor() {
     effect(() => {
