@@ -534,8 +534,27 @@ def gpt(request):
     return response
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def instrument_tag(request):
+    if request.method == 'POST':
+        uid = request.data.get('uid') or request.GET.get('uid')
+        tag_name = request.data.get('tag_name') or request.GET.get('tag_name')
+        tag_value = request.data.get('tag_value') or request.GET.get('tag_value')
+
+        if uid and tag_name and tag_value is not None:
+            db_2.instrument_tags_db.upset_tag(
+                        instrument_uid=uid,
+                        tag_name='llm_sell_conclusion',
+                        tag_value=tag_value,
+                    )
+
+            return HttpResponse(serializer.to_json({'ok': True}))
+
+        return HttpResponse(
+            serializer.to_json({'ok': False, 'error': 'uid, tag_name, tag_value are required'}),
+            status=400,
+        )
+
     response = None
     uid = request.GET.get('uid')
     tag_name = request.GET.get('tag_name')

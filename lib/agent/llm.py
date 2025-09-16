@@ -1,21 +1,17 @@
 import os
-from langchain_community.chat_models import ChatHuggingFace
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
-from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
-from lib import docker
-from lib.agent import agent_tools, models, utils
+from lib import docker, agent
 
 tools = [
-    agent_tools.get_instruments_list,
-    agent_tools.get_user_instruments_list,
-    agent_tools.get_instrument_info,
-    agent_tools.get_instrument_balance,
-    agent_tools.get_instrument_buy_rate,
-    agent_tools.run_python_code,
+    agent.agent_tools.get_instruments_list,
+    agent.agent_tools.get_user_instruments_list,
+    agent.agent_tools.get_instrument_info,
+    agent.agent_tools.get_instrument_balance,
+    agent.agent_tools.get_instrument_buy_rate,
+    agent.agent_tools.run_python_code,
 ]
 
 checkpointer = InMemorySaver()

@@ -33,6 +33,7 @@ def rank_last_news():
         },
         is_send_telegram=True,
     )
+    time_start = time.perf_counter()
     graph = get_news_rank_graph()
 
     for i in users.sort_instruments_cost(
@@ -85,6 +86,10 @@ def rank_last_news():
         except Exception as e:
             logger.log_error(method_name='rank_last_news_item', error=e)
 
+    logger.log_info(
+        message=f'NEWS RANK TIME: {time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - time_start))}',
+        is_send_telegram=True,
+    )
 
 def get_news_rank_graph() -> CompiledStateGraph:
     checkpointer = InMemorySaver()
