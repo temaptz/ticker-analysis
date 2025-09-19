@@ -6,9 +6,13 @@ import pickle
 from lib import logger
 
 
-def to_json(obj, ensure_ascii=True) -> str or None:
+def to_json(obj, ensure_ascii=True, is_pretty=False) -> str or None:
     try:
-        return json.dumps(get_dict_by_object_recursive(obj), ensure_ascii=ensure_ascii)
+        return json.dumps(
+            get_dict_by_object_recursive(obj),
+            ensure_ascii=ensure_ascii,
+            indent=(4 if is_pretty else None),
+        )
     except Exception as e:
         print('ERROR to_json', e)
         return None

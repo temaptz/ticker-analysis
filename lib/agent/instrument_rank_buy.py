@@ -10,16 +10,12 @@ from lib import instruments, fundamentals, users, predictions, news, serializer,
 from lib.agent import llm
 
 
-class RatePercentWithConclusion(BaseModel):
-    rate: int
-    final_conclusion: str
-
 class State(TypedDict, total=False):
     human_name: str
     instrument_uid: str
-    fundamental_rate: RatePercentWithConclusion
-    price_prediction_rate: RatePercentWithConclusion
-    news_rate: RatePercentWithConclusion
+    fundamental_rate: agent.models.RatePercentWithConclusion
+    price_prediction_rate: agent.models.RatePercentWithConclusion
+    news_rate: agent.models.RatePercentWithConclusion
     structured_response: int
 
 
@@ -97,11 +93,11 @@ def llm_fundamental_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по инвестициям проанализируй фундаментальные показатели компании и дай оценку от 0 до 100, 
+        Проанализируй фундаментальные показатели компании и дай оценку от 0 до 100, 
         насколько фундаментальные показатели компании указывают на перспективу роста цены её актива 
         в среднесрочной перспективе (0-24 месяцев). 
         
-        # ИНСТРУКЦИЯ
+        # ПРАВИЛА
         
         1. Проанализируй каждую метрику и оцени её влияние на инвестиционную привлекательность.
         2. Сформируй общее впечатление о потенциале роста актива.
@@ -111,22 +107,23 @@ def llm_fundamental_rate(state: State):
            - 51-74 - хорошие показатели, рост вероятен;
            - 75-90 - отличные показатели, высокая вероятность роста цены актива.
            - 91-100 - отличные показатели и хорошая динамика, высокая вероятность роста цены актива.   
-        4. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
         
         # ФОРМАТ ОТВЕТА
         
         Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
         '''
 
-
-        print('HUMAN MESSAGE fundamental_rate', prompt)
-
         try:
-            if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
+            if result := llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                        SystemMessage(content=agent.prompts.get_missed_data_prompt()),
-                        SystemMessage(content=agent.prompts.get_thinking_prompt()),
+                        SystemMessage(content='''
+                        Ты аналитик фондового рынка специалист по инвестициям. 
+                        Твоя задача оценивать финансовую отчетность компании с точки зрения перспективы роста и как следствие привлекательности покупки.
+                        Учитывай динамику изменения финансовых индикаторов.
+                        Не выдумывай данные. 
+                        Unknown/None отсутствующие данные пропускай и учитывай штрафом.
+                        Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
+                        '''),
                         HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=uid)),
                         HumanMessage(content=prompt),
                     ],
@@ -151,40 +148,38 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу проанализируй и оцени насколько выгодна покупка актива сейчас с целью её продажи в течение следующих 0-24 месяцев.
+        Проанализируй прогнозы изменения цены и оцени насколько потенциально выгодна покупка актива сейчас с целью её продажи в течение следующих 0-24 месяцев.
         
         
-        # ИНСТРУКЦИЯ
+        # ПРАВИЛА
         
-        1. Проанализируй прогноз изменения цены price_prediction на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
-        2. Учитывай что актив выгоднее покупать при низкой цене и перед устойчивым трендом на рост.
-        3. Оцени, насколько выгодна покупка актива именно сейчас.
-        4. Покупка выгодна если в ближайший месяц ожидается постепенный стабильный тренд на рост, чем сильнее рост, тем выше оценка.
-        5. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на рост цены, то это увеличивает оценку.       
-        6. Незначительное снижение в течении нескольких дней перед стабильным ростом говорит о хорошем моменте для покупки и увеличивает оценку.
-        7. Присвой итоговую числовую оценку выгодной покупки целое число от 0 до 100, где:
-           - 0 - все price_prediction на ближайший месяц и меньше стабильно отрицательные, покупка в ближайшее время не выгодна;
-           - 1-49 - в ближайший месяц и меньше присутствуют отрицательные price_prediction, покупка не рекомендована;
-           - 50-74 - все price_prediction до месяца стабильно положительные, покупка возможна;
-           - 75-89 - все price_prediction до трех месяцев стабильно положительные, сейчас хороший момент для покупки.
-           - 90-100 - все price_prediction до пол года стабильно положительные, сейчас идеальный момент для покупки.
-        8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
-        9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
+        1. Учитывай что актив выгоднее покупать при низкой цене и перед устойчивым трендом на рост.
+        2. Покупка выгодна если в ближайший месяц ожидается постепенный стабильный тренд на рост, чем сильнее рост, тем выше оценка.
+        3. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на рост цены, то это увеличивает оценку.       
+        4. Присвой итоговую числовую оценку выгодной покупки целое число от 0 до 100, где:
+           - 0 - в ближайший месяц роста цены не прогнозируется покупка сейчас не выгодна;
+           - 50 - в ближайшую неделю прогнозируется начало устойчивого продолжительного тренда на рост цены сейчас покупка выгодна;
+           - 100 - в ближайшие несколько дней прогнозируется начало устойчивого долгосрочного тренда на высокий рост цены сейчас идеальный момент для покупки.
+        
         
         # ФОРМАТ ОТВЕТА
         
-        Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
+        Ответ - Итоговый развернутый вывод и итоговая оценка целое число от 0 до 100.
         '''
 
-
-        print('HUMAN MESSAGE price_prediction', prompt)
-
         try:
-            if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
+            if result := llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                        SystemMessage(content=agent.prompts.get_missed_data_prompt()),
-                        SystemMessage(content=agent.prompts.get_thinking_prompt()),
+                        SystemMessage(content='''
+                        Ты аналитик фондового рынка эксперт по трендам и тенденциям прогнозов.
+                        Твоя задача оценить привлекательность покупки актива по графику прогнозов изменения цены.
+                        Используй прогнозы относительного изменения цены на горизонтах 3d,1w,2w,3w,1m,2m,3m,6m,1y. 
+                        Не выдумывай данные. 
+                        Unknown/None отсутствующие данные пропускай и учитывай штрафом.
+                        Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
+                        Покупка выгодна в начале устойчивого положительного тренда высокого роста.
+                        +25% считается высоким ростом.
+                        '''),
                         HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
                     ],
@@ -209,35 +204,37 @@ def llm_news_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по медиа проанализируй рейтинг новостного фона за указанные периоды.  
+        Проанализируй рейтинг новостного фона за указанные периоды.  
         Оцени, насколько текущие значения новостного рейтинга могут способствовать росту цены актива.
         
-        # ИНСТРУКЦИЯ
+        # ПРАВИЛА
         
-        1. Проанализируй динамику рейтинга новостного фона по периодам.
-        2. Оцени силу и стабильность позитивного влияния новостей на цену актива.
+        
+        1. Проанализируй динамику рейтинга новостного фона.
+        2. Оцени потенциальное влияние силы и динамики новостного фона на цену актива.
         4. Итоговая оценка - одно число от 0 до 100, где:
            - 0-10 - все influence_score отрицательные или часть отсутствует, негативный новостной фон;
            - 11-30 - все -5 < influence_score < 0, умеренно негативный новостной фон;
            - 31-75 - все influence_score > 0, динамика нестабильная, умеренно позитивный новостной фон;
            - 76-90 - все influence_score > 0, некоторые influence_score > 3, есть положительная динамика, позитивный новостной фон;
            - 91-100 - все influence_score > 0 большинство influence_score > 3, есть положительная динамика, позитивный новостной фон;
-        5. Снижай оценку при нулевом или отсутствующем новостном фоне. Если данные полностью отсутствуют, оценка 0.
-        6. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
+           
            
         # ФОРМАТ ОТВЕТА
         
         Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
         '''
 
-
-        print('HUMAN MESSAGE news_rate', prompt)
-
         try:
-            if result := llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
+            if result := llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                        SystemMessage(content=agent.prompts.get_thinking_prompt()),
+                        SystemMessage(content='''
+                        Ты новостной аналитик эксперт по финансам.
+                        Твоя задача оценивать насколько новостной фон способствует перспективе роста акций и следовательно выгодной покупке.
+                        Не выдумывай данные. 
+                        Unknown/None отсутствующие данные пропускай и учитывай штрафом.
+                        Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
+                        '''),
                         HumanMessage(content=agent.prompts.get_news_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
                     ],
@@ -271,7 +268,7 @@ def llm_total_buy_rate(state: State):
 
     if fundamental_rate or price_prediction_rate:
         try:
-            weights = {'fundamental_rate': 1, 'price_prediction_rate': 2, 'news_rate': 1, 'favorites': 0.05}
+            weights = {'fundamental_rate': 1, 'price_prediction_rate': 2.5, 'news_rate': 1, 'favorites': 0.05}
             calc_rate = int(
                 (
                         (fundamental_rate or 0) * weights['fundamental_rate']
@@ -288,9 +285,9 @@ def llm_total_buy_rate(state: State):
             )
 
             if calc_rate or calc_rate == 0:
-                return {'structured_response': RatePercentWithConclusion(
+                return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{fundamental_conclusion}\n{price_prediction_conclusion}\n{news_conclusion}'
+                    final_conclusion=f'{fundamental_rate}\n{fundamental_conclusion}\n\n{price_prediction_rate}\n{price_prediction_conclusion}\n\n{news_rate}\n{news_conclusion}'
                 )}
         except Exception as e:
             print('ERROR llm_total_buy_rate', e)

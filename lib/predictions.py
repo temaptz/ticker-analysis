@@ -212,7 +212,6 @@ def get_prediction_graph(uid: str, model_name: model, date_from: datetime.dateti
 
 
 @logger.error_logger
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_prediction_history_graph(
         uid: str,
         model_name: str,
@@ -221,6 +220,8 @@ def get_prediction_history_graph(
         interval: CandleInterval,
 ) -> dict:
     result = {}
+    current_price = instruments.get_instrument_last_price_by_uid(uid)
+    legacy_format_dt = datetime.datetime(year=2025, month=8, day=14)
 
     for prediction in predictions_db.get_predictions_by_uid_date(
         uid=uid,
@@ -228,15 +229,31 @@ def get_prediction_history_graph(
         date_to=date_to,
         model_name=model_name,
     ):
-        key = date_utils.parse_date(prediction.date).isoformat()
+        dt = date_utils.parse_date(prediction.date)
         target_dt = date_utils.parse_date(prediction.target_date)
+        key = dt.isoformat()
 
         if key not in result:
             result[key] = []
 
         if not any(p['date'] == target_dt for p in result[key]):
+            p = prediction.prediction
+            p_percent = prediction.prediction
+
+            if dt > legacy_format_dt:
+                p = utils.get_price_by_change_relative(
+                    current_price=current_price,
+                    relative_change=prediction.prediction,
+                )
+            else:
+                p_percent = utils.get_change_relative_by_price(
+                    main_price=current_price,
+                    next_price=p,
+                )
+
             result[key].append({
-                'prediction': prediction.prediction,
+                'prediction': p,
+                'prediction_percent': p_percent,
                 'date': target_dt,
             })
 

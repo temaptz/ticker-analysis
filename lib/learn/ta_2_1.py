@@ -1,24 +1,27 @@
 import numpy
+import numpy as np
 from tinkoff.invest import InstrumentResponse, Instrument, CandleInterval
 import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, types_util, yandex_disk, docker, logger
-from lib.news import news_rate_v1
+from tinkoff.invest.schemas import IndicatorType
+
+from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, tech_analysis, yandex_disk, docker, logger
 from lib.learn import learn_utils, model
 
 
 def get_feature_names() -> list:
     return [
         'target_date_days',
-        'news_positive_percent',
-        'news_negative_percent',
-        'news_neutral_percent',
         'name',
         'currency',
         'country_of_risk',
         'forecast_price_change',
+        'market_volume',
+        'rsi',
+        'macd',
+
         'revenue_ttm',
         'ebitda_ttm',
         'market_capitalization',
@@ -27,6 +30,12 @@ def get_feature_names() -> list:
         'pe_ratio_ttm',
         'ev_to_ebitda_mrq',
         'dividend_payout_ratio_fy',
+
+        'news_influence_score_0',
+        'news_influence_score_1',
+        'news_influence_score_2',
+        'news_influence_score_3',
+
         'price_change_2_days_min',
         'price_change_2_days_max',
         'price_change_1_week_min',
@@ -47,11 +56,24 @@ def get_feature_names() -> list:
         'price_change_2_years_max',
         'price_change_3_years_min',
         'price_change_3_years_max',
+
+        'price_change_2_days',
+        'price_change_1_week',
+        'price_change_2_week',
+        'price_change_3_week',
+        'price_change_1_month',
+        'price_change_3_months',
+        'price_change_6_months',
+        'price_change_1_year',
+        'price_change_2_years',
+        'price_change_3_years',
     ]
 
 
 def to_numpy_float(num: float) -> float:
-    return numpy.float32(num) if num else num
+    if num or num == 0:
+        return numpy.float32(num)
+    return np.nan
 
 
 MODEL_NAME = model.TA_2_1
@@ -63,12 +85,13 @@ class Ta21LearningCard:
     date: datetime.datetime = None  # Дата создания прогноза
     target_date: datetime.datetime = None  # Дата на которую составляется прогноз
     target_date_days: int = None  # Количество дней до даты прогнозируемой цены
-    news_positive_percent: int = None  # Процент позитивного новостного фона за месяц до даты
-    news_negative_percent: int = None  # Процент негативного новостного фона за месяц до даты
-    news_neutral_percent: int = None  # Процент нейтрального новостного фона за месяц до даты
     price: float = None  # Цена в дату создания прогноза
     target_price_change: float = None  # Прогнозируемая цена
     forecast_price_change: float = None  # Прогноз аналитиков
+    market_volume: float = None # Объем торгов
+    rsi: float = None # RSI тех.индикатор
+    macd: float = None # MACD тех.индикатор
+
     revenue_ttm: float = None  # Выручка
     ebitda_ttm: float = None  # EBITDA
     market_capitalization: float = None  # Капитализация
@@ -77,6 +100,12 @@ class Ta21LearningCard:
     pe_ratio_ttm: float = None  # P/E — цена/прибыль
     ev_to_ebitda_mrq: float = None  # EV/EBITDA — стоимость компании / EBITDA
     dividend_payout_ratio_fy: float = None  # DPR — коэффициент выплаты дивидендов
+
+    news_influence_score_0: float = None  # Новостной фон 0-7 дней до даты
+    news_influence_score_1: float = None  # Новостной фон 8-14 дней до даты
+    news_influence_score_2: float = None  # Новостной фон 15-21 дней до даты
+    news_influence_score_3: float = None  # Новостной фон 22-28 дней до даты
+
     price_change_2_days_min: float = None # Изменение цены за 2 дня
     price_change_2_days_max: float = None # Изменение цены за 2 дня
     price_change_1_week_min: float = None # Изменение цены за 1 неделю
@@ -97,6 +126,17 @@ class Ta21LearningCard:
     price_change_2_years_max: float = None # Изменение цены за 2 года
     price_change_3_years_min: float = None # Изменение цены за 3 года
     price_change_3_years_max: float = None # Изменение цены за 3 года
+
+    price_change_2_days: float = None # Изменение цены за 2 дня
+    price_change_1_week: float = None # Изменение цены за 1 неделю
+    price_change_2_week: float = None # Изменение цены за 2 недели
+    price_change_3_week: float = None # Изменение цены за 3 недели
+    price_change_1_month: float = None # Изменение цены за 1 месяц
+    price_change_3_months: float = None # Изменение цены за 3 месяца
+    price_change_6_months: float = None # Изменение цены за 6 месяцев
+    price_change_1_year: float = None # Изменение цены за 1 год
+    price_change_2_years: float = None # Изменение цены за 2 года
+    price_change_3_years: float = None # Изменение цены за 3 года
 
     def __init__(
             self,
@@ -129,6 +169,20 @@ class Ta21LearningCard:
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price_change = self.get_target_change_relative()
         self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
+        self.market_volume = instruments.get_instrument_volume(uid=self.instrument.uid, date=self.date)
+        self.rsi = tech_analysis.get_avg_tech_analysis_by_date(
+            instrument_uid=self.instrument.uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
+            date_from=self.date - datetime.timedelta(days=3),
+            date_to=self.date + datetime.timedelta(days=3),
+        )
+        self.macd = tech_analysis.get_avg_tech_analysis_by_date(
+            instrument_uid=self.instrument.uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
+            date_from=self.date - datetime.timedelta(days=3),
+            date_to=self.date + datetime.timedelta(days=3),
+        )
+
         if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
             self.revenue_ttm = f.revenue_ttm
             self.ebitda_ttm = f.ebitda_ttm
@@ -148,37 +202,42 @@ class Ta21LearningCard:
             self.ev_to_ebitda_mrq = 0
             self.dividend_payout_ratio_fy = 0
 
-        self.price_change_2_days_min = self.get_price_change_days(days_count=2, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_2_days_max = self.get_price_change_days(days_count=2, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_1_week_min = self.get_price_change_days(days_count=7, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_1_week_max = self.get_price_change_days(days_count=7, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_2_week_min = self.get_price_change_days(days_count=7 * 2, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_2_week_max = self.get_price_change_days(days_count=7 * 2, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_3_week_min = self.get_price_change_days(days_count=7 * 3, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_3_week_max = self.get_price_change_days(days_count=7 * 3, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_1_month_min = self.get_price_change_days(days_count=30, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_1_month_max = self.get_price_change_days(days_count=30, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_3_months_min = self.get_price_change_days(days_count=30 * 3, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_3_months_max = self.get_price_change_days(days_count=30 * 3, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_6_months_min = self.get_price_change_days(days_count=30 * 6, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_6_months_max = self.get_price_change_days(days_count=30 * 6, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_1_year_min = self.get_price_change_days(days_count=365, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_1_year_max = self.get_price_change_days(days_count=365, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_2_years_min = self.get_price_change_days(days_count=365 * 2, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_2_years_max = self.get_price_change_days(days_count=365 * 2, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_3_years_min = self.get_price_change_days(days_count=365 * 3, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_3_years_max = self.get_price_change_days(days_count=365 * 3, is_max=True, is_fill_empty=is_fill_empty)
+        self.news_influence_score_0 = self.get_news_influence_score(days_from=0, days_to=7)
+        self.news_influence_score_1 = self.get_news_influence_score(days_from=8, days_to=14)
+        self.news_influence_score_1 = self.get_news_influence_score(days_from=15, days_to=21)
+        self.news_influence_score_1 = self.get_news_influence_score(days_from=22, days_to=28)
 
-        news_rated = self.get_news_rated()
+        self.price_change_2_days_min = self.get_price_change_days_extreme(days_count=2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_days_max = self.get_price_change_days_extreme(days_count=2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_1_week_min = self.get_price_change_days_extreme(days_count=7, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_1_week_max = self.get_price_change_days_extreme(days_count=7, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_2_week_min = self.get_price_change_days_extreme(days_count=7 * 2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_week_max = self.get_price_change_days_extreme(days_count=7 * 2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_week_min = self.get_price_change_days_extreme(days_count=7 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_week_max = self.get_price_change_days_extreme(days_count=7 * 3, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_1_month_min = self.get_price_change_days_extreme(days_count=30, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_1_month_max = self.get_price_change_days_extreme(days_count=30, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_months_min = self.get_price_change_days_extreme(days_count=30 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_months_max = self.get_price_change_days_extreme(days_count=30 * 3, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_6_months_min = self.get_price_change_days_extreme(days_count=30 * 6, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_6_months_max = self.get_price_change_days_extreme(days_count=30 * 6, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_1_year_min = self.get_price_change_days_extreme(days_count=365, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_1_year_max = self.get_price_change_days_extreme(days_count=365, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_2_years_min = self.get_price_change_days_extreme(days_count=365 * 2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_years_max = self.get_price_change_days_extreme(days_count=365 * 2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_years_min = self.get_price_change_days_extreme(days_count=365 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_years_max = self.get_price_change_days_extreme(days_count=365 * 3, is_max=True, is_fill_empty=is_fill_empty)
 
-        if news_rated:
-            self.news_positive_percent = news_rated.positive_percent
-            self.news_negative_percent = news_rated.negative_percent
-            self.news_neutral_percent = news_rated.neutral_percent
-        elif is_fill_empty:
-            self.news_positive_percent = 0
-            self.news_negative_percent = 0
-            self.news_neutral_percent = 0
+        self.price_change_2_days = self.get_price_change_days(days_count=2)
+        self.price_change_1_week = self.get_price_change_days(days_count=7)
+        self.price_change_2_week = self.get_price_change_days(days_count=7 * 2)
+        self.price_change_3_week = self.get_price_change_days(days_count=7 * 3)
+        self.price_change_1_month = self.get_price_change_days(days_count=30)
+        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3)
+        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6)
+        self.price_change_1_year = self.get_price_change_days(days_count=365)
+        self.price_change_2_years = self.get_price_change_days(days_count=365 * 2)
+        self.price_change_3_years = self.get_price_change_days(days_count=365 * 3)
 
     # Проверка карточки
     def check_x(self, is_fill_empty=False):
@@ -195,22 +254,26 @@ class Ta21LearningCard:
         if (
                 not is_fill_empty
                 and (
-                    self.news_positive_percent is None
-                    or self.news_negative_percent is None
-                    or self.news_neutral_percent is None
+                    self.news_influence_score_0 is None
+                    and self.news_influence_score_1 is None
+                    and self.news_influence_score_2 is None
+                    and self.news_influence_score_3 is None
                 )
         ):
             print(f'{MODEL_NAME} CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
             self.is_ok = False
             return
 
-        if not all(x is not None for x in self.get_x()):
-            print(f'{MODEL_NAME} CARD IS NOT OK BY EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
-            print(self.get_csv_record())
-            self.is_ok = False
+        x_values = self.get_x()
+        if not all(x is not None for x in x_values):
+            feature_names = get_feature_names()
+            empty_fields = [name for name, value in zip(feature_names, x_values) if value is None]
+            print(f'{MODEL_NAME} CARD IS OK BUT EMPTY ELEMENT IN X', self.instrument.ticker, self.date)
+            print(f'Empty fields: {empty_fields}')
+            # self.is_ok = False
             return
 
-    def get_price_change_days(self, days_count: int, is_max: bool, is_fill_empty=False) -> float or None:
+    def get_price_change_days_extreme(self, days_count: int, is_max: bool, is_fill_empty=False) -> float or None:
         if current_price := self.price:
             interval = CandleInterval.CANDLE_INTERVAL_DAY
             if days_count > 30:
@@ -240,6 +303,15 @@ class Ta21LearningCard:
                             return price_change
         return 0 if is_fill_empty else None
 
+    def get_price_change_days(self, days_count: int) -> float or None:
+        if price := instruments.get_instrument_price_by_date(
+                uid=self.instrument.uid,
+                date=self.date - datetime.timedelta(days=days_count),
+                delta_hours=24 if days_count < 30 else 24 * 5
+        ):
+            return price
+        return None
+
     def get_forecast_change(self, is_fill_empty=False) -> float or None:
         try:
             if current_price := self.price:
@@ -261,10 +333,9 @@ class Ta21LearningCard:
 
         return None
 
-    def get_news_rated(self) -> types_util.NewsRate or None:
-        result = None
-        start_date = self.date - datetime.timedelta(days=30)
-        end_date = self.date
+    def get_news_influence_score(self, days_from: int, days_to: int) -> float or None:
+        start_date = self.date - datetime.timedelta(days=days_to)
+        end_date = self.date - datetime.timedelta(days=days_from)
 
         news_list = news.news.get_news_by_instrument_uid(
             instrument_uid=self.instrument.uid,
@@ -272,16 +343,16 @@ class Ta21LearningCard:
             end_date=end_date,
         )
         news_ids = [n.news_uid for n in news_list or []]
-        rate = news_rate_v1.get_news_rate(news_uid_list=news_ids, instrument_uid=self.instrument.uid)
 
-        if rate and (rate.positive_percent + rate.negative_percent + rate.neutral_percent) > 0:
-            result = types_util.NewsRate(
-                positive_percent=rate.positive_percent,
-                negative_percent=rate.negative_percent,
-                neutral_percent=rate.neutral_percent,
-            )
+        rate = news.news_rate_v2.get_news_total_influence_score(
+                instrument_uid=self.instrument.uid,
+                news_ids=news_ids,
+        )
 
-        return result
+        if rate or rate == 0:
+            return rate
+
+        return None
 
     def get_target_change_relative(self) -> float or None:
         if self.price:
@@ -297,13 +368,14 @@ class Ta21LearningCard:
 
         return [
             target_days_count,
-            self.news_positive_percent,
-            self.news_negative_percent,
-            self.news_neutral_percent,
             self.instrument.name, # Название актива.
             self.instrument.currency, # Валюта актива.
             self.instrument.country_of_risk, # Код страны
             to_numpy_float(self.forecast_price_change),
+            to_numpy_float(self.market_volume),
+            to_numpy_float(self.rsi),
+            to_numpy_float(self.macd),
+
             to_numpy_float(self.revenue_ttm),
             to_numpy_float(self.ebitda_ttm),
             to_numpy_float(self.market_capitalization),
@@ -312,6 +384,12 @@ class Ta21LearningCard:
             to_numpy_float(self.pe_ratio_ttm),
             to_numpy_float(self.ev_to_ebitda_mrq),
             to_numpy_float(self.dividend_payout_ratio_fy),
+
+            to_numpy_float(self.news_influence_score_0),
+            to_numpy_float(self.news_influence_score_1),
+            to_numpy_float(self.news_influence_score_2),
+            to_numpy_float(self.news_influence_score_3),
+
             to_numpy_float(self.price_change_2_days_min),
             to_numpy_float(self.price_change_2_days_max),
             to_numpy_float(self.price_change_1_week_min),
@@ -332,6 +410,17 @@ class Ta21LearningCard:
             to_numpy_float(self.price_change_2_years_max),
             to_numpy_float(self.price_change_3_years_min),
             to_numpy_float(self.price_change_3_years_max),
+
+            to_numpy_float(self.price_change_2_days),
+            to_numpy_float(self.price_change_1_week),
+            to_numpy_float(self.price_change_2_week),
+            to_numpy_float(self.price_change_3_week),
+            to_numpy_float(self.price_change_1_month),
+            to_numpy_float(self.price_change_3_months),
+            to_numpy_float(self.price_change_6_months),
+            to_numpy_float(self.price_change_1_year),
+            to_numpy_float(self.price_change_2_years),
+            to_numpy_float(self.price_change_3_years),
         ]
 
     # Выходные данные для обучения
@@ -353,8 +442,7 @@ class Ta21LearningCard:
 
 
 def generate_data():
-    news_beginning_date = datetime.datetime(year=2025, month=1, day=29)  # Самые первые новости
-    news_beginning_date2 = news.news.news_beginning_date  # По всем тикерам
+    news_beginning_date2 = news.news.news_beginning_date
     date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(9), tzinfo=datetime.timezone.utc)
     date_start = datetime.datetime.combine((news_beginning_date2 + datetime.timedelta(days=30)), datetime.time(9), tzinfo=datetime.timezone.utc)
     instruments_list = instruments.get_instruments_white_list()
@@ -496,7 +584,10 @@ def learn():
         l2_leaf_reg=5,
         eval_metric='RMSE',
         loss_function='RMSE',
+        nan_mode='Min',
     )
+
+    fit_start_dt = datetime.datetime.now()
 
     model_cb.fit(
         train_pool,
@@ -510,7 +601,123 @@ def learn():
     mse_test = mean_squared_error(y_test, y_pred_test)
     rmse_test = numpy.sqrt(mse_test)
 
-    logger.log_info(message=f'{MODEL_NAME} LEARN RESULT. RMSE: {rmse_test}, MSE: {mse_test}, DATA FRAME LENGTH: {len(df)}, MODEL SIZE: {utils.get_file_size_readable(filepath=get_model_file_path())}', is_send_telegram=True)
+    # Формируем компактный, но информативный лог об обучении одной записью
+    fit_end_dt = datetime.datetime.now()
+    fit_duration_sec = (fit_end_dt - fit_start_dt).total_seconds()
+
+    params = {}
+    try:
+        params = model_cb.get_params()
+    except Exception:
+        params = {}
+
+    evals_result = None
+    try:
+        evals_result = model_cb.get_evals_result()
+    except Exception:
+        evals_result = None
+
+    best_iteration = None
+    best_score = {}
+    try:
+        best_iteration = model_cb.get_best_iteration()
+        best_score = model_cb.get_best_score()
+    except Exception:
+        best_iteration = None
+        best_score = {}
+
+    # Достаём истории RMSE
+    learn_rmse = []
+    val_rmse = []
+    if isinstance(evals_result, dict):
+        learn_rmse = (evals_result.get('learn') or {}).get('RMSE') or []
+        # Возможные варианты ключей для валидации: 'validation' или 'validation_0'
+        val_dict = evals_result.get('validation') or evals_result.get('validation_0') or {}
+        val_rmse = val_dict.get('RMSE') or []
+
+    # Шаг логирования для TRACE
+    verbose_step = 100
+    if isinstance(params, dict):
+        try:
+            v = params.get('verbose')
+            if isinstance(v, int) and v > 0:
+                verbose_step = v
+        except Exception:
+            pass
+
+    trace_lines = []
+    total_points = len(learn_rmse)
+    if total_points > 0:
+        # Логируем каждые verbose_step итераций и финальную строку
+        start_index = verbose_step - 1 if verbose_step > 0 else 0
+        for idx in range(start_index, total_points, max(verbose_step, 1)):
+            lr = learn_rmse[idx]
+            vr = val_rmse[idx] if idx < len(val_rmse) else None
+            trace_lines.append(f"iter={idx + 1}: learn={lr:.6f}" + (f" val={vr:.6f}" if vr is not None else ""))
+        if (total_points - 1) % max(verbose_step, 1) != (max(verbose_step, 1) - 1):
+            lr = learn_rmse[-1]
+            vr = val_rmse[-1] if len(val_rmse) == total_points else (val_rmse[-1] if len(val_rmse) > 0 else None)
+            trace_lines.append(f"iter={total_points}: learn={lr:.6f}" + (f" val={vr:.6f}" if vr is not None else "") + " (final)")
+
+    # Лучшие метрики (если доступны)
+    best_learn_rmse = None
+    best_val_rmse = None
+    try:
+        best_learn_rmse = (best_score.get('learn') or {}).get('RMSE')
+        best_val_rmse = (best_score.get('validation') or best_score.get('validation_0') or {}).get('RMSE')
+    except Exception:
+        best_learn_rmse = None
+        best_val_rmse = None
+
+    # Сводка параметров для читаемости
+    param_line = (
+        f"iterations={params.get('iterations', 10000)}, "
+        f"lr={params.get('learning_rate', 0.03)}, depth={params.get('depth', 8)}, "
+        f"l2_leaf_reg={params.get('l2_leaf_reg', 5)}, seed={params.get('random_seed', 42)}, "
+        f"early_stopping_rounds={params.get('early_stopping_rounds', 300)}, task={params.get('task_type', 'CPU')}, "
+        f"loss={params.get('loss_function', 'RMSE')}, eval={params.get('eval_metric', 'RMSE')}"
+    )
+
+    # Важность признаков (top K)
+    feature_importance_line = None
+    top_k = 15
+    try:
+        importances = model_cb.get_feature_importance(data=train_pool, type='PredictionValuesChange')
+        names = get_feature_names()
+        if isinstance(importances, (list, tuple)) or getattr(importances, 'shape', None):
+            importances_list = list(importances)
+        else:
+            importances_list = []
+
+        if len(importances_list) != len(names):
+            pairs = [(f'feature_{i}', val) for i, val in enumerate(importances_list)]
+        else:
+            pairs = list(zip(names, importances_list))
+
+        pairs_sorted = sorted(pairs, key=lambda x: abs(x[1]) if isinstance(x[1], (int, float)) else 0, reverse=True)
+        feature_importance_line = ', '.join([f"{name}={value:.6f}" for name, value in pairs_sorted[:top_k]])
+    except Exception:
+        feature_importance_line = None
+
+    log_lines = [
+        f"{MODEL_NAME} LEARN",
+        f"DATA: DF={len(df)} train={x_train.shape}/{y_train.shape} val={x_val.shape}/{y_val.shape} test={x_test.shape}/{y_test.shape}",
+        f"PARAMS: {param_line}",
+        f"FIT: started={fit_start_dt.isoformat(timespec='seconds')}, duration={fit_duration_sec:.1f}s, trees_built={getattr(model_cb, 'tree_count_', None)}",
+        f"BEST: iteration={best_iteration}, learn_RMSE={best_learn_rmse}, val_RMSE={best_val_rmse}",
+    ]
+
+    if feature_importance_line:
+        log_lines.append(f"FEATURE_IMPORTANCE (top {top_k}): {feature_importance_line}")
+
+    if trace_lines:
+        log_lines.append("TRACE (every ~verbose iters):")
+        log_lines.extend(trace_lines)
+
+    log_lines.append(f"TEST: RMSE={rmse_test:.6f}, MSE={mse_test:.6f}")
+    log_lines.append(f"MODEL: path={get_model_file_path()}, size={utils.get_file_size_readable(filepath=get_model_file_path())}")
+
+    logger.log_info(message='\n'.join(log_lines), is_send_telegram=True)
 
     learn_utils.plot_catboost_metrics(model_cb, metric_name='RMSE')
 

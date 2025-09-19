@@ -182,3 +182,42 @@ def get_instrument_keywords(uid: str) -> list[str]:
                 )
                 return yandex_value
     return []
+
+@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
+def get_instrument_volume(uid: str, date: datetime.datetime) -> float or None:
+    try:
+        # Используем дневные свечи и существующую обёртку для получения истории
+        to_date = date_utils.convert_to_utc(date_utils.get_day_end(date))
+        candles = get_instrument_history_price_by_uid(
+            uid=uid,
+            days_count=1,
+            interval=CandleInterval.CANDLE_INTERVAL_DAY,
+            to_date=to_date,
+        )
+
+        if not candles:
+            return None
+
+        target_local = date_utils.convert_to_local(date)
+
+        # Сначала пытаемся найти свечу именно за этот день (по локальной дате)
+        for c in candles:
+            c_local = date_utils.convert_to_local(c.time)
+            if c_local.date() == target_local.date():
+                return float(c.volume) if c.volume is not None else None
+
+        # Иначе берём ближайшую по времени дневную свечу
+        nearest = None
+        nearest_delta = None
+        for c in candles:
+            c_local = date_utils.convert_to_local(c.time)
+            delta = abs((target_local - c_local).total_seconds())
+            if nearest is None or delta < nearest_delta:
+                nearest = c
+                nearest_delta = delta
+
+        if nearest:
+            return float(nearest.volume) if nearest.volume is not None else None
+    except Exception as e:
+        print('ERROR get_instrument_volume', e)
+    return None

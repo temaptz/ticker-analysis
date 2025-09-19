@@ -219,6 +219,7 @@ export class ComplexGraphComponent {
             startOfDay(subDays(new Date(), historyDays)),
             endOfDay(addDays(new Date(), futureDays)),
             interval,
+            ModelNameEnum.Ta_2_1
           )
           : of(null)
         ),
@@ -614,7 +615,7 @@ export class ComplexGraphComponent {
 
     return Object.keys(graphResp ?? {}).map((date: string) => {
       return {
-        name: `История TA_2 [${date}]`,
+        name: `История TA_2_1 [${date}]`,
         type: 'line',
         showSymbol: true,
         symbol: 'circle',

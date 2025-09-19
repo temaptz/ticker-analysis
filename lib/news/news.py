@@ -6,7 +6,7 @@ from lib.db_2 import news_db
 from lib import instruments, yandex, cache, serializer, utils, logger, learn, types_util, date_utils
 from lib.news import news_rate_v1, news_rate_v2
 
-news_beginning_date = datetime.datetime(year=2025, month=2, day=17)
+news_beginning_date = datetime.datetime(year=2025, month=2, day=17) # datetime.datetime(year=2025, month=1, day=29)  # Самые первые новости
 
 
 class NewsSourceRated:

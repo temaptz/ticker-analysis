@@ -45,3 +45,16 @@ class PythonExecutionResult(BaseModel):
     """Строгий ответ инструмента run_python_code."""
     ok: bool = Field(..., description='True, если код выполнился без ошибок и тайм-аута')
     output: str = Field(..., description='stdout либо сообщение об ошибке')
+
+
+class RatePercentWithConclusion(BaseModel):
+    rate: int = Field(
+        ...,
+        ge=0,
+        le=100,
+        description='Итоговая оценка',
+    )
+    final_conclusion: str = Field(
+        ...,
+        description='Итоговое краткое заключение объясняющее оценку',
+    )

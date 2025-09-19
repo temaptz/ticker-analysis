@@ -1,7 +1,7 @@
 import os
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
-from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from lib import docker, agent
 
@@ -14,7 +14,7 @@ tools = [
     agent.agent_tools.run_python_code,
 ]
 
-checkpointer = InMemorySaver()
+checkpointer = MemorySaver()
 
 if not os.getenv('OLLAMA_MODEL_NAME'):
     raise RuntimeError('OLLAMA_MODEL_NAME is required and must be set (no defaults).')

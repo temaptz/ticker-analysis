@@ -151,6 +151,14 @@ def _worker_news_loop(deadline_ts: float) -> None:
 
 # === ПАЙПЛАЙНЫ (внутри джоб APScheduler, короткие) ===
 
+def create_orders() -> None:
+    try:
+        agent.sell.create_orders_2()
+        agent.buy.create_orders_2()
+    except Exception as e:
+        logger.log_error(method_name='create_orders', error=e)
+
+
 def weekday_11_pipeline() -> None:
     """Будничный цикл: 11:00 — создать заявки, затем старт длинной задачи по дню недели."""
     # На всякий случай, перед началом чистим возможные хвосты
@@ -160,11 +168,7 @@ def weekday_11_pipeline() -> None:
     telegram.send_message('Начало обработки LLM задач')
 
     # 1) Создание заявок — выполняется до конца (блокирующе)
-    try:
-        agent.sell.create_orders_2()
-        agent.buy.create_orders_2()
-    except Exception as e:
-        logger.log_error(method_name='create_orders', error=e)
+    create_orders()
 
     # 2) Ветка в зависимости от дня
     wd = _now().weekday()  # 0=Пн..6=Вс
@@ -177,7 +181,7 @@ def weekday_11_pipeline() -> None:
         _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
     else:
         # Если вдруг попали сюда (на всякий), запускаем новостной цикл
-        _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
+        _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)        
 
 
 def daily_cutoff_10() -> None:

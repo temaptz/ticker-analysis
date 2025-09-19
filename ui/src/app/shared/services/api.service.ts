@@ -146,12 +146,13 @@ export class ApiService {
     return this.http.get<PredictionGraphResp>(`${this.apiUrl}/instrument/prediction_graph`, {params: params});
   }
 
-  getInstrumentPredictionHistoryGraph(uid: string, from: Date, to: Date, interval: CandleInterval): Observable<PredictionHistoryGraphResp> {
+  getInstrumentPredictionHistoryGraph(uid: string, from: Date, to: Date, interval: CandleInterval, modelName: string): Observable<PredictionHistoryGraphResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
     params = params.set('date_from', from.toJSON());
     params = params.set('date_to', to.toJSON());
     params = params.set('interval', interval);
+    params = params.set('model_name', modelName);
 
     return this.http.get<PredictionHistoryGraphResp>(`${this.apiUrl}/instrument/prediction_history_graph`, {params: params});
   }

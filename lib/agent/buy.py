@@ -262,7 +262,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
 
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
-        is_ok = (total_price <= total_price_calc * 1.5)
+        is_ok = (total_price <= total_price_calc * 2)
 
         logger.log_info(
             message='DEBUG BUY RECOMMENDATION',

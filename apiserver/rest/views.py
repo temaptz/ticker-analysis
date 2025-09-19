@@ -325,11 +325,12 @@ def instrument_prediction_history_graph(request):
     date_from = date_utils.parse_date(request.GET.get('date_from'))
     date_to = date_utils.parse_date(request.GET.get('date_to'))
     interval = CandleInterval(int(request.GET.get('interval')))
+    model_name = request.GET.get('model_name')
 
     if uid and date_from and date_to and interval:
         resp = predictions.get_prediction_history_graph(
             uid=uid,
-            model_name=model.TA_2_1,
+            model_name=model_name,
             date_from=date_from,
             date_to=date_to,
             interval=interval,

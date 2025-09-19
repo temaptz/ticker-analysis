@@ -259,39 +259,30 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             {{
                 "3_days": {{
                     "price_prediction": "{'+' if prediction_3_days > 0 else ''}{utils.round_float(prediction_3_days * 100, 2)}%",
-                    "description": "Прогноз относительного изменения цены актива через 3 дня"
                 }},
                 "1_week": {{
                     "price_prediction": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week * 100, 2)}%",
-                    "description": "Прогноз относительного изменения цены актива через 1 неделю"
                 }},
                 "2_weeks": {{
                     "price_prediction": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks * 100, 2)}%",
-                    "description": "Прогноз относительного изменения цены актива через 2 недели"
                 }},
                 "3_weeks": {{
                     "price_prediction": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks * 100, 2)}%",
-                    "description": "Прогноз относительного изменения цены актива через 3 недели"
                 }},
                 "1_month": {{
                     "price_prediction": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month * 100, 2)}%",
-                    "description": "Прогноз относительного изменения цены актива через 1 месяц"
                 }},
                 "2_months": {{
                     "price_prediction": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months * 100, 2)}%",
-                    "description": "Прогноз относительного изменения цены актива через 2 месяца"
                 }},
                 "3_months": {{
                     "price_prediction": "{'+' if prediction_3_months > 0 else ''}{utils.round_float(prediction_3_months, 5) * 100}%",
-                    "description": "Прогноз относительного изменения цены актива через 3 месяца"
                 }},
                 "6_months": {{
                     "price_prediction": "{'+' if prediction_6_months > 0 else ''}{utils.round_float(prediction_6_months, 5) * 100}%",
-                    "description": "Прогноз относительного изменения цены актива через 6 месяцев"
                 }},
                 "1_year": {{
                     "price_prediction": "{'+' if prediction_year > 0 else ''}{utils.round_float(prediction_year, 5) * 100}%",
-                    "description": "Прогноз относительного изменения цены актива через 1 год"
                 }}
             }}
             

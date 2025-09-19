@@ -260,7 +260,7 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
             qty_calc = balance_qty * 0.50
 
         qty_round = math.ceil(qty_calc / lot_size) * lot_size
-        is_ok = (0 < qty_round <= qty_calc * 1.7)
+        is_ok = (0 < qty_round <= qty_calc * 3)
 
         logger.log_info(
             message='DEBUG SELL RECOMMENDATION',

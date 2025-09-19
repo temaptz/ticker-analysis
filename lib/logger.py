@@ -33,7 +33,7 @@ def log_info(message: str, output: any = None, is_send_telegram=False) -> None:
     date_str = get_local_time_log_str()
     json = ''
     try:
-        json = serializer.to_json(output)
+        json = serializer.to_json(output, ensure_ascii=False, is_pretty=True)
     except Exception as e:
         print('ERROR LOG_INFO', e)
         json = ''

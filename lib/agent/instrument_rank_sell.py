@@ -5,20 +5,16 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts, invest_calc
 
-
-class RatePercentWithConclusion(BaseModel):
-    rate: int
-    final_conclusion: str
 
 class State(TypedDict, total=False):
     human_name: str
     instrument_uid: str
-    invest_calc_rate: RatePercentWithConclusion
-    price_prediction_rate: RatePercentWithConclusion
-    structured_response: RatePercentWithConclusion
+    invest_calc_rate: agent.models.RatePercentWithConclusion
+    price_prediction_rate: agent.models.RatePercentWithConclusion
+    structured_response: agent.models.RatePercentWithConclusion
 
 
 def update_recommendations():
@@ -115,7 +111,7 @@ def llm_invest_calc_rate(state: State):
 
                     if rate or rate == 0:
                         result = {
-                            'invest_calc_rate': RatePercentWithConclusion(
+                            'invest_calc_rate': agent.models.RatePercentWithConclusion(
                                 rate=rate,
                                 final_conclusion=f'Финальная оценка продажи: {rate} [0-100]. potential_profit_percent: {utils.round_float(calc['potential_profit_percent'], 4)}% - потенциальная выгода в процентах',
                             )
@@ -135,40 +131,37 @@ def llm_price_prediction_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Как специалист по трейдингу проанализируй и оцени насколько потенциально выгодна продажа актива именно сейчас.
+        Проанализируй прогнозы изменения цены и оцени насколько потенциально выгодна продажа актива именно сейчас.
         
         
-        # ИНСТРУКЦИЯ
+        # ПРАВИЛА
         
-        1. Проанализируй изменение цены на каждом интервале времени, оцени стабильность и направление ожидаемой динамики.
-        2. Учитывай что актив выгоднее продавать при высокой цене и перед устойчивым трендом на снижение.
-        3. Оцени, насколько выгодна продажа актива именно сейчас.
-        4. Продажа выгодна если в ближайший месяц ожидается постепенный стабильный тренд на снижение, чем сильнее снижение, тем выше оценка.
-        5. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на снижение цены, то это увеличивает оценку.
-        6. Незначительный рост в течении нескольких дней перед стабильным снижением говорит о хорошем моменте для продажи и увеличивает оценку. 
-        7. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
-           - 0 - все price_prediction до месяца стабильно положительные, продажа в ближайшее время не выгодна;
-           - 1-49 - в ближайший месяц присутствуют положительные price_prediction, продажа не рекомендована;
-           - 50-74 - все price_prediction до месяца стабильно отрицательные, продажа возможна;
-           - 75-89 - все price_prediction до трех месяцев стабильно отрицательные, сейчас хороший момент для продажи.
-           - 90-100 - все price_prediction до пол года стабильно отрицательные, сейчас идеальный момент для продажи.
-        8. На основе шкалы данной инструкции построй собственную более развернутую шкалу и дай по ней окончательную точную оценку.
-        9. В конце кратко обобщи все рассуждение сформулируй итоговый вывод и итоговую оценку целое число от 0 до 100.
+        1. Продажа выгодна если в ближайший месяц ожидается постепенный стабильный тренд на снижение, чем сильнее снижение, тем выше оценка.
+        2. Если в длительной перспективе (6-24 месяца) так же ожидается тренд на снижение цены, то это увеличивает оценку.
+        3. Присвой итоговую числовую оценку выгодной продажи целое число от 0 до 100, где:
+           - 0 - в ближайший месяц снижения цены не прогнозируется продажа сейчас не выгодна;
+           - 50 - в ближайшую неделю прогнозируется начало устойчивого продолжительного тренда на снижение цены сейчас продажа выгодна;
+           - 100 - в ближайшие несколько дней прогнозируется начало устойчивого долгосрочного тренда на сильное снижение сейчас идеальный момент для продажи.
+        
         
         # ФОРМАТ ОТВЕТА
         
         Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
         '''
 
-
-        print('HUMAN MESSAGE price_prediction', prompt)
-
         try:
-            if result := agent.llm.llm.with_structured_output(RatePercentWithConclusion).invoke(
+            if result := agent.llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content=agent.prompts.get_system_invest_prompt()),
-                        SystemMessage(content=agent.prompts.get_missed_data_prompt()),
-                        SystemMessage(content=agent.prompts.get_thinking_prompt()),
+                        SystemMessage(content='''
+                        Ты аналитик фондового рынка эксперт по трендам и тенденциям прогнозов.
+                        Твоя задача оценить привлекательность продажи актива по графику прогнозов изменения цены.
+                        Используй прогнозы относительного изменения цены на горизонтах 3d,1w,2w,3w,1m,2m,3m,6m,1y.
+                        Не выдумывай данные. 
+                        Unknown/None отсутствующие данные пропускай и учитывай штрафом.
+                        Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
+                        Продажа выгодна в начале устойчивого тренда сильного отрицательного снижения.
+                        -25% считается сильным снижением.
+                        '''),
                         HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
                     ],
@@ -208,9 +201,9 @@ def llm_total_sell_rate(state: State) -> State:
             )
 
             if calc_rate or calc_rate == 0:
-                return {'structured_response': RatePercentWithConclusion(
+                return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{invest_rate_conclusion}\n{price_prediction_conclusion}'
+                    final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rate}\n{price_prediction_conclusion}'
                 )}
         except Exception as e:
             print('ERROR llm_total_sell_rate', e)

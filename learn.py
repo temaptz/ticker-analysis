@@ -14,19 +14,19 @@ if docker.is_prod():
 
     cache.clean()
 
-    telegram.send_message('[LEARN] Начало обучения TA-2')
-    ta_2.generate_data()
-    ta_2.learn()
-    telegram.send_message('[LEARN] Обучение TA-2 завершено')
-
-    cache.clean()
-
-    telegram.send_message('[LEARN] Начало обучения TA-1_2')
-    ta_1_2.generate_data()
-    ta_1_2.learn()
-    telegram.send_message('[LEARN] Обучение TA-1_2 завершено')
-
-    cache.clean()
+    # telegram.send_message('[LEARN] Начало обучения TA-2')
+    # ta_2.generate_data()
+    # ta_2.learn()
+    # telegram.send_message('[LEARN] Обучение TA-2 завершено')
+    #
+    # cache.clean()
+    #
+    # telegram.send_message('[LEARN] Начало обучения TA-1_2')
+    # ta_1_2.generate_data()
+    # ta_1_2.learn()
+    # telegram.send_message('[LEARN] Обучение TA-1_2 завершено')
+    #
+    # cache.clean()
 
     telegram.send_message('[LEARN] Начало обучения TA-consensus')
     consensus.learn()
