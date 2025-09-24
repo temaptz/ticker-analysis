@@ -739,7 +739,7 @@ def predict_future_relative_change(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
         date=date_current if date_target else datetime.datetime.now(datetime.timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0),
         target_date=prediction_target_date,
-        fill_empty=True,
+        fill_empty=False,
     )
 
     if card.is_ok:
@@ -766,7 +766,7 @@ def get_model_file_path():
     if docker.is_docker():
         return '/app/learn_models/ta-2_1.cbm'
 
-    return utils.get_file_abspath_recursive('ta-2_1.txt', 'learn_models')
+    return utils.get_file_abspath_recursive('ta-2_1.cbm', 'learn_models')
 
 
 def get_data_frame_csv_file_path():

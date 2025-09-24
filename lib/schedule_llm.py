@@ -175,7 +175,13 @@ def weekday_11_pipeline() -> None:
     deadline = _get_deadline()
     deadline_ts = deadline.timestamp()
 
-    _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
+    if wd in (0, 3):  # Пн/Чт — рекомендации
+        _start_proc('RECS', _worker_update_recommendations, deadline_ts)
+    elif wd in (1, 2, 4):  # Вт/Ср/Пт — новости
+        _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
+    else:
+        # Если вдруг попали сюда (на всякий), запускаем новостной цикл
+        _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
 
 
 def daily_cutoff_10() -> None:
