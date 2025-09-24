@@ -1,0 +1,16 @@
+FROM ollama/ollama:latest
+
+WORKDIR /app
+
+# Копируем entrypoint
+COPY entrypoint-ollama.sh /usr/local/bin/entrypoint-ollama.sh
+RUN chmod +x /usr/local/bin/entrypoint-ollama.sh
+
+# Обеспечиваем корректные значения по умолчанию
+ENV OLLAMA_HOST=0.0.0.0:11434 \
+    OLLAMA_KEEP_ALIVE=1h
+
+EXPOSE 11434
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-ollama.sh"]
+

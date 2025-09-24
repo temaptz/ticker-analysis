@@ -231,21 +231,24 @@ def get_prediction_history_graph(
     ):
         dt = date_utils.parse_date(prediction.date)
         target_dt = date_utils.parse_date(prediction.target_date)
-        key = dt.isoformat()
+
+        if model_name in [model.TA_1, model.TA_1_1]:
+            key = date_to.isoformat()
+        else:
+            key = dt.isoformat()
 
         if key not in result:
             result[key] = []
 
         if not any(p['date'] == target_dt for p in result[key]):
-            p = prediction.prediction
-            p_percent = prediction.prediction
-
             if dt > legacy_format_dt:
                 p = utils.get_price_by_change_relative(
                     current_price=current_price,
                     relative_change=prediction.prediction,
                 )
+                p_percent = prediction.prediction
             else:
+                p = prediction.prediction
                 p_percent = utils.get_change_relative_by_price(
                     main_price=current_price,
                     next_price=p,
@@ -255,6 +258,7 @@ def get_prediction_history_graph(
                 'prediction': p,
                 'prediction_percent': p_percent,
                 'date': target_dt,
+                'model_name': model_name,
             })
 
     return result
@@ -314,4 +318,5 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
 
 
 def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
-    return consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)
+    return ta_2_1.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)
+    # return consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)

@@ -2,11 +2,9 @@ import holidays.countries
 from dateutil import parser
 import datetime
 from pytz import timezone
-from lib import logger
 from tinkoff.invest import CandleInterval
 
 
-@logger.error_logger
 def parse_date(date: str or datetime.datetime) -> datetime.datetime or None:
     if isinstance(date, datetime.datetime):
         return date
@@ -19,7 +17,6 @@ def parse_date(date: str or datetime.datetime) -> datetime.datetime or None:
     return None
 
 
-@logger.error_logger
 def convert_to_local(date: datetime.datetime) -> datetime.datetime:
     time_local = date.astimezone(timezone('Europe/Moscow')).replace(tzinfo=None)
     result = datetime.datetime.combine(date=time_local.date(), time=time_local.time(), tzinfo=timezone('Europe/Moscow'))
@@ -30,7 +27,6 @@ def convert_to_local(date: datetime.datetime) -> datetime.datetime:
     return date
 
 
-@logger.error_logger
 def convert_to_utc(date: datetime.datetime) -> datetime.datetime:
     if date.tzinfo is None:
         moscow = timezone('Europe/Moscow')
@@ -92,10 +88,7 @@ def get_interval_sec_by_candle(interval: CandleInterval) -> int:
 
 
 def get_local_time_log_str(date=None) -> str:
-    if not date:
-        date = datetime.datetime.now()
-
-    return date.strftime('%Y-%m-%d_%H-%M-%S')
+    return (date or datetime.datetime.now()).strftime('%Y-%m-%d_%H-%M-%S')
 
 
 def get_day_start(date: datetime.datetime) -> datetime.datetime:

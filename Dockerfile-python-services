@@ -23,10 +23,10 @@ RUN pip install tinkoff-investments --no-deps
 
 FROM requirements
 
-COPY ./apiserver /app/apiserver
 COPY ./lib /app/lib
 COPY ./main.py /app/main.py
 COPY ./learn.py /app/learn.py
 COPY ./news_rate.py /app/news_rate.py
+COPY ./fast_api.py /app/fast_api.py
 COPY ./const.py /app/const.py
 COPY ./.env /app/.env

@@ -68,7 +68,11 @@ export class ComplexGraphComponent {
   daysHistory = signal<number>(90);
   daysFuture = signal<number>(90);
   isShowNewsGraph = signal<boolean>(false);
-  isShowPredictionsHistory = signal<boolean>(false);
+  isShowTa_1_PredictionsHistory = signal<boolean>(false);
+  isShowTa_1_1_PredictionsHistory = signal<boolean>(false);
+  isShowTa_1_2_PredictionsHistory = signal<boolean>(false);
+  isShowTa_2_PredictionsHistory = signal<boolean>(false);
+  isShowTa_2_1_PredictionsHistory = signal<boolean>(false);
   isShowModelsGraph = signal<boolean>(false);
   isLoadedHistoryPrice = signal<boolean>(true);
   isLoadedPredictions = signal<boolean>(true);
@@ -208,21 +212,56 @@ export class ComplexGraphComponent {
       toObservable(this.daysHistory),
       toObservable(this.daysFuture),
       toObservable(this.historyInterval),
-      toObservable(this.isShowPredictionsHistory),
+      toObservable(this.isShowTa_1_PredictionsHistory),
+      toObservable(this.isShowTa_1_1_PredictionsHistory),
+      toObservable(this.isShowTa_1_2_PredictionsHistory),
+      toObservable(this.isShowTa_2_PredictionsHistory),
+      toObservable(this.isShowTa_2_1_PredictionsHistory),
     ])
       .pipe(
         debounceTime(0),
-        tap(() => this.isLoadedPredictionsHistory.set(false)),
-        switchMap(([uid, historyDays, futureDays, interval, isShowPredictionsHistory]) => isShowPredictionsHistory
-          ? this.appService.getInstrumentPredictionHistoryGraph(
-            uid,
-            startOfDay(subDays(new Date(), historyDays)),
-            endOfDay(addDays(new Date(), futureDays)),
-            interval,
-            ModelNameEnum.Ta_2_1
-          )
-          : of(null)
+        tap(resp => {
+          if (resp && (resp[4] || resp[5] || resp[6] || resp[7] || resp[8])) {
+            this.isLoadedPredictionsHistory.set(false)
+          }
+        }),
+        switchMap(([
+                     uid,
+                     historyDays,
+                     futureDays,
+                     interval,
+                     isShowTa_1_PredictionsHistory,
+                     isShowTa_1_1_PredictionsHistory,
+                     isShowTa_1_2_PredictionsHistory,
+                     isShowTa_2_PredictionsHistory,
+                     isShowTa_2_1_PredictionsHistory
+                   ]) => combineLatest([
+                     isShowTa_1_PredictionsHistory ? ModelNameEnum.Ta_1 : null,
+                     isShowTa_1_1_PredictionsHistory ? ModelNameEnum.Ta_1_1 : null,
+                     isShowTa_1_2_PredictionsHistory ? ModelNameEnum.Ta_1_2 : null,
+                     isShowTa_2_PredictionsHistory ? ModelNameEnum.Ta_2 : null,
+                     isShowTa_2_1_PredictionsHistory ? ModelNameEnum.Ta_2_1 : null,
+          ]
+            .filter(i => !!i)
+            .map(i => this.appService.getInstrumentPredictionHistoryGraph(
+              uid,
+              startOfDay(subDays(new Date(), historyDays)),
+              endOfDay(addDays(new Date(), futureDays)),
+              interval,
+              i,
+            )))
         ),
+        map((resp: PredictionHistoryGraphResp[]): PredictionHistoryGraphResp => {
+          const result: PredictionHistoryGraphResp = {};
+
+          resp.forEach((r: PredictionHistoryGraphResp) => {
+            Object.keys(r).forEach((model_date: string) => {
+              result[model_date] = r[model_date];
+            });
+          });
+
+          return result;
+        }),
         tap(() => this.isLoadedPredictionsHistory.set(true)),
       )
   );
@@ -615,7 +654,7 @@ export class ComplexGraphComponent {
 
     return Object.keys(graphResp ?? {}).map((date: string) => {
       return {
-        name: `История TA_2_1 [${date}]`,
+        name: `История ${graphResp?.[date]?.[0]?.model_name ?? '_'} [${date}]`,
         type: 'line',
         showSymbol: true,
         symbol: 'circle',
@@ -673,7 +712,15 @@ export class ComplexGraphComponent {
       series.push(...this.seriesTechAnalysis());
     }
 
-    if (this.isShowPredictionsHistory() && this.isLoadedPredictionsHistory()) {
+    if (
+      (
+        this.isShowTa_1_PredictionsHistory()
+        || this.isShowTa_1_1_PredictionsHistory()
+        || this.isShowTa_1_2_PredictionsHistory()
+        || this.isShowTa_2_PredictionsHistory()
+        || this.isShowTa_2_1_PredictionsHistory()
+      ) && this.isLoadedPredictionsHistory()
+    ) {
       series.push(...this.seriesPredictionsHistory());
     }
 
@@ -699,7 +746,11 @@ export class ComplexGraphComponent {
       this.historyInterval.set(this.interval());
       this.daysFuture.set(this.futureDaysCount());
       this.isShowNewsGraph.set(this.isShowNewsGraphInput());
-      this.isShowPredictionsHistory.set(this.isShowPredictionsHistoryInput());
+      this.isShowTa_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+      this.isShowTa_1_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+      this.isShowTa_1_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+      this.isShowTa_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+      this.isShowTa_2_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
       this.isShowModelsGraph.set(this.isShowModelsGraphInput());
     });
   }
@@ -721,8 +772,24 @@ export class ComplexGraphComponent {
       this.isShowNewsGraph.set(options.isShowNews);
     }
 
-    if (options.isShowPredictionsHistory !== this.isShowPredictionsHistory()) {
-      this.isShowPredictionsHistory.set(options.isShowPredictionsHistory);
+    if (options.isShowTa_1_PredictionsHistory !== this.isShowTa_1_PredictionsHistory()) {
+      this.isShowTa_1_PredictionsHistory.set(options.isShowTa_1_PredictionsHistory);
+    }
+
+    if (options.isShowTa_1_1_PredictionsHistory !== this.isShowTa_1_1_PredictionsHistory()) {
+      this.isShowTa_1_1_PredictionsHistory.set(options.isShowTa_1_1_PredictionsHistory);
+    }
+
+    if (options.isShowTa_1_2_PredictionsHistory !== this.isShowTa_1_2_PredictionsHistory()) {
+      this.isShowTa_1_2_PredictionsHistory.set(options.isShowTa_1_2_PredictionsHistory);
+    }
+
+    if (options.isShowTa_2_PredictionsHistory !== this.isShowTa_2_PredictionsHistory()) {
+      this.isShowTa_2_PredictionsHistory.set(options.isShowTa_2_PredictionsHistory);
+    }
+
+    if (options.isShowTa_2_1_PredictionsHistory !== this.isShowTa_2_1_PredictionsHistory()) {
+      this.isShowTa_2_1_PredictionsHistory.set(options.isShowTa_2_1_PredictionsHistory);
     }
 
     if (options.isShowModels !== this.isShowModelsGraph()) {

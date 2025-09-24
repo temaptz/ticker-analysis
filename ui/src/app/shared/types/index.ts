@@ -121,6 +121,7 @@ export interface PredictionGraph {
   prediction_percent: number;
   prediction: number;
   date: string;
+  model_name: string;
 }
 
 export interface InstrumentForecastsHistory {

@@ -1,40 +1,30 @@
 import {
   booleanAttribute,
-  Component, computed, DestroyRef,
-  effect, inject,
-  input, model,
-  numberAttribute, output,
-  signal,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  numberAttribute,
+  output,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { map, Observable, of, switchMap, tap } from 'rxjs';
-import { addDays, endOfDay, isAfter, parseJSON, startOfDay, subDays } from 'date-fns';
-import * as echarts from 'echarts';
-import { ApiService } from '../../shared/services/api.service';
-import { GRAPH_COLORS } from '../../shared/const';
-import {
-  Instrument,
-  InstrumentForecastsGraphItem,
-  InstrumentHistoryPrice,
-  InstrumentInList,
-  Operation,
-  PredictionGraphResp, TechAnalysisOptions, TechAnalysisResp
-} from '../../shared/types';
-import { getPriceByQuotation, getRoundPrice } from '../../utils';
-import { CandleInterval } from '../../shared/enums';
-import { PreloaderComponent } from '../preloader/preloader.component';
-import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
-import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
-import { ECHARTS_MAIN_OPTIONS } from '../echarts-graph/utils';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TechAnalysisOptions } from '../../shared/types';
+import { CandleInterval, ModelNameEnum } from '../../shared/enums';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 export interface ComplexGraphControlOptions {
   historyDaysCount: number,
   interval: CandleInterval,
   futureDaysCount: number,
   isShowNews: boolean,
-  isShowPredictionsHistory: boolean,
+  isShowTa_1_PredictionsHistory: boolean,
+  isShowTa_1_1_PredictionsHistory: boolean,
+  isShowTa_1_2_PredictionsHistory: boolean,
+  isShowTa_2_PredictionsHistory: boolean,
+  isShowTa_2_1_PredictionsHistory: boolean,
   isShowModels: boolean
 }
 
@@ -54,7 +44,11 @@ export class ComplexGraphControlComponent {
   isShowTechAnalysis = input(false, {transform: booleanAttribute});
   techAnalysisOptions = input<TechAnalysisOptions>({});
   isShowNews = input(false, {transform: booleanAttribute});
-  isShowPredictionsHistory = input(false, {transform: booleanAttribute});
+  isShowTa_1_PredictionsHistory = input(false, {transform: booleanAttribute});
+  isShowTa_1_1_PredictionsHistory = input(false, {transform: booleanAttribute});
+  isShowTa_1_2_PredictionsHistory = input(false, {transform: booleanAttribute});
+  isShowTa_2_PredictionsHistory = input(false, {transform: booleanAttribute});
+  isShowTa_2_1_PredictionsHistory = input(false, {transform: booleanAttribute});
   isShowModels = input(false, {transform: booleanAttribute});
 
   onChange = output<ComplexGraphControlOptions>();
@@ -66,11 +60,16 @@ export class ComplexGraphControlComponent {
     interval: new FormControl(),
     futureDaysCount: new FormControl(),
     isShowNews: new FormControl<boolean>(this.isShowNews()),
-    isShowPredictionsHistory: new FormControl<boolean>(this.isShowPredictionsHistory()),
+    isShowTa_1_PredictionsHistory: new FormControl<boolean>(this.isShowTa_1_PredictionsHistory()),
+    isShowTa_1_1_PredictionsHistory: new FormControl<boolean>(this.isShowTa_1_1_PredictionsHistory()),
+    isShowTa_1_2_PredictionsHistory: new FormControl<boolean>(this.isShowTa_1_2_PredictionsHistory()),
+    isShowTa_2_PredictionsHistory: new FormControl<boolean>(this.isShowTa_2_PredictionsHistory()),
+    isShowTa_2_1_PredictionsHistory: new FormControl<boolean>(this.isShowTa_2_1_PredictionsHistory()),
     isShowModels: new FormControl<boolean>(this.isShowModels()),
   });
 
   protected readonly candleInterval = CandleInterval;
+  protected readonly modelNameEnum = ModelNameEnum;
 
   private destroyRef = inject(DestroyRef);
 
@@ -81,7 +80,11 @@ export class ComplexGraphControlComponent {
         interval: this.interval(),
         futureDaysCount: this.futureDaysCount(),
         isShowNews: this.isShowNews(),
-        isShowPredictionsHistory:  this.isShowPredictionsHistory(),
+        isShowTa_1_PredictionsHistory:  this.isShowTa_1_PredictionsHistory(),
+        isShowTa_1_1_PredictionsHistory:  this.isShowTa_1_1_PredictionsHistory(),
+        isShowTa_1_2_PredictionsHistory:  this.isShowTa_1_2_PredictionsHistory(),
+        isShowTa_2_PredictionsHistory:  this.isShowTa_2_PredictionsHistory(),
+        isShowTa_2_1_PredictionsHistory:  this.isShowTa_2_1_PredictionsHistory(),
         isShowModels: this.isShowModels(),
       }, { emitEvent: false });
     });
@@ -93,7 +96,11 @@ export class ComplexGraphControlComponent {
         interval: value.interval,
         futureDaysCount: parseInt(value.futureDaysCount),
         isShowNews: !!value.isShowNews,
-        isShowPredictionsHistory: !!value.isShowPredictionsHistory,
+        isShowTa_1_PredictionsHistory: !!value.isShowTa_1_PredictionsHistory,
+        isShowTa_1_1_PredictionsHistory: !!value.isShowTa_1_1_PredictionsHistory,
+        isShowTa_1_2_PredictionsHistory: !!value.isShowTa_1_2_PredictionsHistory,
+        isShowTa_2_PredictionsHistory: !!value.isShowTa_2_PredictionsHistory,
+        isShowTa_2_1_PredictionsHistory: !!value.isShowTa_2_1_PredictionsHistory,
         isShowModels: !!value.isShowModels,
       }));
   }

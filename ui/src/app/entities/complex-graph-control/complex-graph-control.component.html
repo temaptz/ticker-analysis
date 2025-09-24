@@ -114,9 +114,37 @@
         <div>
           <input
             type="checkbox"
-            [checked]="isShowPredictionsHistory()"
-            (change)="handleToggleBoolean('isShowPredictionsHistory', $event)"
-          /> История предсказаний
+            [checked]="isShowTa_1_PredictionsHistory()"
+            (change)="handleToggleBoolean('isShowTa_1_PredictionsHistory', $event)"
+          /> История предсказаний {{ modelNameEnum.Ta_1 }}
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowTa_1_1_PredictionsHistory()"
+            (change)="handleToggleBoolean('isShowTa_1_1_PredictionsHistory', $event)"
+          /> История предсказаний {{ modelNameEnum.Ta_1_1 }}
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowTa_1_2_PredictionsHistory()"
+            (change)="handleToggleBoolean('isShowTa_1_2_PredictionsHistory', $event)"
+          /> История предсказаний {{ modelNameEnum.Ta_1_2 }}
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowTa_2_PredictionsHistory()"
+            (change)="handleToggleBoolean('isShowTa_2_PredictionsHistory', $event)"
+          /> История предсказаний {{ modelNameEnum.Ta_2 }}
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowTa_2_1_PredictionsHistory()"
+            (change)="handleToggleBoolean('isShowTa_2_1_PredictionsHistory', $event)"
+          /> История предсказаний {{ modelNameEnum.Ta_2_1 }}
         </div>
         <div>
           <input

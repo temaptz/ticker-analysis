@@ -1,8 +1,15 @@
+import os
 import time
 from dotenv import load_dotenv
-from lib import docker, logger, agent
+from lib import docker, logger
 
 load_dotenv()
+
+# Гарантируем, что переменная окружения модели LLM установлена из .env
+if os.getenv('OLLAMA_MODEL_NAME'):
+    os.environ['OLLAMA_MODEL_NAME'] = os.getenv('OLLAMA_MODEL_NAME')
+
+from lib import agent
 
 
 print('IS DOCKER', docker.is_docker())

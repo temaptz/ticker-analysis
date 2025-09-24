@@ -1,8 +1,6 @@
-Django==5.2.5
-djangorestframework
-django-cors-headers
 tinkoff==0.1.1
 grpcio
+uvicorn
 numpy
 pandas
 scikit-learn
@@ -14,9 +12,6 @@ requests
 python-dateutil
 yandex-cloud-ml-sdk==0.14.0
 redis
-ipywidgets
-ipython
-traitlets
 psycopg2-binary
 sqlalchemy==2.0.43
 matplotlib
@@ -33,3 +28,4 @@ langchain_core==0.3.74
 langsmith==0.4.15
 python-dotenv
 restrictedpython==8.0
+fastapi==0.117.1

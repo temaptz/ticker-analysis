@@ -175,27 +175,13 @@ def weekday_11_pipeline() -> None:
     deadline = _get_deadline()
     deadline_ts = deadline.timestamp()
 
-    if wd in (0, 3):  # Пн/Чт — рекомендации
-        _start_proc('RECS', _worker_update_recommendations, deadline_ts)
-    elif wd in (1, 2, 4):  # Вт/Ср/Пт — новости
-        _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
-    else:
-        # Если вдруг попали сюда (на всякий), запускаем новостной цикл
-        _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)        
+    _start_proc('NEWS_WEEKDAY', _worker_news_loop, deadline_ts)
 
 
 def daily_cutoff_10() -> None:
     """Каждый будний день 10:00 — принудительно останавливаем длинные задачи для часа отдыха."""
     _kill_proc('RECS', 'daily-cutoff-10')
     _kill_proc('NEWS_WEEKDAY', 'daily-cutoff-10')
-
-
-def create_orders() -> None:
-    try:
-        agent.sell.create_orders_2()
-        agent.buy.create_orders_2()
-    except Exception as e:
-        logger.log_error(method_name='create_orders', error=e)
 
 
 # === СТАРТ ПЛАНИРОВЩИКА ===

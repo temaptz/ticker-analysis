@@ -28,8 +28,8 @@ if docker.is_prod():
     #
     # cache.clean()
 
-    telegram.send_message('[LEARN] Начало обучения TA-consensus')
-    consensus.learn()
-    telegram.send_message('[LEARN] Обучение TA-consensus завершено')
-
-    cache.clean()
+    # telegram.send_message('[LEARN] Начало обучения TA-consensus')
+    # consensus.learn()
+    # telegram.send_message('[LEARN] Обучение TA-consensus завершено')
+    #
+    # cache.clean()

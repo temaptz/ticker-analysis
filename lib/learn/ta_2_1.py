@@ -204,8 +204,8 @@ class Ta21LearningCard:
 
         self.news_influence_score_0 = self.get_news_influence_score(days_from=0, days_to=7)
         self.news_influence_score_1 = self.get_news_influence_score(days_from=8, days_to=14)
-        self.news_influence_score_1 = self.get_news_influence_score(days_from=15, days_to=21)
-        self.news_influence_score_1 = self.get_news_influence_score(days_from=22, days_to=28)
+        self.news_influence_score_2 = self.get_news_influence_score(days_from=15, days_to=21)
+        self.news_influence_score_3 = self.get_news_influence_score(days_from=22, days_to=28)
 
         self.price_change_2_days_min = self.get_price_change_days_extreme(days_count=2, is_max=False, is_fill_empty=is_fill_empty)
         self.price_change_2_days_max = self.get_price_change_days_extreme(days_count=2, is_max=True, is_fill_empty=is_fill_empty)
@@ -304,12 +304,17 @@ class Ta21LearningCard:
         return 0 if is_fill_empty else None
 
     def get_price_change_days(self, days_count: int) -> float or None:
-        if price := instruments.get_instrument_price_by_date(
-                uid=self.instrument.uid,
-                date=self.date - datetime.timedelta(days=days_count),
-                delta_hours=24 if days_count < 30 else 24 * 5
-        ):
-            return price
+        if current_price := self.price:
+            if price := instruments.get_instrument_price_by_date(
+                    uid=self.instrument.uid,
+                    date=self.date - datetime.timedelta(days=days_count),
+                    delta_hours=24 if days_count < 30 else 24 * 5
+            ):
+                if price_change := utils.get_change_relative_by_price(
+                        main_price=current_price,
+                        next_price=price,
+                ):
+                    return price_change
         return None
 
     def get_forecast_change(self, is_fill_empty=False) -> float or None:
@@ -732,7 +737,7 @@ def predict_future_relative_change(
 
     card = Ta21LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
-        date=(date_current or datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)),
+        date=date_current if date_target else datetime.datetime.now(datetime.timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0),
         target_date=prediction_target_date,
         fill_empty=True,
     )
@@ -759,7 +764,7 @@ def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float
 
 def get_model_file_path():
     if docker.is_docker():
-        return '/app/learn_models/ta-2_1.txt'
+        return '/app/learn_models/ta-2_1.cbm'
 
     return utils.get_file_abspath_recursive('ta-2_1.txt', 'learn_models')
 
@@ -806,7 +811,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key___003',
+        'method': 'ta_2_1_get_record_cache_key',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

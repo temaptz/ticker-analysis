@@ -1,6 +1,6 @@
 import datetime
 from pytz import timezone
-from lib import docker, telegram, serializer
+from lib import docker, telegram, serializer, date_utils
 
 def error_logger(func):
     def wrapper(*args, **kwargs):
@@ -14,7 +14,7 @@ def error_logger(func):
 
 
 def log_error(method_name: str, error: Exception = None, debug_info: str = None, is_telegram_send=docker.is_prod()) -> None:
-    date_str = get_local_time_log_str()
+    date_str = date_utils.get_local_time_log_str()
     error_str = f'\033[91m[{date_str}] ERROR: {method_name}\033[0m'
 
     if error:
@@ -30,7 +30,7 @@ def log_error(method_name: str, error: Exception = None, debug_info: str = None,
 
 
 def log_info(message: str, output: any = None, is_send_telegram=False) -> None:
-    date_str = get_local_time_log_str()
+    date_str = date_utils.get_local_time_log_str()
     json = ''
     try:
         json = serializer.to_json(output, ensure_ascii=False, is_pretty=True)
@@ -43,6 +43,3 @@ def log_info(message: str, output: any = None, is_send_telegram=False) -> None:
     if is_send_telegram and docker.is_prod():
         telegram.send_message(message=f'{out_str}\nOUTPUT_JSON:{json}')
 
-
-def get_local_time_log_str() -> str:
-    return datetime.datetime.now(timezone('Europe/Moscow')).strftime('%Y-%m-%d_%H-%M-%S')
