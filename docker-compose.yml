@@ -71,7 +71,7 @@ services:
       --workers 6
       --loop uvloop
       --timeout-keep-alive 5
-      --limit-concurrency 100
+      --limit-concurrency 10
       --backlog 2048
 
     depends_on:

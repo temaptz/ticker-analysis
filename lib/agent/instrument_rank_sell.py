@@ -161,6 +161,7 @@ def llm_price_prediction_rate(state: State):
                         Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
                         Продажа выгодна в начале устойчивого тренда сильного отрицательного снижения.
                         -20% считается сильным снижением.
+                        -1% считается незначительным снижением.
                         '''),
                         HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),

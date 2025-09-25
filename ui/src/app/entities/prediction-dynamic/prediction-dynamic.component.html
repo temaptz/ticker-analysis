@@ -4,7 +4,9 @@
   @if (price) {
     @for (i of predictions.value(); track i.date) {
       <div [title]="i.date | date : 'yyyy-MM-dd'">
-        [Через {{ i.date | dateDurationDays }} дней]:
+        <span class="duration">
+          [{{ i.date | dateDurationDays | daysCountHuman }}]:
+        </span>
         <span
           [class.plus]="i.prediction > 0"
           [class.minus]="i.prediction <= 0"

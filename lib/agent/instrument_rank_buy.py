@@ -179,6 +179,7 @@ def llm_price_prediction_rate(state: State):
                         Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
                         Покупка выгодна в начале устойчивого положительного тренда высокого роста.
                         +20% считается высоким ростом.
+                        +1% считается незначительным ростом.
                         '''),
                         HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),
