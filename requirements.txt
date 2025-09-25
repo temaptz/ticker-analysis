@@ -1,6 +1,8 @@
 tinkoff==0.1.1
 grpcio
 uvicorn
+uvloop
+httptools
 numpy
 pandas
 scikit-learn

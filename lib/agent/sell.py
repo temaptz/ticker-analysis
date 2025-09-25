@@ -40,7 +40,7 @@ def create_orders_2():
     ):
         if len(recommendations) < 5:
             if sell_rate := agent.utils.get_sell_rate(instrument_uid=instrument.uid):
-                if sell_rate > 70:
+                if sell_rate >= 70:
                     if calc := invest_calc.get_invest_calc_by_instrument_uid(
                             instrument_uid=instrument.uid,
                     ):

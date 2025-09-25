@@ -160,7 +160,7 @@ def llm_price_prediction_rate(state: State):
                         Unknown/None отсутствующие данные пропускай и учитывай штрафом.
                         Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
                         Продажа выгодна в начале устойчивого тренда сильного отрицательного снижения.
-                        -25% считается сильным снижением.
+                        -20% считается сильным снижением.
                         '''),
                         HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
                         HumanMessage(content=prompt),

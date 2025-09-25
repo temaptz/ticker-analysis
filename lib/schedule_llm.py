@@ -121,18 +121,6 @@ def _kill_proc(name: str, reason: str) -> None:
 
 # === РАБОЧИЕ ФУНКЦИИ (в отдельных процессах) ===
 
-def _worker_update_recommendations(deadline_ts: float) -> None:
-    """Обновление рекомендаций до дедлайна. Если не успеет — будет убит снаружи в 10:00."""
-    try:
-        telegram.send_message('Старт обновления рекомендаций')
-        agent.instrument_rank_sell.update_recommendations()
-        agent.instrument_rank_buy.update_recommendations()
-    except Exception as e:
-        logger.log_error(method_name='update_recommendations', error=e)
-    finally:
-        telegram.send_message('Завершено обновление рекомендаций')
-
-
 def _worker_news_loop(deadline_ts: float) -> None:
     """Цикл оценки новостей до дедлайна. В будни — до ближайших 10:00, на выходных — до пн 10:00."""
     deadline = datetime.datetime.fromtimestamp(deadline_ts, tz=TZ)
@@ -147,6 +135,20 @@ def _worker_news_loop(deadline_ts: float) -> None:
             time.sleep(5)
     finally:
         telegram.send_message('Завершение оценки новостей')
+
+
+def _worker_update_recommendations(deadline_ts: float) -> None:
+    """Обновление рекомендаций до дедлайна. Если не успеет — будет убит снаружи в 10:00."""
+    try:
+        telegram.send_message('Старт обновления рекомендаций')
+        agent.instrument_rank_sell.update_recommendations()
+        agent.instrument_rank_buy.update_recommendations()
+    except Exception as e:
+        logger.log_error(method_name='update_recommendations', error=e)
+    finally:
+        telegram.send_message('Завершено обновление рекомендаций')
+
+    _worker_news_loop(deadline_ts)
 
 
 # === ПАЙПЛАЙНЫ (внутри джоб APScheduler, короткие) ===
