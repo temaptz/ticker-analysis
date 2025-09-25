@@ -1,8 +1,10 @@
 import datetime
+import time
+
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model, consensus
-from lib import date_utils, logger, utils, instruments, cache, logger
+from lib import date_utils, logger, utils, instruments, cache, predictions_cache
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
@@ -12,17 +14,24 @@ def get_prediction(
         date_target: datetime.datetime,
         model_name: model = model.CONSENSUS,
         date_current: datetime.datetime = None,
-        period_days: int = 1,
+        avg_days: int = 1,
+        is_ignore_cache: bool = False,
 ) -> float or None:
     try:
-        days = [date_target + datetime.timedelta(days=o) for o in ([0] + [d for k in range(1, period_days) for d in (-k, k)])][:period_days]
+        days = [date_target + datetime.timedelta(days=o) for o in ([0] + [d for k in range(1, avg_days) for d in (-k, k)])][:avg_days]
         day_results: list[float] = []
 
         for day in days:
-            date = date_utils.convert_to_utc(day).replace(hour=12, minute=0, second=0, microsecond=0)
+            date = date_utils.get_day_prediction_time(day)
             predict_day = None
 
-            if model_name == model.TA_1:
+            if not is_ignore_cache and date_current is None and ((cached := predictions_cache.get_prediction_cache(
+                    instrument_uid=instrument_uid,
+                    model_name=model_name,
+                    date_target=date_target,
+            )) is not None):
+                predict_day = cached
+            elif model_name == model.TA_1:
                 predict_day = get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current)
             elif model_name == model.TA_1_1:
                 predict_day = get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current)
@@ -59,6 +68,35 @@ def get_prediction(
 
     except Exception as e:
         logger.log_error(method_name='get_prediction', error=e)
+
+    return None
+
+
+def get_prediction_cache(
+        instrument_uid: str,
+        date_target: datetime.datetime,
+        model_name: model = model.CONSENSUS,
+        avg_days: int = 1,
+) -> float or None:
+    try:
+        days = [date_target + datetime.timedelta(days=o) for o in ([0] + [d for k in range(1, avg_days) for d in (-k, k)])][:avg_days]
+        day_results: list[float] = []
+
+        for day in days:
+            if (cached := predictions_cache.get_prediction_cache(
+                instrument_uid=instrument_uid,
+                model_name=model_name,
+                date_target=date_utils.get_day_prediction_time(day),
+            )) is not None:
+                if -3 < cached < 3:
+                    day_results.append(cached)
+
+
+        if len(day_results) > 0:
+            return sum(day_results) / len(day_results)
+
+    except Exception as e:
+        logger.log_error(method_name='get_prediction_cache', error=e)
 
     return None
 
@@ -178,20 +216,20 @@ def get_prediction_graph(uid: str, model_name: model, date_from: datetime.dateti
 
         if current_price is not None:
             date_from_utc = date_utils.convert_to_utc(
-                datetime.datetime.combine(
-                    date_from,
-                    datetime.time(hour=12, minute=0, second=0, microsecond=0)
-                )
+                date_utils.get_day_prediction_time(date_from)
             )
             date_to_utc = date_utils.convert_to_utc(date_to)
-
 
             for date in date_utils.get_dates_interval_list(
                     date_from=date_from_utc,
                     date_to=date_to_utc,
                     interval_seconds=date_utils.get_interval_sec_by_candle(interval)
             ):
-                prediction_item = get_prediction(instrument_uid=uid, date_target=date, model_name=model_name)
+                prediction_item = get_prediction_cache(
+                    instrument_uid=uid,
+                    date_target=date,
+                    model_name=model_name,
+                )
 
                 if prediction_item is not None:
                     if prediction_price := utils.get_price_by_change_relative(

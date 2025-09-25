@@ -99,5 +99,5 @@ def get_day_end(date: datetime.datetime) -> datetime.datetime:
     return date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
 
-def get_day_11(date: datetime.datetime = None) -> datetime.datetime:
-    return (date or datetime.datetime.now()).replace(hour=11, minute=0, second=0, microsecond=0)
+def get_day_prediction_time(date: datetime.datetime = None) -> datetime.datetime:
+    return (date or datetime.datetime.now(datetime.timezone.utc)).replace(hour=11, minute=0, second=0, microsecond=0)

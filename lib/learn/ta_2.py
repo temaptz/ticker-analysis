@@ -429,9 +429,8 @@ def predict(data: list) -> float or None:
     return None
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def predict_future(instrument_uid: str, date_target: datetime.datetime, date_current: datetime.datetime = None) -> float or None:
-    prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
+    prediction_target_date = date_utils.get_day_prediction_time(date_target)
 
     card = Ta2LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),

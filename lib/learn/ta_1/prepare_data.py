@@ -1,5 +1,5 @@
 import datetime
-from lib import instruments, redis_utils
+from lib import instruments, date_utils
 from lib.learn.ta_1.learning_card import LearningCard
 import numpy
 
@@ -102,7 +102,7 @@ def get_uids() -> list[str]:
 def get_days(days: int, offset_days: int) -> list[datetime.datetime]:
     result = list[datetime.datetime]()
     end_date = (
-            datetime.datetime.now().replace(hour=12, minute=0, second=0, microsecond=0)
+            date_utils.get_day_prediction_time()
             - datetime.timedelta(days=offset_days)
     )
 

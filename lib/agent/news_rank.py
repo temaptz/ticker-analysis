@@ -23,16 +23,6 @@ class State(TypedDict, total=False):
 
 
 def rank_last_news():
-    logger.log_info(
-        message='LANGSMITH DEBUG NEWS RANKING',
-        output={
-            'LANGSMITH_TRACING': os.getenv('LANGSMITH_TRACING'),
-            'LANGSMITH_ENDPOINT': os.getenv('LANGSMITH_ENDPOINT'),
-            'LANGSMITH_API_KEY': os.getenv('LANGSMITH_API_KEY'),
-            'LANGSMITH_PROJECT': os.getenv('LANGSMITH_PROJECT'),
-        },
-        is_send_telegram=True,
-    )
     time_start = time.perf_counter()
     graph = get_news_rank_graph()
 

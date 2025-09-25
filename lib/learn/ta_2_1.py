@@ -727,17 +727,16 @@ def learn():
     learn_utils.plot_catboost_metrics(model_cb, metric_name='RMSE')
 
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
 def predict_future_relative_change(
         instrument_uid: str,
         date_target: datetime.datetime,
         date_current: datetime.datetime = None,
 ) -> float or None:
-    prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
+    prediction_target_date = date_utils.get_day_prediction_time(date_target)
 
     card = Ta21LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
-        date=date_current if date_target else datetime.datetime.now(datetime.timezone.utc).replace(hour=12, minute=0, second=0, microsecond=0),
+        date=date_current if date_current else date_utils.get_day_prediction_time(),
         target_date=prediction_target_date,
         fill_empty=False,
     )

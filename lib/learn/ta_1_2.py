@@ -386,7 +386,7 @@ def predict_future_relative_change(
         date_target: datetime.datetime,
         date_current: datetime.datetime = None,
 ) -> float or None:
-    prediction_target_date = date_target.replace(hour=12, minute=0, second=0, microsecond=0)
+    prediction_target_date = date_utils.get_day_prediction_time(date_target)
 
     card = Ta12LearningCard(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),

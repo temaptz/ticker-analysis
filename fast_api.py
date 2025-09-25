@@ -146,7 +146,7 @@ def instrument_history_prices(request):
                 uid=uid,
                 days_count=int(days),
                 interval=CandleInterval(int(interval)),
-                to_date=date_utils.get_day_11()
+                to_date=date_utils.get_day_prediction_time()
         ):
             resp.append(serializer.get_dict_by_object_recursive(i))
 
@@ -316,12 +316,12 @@ def instrument_prediction(request):
         current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
 
         resp['relative'] = {}
-        resp['relative'][model.TA_1] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_1)
-        resp['relative'][model.TA_1_1] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_1)
-        resp['relative'][model.TA_1_2] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_2)
-        resp['relative'][model.TA_2] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_2)
-        resp['relative'][model.TA_2_1] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.TA_2_1)
-        resp['relative'][model.CONSENSUS] = predictions.get_prediction(instrument_uid=uid, date_target=date_target, model_name=model.CONSENSUS)
+        resp['relative'][model.TA_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_1)
+        resp['relative'][model.TA_1_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_1)
+        resp['relative'][model.TA_1_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_2)
+        resp['relative'][model.TA_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_2)
+        resp['relative'][model.TA_2_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_2_1)
+        resp['relative'][model.CONSENSUS] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.CONSENSUS)
 
 
         resp[model.TA_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1])
@@ -355,11 +355,11 @@ def instrument_prediction_consensus(request):
         if days >= 180:
             period_days = 30
 
-        if consensus := predictions.get_prediction(
+        if consensus := predictions.get_prediction_cache(
                 instrument_uid=uid,
                 date_target=date,
                 model_name=model.CONSENSUS,
-                period_days=period_days,
+                avg_days=period_days,
         ):
             resp = utils.round_float(num=consensus, decimals=4)
 

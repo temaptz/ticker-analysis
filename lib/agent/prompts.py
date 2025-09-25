@@ -184,47 +184,47 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
         prediction_3_days = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=3),
-            period_days=1,
+            avg_days=1,
         ), 4)
         prediction_week = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=7),
-            period_days=3,
+            avg_days=3,
         ), 4)
         prediction_2_weeks = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=14),
-            period_days=3,
+            avg_days=3,
         ), 4)
         prediction_3_weeks = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=21),
-            period_days=7,
+            avg_days=7,
         ), 4)
         prediction_month = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=30),
-            period_days=7,
+            avg_days=7,
         ), 4)
         prediction_2_months = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=60),
-            period_days=14,
+            avg_days=14,
         ), 4)
         prediction_3_months = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=90),
-            period_days=14,
+            avg_days=14,
         ), 4)
         prediction_6_months = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=180),
-            period_days=30,
+            avg_days=30,
         ), 4)
         prediction_year = utils.round_float(predictions.get_prediction(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=365),
-            period_days=30,
+            avg_days=30,
         ), 4)
 
         print('PRICE PREDICTION PROMPT DATA current_price', current_price)

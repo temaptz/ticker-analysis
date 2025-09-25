@@ -87,6 +87,8 @@ def save_predictions(model_name: str):
                 instrument_uid=instrument.uid,
                 date_target=date,
                 model_name=model_name,
+                avg_days=3,
+                is_ignore_cache=True,
             )
 
             if prediction is not None:

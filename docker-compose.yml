@@ -33,8 +33,22 @@ services:
       - redis
       - postgres
       - ollama
-    environment:
-      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
+    restart: no
+
+  cache_predictions:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    container_name: cache_predictions
+    volumes:
+      - /etc/is_my_prod:/container_host_is_prod:ro
+      - ./learn_models:/app/learn_models
+    command:
+      - python
+      - cache_predictions.py
+    depends_on:
+      - redis
+      - postgres
     restart: no
 
   # news_rate:
@@ -71,8 +85,8 @@ services:
       --workers 6
       --loop uvloop
       --timeout-keep-alive 5
-      --limit-concurrency 10
-      --backlog 2048
+      --limit-concurrency 50
+      --backlog 4096
 
     depends_on:
       - redis

@@ -26,6 +26,7 @@ FROM requirements
 COPY ./lib /app/lib
 COPY ./main.py /app/main.py
 COPY ./learn.py /app/learn.py
+COPY ./cache_predictions.py /app/cache_predictions.py
 COPY ./news_rate.py /app/news_rate.py
 COPY ./fast_api.py /app/fast_api.py
 COPY ./const.py /app/const.py
