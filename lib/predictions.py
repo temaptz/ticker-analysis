@@ -4,7 +4,7 @@ import time
 from lib.learn.ta_1.learning_card import LearningCard
 from lib.learn.ta_1 import learn
 from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model, consensus
-from lib import date_utils, logger, utils, instruments, cache, predictions_cache
+from lib import date_utils, logger, utils, instruments, cache, predictions_cache, learn
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
 
@@ -259,7 +259,6 @@ def get_prediction_history_graph(
 ) -> dict:
     result = {}
     current_price = instruments.get_instrument_last_price_by_uid(uid)
-    legacy_format_dt = datetime.datetime(year=2025, month=8, day=14)
 
     for prediction in predictions_db.get_predictions_by_uid_date(
         uid=uid,
@@ -271,33 +270,46 @@ def get_prediction_history_graph(
         target_dt = date_utils.parse_date(prediction.target_date)
 
         if model_name in [model.TA_1, model.TA_1_1]:
-            key = date_to.isoformat()
+            key_date = date_to
         else:
-            key = dt.isoformat()
+            key_date = dt
+
+        key = key_date.isoformat()
 
         if key not in result:
             result[key] = []
 
         if not any(p['date'] == target_dt for p in result[key]):
-            if dt > legacy_format_dt:
-                p = utils.get_price_by_change_relative(
+            if (
+                    model_name == learn.model.TA_1
+                    or model_name == learn.model.TA_1_1
+                    or (model_name == learn.model.TA_1_2 and key_date < datetime.datetime(year=2025, month=9, day=15))
+                    or (model_name == learn.model.TA_2 and key_date < datetime.datetime(year=2025, month=8, day=18))
+                    or (model_name == learn.model.TA_2_1 and key_date < datetime.datetime(year=2025, month=8, day=18))
+            ):
+                p_abs = prediction.prediction
+                p_percent = utils.get_change_relative_by_price(
+                    main_price=current_price,
+                    next_price=p_abs,
+                )
+            else:
+                p_abs = utils.get_price_by_change_relative(
                     current_price=current_price,
                     relative_change=prediction.prediction,
                 )
                 p_percent = prediction.prediction
-            else:
-                p = prediction.prediction
-                p_percent = utils.get_change_relative_by_price(
-                    main_price=current_price,
-                    next_price=p,
-                )
+
 
             result[key].append({
-                'prediction': p,
+                'prediction': p_abs,
                 'prediction_percent': p_percent,
                 'date': target_dt,
                 'model_name': model_name,
             })
+
+    # Sort each list of predictions by date
+    for key in result:
+        result[key].sort(key=lambda x: x['date'])
 
     return result
 
