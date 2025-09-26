@@ -51,9 +51,7 @@ def health():
 # ==== original view functions ported verbatim, expecting Django-like request ====
 
 
-def instruments_list(request):
-    sort = request.GET.get('sort')
-
+def instruments_list(sort: int or str) -> list[Instrument]:
     sorted_list = instruments.get_instruments_white_list()
 
     if sort and (sort == 1 or sort == '1'):
@@ -73,18 +71,10 @@ def instruments_list(request):
             instruments_list=sorted_list
         )
 
-    response = HttpResponse(serializer.to_json(sorted_list))
-
-    if len(sorted_list) > 0:
-        patch_cache_control(response, public=True, max_age=3600)
-
-    return response
+    return sorted_list
 
 
-def instrument_info(request):
-    resp = None
-    uid = request.GET.get('uid')
-    ticker = request.GET.get('ticker')
+def instrument_info(uid: str, ticker: str):
     instrument = None
 
     if uid:
@@ -94,53 +84,25 @@ def instrument_info(request):
         instrument = instruments.get_instrument_by_ticker(ticker)
 
     if instrument:
-        resp = serializer.get_dict_by_object_recursive(instrument)
+        return serializer.get_dict_by_object_recursive(instrument)
 
-    response = HttpResponse(json.dumps(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+    return None
 
 
-def instrument_last_price(request):
-    resp = None
-    uid = request.GET.get('uid')
-
-    if uid:
-        last_price = instruments.get_instrument_last_price_by_uid(uid)
-
-        if last_price is not None:
-            resp = last_price
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600)
-
-    return response
+def instrument_last_price(uid: Optional[str]):
+    if not uid:
+        return None
+    last_price = instruments.get_instrument_last_price_by_uid(uid)
+    return last_price if last_price is not None else None
 
 
-def instrument_price_by_date(request):
-    uid = request.GET.get('uid')
-    date = utils.parse_json_date(request.GET.get('date'))
-
-    data = instruments.get_instrument_price_by_date(uid=uid, date=date)
-    response = HttpResponse(data or json.dumps(None))
-
-    if data:
-        patch_cache_control(response, public=True, max_age=3600 * 24)
-
-    return response
+def instrument_price_by_date(uid: Optional[str], date_str: Optional[str]):
+    date = utils.parse_json_date(date_str)
+    return instruments.get_instrument_price_by_date(uid=uid, date=date)
 
 
-def instrument_history_prices(request):
+def instrument_history_prices(uid: Optional[str], days: Optional[str], interval: Optional[str]):
     resp = list()
-    uid = request.GET.get('uid')
-    days = request.GET.get('days')
-    interval = request.GET.get('interval')
-
     if uid and days and interval:
         for i in instruments.get_instrument_history_price_by_uid(
                 uid=uid,
@@ -149,52 +111,27 @@ def instrument_history_prices(request):
                 to_date=date_utils.get_day_prediction_time()
         ):
             resp.append(serializer.get_dict_by_object_recursive(i))
-
-    response = HttpResponse(json.dumps(resp))
-
-    if resp and len(resp):
-        patch_cache_control(response, public=True, max_age=3600 * 3)
-
-    return response
+    return resp
 
 
-def instrument_forecasts(request):
-    resp = None
-
-    if uid := request.GET.get('uid'):
-        if f := forecasts.get_forecasts(uid):
-            resp = f
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+def instrument_forecasts(uid: Optional[str]):
+    if not uid:
+        return None
+    f = forecasts.get_forecasts(uid)
+    return f if f else None
 
 
-def instrument_history_forecasts(request):
+def instrument_history_forecasts(uid: Optional[str]):
+    if not uid:
+        return []
+    return forecasts.get_db_forecasts_history_by_uid(uid=uid)
+
+
+def instrument_history_forecasts_graph(uid: Optional[str], start_date_str: Optional[str], end_date_str: Optional[str], interval_str: Optional[str]):
     resp = list()
-    uid = request.GET.get('uid')
-
-    if uid:
-        resp = forecasts.get_db_forecasts_history_by_uid(uid=uid)
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if len(resp) > 0:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
-
-
-def instrument_history_forecasts_graph(request):
-    resp = list()
-    uid = request.GET.get('uid')
-    start_date = utils.parse_json_date(request.GET.get('start_date'))
-    end_date = utils.parse_json_date(request.GET.get('end_date'))
-    interval = CandleInterval(int(request.GET.get('interval')))
-
+    start_date = utils.parse_json_date(start_date_str)
+    end_date = utils.parse_json_date(end_date_str)
+    interval = CandleInterval(int(interval_str)) if interval_str else None
     if uid and start_date and end_date and interval:
         resp = forecasts.get_db_forecasts_graph(
             instrument_uid=uid,
@@ -202,59 +139,33 @@ def instrument_history_forecasts_graph(request):
             end_date=end_date,
             interval=interval,
         )
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp and len(resp) > 0:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+    return resp
 
 
-def instrument_fundamentals(request):
+def instrument_fundamentals(uid: Optional[str]):
     resp = None
-    uid = request.GET.get('uid')
-
     if uid:
-        if instrument := instruments.get_instrument_by_uid(uid):
-            if instrument.asset_uid:
-                fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument.asset_uid)
-
-                if fundamentals_resp:
-                    for f in fundamentals_resp:
-                        resp = serializer.get_dict_by_object_recursive(f)
-
-    response = HttpResponse(json.dumps(resp))
-
-    if resp and len(resp):
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+        instrument_obj = instruments.get_instrument_by_uid(uid)
+        if instrument_obj and instrument_obj.asset_uid:
+            fundamentals_resp = fundamentals.get_fundamentals_by_asset_uid(asset_uid=instrument_obj.asset_uid)
+            if fundamentals_resp:
+                for f in fundamentals_resp:
+                    resp = serializer.get_dict_by_object_recursive(f)
+    return resp
 
 
-def instrument_fundamentals_history(request):
-    resp = list()
-    asset_uid = request.GET.get('asset_uid')
-
-    if asset_uid:
-        resp = fundamentals.get_db_fundamentals_history_by_uid(asset_uid=asset_uid)
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp and len(resp):
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+def instrument_fundamentals_history(asset_uid: Optional[str]):
+    if not asset_uid:
+        return []
+    return fundamentals.get_db_fundamentals_history_by_uid(asset_uid=asset_uid)
 
 
-def instrument_prediction_graph(request):
+def instrument_prediction_graph(uid: Optional[str], date_from_str: Optional[str], date_to_str: Optional[str], interval_str: Optional[str], models_str: Optional[str]):
     resp = {}
-    uid = request.GET.get('uid')
-    date_from = date_utils.parse_date(request.GET.get('date_from'))
-    date_to = date_utils.parse_date(request.GET.get('date_to'))
-    interval = CandleInterval(int(request.GET.get('interval')))
-    models = (request.GET.get('models') or '').split(',') or []
-
+    date_from = date_utils.parse_date(date_from_str)
+    date_to = date_utils.parse_date(date_to_str)
+    interval = CandleInterval(int(interval_str)) if interval_str else None
+    models = (models_str or '').split(',') if models_str is not None else []
     if uid and date_from and date_to and interval:
         model_names = models if len(models) else [
             model.TA_1,
@@ -264,7 +175,6 @@ def instrument_prediction_graph(request):
             model.TA_2_1,
             model.CONSENSUS
         ]
-
         for model_name in model_names:
             resp[model_name] = predictions.get_prediction_graph(
                 uid=uid,
@@ -273,22 +183,14 @@ def instrument_prediction_graph(request):
                 date_to=date_to,
                 interval=interval,
             )
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24)
-
-    return response
+    return resp
 
 
-def instrument_prediction_history_graph(request):
+def instrument_prediction_history_graph(uid: Optional[str], date_from_str: Optional[str], date_to_str: Optional[str], interval_str: Optional[str], model_name: Optional[str]):
     resp = None
-    uid = request.GET.get('uid')
-    date_from = date_utils.parse_date(request.GET.get('date_from'))
-    date_to = date_utils.parse_date(request.GET.get('date_to'))
-    interval = CandleInterval(int(request.GET.get('interval')))
-    model_name = request.GET.get('model_name')
-
+    date_from = date_utils.parse_date(date_from_str)
+    date_to = date_utils.parse_date(date_to_str)
+    interval = CandleInterval(int(interval_str)) if interval_str else None
     if uid and date_from and date_to and interval:
         resp = predictions.get_prediction_history_graph(
             uid=uid,
@@ -297,22 +199,14 @@ def instrument_prediction_history_graph(request):
             date_to=date_to,
             interval=interval,
         )
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24)
-
-    return response
+    return resp
 
 
-def instrument_prediction(request):
+def instrument_prediction(uid: Optional[str], days_future: Optional[str]):
     resp = {}
-    uid = request.GET.get('uid')
-    days_future = int(request.GET.get('days_future')) if request.GET.get('days_future') else 30
-
+    days = int(days_future) if days_future else 30
     if uid:
-        date_target = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days_future)
+        date_target = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=days)
         current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
 
         resp['relative'] = {}
@@ -323,111 +217,67 @@ def instrument_prediction(request):
         resp['relative'][model.TA_2_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_2_1)
         resp['relative'][model.CONSENSUS] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.CONSENSUS)
 
-
         resp[model.TA_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1])
         resp[model.TA_1_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1_1])
         resp[model.TA_1_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1_2])
         resp[model.TA_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_2])
         resp[model.TA_2_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_2_1])
         resp[model.CONSENSUS] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.CONSENSUS])
-
-    response = HttpResponse(json.dumps(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600)
-
-    return response
+    return resp
 
 
-def instrument_prediction_consensus(request):
+def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str]):
     resp = None
-    uid = request.GET.get('uid')
-    date = utils.parse_json_date(request.GET.get('date'))
-
+    date = utils.parse_json_date(date_str)
     if uid and date:
         days = (date - datetime.datetime.now(tz=datetime.timezone.utc)).days
         period_days = 3
-
         if days >= 21:
             period_days = 7
         if days >= 60:
             period_days = 14
         if days >= 180:
             period_days = 30
-
-        if consensus := predictions.get_prediction_cache(
-                instrument_uid=uid,
-                date_target=date,
-                model_name=model.CONSENSUS,
-                avg_days=period_days,
-        ):
+        consensus = predictions.get_prediction_cache(
+            instrument_uid=uid,
+            date_target=date,
+            model_name=model.CONSENSUS,
+            avg_days=period_days,
+        )
+        if consensus is not None:
             resp = utils.round_float(num=consensus, decimals=4)
-
-    response = HttpResponse(json.dumps(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600)
-
-    return response
+    return resp
 
 
-def instrument_balance(request):
-    resp = None
-    uid = request.GET.get('uid')
-
-    if uid:
-        resp = users.get_user_instrument_balance(instrument_uid=uid)
-
-    response = HttpResponse(json.dumps(resp))
-
-    patch_cache_control(response, public=True, max_age=3600)
-
-    return response
+def instrument_balance(uid: Optional[str]):
+    if not uid:
+        return None
+    return users.get_user_instrument_balance(instrument_uid=uid)
 
 
-def instrument_operations(request):
-    resp = None
-    figi = request.GET.get('figi')
-
-    if figi:
-        resp = users.get_user_instrument_operations(instrument_figi=figi, account_id=users.get_analytics_account().id)
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600)
-
-    return response
+def instrument_operations(figi: Optional[str]):
+    if not figi:
+        return None
+    return users.get_user_instrument_operations(instrument_figi=figi, account_id=users.get_analytics_account().id)
 
 
-def instrument_news_list_rated(request):
-    resp = None
-    uid = request.GET.get('uid')
-    start_date = utils.parse_json_date(request.GET.get('start_date'))
-    end_date = utils.parse_json_date(request.GET.get('end_date'))
-
+def instrument_news_list_rated(uid: Optional[str], start_date_str: Optional[str], end_date_str: Optional[str]):
+    start_date = utils.parse_json_date(start_date_str)
+    end_date = utils.parse_json_date(end_date_str)
     if uid and start_date and end_date:
-        resp = news.news.get_rated_news_by_instrument_uid(
+        return news.news.get_rated_news_by_instrument_uid(
             instrument_uid=uid,
             start_date=start_date,
             end_date=end_date,
         )
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+    return None
 
 
-def instrument_news_graph(request):
+def instrument_news_graph(uid: Optional[str], start_date_str: Optional[str], end_date_str: Optional[str], interval_str: Optional[str]):
     resp = None
-    uid = request.GET.get('uid')
-    start_date = utils.parse_json_date(request.GET.get('date_from'))
-    end_date = utils.parse_json_date(request.GET.get('date_to'))
-    interval = CandleInterval(int(request.GET.get('interval')))
-
+    start_date = utils.parse_json_date(start_date_str)
+    end_date = utils.parse_json_date(end_date_str)
+    interval = CandleInterval(int(interval_str)) if interval_str else None
     if uid and start_date and end_date and interval:
         resp = news.news.get_rated_news_graph(
             instrument_uid=uid,
@@ -435,55 +285,29 @@ def instrument_news_graph(request):
             end_date=end_date,
             interval=interval
         )
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 7)
-
-    return response
+    return resp
 
 
-def instrument_brand(request):
-    resp = None
-    uid = request.GET.get('uid')
-
-    if uid:
-        instrument = instruments.get_instrument_by_uid(uid=uid)
-
-        if instrument:
-            resp = instruments.get_instrument_by_ticker(ticker=instrument.ticker).brand
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 24 * 30)
-
-    return response
+def instrument_brand(uid: Optional[str]):
+    if not uid:
+        return None
+    instrument_obj = instruments.get_instrument_by_uid(uid=uid)
+    if instrument_obj:
+        return instruments.get_instrument_by_ticker(ticker=instrument_obj.ticker).brand
+    return None
 
 
-def instrument_invest_calc(request):
-    resp = None
-    uid = request.GET.get('uid')
-
-    if uid:
-        resp = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid, account_id=users.get_analytics_account().id)
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 3)
-
-    return response
+def instrument_invest_calc(uid: Optional[str]):
+    if not uid:
+        return None
+    return invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid, account_id=users.get_analytics_account().id)
 
 
-def tech_analysis_graph(request):
+def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_date_str: Optional[str], interval_str: Optional[str]):
     resp = {}
-    uid = request.GET.get('uid')
-    date_from = date_utils.parse_date(request.GET.get('start_date'))
-    date_to = date_utils.parse_date(request.GET.get('end_date'))
-    interval = IndicatorInterval(int(request.GET.get('interval')))
-
+    date_from = date_utils.parse_date(start_date_str)
+    date_to = date_utils.parse_date(end_date_str)
+    interval = IndicatorInterval(int(interval_str)) if interval_str else None
     if uid and date_from and date_to and interval:
         resp['RSI'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
@@ -492,7 +316,6 @@ def tech_analysis_graph(request):
             date_to=date_to,
             interval=interval,
         )
-
         resp['BB'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_BB,
@@ -501,7 +324,6 @@ def tech_analysis_graph(request):
             interval=interval,
             deviation=Deviation(deviation_multiplier=Quotation(units=2, nano=0)),
         )
-
         resp['EMA'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_EMA,
@@ -509,7 +331,6 @@ def tech_analysis_graph(request):
             date_to=date_to,
             interval=interval,
         )
-
         resp['SMA'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
@@ -517,7 +338,6 @@ def tech_analysis_graph(request):
             date_to=date_to,
             interval=interval,
         )
-
         resp['MACD'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
@@ -530,13 +350,7 @@ def tech_analysis_graph(request):
                 signal_smoothing=9,
             )
         )
-
-    response = HttpResponse(serializer.to_json(resp))
-
-    if resp:
-        patch_cache_control(response, public=True, max_age=3600 * 3)
-
-    return response
+    return resp
 
 
 def instrument_tag(request):
@@ -559,7 +373,6 @@ def instrument_tag(request):
             status=400,
         )
 
-    response = None
     uid = request.GET.get('uid')
     tag_name = request.GET.get('tag_name')
 
@@ -568,13 +381,10 @@ def instrument_tag(request):
             instrument_uid=uid,
             tag_name=tag_name,
         ):
-            if tag.tag_value:
-                response = HttpResponse(serializer.to_json(tag.tag_value))
+            if tag.tag_value is not None:
+                return HttpResponse(serializer.to_json(tag.tag_value))
 
-    if response:
-        patch_cache_control(response, public=True, max_age=60)
-
-    return response
+    return HttpResponse(None)
 
 
 # ==== adapter ====
@@ -602,151 +412,156 @@ def _to_fastapi_response(result, response: Response):
 
 
 @app.get('/instruments')
-async def instruments_list_endpoint(request: Request, response: Response):
-    print('INSTRUMENTS LIST', request)
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instruments_list(shim)
-    return _to_fastapi_response(result, response)
+def instruments_list_endpoint(request: Request):
+    return instruments_list(
+        sort=request.query_params.get('sort'),
+    )
     
 
 @app.get('/instrument')
-async def instrument_info_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_info(shim)
-    return _to_fastapi_response(result, response)
-    
+def instrument_info_endpoint(request: Request):
+    return instrument_info(
+        uid=request.query_params.get('uid'),
+        ticker=request.query_params.get('ticker'),
+    )
+
 
 @app.get('/instrument/last_price')
-async def instrument_last_price_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_last_price(shim)
-    return _to_fastapi_response(result, response)
+def instrument_last_price_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_last_price(uid)
     
 
 @app.get('/instrument/price_by_date')
-async def instrument_price_by_date_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_price_by_date(shim)
-    return _to_fastapi_response(result, response)
+def instrument_price_by_date_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    date_str = request.query_params.get('date')
+    return instrument_price_by_date(uid, date_str)
     
 
 @app.get('/instrument/history_prices')
-async def instrument_history_prices_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_history_prices(shim)
-    return _to_fastapi_response(result, response)
+def instrument_history_prices_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    days = request.query_params.get('days')
+    interval = request.query_params.get('interval')
+    return instrument_history_prices(uid, days, interval)
     
 
 @app.get('/instrument/forecasts')
-async def instrument_forecasts_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_forecasts(shim)
-    return _to_fastapi_response(result, response)
+def instrument_forecasts_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_forecasts(uid)
     
 
 @app.get('/instrument/history_forecasts')
-async def instrument_history_forecasts_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_history_forecasts(shim)
-    return _to_fastapi_response(result, response)
+def instrument_history_forecasts_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_history_forecasts(uid)
     
 
 @app.get('/instrument/history_forecasts_graph')
-async def instrument_history_forecasts_graph_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_history_forecasts_graph(shim)
-    return _to_fastapi_response(result, response)
+def instrument_history_forecasts_graph_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    start_date = request.query_params.get('start_date')
+    end_date = request.query_params.get('end_date')
+    interval = request.query_params.get('interval')
+    return instrument_history_forecasts_graph(uid, start_date, end_date, interval)
     
 
 @app.get('/instrument/fundamentals')
-async def instrument_fundamentals_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_fundamentals(shim)
-    return _to_fastapi_response(result, response)
+def instrument_fundamentals_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_fundamentals(uid)
     
 
 @app.get('/instrument/fundamentals_history')
-async def instrument_fundamentals_history_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_fundamentals_history(shim)
-    return _to_fastapi_response(result, response)
+def instrument_fundamentals_history_endpoint(request: Request):
+    asset_uid = request.query_params.get('asset_uid')
+    return instrument_fundamentals_history(asset_uid)
     
 
 @app.get('/instrument/prediction_graph')
-async def instrument_prediction_graph_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_prediction_graph(shim)
-    return _to_fastapi_response(result, response)
+def instrument_prediction_graph_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    date_from = request.query_params.get('date_from')
+    date_to = request.query_params.get('date_to')
+    interval = request.query_params.get('interval')
+    models = request.query_params.get('models')
+    return instrument_prediction_graph(uid, date_from, date_to, interval, models)
     
 
 @app.get('/instrument/prediction_history_graph')
-async def instrument_prediction_history_graph_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_prediction_history_graph(shim)
-    return _to_fastapi_response(result, response)
+def instrument_prediction_history_graph_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    date_from = request.query_params.get('date_from')
+    date_to = request.query_params.get('date_to')
+    interval = request.query_params.get('interval')
+    model_name = request.query_params.get('model_name')
+    return instrument_prediction_history_graph(uid, date_from, date_to, interval, model_name)
     
 
 @app.get('/instrument/prediction')
-async def instrument_prediction_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_prediction(shim)
-    return _to_fastapi_response(result, response)
+def instrument_prediction_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    days_future = request.query_params.get('days_future')
+    return instrument_prediction(uid, days_future)
     
 
 @app.get('/instrument/prediction_consensus')
-async def instrument_prediction_consensus_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_prediction_consensus(shim)
-    return _to_fastapi_response(result, response)
+def instrument_prediction_consensus_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    date = request.query_params.get('date')
+    return instrument_prediction_consensus(uid, date)
     
 
 @app.get('/instrument/balance')
-async def instrument_balance_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_balance(shim)
-    return _to_fastapi_response(result, response)
+def instrument_balance_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_balance(uid)
     
 
 @app.get('/instrument/operations')
-async def instrument_operations_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_operations(shim)
-    return _to_fastapi_response(result, response)
+def instrument_operations_endpoint(request: Request):
+    figi = request.query_params.get('figi')
+    return instrument_operations(figi)
     
 
 @app.get('/instrument/news_list_rated')
-async def instrument_news_list_rated_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_news_list_rated(shim)
-    return _to_fastapi_response(result, response)
+def instrument_news_list_rated_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    start_date = request.query_params.get('start_date')
+    end_date = request.query_params.get('end_date')
+    return instrument_news_list_rated(uid, start_date, end_date)
     
 
 @app.get('/instrument/news_graph')
-async def instrument_news_graph_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_news_graph(shim)
-    return _to_fastapi_response(result, response)
+def instrument_news_graph_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    date_from = request.query_params.get('date_from')
+    date_to = request.query_params.get('date_to')
+    interval = request.query_params.get('interval')
+    return instrument_news_graph(uid, date_from, date_to, interval)
     
 
 @app.get('/instrument/brand')
-async def instrument_brand_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_brand(shim)
-    return _to_fastapi_response(result, response)
+def instrument_brand_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_brand(uid)
     
 
 @app.get('/instrument/invest_calc')
-async def instrument_invest_calc_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_invest_calc(shim)
-    return _to_fastapi_response(result, response)
+def instrument_invest_calc_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    return instrument_invest_calc(uid)
     
 
 @app.get('/instrument/tech_analysis_graph')
-async def tech_analysis_graph_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = tech_analysis_graph(shim)
-    return _to_fastapi_response(result, response)
+def tech_analysis_graph_endpoint(request: Request):
+    uid = request.query_params.get('uid')
+    start_date = request.query_params.get('start_date')
+    end_date = request.query_params.get('end_date')
+    interval = request.query_params.get('interval')
+    return tech_analysis_graph(uid, start_date, end_date, interval)
     
 
 @app.get('/instrument/tag')
