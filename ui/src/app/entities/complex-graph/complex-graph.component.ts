@@ -1,12 +1,4 @@
-import {
-  input,
-  effect,
-  inject,
-  signal,
-  computed,
-  Component,
-  numberAttribute,
-} from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, signal, } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, debounceTime, map, of, switchMap, tap } from 'rxjs';
@@ -15,19 +7,19 @@ import * as echarts from 'echarts';
 import { ApiService } from '../../shared/services/api.service';
 import { GRAPH_COLORS } from '../../shared/const';
 import {
-  Operation,
   Instrument,
-  PredictionGraph,
-  InstrumentInList,
-  TechAnalysisResp,
-  TechAnalysisOptions,
-  PredictionGraphResp,
-  InstrumentHistoryPrice,
-  PredictionHistoryGraphResp,
   InstrumentForecastsGraphItem,
+  InstrumentHistoryPrice,
+  InstrumentInList,
+  Operation,
+  PredictionGraph,
+  PredictionGraphResp,
+  PredictionHistoryGraphResp,
+  TechAnalysisOptions,
+  TechAnalysisResp,
 } from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
-import { CandleInterval, ModelNameEnum } from '../../shared/enums';
+import { CandleInterval, ModelNameEnum, OperationTypeEnum } from '../../shared/enums';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
@@ -475,7 +467,7 @@ export class ComplexGraphComponent {
         tooltip: 2,
       },
       data: operations?.map(i => {
-        const isBuy = i.operation_type._name_ === 'OPERATION_TYPE_BUY'
+        const isBuy = i.operation_type === OperationTypeEnum.Buy
         const tooltip =
           `${isBuy ? 'Покупка' : 'Продажа'} ${i.quantity}шт. `
           + `По цене ${this.priceFormatPipe.transform(getPriceByQuotation(i.price))}. `

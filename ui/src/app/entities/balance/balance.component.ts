@@ -8,6 +8,7 @@ import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceByQuotationPipe } from '../../shared/pipes/price-by-quotation.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
+import { OperationTypeEnum } from '../../shared/enums';
 
 
 @Component({
@@ -30,6 +31,9 @@ export class BalanceComponent {
   potentialProfitPercent = signal<number | null>(null);
   avgPrice = signal<number | null>(null);
   currentPrice = signal<number | null>(null);
+
+  protected readonly operationTypeEnum = OperationTypeEnum;
+  protected readonly infinity = Infinity;
 
   private apiService = inject(ApiService);
   private destroyRef = inject(DestroyRef);
@@ -83,13 +87,13 @@ export class BalanceComponent {
     const openPositions: { quantity: number; costPerShare: number }[] = [];
 
     for (const o of operations) {
-      if (o.operation_type._name_ === 'OPERATION_TYPE_BUY') {
+      if (o.operation_type === OperationTypeEnum.Buy) {
         // При покупке добавляем новый лот.
         openPositions.push({
           quantity: o.quantity,
           costPerShare: getPriceByQuotation(o.price) ?? 0
         });
-      } else if (o.operation_type === 'OPERATION_TYPE_SELL') {
+      } else if (o.operation_type === OperationTypeEnum.Sell) {
         // При продаже уменьшаем лоты с начала (FIFO)
         let remainToSell = o.quantity;
 
@@ -155,5 +159,4 @@ export class BalanceComponent {
     return (profit / costBasis) * 100;
   }
 
-  protected readonly Infinity = Infinity;
 }

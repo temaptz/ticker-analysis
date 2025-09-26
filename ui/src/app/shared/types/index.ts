@@ -1,4 +1,4 @@
-import { ModelNameEnum } from '../enums';
+import { ModelNameEnum, OperationTypeEnum } from '../enums';
 
 export interface InstrumentInList extends Instrument {}
 
@@ -16,7 +16,6 @@ export type InstrumentHistoryPrice = any;
 export type Candle = any;
 export type Quotation = any;
 export type Fundamentals = any;
-export type Operation = any;
 export type InstrumentBrandResponse = any;
 
 export interface RecommendationResp {
@@ -189,4 +188,12 @@ export interface Forecast {
     consensus: Quotation;
     price_change_rel: Quotation;
   };
+}
+
+export interface Operation {
+  quantity: number;
+  price: Quotation;
+  payment: Quotation;
+  date: string;
+  operation_type: OperationTypeEnum;
 }

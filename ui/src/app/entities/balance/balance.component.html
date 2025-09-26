@@ -11,8 +11,8 @@
       class="small"
     >
     <span
-      [class.plus]="operation.operation_type._name_ === 'OPERATION_TYPE_BUY'"
-      [class.minus]="operation.operation_type._name_ === 'OPERATION_TYPE_SELL'"
+      [class.plus]="operation.operation_type === operationTypeEnum.Buy"
+      [class.minus]="operation.operation_type === operationTypeEnum.Sell"
     >
       {{ operation.quantity }} * {{ operation.price | priceByQuotation | priceFormat }} = {{ operation.payment | priceByQuotation : true | priceFormat }}
     </span>
@@ -30,7 +30,7 @@
     >
       <b>{{ potentialProfit() | priceFormat : 2 : true : true : true }}</b>
 
-      @if (potentialProfitPercent() !== Infinity) {
+      @if (potentialProfitPercent() !== infinity) {
         ({{ potentialProfitPercent() | priceFormat : 2 : false : false }}%)
       }
 

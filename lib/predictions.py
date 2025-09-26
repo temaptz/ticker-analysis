@@ -308,10 +308,15 @@ def get_prediction_history_graph(
             })
 
     # Sort each list of predictions by date
-    for key in result:
-        result[key].sort(key=lambda x: x['date'])
-
-    return result
+    return {k: sorted(
+        rebuild_points_by_interval(
+            points=v,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+        ),
+        key=lambda x: x['date']
+    ) for k, v in sorted(result.items())}
 
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
@@ -370,3 +375,79 @@ def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetim
 def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     return ta_2_1.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)
     # return consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)
+
+
+def rebuild_points_by_interval(
+        points: list[dict],
+        date_from: datetime.datetime,
+        date_to: datetime.datetime,
+        interval: CandleInterval,
+) -> list[dict]:
+    """
+    Группировка точек по интервалам [start, end) с усреднением.
+    Пропуск интервалов без данных.
+    """
+    try:
+        if not points or date_from >= date_to:
+            return []
+
+        # normalize bounds
+        df_utc = date_utils.convert_to_utc(date_from)
+        dt_utc = date_utils.convert_to_utc(date_to)
+
+        interval_sec = date_utils.get_interval_sec_by_candle(interval)
+
+        # buckets в UTC-aware
+        buckets: list[tuple[datetime.datetime, datetime.datetime]] = []
+        for start in date_utils.get_dates_interval_list(
+                date_from=df_utc,
+                date_to=dt_utc,
+                interval_seconds=interval_sec,
+        ):
+            s = date_utils.convert_to_utc(start)
+            buckets.append((s, s + datetime.timedelta(seconds=interval_sec)))
+
+        # normalize point dates to UTC-aware и упорядочим
+        pts = []
+        for p in points:
+            d = date_utils.convert_to_utc(p['date'])
+            np = dict(p)
+            np['date'] = d
+            pts.append(np)
+        pts.sort(key=lambda x: x['date'])
+
+        n = len(pts)
+        i = 0
+        out: list[dict] = []
+
+        for start, end in buckets:
+            while i < n and pts[i]['date'] < start:
+                i += 1
+
+            j = i
+            vs, vs_pct = [], []
+
+            while j < n and pts[j]['date'] < end:
+                p = pts[j]
+                if (v := p.get('prediction')) is not None:
+                    vs.append(v)
+                if (vp := p.get('prediction_percent')) is not None:
+                    vs_pct.append(vp)
+                j += 1
+
+            if vs or vs_pct:
+                # model_name оставим от последней точки интервала (если нужна единообразность — возьмите первый)
+                mdl = pts[j - 1].get('model_name') if j > i else None
+                out.append({
+                    'prediction': (sum(vs) / len(vs)) if vs else None,
+                    'prediction_percent': (sum(vs_pct) / len(vs_pct)) if vs_pct else None,
+                    'date': start,           # UTC-aware граница интервала
+                    'model_name': mdl,
+                })
+
+            i = j
+
+        return out
+    except Exception as e:
+        print('ERROR aggregate_points_by_interval', e)
+        return []

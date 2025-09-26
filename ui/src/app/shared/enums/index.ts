@@ -24,3 +24,8 @@ export enum ModelNameEnum {
   Ta_2_1 =  'ta_2_1',
   Consensus =  'consensus',
 }
+
+export enum OperationTypeEnum {
+  Buy = 15,
+  Sell = 22,
+}

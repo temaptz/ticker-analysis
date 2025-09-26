@@ -492,12 +492,13 @@ def instrument_prediction_graph_endpoint(request: Request):
 
 @app.get('/instrument/prediction_history_graph')
 def instrument_prediction_history_graph_endpoint(request: Request):
-    uid = request.query_params.get('uid')
-    date_from = request.query_params.get('date_from')
-    date_to = request.query_params.get('date_to')
-    interval = request.query_params.get('interval')
-    model_name = request.query_params.get('model_name')
-    return instrument_prediction_history_graph(uid, date_from, date_to, interval, model_name)
+    return instrument_prediction_history_graph(
+        uid=request.query_params.get('uid'),
+        date_from_str=request.query_params.get('date_from'),
+        date_to_str=request.query_params.get('date_to'),
+        interval_str=request.query_params.get('interval'),
+        model_name = request.query_params.get('model_name'),
+    )
     
 
 @app.get('/instrument/prediction')
