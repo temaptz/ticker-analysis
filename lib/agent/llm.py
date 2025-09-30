@@ -4,6 +4,10 @@ from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from lib import docker, agent
+from langchain_core.globals import set_debug, set_verbose
+
+set_debug(False)
+set_verbose(True)
 
 tools = [
     agent.agent_tools.get_instruments_list,
@@ -22,7 +26,8 @@ model_name = os.getenv('OLLAMA_MODEL_NAME')
 llm = ChatOllama(
     base_url=f'http://{'ollama' if docker.is_docker() else 'localhost'}:11434',
     model=model_name,
-    verbose=True, name='llm_ollama',
+    verbose=True,
+    name='llm_ollama',
     num_ctx=16384,
     temperature=0.01,
 )

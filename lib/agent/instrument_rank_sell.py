@@ -1,12 +1,10 @@
-import os
 from typing import TypedDict
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from pydantic import BaseModel, Field
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts, invest_calc
+from lib import instruments, users, agent, utils, db_2, logger, invest_calc
 
 
 class State(TypedDict, total=False):
@@ -46,7 +44,7 @@ def update_recommendations():
                     )
 
                     logger.log_info(
-                        message=f'Сохранена оценка продажи {i.name}\nОценка: {structured_response.rate}\nКомментарий: {structured_response.final_conclusion}\nПрошлая оценка: {previous_rate}',
+                        message=f'Сохранена оценка продажи {i.name}\nОценка: {structured_response.rate}\nПрошлая оценка: {previous_rate}\nКомментарий: {structured_response.final_conclusion}',
                         is_send_telegram=True,
                     )
 
@@ -149,10 +147,12 @@ def llm_price_prediction_rate(state: State):
         Ответ - Итоговый краткий вывод и итоговая оценка целое число от 0 до 100.
         '''
 
+        print('PRICE PREDICTION SELL PROMPT', prompt)
+
         try:
             if result := agent.llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content='''
+                        SystemMessage(content=agent.utils.trim_prompt('''
                         Ты аналитик фондового рынка эксперт по трендам и тенденциям прогнозов.
                         Твоя задача оценить привлекательность продажи актива по графику прогнозов изменения цены.
                         Используй прогнозы относительного изменения цены на горизонтах 3d,1w,2w,3w,1m,2m,3m,6m,1y.
@@ -162,9 +162,9 @@ def llm_price_prediction_rate(state: State):
                         Продажа выгодна в начале устойчивого тренда сильного отрицательного снижения.
                         -20% считается сильным снижением.
                         -1% считается незначительным снижением.
-                        '''),
-                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
-                        HumanMessage(content=prompt),
+                        ''')),
+                        HumanMessage(content=agent.utils.trim_prompt(agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid))),
+                        HumanMessage(content=agent.utils.trim_prompt(prompt)),
                     ],
                     config=agent.llm.config,
             ):

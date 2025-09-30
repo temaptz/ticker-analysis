@@ -10,7 +10,7 @@ import {
   Instrument,
   InstrumentForecastsGraphItem,
   InstrumentHistoryPrice,
-  InstrumentInList,
+  InstrumentInList, NewsGraphItem,
   Operation,
   PredictionGraph,
   PredictionGraphResp,
@@ -66,13 +66,15 @@ export class ComplexGraphComponent {
   isShowTa_2_PredictionsHistory = signal<boolean>(false);
   isShowTa_2_1_PredictionsHistory = signal<boolean>(false);
   isShowModelsGraph = signal<boolean>(false);
+  isShowForecastsGraph = signal<boolean>(false);
   isLoadedHistoryPrice = signal<boolean>(true);
   isLoadedPredictions = signal<boolean>(true);
   isLoadedOperations = signal<boolean>(true);
   isLoadedForecasts = signal<boolean>(true);
   isLoadedTechAnalysis = signal<boolean>(true);
   isLoadedPredictionsHistory = signal<boolean>(true);
-  isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis() && this.isLoadedPredictionsHistory()));
+  isLoadedNews = signal<boolean>(true);
+  isLoaded = computed<boolean>(() => (this.isLoadedHistoryPrice() && this.isLoadedPredictions() && this.isLoadedOperations() && this.isLoadedForecasts() && this.isLoadedTechAnalysis() && this.isLoadedPredictionsHistory() && this.isLoadedNews()));
 
   techAnalysisOptions = signal<TechAnalysisOptions>({});
 
@@ -156,7 +158,7 @@ export class ComplexGraphComponent {
       toObservable(this.daysHistory),
       toObservable(this.daysFuture),
       toObservable(this.historyInterval),
-      toObservable(this.isShowForecasts),
+      toObservable(this.isShowForecastsGraph),
     ])
       .pipe(
         debounceTime(0),
@@ -255,6 +257,29 @@ export class ComplexGraphComponent {
           return result;
         }),
         tap(() => this.isLoadedPredictionsHistory.set(true)),
+      )
+  );
+
+  newsResp = toSignal<NewsGraphItem[]>(
+    combineLatest([
+      toObservable(this.daysHistory),
+      toObservable(this.daysFuture),
+      toObservable(this.historyInterval),
+      toObservable(this.isShowNewsGraph),
+    ])
+      .pipe(
+        debounceTime(0),
+        tap(() => this.isLoadedNews.set(false)),
+        switchMap(([historyDays, futureDays, interval, isShowNewsGraph]) => isShowNewsGraph
+          ? this.appService.getInstrumentNewsGraph(
+            this.instrumentUid(),
+            startOfDay(subDays(new Date(), historyDays)),
+            endOfDay(addDays(new Date(), futureDays)),
+            interval,
+          )
+          : of([])
+        ),
+        tap(() => this.isLoadedNews.set(true)),
       )
   );
 
@@ -669,6 +694,33 @@ export class ComplexGraphComponent {
     });
   });
 
+  seriesNews = computed<echarts.SeriesOption>(() => {
+    const graphResp = this.newsResp();
+
+    return {
+      name: `influence_score`,
+      type: 'line',
+      showSymbol: true,
+      symbol: 'circle',
+      symbolSize: 2.5,
+      yAxisIndex: 1,
+      itemStyle: {
+        color: GRAPH_COLORS.influence_score,
+      },
+      lineStyle: {
+        width: 2,
+      },
+      encode: {
+        x: 0,
+        y: 1,
+      },
+      data: graphResp?.map(i => [
+        parseJSON(i.date),
+        i.influence_score,
+      ]) ?? []
+    } as echarts.SeriesOption;
+  });
+
   option = computed<echarts.EChartsOption>(() => {
     const series: echarts.SeriesOption[] = [];
 
@@ -716,11 +768,49 @@ export class ComplexGraphComponent {
       series.push(...this.seriesPredictionsHistory());
     }
 
+    if (this.isShowNewsGraph() && this.isLoadedNews()) {
+      series.push(this.seriesNews());
+    }
+
     return {
       ...ECHARTS_MAIN_OPTIONS,
       legend: {
         show: this.isShowLegend(),
       },
+      grid: {
+        ...ECHARTS_MAIN_OPTIONS.grid,
+        right: '20%' // Add some space for the second Y-axis
+      },
+      yAxis: [
+        // Primary Y-axis (default for all other series)
+        {
+          type: 'value',
+          scale: true,
+          axisLabel: {
+            formatter: (value: number) => this.priceFormatPipe.transform(value)
+          },
+          splitLine: {
+            lineStyle: {
+              type: 'dashed'
+            }
+          }
+        },
+        // Secondary Y-axis for Influence Score
+        {
+          type: 'value',
+          scale: true,
+          name: 'Influence Score',
+          nameLocation: 'middle',
+          nameGap: 50,
+          axisLabel: {
+            formatter: (value: number) => value.toFixed(2)
+          },
+          splitLine: {
+            show: false
+          },
+          position: 'right'
+        }
+      ],
       series,
     }
   });
@@ -744,6 +834,7 @@ export class ComplexGraphComponent {
       this.isShowTa_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
       this.isShowTa_2_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
       this.isShowModelsGraph.set(this.isShowModelsGraphInput());
+      this.isShowForecastsGraph.set(this.isShowForecasts());
     });
   }
 
@@ -786,6 +877,10 @@ export class ComplexGraphComponent {
 
     if (options.isShowModels !== this.isShowModelsGraph()) {
       this.isShowModelsGraph.set(options.isShowModels);
+    }
+
+    if (options.isShowForecasts !== this.isShowForecastsGraph()) {
+      this.isShowForecastsGraph.set(options.isShowForecasts);
     }
   }
 

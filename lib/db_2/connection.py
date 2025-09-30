@@ -9,7 +9,14 @@ def get_engine(retries=50, delay=1):
 
     for attempt in range(1, retries + 1):
         try:
-            engine = sqlalchemy.create_engine(db_url)
+            engine = sqlalchemy.create_engine(
+                db_url,
+                pool_pre_ping=True,
+                pool_recycle=280,
+                pool_size=2,
+                max_overflow=5,
+                pool_timeout=30,
+            )
             with engine.connect():
                 return engine
         except sqlalchemy.exc.OperationalError as e:

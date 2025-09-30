@@ -10,18 +10,18 @@
   </div>
 }
 
-@if (isShowNewsGraph()) {
-  <div class="news-graph">
-    <news-graph
-      [instrumentUid]="instrumentUid()"
-      [interval]="historyInterval()"
-      [historyDaysCount]="daysHistory()"
-      [futureDaysCount]="daysFuture()"
-      [width]="width()"
-      height="300px"
-    ></news-graph>
-  </div>
-}
+<!--@if (isShowNewsGraph()) {-->
+<!--  <div class="news-graph">-->
+<!--    <news-graph-->
+<!--      [instrumentUid]="instrumentUid()"-->
+<!--      [interval]="historyInterval()"-->
+<!--      [historyDaysCount]="daysHistory()"-->
+<!--      [futureDaysCount]="daysFuture()"-->
+<!--      [width]="width()"-->
+<!--      height="300px"-->
+<!--    ></news-graph>-->
+<!--  </div>-->
+<!--}-->
 
 @if (isShowControl()) {
   <div class="control">
@@ -38,6 +38,7 @@
       [isShowTa_2_PredictionsHistory]="isShowTa_2_PredictionsHistory()"
       [isShowTa_2_1_PredictionsHistory]="isShowTa_2_1_PredictionsHistory()"
       [isShowModels]="isShowModelsGraph()"
+      [isShowForecasts]="isShowForecastsGraph()"
       (onChange)="handleChangeControl($event)"
       (onChangeTechAnalysis)="handleChangeTechAnalysis($event)"
     ></complex-graph-control>

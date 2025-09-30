@@ -1,6 +1,6 @@
 import datetime
 
-from lib import instruments, fundamentals, predictions, news, invest_calc, users, utils
+from lib import instruments, fundamentals, predictions, news, invest_calc, users, utils, serializer
 
 
 def get_system_invest_prompt() -> str:
@@ -71,47 +71,50 @@ def get_fundamental_prompt(instrument_uid: str) -> str:
                 result = f'''
                 # ТЕКУЩИЕ АКТУАЛЬНЫЕ ФУНДАМЕНТАЛЬНЫЕ ПОКАЗАТЕЛИ АКТИВА
                 
-                [
-                    {{
-                        "date": "{datetime.datetime.now().strftime('%Y-%m-%d')}",
-                        "date_description": "Текущие фундаментальные показатели",
-                        "currency": "{f.currency}",
-                        "revenue_ttm": "{f.revenue_ttm}",
-                        "ebitda_ttm": "{f.ebitda_ttm}",
-                        "market_capitalization": "{f.market_capitalization}",
-                        "total_debt_mrq": "{f.total_debt_mrq}",
-                        "eps_ttm": "{f.eps_ttm}",
-                        "pe_ratio_ttm": "{f.pe_ratio_ttm}",
-                        "ev_to_ebitda_mrq": "{f.ev_to_ebitda_mrq}",
-                        "dividend_payout_ratio_fy": "{f.dividend_payout_ratio_fy}",
-                    }},
-                    {{
-                        "date": "{(datetime.datetime.now() - datetime.timedelta(days=30 * 6)).strftime('%Y-%m-%d')}",
-                        "date_description": "Фундаментальные показатели 6 месяцев назад",
-                        "currency": "{getattr(f_6_months, 'currency')}",
-                        "revenue_ttm": "{getattr(f_6_months, 'revenue_ttm')}",
-                        "ebitda_ttm": "{getattr(f_6_months, 'ebitda_ttm')}",
-                        "market_capitalization": "{getattr(f_6_months, 'market_capitalization')}",
-                        "total_debt_mrq": "{getattr(f_6_months, 'total_debt_mrq')}",
-                        "eps_ttm": "{getattr(f_6_months, 'eps_ttm')}",
-                        "pe_ratio_ttm": "{getattr(f_6_months, 'pe_ratio_ttm')}",
-                        "ev_to_ebitda_mrq": "{getattr(f_6_months, 'ev_to_ebitda_mrq')}",
-                        "dividend_payout_ratio_fy": "{getattr(f_6_months, 'dividend_payout_ratio_fy')}",
-                    }},
-                    {{
-                        "date": "{(datetime.datetime.now() - datetime.timedelta(days=30 * 12)).strftime('%Y-%m-%d')}",
-                        "date_description": "Фундаментальные показатели 12 месяцев назад",
-                        "currency": "{getattr(f_12_months, 'currency')}",
-                        "revenue_ttm": "{getattr(f_12_months, 'revenue_ttm')}",
-                        "ebitda_ttm": "{getattr(f_12_months, 'ebitda_ttm')}",
-                        "market_capitalization": "{getattr(f_12_months, 'market_capitalization')}",
-                        "total_debt_mrq": "{getattr(f_12_months, 'total_debt_mrq')}",
-                        "eps_ttm": "{getattr(f_12_months, 'eps_ttm')}",
-                        "pe_ratio_ttm": "{getattr(f_12_months, 'pe_ratio_ttm')}",
-                        "ev_to_ebitda_mrq": "{getattr(f_12_months, 'ev_to_ebitda_mrq')}",
-                        "dividend_payout_ratio_fy": "{getattr(f_12_months, 'dividend_payout_ratio_fy')}",
-                    }}
-                ]
+                {serializer.to_json(
+                    obj=[
+                        {
+                            'date': datetime.datetime.now().strftime('%Y-%m-%d'),
+                            'date_description': 'Текущие фундаментальные показатели',
+                            'currency': f.currency,
+                            'revenue_ttm': f.revenue_ttm,
+                            'ebitda_ttm': f.ebitda_ttm,
+                            'market_capitalization': f.market_capitalization,
+                            'total_debt_mrq': f.total_debt_mrq,
+                            'eps_ttm': f.eps_ttm,
+                            'pe_ratio_ttm': f.pe_ratio_ttm,
+                            'ev_to_ebitda_mrq': f.ev_to_ebitda_mrq,
+                            'dividend_payout_ratio_fy': f.dividend_payout_ratio_fy,
+                        },
+                        {
+                            'date': (datetime.datetime.now() - datetime.timedelta(days=30 * 6)).strftime('%Y-%m-%d'),
+                            'date_description': 'Фундаментальные показатели 6 месяцев назад',
+                            'currency': getattr(f_6_months, 'currency'),
+                            'revenue_ttm': getattr(f_6_months, 'revenue_ttm'),
+                            'ebitda_ttm': getattr(f_6_months, 'ebitda_ttm'),
+                            'market_capitalization': getattr(f_6_months, 'market_capitalization'),
+                            'total_debt_mrq': getattr(f_6_months, 'total_debt_mrq'),
+                            'eps_ttm': getattr(f_6_months, 'eps_ttm'),
+                            'pe_ratio_ttm': getattr(f_6_months, 'pe_ratio_ttm'),
+                            'ev_to_ebitda_mrq': getattr(f_6_months, 'ev_to_ebitda_mrq'),
+                            'dividend_payout_ratio_fy': getattr(f_6_months, 'dividend_payout_ratio_fy'),
+                        },
+                        {
+                            'date': (datetime.datetime.now() - datetime.timedelta(days=30 * 12)).strftime('%Y-%m-%d'),
+                            'date_description': 'Фундаментальные показатели 12 месяцев назад',
+                            'currency': getattr(f_12_months, 'currency'),
+                            'revenue_ttm': getattr(f_12_months, 'revenue_ttm'),
+                            'ebitda_ttm': getattr(f_12_months, 'ebitda_ttm'),
+                            'market_capitalization': getattr(f_12_months, 'market_capitalization'),
+                            'total_debt_mrq': getattr(f_12_months, 'total_debt_mrq'),
+                            'eps_ttm': getattr(f_12_months, 'eps_ttm'),
+                            'pe_ratio_ttm': getattr(f_12_months, 'pe_ratio_ttm'),
+                            'ev_to_ebitda_mrq': getattr(f_12_months, 'ev_to_ebitda_mrq'),
+                            'dividend_payout_ratio_fy': getattr(f_12_months, 'dividend_payout_ratio_fy'),
+                        },
+                    ],
+                    ensure_ascii=False,
+                )}
                 
                 # РАСШИФРОВКА
                 
@@ -181,62 +184,61 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
     try:
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         current_price = instruments.get_instrument_last_price_by_uid(uid=instrument_uid)
-        prediction_3_days = utils.round_float(predictions.get_prediction(
+        prediction_3_days = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=3),
-            avg_days=1,
+            avg_days=3,
         ), 4)
-        prediction_week = utils.round_float(predictions.get_prediction(
+        prediction_week = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=7),
             avg_days=3,
         ), 4)
-        prediction_2_weeks = utils.round_float(predictions.get_prediction(
+        prediction_2_weeks = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=14),
             avg_days=3,
         ), 4)
-        prediction_3_weeks = utils.round_float(predictions.get_prediction(
+        prediction_3_weeks = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=21),
             avg_days=7,
         ), 4)
-        prediction_month = utils.round_float(predictions.get_prediction(
+        prediction_month = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=30),
             avg_days=7,
         ), 4)
-        prediction_2_months = utils.round_float(predictions.get_prediction(
+        prediction_2_months = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=60),
+            date_target=now + datetime.timedelta(days=30*2),
             avg_days=14,
         ), 4)
-        prediction_3_months = utils.round_float(predictions.get_prediction(
+        prediction_3_months = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=90),
+            date_target=now + datetime.timedelta(days=30*3),
             avg_days=14,
         ), 4)
-        prediction_6_months = utils.round_float(predictions.get_prediction(
+        prediction_4_months = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
-            date_target=now + datetime.timedelta(days=180),
+            date_target=now + datetime.timedelta(days=30*4),
+            avg_days=14,
+        ), 4)
+        prediction_5_months = utils.round_float(predictions.get_prediction_cache(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=30*5),
+            avg_days=14,
+        ), 4)
+        prediction_6_months = utils.round_float(predictions.get_prediction_cache(
+            instrument_uid=instrument_uid,
+            date_target=now + datetime.timedelta(days=30*6),
             avg_days=30,
         ), 4)
-        prediction_year = utils.round_float(predictions.get_prediction(
+        prediction_year = utils.round_float(predictions.get_prediction_cache(
             instrument_uid=instrument_uid,
             date_target=now + datetime.timedelta(days=365),
             avg_days=30,
         ), 4)
-
-        print('PRICE PREDICTION PROMPT DATA current_price', current_price)
-        print('PRICE PREDICTION PROMPT DATA prediction_3_days', prediction_3_days)
-        print('PRICE PREDICTION PROMPT DATA prediction_week', prediction_week)
-        print('PRICE PREDICTION PROMPT DATA prediction_2_weeks', prediction_2_weeks)
-        print('PRICE PREDICTION PROMPT DATA prediction_3_weeks', prediction_3_weeks)
-        print('PRICE PREDICTION PROMPT DATA prediction_month', prediction_month)
-        print('PRICE PREDICTION PROMPT DATA prediction_2_months', prediction_2_months)
-        print('PRICE PREDICTION PROMPT DATA prediction_3_months', prediction_3_months)
-        print('PRICE PREDICTION PROMPT DATA prediction_6_months', prediction_6_months)
-        print('PRICE PREDICTION PROMPT DATA prediction_year', prediction_year)
 
         if current_price and (
                 prediction_3_days
@@ -246,6 +248,8 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
                 or prediction_month
                 or prediction_2_months
                 or prediction_3_months
+                or prediction_4_months
+                or prediction_5_months
                 or prediction_6_months
                 or prediction_year
         ):
@@ -256,35 +260,45 @@ def get_price_prediction_prompt(instrument_uid: str) -> str:
             
             # ПРОГНОЗ ОТНОСИТЕЛЬНОГО ИЗМЕНЕНИЯ ЦЕНЫ АКТИВА - price_prediction
             
-            {{
-                "3_days": {{
-                    "price_prediction": "{'+' if prediction_3_days > 0 else ''}{utils.round_float(prediction_3_days * 100, 2)}%",
-                }},
-                "1_week": {{
-                    "price_prediction": "{'+' if prediction_week > 0 else ''}{utils.round_float(prediction_week * 100, 2)}%",
-                }},
-                "2_weeks": {{
-                    "price_prediction": "{'+' if prediction_2_weeks > 0 else ''}{utils.round_float(prediction_2_weeks * 100, 2)}%",
-                }},
-                "3_weeks": {{
-                    "price_prediction": "{'+' if prediction_3_weeks > 0 else ''}{utils.round_float(prediction_3_weeks * 100, 2)}%",
-                }},
-                "1_month": {{
-                    "price_prediction": "{'+' if prediction_month > 0 else ''}{utils.round_float(prediction_month * 100, 2)}%",
-                }},
-                "2_months": {{
-                    "price_prediction": "{'+' if prediction_2_months > 0 else ''}{utils.round_float(prediction_2_months * 100, 2)}%",
-                }},
-                "3_months": {{
-                    "price_prediction": "{'+' if prediction_3_months > 0 else ''}{utils.round_float(prediction_3_months, 5) * 100}%",
-                }},
-                "6_months": {{
-                    "price_prediction": "{'+' if prediction_6_months > 0 else ''}{utils.round_float(prediction_6_months, 5) * 100}%",
-                }},
-                "1_year": {{
-                    "price_prediction": "{'+' if prediction_year > 0 else ''}{utils.round_float(prediction_year, 5) * 100}%",
-                }}
-            }}
+            {serializer.to_json(
+                obj={
+                    '3_days': {
+                        'price_prediction': ('+' if prediction_3_days > 0 else '')+str(utils.round_float(prediction_3_days * 100, 2))+'%',
+                    },
+                    '1_week': {
+                        'price_prediction': ('+' if prediction_week > 0 else '')+str(utils.round_float(prediction_week * 100, 2))+'%',
+                    },
+                    '2_weeks': {
+                        'price_prediction': ('+' if prediction_2_weeks > 0 else '')+str(utils.round_float(prediction_2_weeks * 100, 2))+'%',
+                    },
+                    '3_weeks': {
+                        'price_prediction': ('+' if prediction_3_weeks > 0 else '')+str(utils.round_float(prediction_3_weeks * 100, 2))+'%',
+                    },
+                    '1_month': {
+                        'price_prediction': ('+' if prediction_month > 0 else '')+str(utils.round_float(prediction_month * 100, 2))+'%',
+                    },
+                    '2_months': {
+                        'price_prediction': ('+' if prediction_2_months > 0 else '')+str(utils.round_float(prediction_2_months * 100, 2))+'%',
+                    },
+                    '3_months': {
+                        'price_prediction': ('+' if prediction_3_months > 0 else '')+str(utils.round_float(prediction_3_months * 100, 2))+'%',
+                    },
+                    '4_months': {
+                        'price_prediction': ('+' if prediction_4_months > 0 else '')+str(utils.round_float(prediction_4_months * 100, 2))+'%',
+                    },
+                    '5_months': {
+                        'price_prediction': ('+' if prediction_5_months > 0 else '')+str(utils.round_float(prediction_5_months * 100, 2))+'%',
+                    },
+                    '6_months': {
+                        'price_prediction': ('+' if prediction_6_months > 0 else '')+str(utils.round_float(prediction_6_months * 100, 2))+'%',
+                    },
+                    '1_year': {
+                        'price_prediction': ('+' if prediction_year > 0 else '')+str(utils.round_float(prediction_year * 100, 2))+'%',
+                    },
+                },
+                ensure_ascii=False,
+            )}
+            
             
             # ОПРЕДЕЛЕНИЯ
             
@@ -427,33 +441,40 @@ def get_news_prompt(instrument_uid: str, is_for_sell=False) -> str:
             start_date=now - datetime.timedelta(days=28),
             end_date=now - datetime.timedelta(days=22),
         )
-
-        print('NEWS PROMPT DATA news_rate_week_1', news_rate_week_0)
-        print('NEWS PROMPT DATA news_rate_week_1', news_rate_week_1)
-        print('NEWS PROMPT DATA news_rate_week_2', news_rate_week_2)
-        print('NEWS PROMPT DATA news_rate_week_3', news_rate_week_3)
+        news_rate_week_4 = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=now - datetime.timedelta(days=35),
+            end_date=now - datetime.timedelta(days=29),
+        )
 
         if news_rate_week_0 or news_rate_week_1 or news_rate_week_2 or news_rate_week_3:
             result = f'''
             # РЕЙТИНГ НОВОСТНОГО ФОНА
-            {{
-                "d0_7": {{
-                    "influence_score": {news_rate_week_0},
-                    "description": "Рейтинг новостного фона за период от 0 до 7 дней до текущей даты"
-                }},
-                "d8_14": {{
-                    "influence_score": {news_rate_week_1},
-                    "description": "Рейтинг новостного фона за период от 8 до 14 дней до текущей даты"
-                }},
-                "d15_21": {{
-                    "influence_score": {news_rate_week_2},
-                    "description": "Рейтинг новостного фона за период от 15 до 21 дней до текущей даты"
-                }},
-                "d22_28": {{
-                    "influence_score": {news_rate_week_3},
-                    "description": "Рейтинг новостного фона за период от 22 до 28 дней до текущей даты"
-                }}
-            }}
+            {serializer.to_json(
+                obj={
+                    'day_0_7': {
+                        'influence_score': news_rate_week_0,
+                        'description': 'Рейтинг новостного фона за период от 0 до 7 дней до текущей даты'
+                    },
+                    'day_8_14': {
+                        'influence_score': news_rate_week_1,
+                        'description': 'Рейтинг новостного фона за период от 8 до 14 дней до текущей даты'
+                    },
+                    'day_15_21': {
+                        'influence_score': news_rate_week_2,
+                        'description': 'Рейтинг новостного фона за период от 15 до 21 дней до текущей даты'
+                    },
+                    'day_22_28': {
+                        'influence_score': news_rate_week_3,
+                        'description': 'Рейтинг новостного фона за период от 22 до 28 дней до текущей даты'
+                    },
+                    'day_29_35': {
+                        'influence_score': news_rate_week_4,
+                        'description': 'Рейтинг новостного фона за период от 29 до 35 дней до текущей даты'
+                    }
+                },
+                ensure_ascii=False,
+            )}
             
             
             # ОПРЕДЕЛЕНИЯ
@@ -524,14 +545,18 @@ def get_profit_calc_prompt(instrument_uid: str) -> str:
             # ПОТЕНЦИАЛЬНАЯ ВЫГОДА ОТ ПРОДАЖИ АКТИВА
             Текущие актуальные показатели
             
-            {{
-                "current_price": {calc['current_price'] or 'Unknown'},
-                "balance": {calc['balance'] or 'Unknown'},
-                "market_value": {calc['market_value'] or 'Unknown'},
-                "potential_profit": {calc['potential_profit'] or 'Unknown'},
-                "potential_profit_percent": {calc['potential_profit_percent'] or 'Unknown'},
-                "avg_price": {calc['avg_price'] or 'Unknown'}
-            }}
+            {serializer.to_json(
+                obj={
+                    'current_price': calc['current_price'] or 'Unknown',
+                    'balance': calc['balance'] or 'Unknown',
+                    'market_value': calc['market_value'] or 'Unknown',
+                    'potential_profit': calc['potential_profit'] or 'Unknown',
+                    'potential_profit_percent': calc['potential_profit_percent'] or 'Unknown',
+                    'avg_price': calc['avg_price'] or 'Unknown'
+                },
+                ensure_ascii=False,
+            )}
+            
             
             # РАСШИФРОВКА
             

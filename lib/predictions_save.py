@@ -83,12 +83,11 @@ def save_predictions(model_name: str):
                 date_to=date_to,
                 interval_seconds=3600 * 24 * 7
         ):
-            prediction = predictions.get_prediction(
+            prediction = predictions.get_prediction_cache(
                 instrument_uid=instrument.uid,
                 date_target=date,
                 model_name=model_name,
-                avg_days=3,
-                is_ignore_cache=True,
+                avg_days=5,
             )
 
             if prediction is not None:

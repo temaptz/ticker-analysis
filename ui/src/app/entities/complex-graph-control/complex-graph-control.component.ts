@@ -26,6 +26,7 @@ export interface ComplexGraphControlOptions {
   isShowTa_2_PredictionsHistory: boolean,
   isShowTa_2_1_PredictionsHistory: boolean,
   isShowModels: boolean
+  isShowForecasts: boolean
 }
 
 
@@ -50,6 +51,7 @@ export class ComplexGraphControlComponent {
   isShowTa_2_PredictionsHistory = input(false, {transform: booleanAttribute});
   isShowTa_2_1_PredictionsHistory = input(false, {transform: booleanAttribute});
   isShowModels = input(false, {transform: booleanAttribute});
+  isShowForecasts = input(false, {transform: booleanAttribute});
 
   onChange = output<ComplexGraphControlOptions>();
   onChangeTechAnalysis = output<TechAnalysisOptions>();
@@ -66,6 +68,7 @@ export class ComplexGraphControlComponent {
     isShowTa_2_PredictionsHistory: new FormControl<boolean>(this.isShowTa_2_PredictionsHistory()),
     isShowTa_2_1_PredictionsHistory: new FormControl<boolean>(this.isShowTa_2_1_PredictionsHistory()),
     isShowModels: new FormControl<boolean>(this.isShowModels()),
+    isShowForecasts: new FormControl<boolean>(this.isShowForecasts()),
   });
 
   protected readonly candleInterval = CandleInterval;
@@ -86,6 +89,7 @@ export class ComplexGraphControlComponent {
         isShowTa_2_PredictionsHistory:  this.isShowTa_2_PredictionsHistory(),
         isShowTa_2_1_PredictionsHistory:  this.isShowTa_2_1_PredictionsHistory(),
         isShowModels: this.isShowModels(),
+        isShowForecasts: this.isShowForecasts(),
       }, { emitEvent: false });
     });
 
@@ -102,6 +106,7 @@ export class ComplexGraphControlComponent {
         isShowTa_2_PredictionsHistory: !!value.isShowTa_2_PredictionsHistory,
         isShowTa_2_1_PredictionsHistory: !!value.isShowTa_2_1_PredictionsHistory,
         isShowModels: !!value.isShowModels,
+        isShowForecasts: !!value.isShowForecasts,
       }));
   }
 

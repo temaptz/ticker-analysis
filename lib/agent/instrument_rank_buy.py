@@ -1,13 +1,11 @@
-import os
 from typing import TypedDict
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from pydantic import BaseModel
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, utils, db_2, logger, forecasts
-from lib.agent import llm
+
+from lib import instruments, users, agent, db_2, logger
 
 
 class State(TypedDict, total=False):
@@ -36,7 +34,7 @@ def update_recommendations():
                 result = graph_buy.invoke(
                     input=input_state,
                     debug=True,
-                    config=llm.config,
+                    config=agent.llm.config,
                 )
 
                 if structured_response := result.get('structured_response', None):
@@ -50,7 +48,7 @@ def update_recommendations():
                         )
 
                         logger.log_info(
-                            message=f'Сохранена оценка покупки {i.name}\nОценка: {structured_response.rate}\nКомментарий: {structured_response.final_conclusion}\nПрошлая оценка: {previous_rate}',
+                            message=f'Сохранена оценка покупки {i.name}\nОценка: {structured_response.rate}\nПрошлая оценка: {previous_rate}\nКомментарий: {structured_response.final_conclusion}',
                             is_send_telegram=True,
                         )
 
@@ -114,20 +112,20 @@ def llm_fundamental_rate(state: State):
         '''
 
         try:
-            if result := llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
+            if result := agent.llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content='''
+                        SystemMessage(content=agent.utils.trim_prompt('''
                         Ты аналитик фондового рынка специалист по инвестициям. 
                         Твоя задача оценивать финансовую отчетность компании с точки зрения перспективы роста и как следствие привлекательности покупки.
                         Учитывай динамику изменения финансовых индикаторов.
                         Не выдумывай данные. 
                         Unknown/None отсутствующие данные пропускай и учитывай штрафом.
                         Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
-                        '''),
-                        HumanMessage(content=agent.prompts.get_fundamental_prompt(instrument_uid=uid)),
-                        HumanMessage(content=prompt),
+                        ''')),
+                        HumanMessage(content=agent.utils.trim_prompt(agent.prompts.get_fundamental_prompt(instrument_uid=uid))),
+                        HumanMessage(content=agent.utils.trim_prompt(prompt)),
                     ],
-                    config=llm.config
+                    config=agent.llm.config,
             ):
                 if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM FUNDAMENTAL RATE IS: {result.rate}')
@@ -168,9 +166,9 @@ def llm_price_prediction_rate(state: State):
         '''
 
         try:
-            if result := llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
+            if result := agent.llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content='''
+                        SystemMessage(content=agent.utils.trim_prompt('''
                         Ты аналитик фондового рынка эксперт по трендам и тенденциям прогнозов.
                         Твоя задача оценить привлекательность покупки актива по графику прогнозов изменения цены.
                         Используй прогнозы относительного изменения цены на горизонтах 3d,1w,2w,3w,1m,2m,3m,6m,1y. 
@@ -180,11 +178,11 @@ def llm_price_prediction_rate(state: State):
                         Покупка выгодна в начале устойчивого положительного тренда высокого роста.
                         +20% считается высоким ростом.
                         +1% считается незначительным ростом.
-                        '''),
-                        HumanMessage(content=agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid)),
-                        HumanMessage(content=prompt),
+                        ''')),
+                        HumanMessage(content=agent.utils.trim_prompt(agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid))),
+                        HumanMessage(content=agent.utils.trim_prompt(prompt)),
                     ],
-                    config=llm.config,
+                    config=agent.llm.config,
             ):
                 if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM PRICE PREDICTION RATE IS: {result.rate}')
@@ -227,19 +225,19 @@ def llm_news_rate(state: State):
         '''
 
         try:
-            if result := llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
+            if result := agent.llm.llm.with_structured_output(agent.models.RatePercentWithConclusion).invoke(
                     [
-                        SystemMessage(content='''
+                        SystemMessage(content=agent.utils.trim_prompt('''
                         Ты новостной аналитик эксперт по финансам.
                         Твоя задача оценивать насколько новостной фон способствует перспективе роста акций и следовательно выгодной покупке.
                         Не выдумывай данные. 
                         Unknown/None отсутствующие данные пропускай и учитывай штрафом.
                         Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
-                        '''),
-                        HumanMessage(content=agent.prompts.get_news_prompt(instrument_uid=instrument_uid)),
-                        HumanMessage(content=prompt),
+                        ''')),
+                        HumanMessage(content=agent.utils.trim_prompt(agent.prompts.get_news_prompt(instrument_uid=instrument_uid))),
+                        HumanMessage(content=agent.utils.trim_prompt(prompt)),
                     ],
-                    config=llm.config
+                    config=agent.llm.config
             ):
                 if result and result.rate is not None and 0 <= result.rate <= 100:
                     logger.log_info(message=f'LLM NEWS RATE IS: {result.rate}')

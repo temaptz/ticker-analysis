@@ -84,16 +84,17 @@ def get_rated_news_graph(
         interval: CandleInterval,
 ):
     response = []
+    interval_sec = date_utils.get_interval_sec_by_candle(interval=interval)
 
     for date in date_utils.get_dates_interval_list(
         date_from=start_date,
         date_to=end_date,
-        interval_seconds=date_utils.get_interval_sec_by_candle(interval=interval)
+        interval_seconds=interval_sec
     ):
         news_list = get_news_by_instrument_uid(
             instrument_uid=instrument_uid,
             start_date=date_utils.get_day_start(date),
-            end_date=date_utils.get_day_end(date),
+            end_date=date_utils.get_day_end(date + datetime.timedelta(seconds=interval_sec)),
         )
         news_ids_list = [n.news_uid for n in news_list or []]
         influence_score = news_rate_v2.get_news_total_influence_score(

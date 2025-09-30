@@ -56,12 +56,14 @@ export class PredictionDynamicComponent {
   private predictionDates = [
     setHours(addDays(startOfDay(new Date()), 3), 12),
     setHours(addDays(startOfDay(new Date()), 7), 12),
-    setHours(addDays(startOfDay(new Date()), 14), 12),
-    setHours(addDays(startOfDay(new Date()), 21), 12),
+    setHours(addDays(startOfDay(new Date()), 7*2), 12),
+    setHours(addDays(startOfDay(new Date()), 7*3), 12),
     setHours(addDays(startOfDay(new Date()), 30), 12),
-    setHours(addDays(startOfDay(new Date()), 60), 12),
-    setHours(addDays(startOfDay(new Date()), 90), 12),
-    setHours(addDays(startOfDay(new Date()), 180), 12),
+    setHours(addDays(startOfDay(new Date()), 30*2), 12),
+    setHours(addDays(startOfDay(new Date()), 30*3), 12),
+    setHours(addDays(startOfDay(new Date()), 30*4), 12),
+    setHours(addDays(startOfDay(new Date()), 30*5), 12),
+    setHours(addDays(startOfDay(new Date()), 30*6), 12),
     setHours(addDays(startOfDay(new Date()), 365), 12),
   ]
 

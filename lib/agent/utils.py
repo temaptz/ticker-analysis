@@ -1,9 +1,9 @@
+import re
 from langchain_core.runnables.graph import MermaidDrawMethod
 from io import BytesIO
 from PIL import Image
-from lib import serializer, db_2
+from lib import serializer, db_2, agent, logger
 from rich import print_json
-from lib.agent import models
 
 
 def draw_graph(graph):
@@ -24,7 +24,7 @@ def output_json(obj):
     print_json(serializer.to_json(obj))
 
 
-def get_last_message_content(state: models.State) -> str or None:
+def get_last_message_content(state: agent.models.State) -> str or None:
     if messages := state.get('messages', []):
         if len(messages) > 0 and messages[-1] and messages[-1].content:
             return messages[-1].content
@@ -53,3 +53,14 @@ def get_sell_conclusion(instrument_uid: str) -> int or None:
         if tag.tag_value:
             return tag.tag_value
     return None
+
+
+def trim_prompt(prompt: str) -> str:
+    try:
+        s = prompt.replace('\\n', ' ').replace('\r\n', ' ').replace('\n', ' ')
+        # сжать любые повторяющиеся пробельные символы в один пробел
+        s = re.sub(r'\s+', ' ', s)
+        return s.strip()
+    except Exception as e:
+        logger.log_error(method_name='trim_prompt', error=e)
+    return ''

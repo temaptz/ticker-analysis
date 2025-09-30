@@ -232,11 +232,11 @@ def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str])
     if uid and date:
         days = (date - datetime.datetime.now(tz=datetime.timezone.utc)).days
         period_days = 3
-        if days >= 21:
+        if days >= 7*3:
             period_days = 7
-        if days >= 60:
+        if days >= 30*2:
             period_days = 14
-        if days >= 180:
+        if days >= 30*6:
             period_days = 30
         consensus = predictions.get_prediction_cache(
             instrument_uid=uid,
@@ -533,15 +533,16 @@ def instrument_news_list_rated_endpoint(request: Request):
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
     return instrument_news_list_rated(uid, start_date, end_date)
-    
+
 
 @app.get('/instrument/news_graph')
 def instrument_news_graph_endpoint(request: Request):
-    uid = request.query_params.get('uid')
-    date_from = request.query_params.get('date_from')
-    date_to = request.query_params.get('date_to')
-    interval = request.query_params.get('interval')
-    return instrument_news_graph(uid, date_from, date_to, interval)
+    return instrument_news_graph(
+        uid=request.query_params.get('uid'),
+        start_date_str=request.query_params.get('date_from'),
+        end_date_str=request.query_params.get('date_to'),
+        interval_str=request.query_params.get('interval'),
+    )
     
 
 @app.get('/instrument/brand')

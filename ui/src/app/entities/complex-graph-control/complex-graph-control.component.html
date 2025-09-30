@@ -153,6 +153,13 @@
             (change)="handleToggleBoolean('isShowModels', $event)"
           /> Отдельные модели
         </div>
+        <div>
+          <input
+            type="checkbox"
+            [checked]="isShowForecasts()"
+            (change)="handleToggleBoolean('isShowForecasts', $event)"
+          /> Прогнозы аналитиков
+        </div>
       </label>
     </div>
   }
