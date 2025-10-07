@@ -252,14 +252,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
         balance_rub = users.get_user_money_rub()
         buy_rate = agent.utils.get_buy_rate(instrument_uid=instrument_uid)
         lot_size = instruments.get_instrument_by_uid(instrument_uid).lot or 1
-        total_price_calc = balance_rub * 0.01
-
-        if buy_rate > 75:
-            total_price_calc = balance_rub * 0.05
-
-        if buy_rate > 90:
-            total_price_calc = balance_rub * 0.10
-
+        total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=buy_rate)
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
         is_ok = (total_price <= total_price_calc * 2)

@@ -64,3 +64,34 @@ def trim_prompt(prompt: str) -> str:
     except Exception as e:
         logger.log_error(method_name='trim_prompt', error=e)
     return ''
+
+
+def lerp(x: float, a: float, b: float, y0: float, y1: float) -> float:
+    """
+    Линейная интерполяция.
+    Возвращает значение, соответствующее позиции x на отрезке [a, b],
+    интерполированное в отрезок [y0, y1].
+    Если b == a возвращает y0 (защита от деления на ноль).
+    Замечание: сама по себе функция не обрезает результат при x вне [a,b].
+    """
+    return y0 + (0 if b == a else (x - a) / (b - a)) * (y1 - y0)
+
+
+def get_buy_balance_multiply(buy_rate: float) -> float:
+    if buy_rate >= 75:
+        return lerp(buy_rate, 75, 89, 0.05, 0.10)
+
+    if buy_rate >= 90:
+        return lerp(buy_rate, 90, 100, 0.10, 0.30)
+
+    return lerp(buy_rate, 0, 74, 0.01, 0.05)
+
+
+def get_sell_balance_multiply(sell_rate: float) -> float:
+    if sell_rate >= 75:
+        return lerp(sell_rate, 75, 89, 0.15, 0.50)
+
+    if sell_rate >= 90:
+        return lerp(sell_rate, 90, 100, 0.50, 1.00)
+
+    return lerp(sell_rate, 0, 74, 0.01, 0.15)
