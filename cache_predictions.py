@@ -12,7 +12,7 @@ def refresh_cache_loop():
 
             for date_target in date_utils.get_dates_interval_list(
                 date_from=(now+datetime.timedelta(days=1)),
-                date_to=(now+datetime.timedelta(days=365*3)),
+                date_to=(now+datetime.timedelta(days=365*1)),
                 is_order_descending=False,
             ):
                 for instrument in instruments.get_instruments_white_list():

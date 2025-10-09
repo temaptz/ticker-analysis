@@ -528,8 +528,8 @@ def learn():
     df = pandas.read_csv(get_data_frame_csv_file_path())
     x = df.drop(columns=['result'])
     y = df['result']
-    text_features = ['name']
-    cat_features = ['currency', 'country_of_risk']
+    text_features = []
+    cat_features = ['name', 'currency', 'country_of_risk']
 
     x_array = x.values
     y_array = y.values
