@@ -1,7 +1,9 @@
-import { Component, model } from '@angular/core';
+import { Component, inject, model, resource } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonToggle, MatButtonToggleChange, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { SortModeEnum } from '../../shared/types';
+import { ApiService } from '../../shared/services/api.service';
+import { firstValueFrom } from 'rxjs';
 
 
 @Component({
@@ -18,6 +20,12 @@ export class DrawerComponent {
   sortModeEnum = SortModeEnum;
 
   isDrawerOpen = false;
+
+  totalInfo = resource({
+    loader: () => firstValueFrom(this._api.getTotalInfo()),
+  });
+
+  private _api = inject(ApiService);
 
   handleToggleDrawer(): void {
     this.isDrawerOpen = !this.isDrawerOpen;

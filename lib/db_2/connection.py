@@ -3,7 +3,12 @@ import time
 import const
 from lib import docker
 
-def get_engine(retries=50, delay=1):
+
+def get_db_host() -> str:
+    return const.DB_HOST if docker.is_docker() else 'localhost'
+
+
+def _get_engine(retries=50, delay=1):
     db_host = get_db_host()
     db_url = f'postgresql+psycopg2://{const.DB_USERNAME}:{const.DB_PASSWORD}@{db_host}:5432/{const.DB_NAME}'
 
@@ -26,5 +31,8 @@ def get_engine(retries=50, delay=1):
     raise RuntimeError(f'Не удалось подключиться к БД после {retries} попыток')
 
 
-def get_db_host() -> str:
-    return const.DB_HOST if docker.is_docker() else 'localhost'
+_engine = _get_engine()
+
+
+def get_engine():
+    return _engine

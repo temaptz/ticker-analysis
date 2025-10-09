@@ -1,54 +1,64 @@
-from fastapi import FastAPI, Request, Response, HTTPException
-from fastapi.responses import JSONResponse, PlainTextResponse
-from typing import Any, Optional
-import json
-
-# ==== original imports from views, adjusted ====
 import datetime
+from fastapi import FastAPI, Request, Header, HTTPException, status, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqladmin import Admin, ModelView
+from typing import Optional
 from tinkoff.invest import CandleInterval, Instrument, Quotation
 from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
-# Ported from views.py expected dependencies
-from lib import serializer, instruments, forecasts, predictions, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2, users
-from lib.learn import ta_1_2, ta_2, ta_2_1, model
-import json
+from dotenv import load_dotenv
+load_dotenv()
 
-# ==== Django shims ====
-class _HttpResponse:
-    def __init__(self, content: Any = "", status: int = 200, content_type: str = "application/json"):
-        self.content = content
-        self.status_code = status
-        self.content_type = content_type
-        self.headers = {}
+from lib import serializer, instruments, forecasts, predictions, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2, users, learn, docker
 
-def HttpResponse(content: Any = "", status: int = 200, content_type: str = "application/json"):
-    return _HttpResponse(content=content, status=status, content_type=content_type)
+app = FastAPI(title='API')
 
-def patch_cache_control(response: _HttpResponse, public: bool = False, max_age: Optional[int] = None):
-    directives = []
-    directives.append("public" if public else "private")
-    if max_age is not None:
-        try:
-            directives.append(f"max-age={int(max_age)}")
-        except Exception:
-            pass
-    response.headers["Cache-Control"] = ", ".join(directives)
+if not docker.is_prod():
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=['*'],
+        allow_credentials=True,
+        allow_methods=['*'],
+        allow_headers=['*'],
+    )
 
-class _ShimRequest:
-    def __init__(self, fastapi_request: Request, json_body: Optional[dict] = None):
-        self._fa_req = fastapi_request
-        self.GET = fastapi_request.query_params
-        self.data = json_body or {}
-        self.method = fastapi_request.method
+admin = Admin(app, db_2.connection.get_engine())
 
-# ==== app ====
-app = FastAPI(title="API")
+class UserAdmin(ModelView, model=db_2.users_db.UserDB):
+    column_list = [
+        db_2.users_db.UserDB.id,
+        db_2.users_db.UserDB.login,
+        db_2.users_db.UserDB.date_create,
+    ]
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+    form_columns = [
+        db_2.users_db.UserDB.login,
+        db_2.users_db.UserDB.password_hash,
+    ]
 
-# ==== original view functions ported verbatim, expecting Django-like request ====
+    async def on_model_change(self, data, model, is_created, request) -> None:
+        if password := data.get('password_hash', None):
+            data['password_hash'] = db_2.users_db.hash_password(password=password)
+
+admin.add_view(UserAdmin)
+
+
+def verify_user_by_token(authorization: Optional[str] = Header(None)) -> db_2.users_db.UserDB:
+    if authorization:
+        if user := get_user_by_token(token=authorization):
+            return user
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+    )
+
+
+def get_user_by_token(token: str) -> db_2.users_db.UserDB or None:
+    return db_2.users_db.get_user_by_token(token=token)
+
+
+def get_request_token(request: Request):
+    return request.headers.get('Authorization')
 
 
 def instruments_list(sort: int or str) -> list[Instrument]:
@@ -168,12 +178,12 @@ def instrument_prediction_graph(uid: Optional[str], date_from_str: Optional[str]
     models = (models_str or '').split(',') if models_str is not None else []
     if uid and date_from and date_to and interval:
         model_names = models if len(models) else [
-            model.TA_1,
-            model.TA_1_1,
-            model.TA_1_2,
-            model.TA_2,
-            model.TA_2_1,
-            model.CONSENSUS
+            learn.model.TA_1,
+            learn.model.TA_1_1,
+            learn.model.TA_1_2,
+            learn.model.TA_2,
+            learn.model.TA_2_1,
+            learn.model.CONSENSUS
         ]
         for model_name in model_names:
             resp[model_name] = predictions.get_prediction_graph(
@@ -210,19 +220,19 @@ def instrument_prediction(uid: Optional[str], days_future: Optional[str]):
         current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
 
         resp['relative'] = {}
-        resp['relative'][model.TA_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_1)
-        resp['relative'][model.TA_1_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_1)
-        resp['relative'][model.TA_1_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_1_2)
-        resp['relative'][model.TA_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_2)
-        resp['relative'][model.TA_2_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.TA_2_1)
-        resp['relative'][model.CONSENSUS] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=model.CONSENSUS)
+        resp['relative'][learn.model.TA_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_1)
+        resp['relative'][learn.model.TA_1_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_1_1)
+        resp['relative'][learn.model.TA_1_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_1_2)
+        resp['relative'][learn.model.TA_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_2)
+        resp['relative'][learn.model.TA_2_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_2_1)
+        resp['relative'][learn.model.CONSENSUS] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.CONSENSUS)
 
-        resp[model.TA_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1])
-        resp[model.TA_1_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1_1])
-        resp[model.TA_1_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_1_2])
-        resp[model.TA_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_2])
-        resp[model.TA_2_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.TA_2_1])
-        resp[model.CONSENSUS] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][model.CONSENSUS])
+        resp[learn.model.TA_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_1])
+        resp[learn.model.TA_1_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_1_1])
+        resp[learn.model.TA_1_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_1_2])
+        resp[learn.model.TA_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_2])
+        resp[learn.model.TA_2_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_2_1])
+        resp[learn.model.CONSENSUS] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.CONSENSUS])
     return resp
 
 
@@ -241,7 +251,7 @@ def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str])
         consensus = predictions.get_prediction_cache(
             instrument_uid=uid,
             date_target=date,
-            model_name=model.CONSENSUS,
+            model_name=learn.model.CONSENSUS,
             avg_days=period_days,
         )
         if consensus is not None:
@@ -353,73 +363,82 @@ def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_d
     return resp
 
 
-def instrument_tag(request):
-    if request.method == 'POST':
-        uid = request.data.get('uid') or request.GET.get('uid')
-        tag_name = request.data.get('tag_name') or request.GET.get('tag_name')
-        tag_value = request.data.get('tag_value') or request.GET.get('tag_value')
-
-        if uid and tag_name and tag_value is not None:
-            db_2.instrument_tags_db.upset_tag(
-                        instrument_uid=uid,
-                        tag_name='llm_sell_conclusion',
-                        tag_value=tag_value,
-                    )
-
-            return HttpResponse(serializer.to_json({'ok': True}))
-
-        return HttpResponse(
-            serializer.to_json({'ok': False, 'error': 'uid, tag_name, tag_value are required'}),
-            status=400,
-        )
-
-    uid = request.GET.get('uid')
-    tag_name = request.GET.get('tag_name')
-
+def instrument_tag(
+        uid: str,
+        tag_name: str,
+) -> str or None:
     if uid and tag_name:
         if tag := db_2.instrument_tags_db.get_tag(
             instrument_uid=uid,
             tag_name=tag_name,
         ):
             if tag.tag_value is not None:
-                return HttpResponse(serializer.to_json(tag.tag_value))
+                return tag.tag_value
 
-    return HttpResponse(None)
+    return None
 
 
-# ==== adapter ====
-def _to_fastapi_response(result, response: Response):
-    # If original view returned our shim response
-    if isinstance(result, _HttpResponse):
-        # propagate headers
-        for k, v in result.headers.items():
-            response.headers[k] = v
-        return Response(content=result.content, status_code=result.status_code, media_type=result.content_type)
-    # If it returned a dict or list, send JSON
-    if isinstance(result, (dict, list)):
-        return JSONResponse(content=result)
-    # If returned text
-    if isinstance(result, str):
-        return PlainTextResponse(content=result)
-    # None -> 404
-    if result is None:
-        raise HTTPException(status_code=404, detail="Not found")
-    # Fallback
-    try:
-        return JSONResponse(content=json.loads(result))
-    except Exception:
-        return PlainTextResponse(content=str(result))
+def get_total_info():
+    resp = {}
+
+    news_list_week = news.news.get_news(
+        start_date=datetime.datetime.now() - datetime.timedelta(days=7),
+        end_date=datetime.datetime.now(),
+    ) or []
+    news_list_month = news.news.get_news(
+        start_date=datetime.datetime.now() - datetime.timedelta(days=30),
+        end_date=datetime.datetime.now(),
+    )
+    news_list_full = news.news.get_news(
+        start_date=news.news.news_beginning_date,
+        end_date=datetime.datetime.now(),
+    )
+
+    count_rated_week = 0
+    count_rated_month = 0
+    count_rated_full = 0
+
+    for instrument in instruments.get_instruments_white_list():
+        for i in news_list_week:
+            if news.news_rate_v2.get_news_rate_db(
+                news_uid=i.news_uid,
+                instrument_uid=instrument.uid,
+            ) is not None:
+                count_rated_week += 1
+
+        for i in news_list_month:
+            if news.news_rate_v2.get_news_rate_db(
+                news_uid=i.news_uid,
+                instrument_uid=instrument.uid,
+            ) is not None:
+                count_rated_month += 1
+
+        for i in news_list_full:
+            if news.news_rate_v2.get_news_rate_db(
+                news_uid=i.news_uid,
+                instrument_uid=instrument.uid,
+            ) is not None:
+                count_rated_full += 1
+
+    resp['news_week_count'] = len(news_list_week or [])
+    resp['news_month_count'] = len(news_list_month or [])
+    resp['news_count'] = len(news_list_full or [])
+    resp['news_rated_week_count'] = count_rated_week
+    resp['news_rated_month_count'] = count_rated_month
+    resp['news_rated_count'] = count_rated_full
+
+    return resp
 
 
 @app.get('/instruments')
-def instruments_list_endpoint(request: Request):
+def instruments_list_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instruments_list(
         sort=request.query_params.get('sort'),
     )
     
 
 @app.get('/instrument')
-def instrument_info_endpoint(request: Request):
+def instrument_info_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_info(
         uid=request.query_params.get('uid'),
         ticker=request.query_params.get('ticker'),
@@ -427,20 +446,20 @@ def instrument_info_endpoint(request: Request):
 
 
 @app.get('/instrument/last_price')
-def instrument_last_price_endpoint(request: Request):
+def instrument_last_price_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_last_price(uid)
     
 
 @app.get('/instrument/price_by_date')
-def instrument_price_by_date_endpoint(request: Request):
+def instrument_price_by_date_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     date_str = request.query_params.get('date')
     return instrument_price_by_date(uid, date_str)
     
 
 @app.get('/instrument/history_prices')
-def instrument_history_prices_endpoint(request: Request):
+def instrument_history_prices_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     days = request.query_params.get('days')
     interval = request.query_params.get('interval')
@@ -448,19 +467,19 @@ def instrument_history_prices_endpoint(request: Request):
     
 
 @app.get('/instrument/forecasts')
-def instrument_forecasts_endpoint(request: Request):
+def instrument_forecasts_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_forecasts(uid)
     
 
 @app.get('/instrument/history_forecasts')
-def instrument_history_forecasts_endpoint(request: Request):
+def instrument_history_forecasts_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_history_forecasts(uid)
     
 
 @app.get('/instrument/history_forecasts_graph')
-def instrument_history_forecasts_graph_endpoint(request: Request):
+def instrument_history_forecasts_graph_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
@@ -469,19 +488,19 @@ def instrument_history_forecasts_graph_endpoint(request: Request):
     
 
 @app.get('/instrument/fundamentals')
-def instrument_fundamentals_endpoint(request: Request):
+def instrument_fundamentals_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_fundamentals(uid)
     
 
 @app.get('/instrument/fundamentals_history')
-def instrument_fundamentals_history_endpoint(request: Request):
+def instrument_fundamentals_history_endpoint(request: Request, user=Depends(verify_user_by_token)):
     asset_uid = request.query_params.get('asset_uid')
     return instrument_fundamentals_history(asset_uid)
     
 
 @app.get('/instrument/prediction_graph')
-def instrument_prediction_graph_endpoint(request: Request):
+def instrument_prediction_graph_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     date_from = request.query_params.get('date_from')
     date_to = request.query_params.get('date_to')
@@ -491,7 +510,7 @@ def instrument_prediction_graph_endpoint(request: Request):
     
 
 @app.get('/instrument/prediction_history_graph')
-def instrument_prediction_history_graph_endpoint(request: Request):
+def instrument_prediction_history_graph_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_prediction_history_graph(
         uid=request.query_params.get('uid'),
         date_from_str=request.query_params.get('date_from'),
@@ -502,33 +521,33 @@ def instrument_prediction_history_graph_endpoint(request: Request):
     
 
 @app.get('/instrument/prediction')
-def instrument_prediction_endpoint(request: Request):
+def instrument_prediction_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     days_future = request.query_params.get('days_future')
     return instrument_prediction(uid, days_future)
     
 
 @app.get('/instrument/prediction_consensus')
-def instrument_prediction_consensus_endpoint(request: Request):
+def instrument_prediction_consensus_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     date = request.query_params.get('date')
     return instrument_prediction_consensus(uid, date)
     
 
 @app.get('/instrument/balance')
-def instrument_balance_endpoint(request: Request):
+def instrument_balance_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_balance(uid)
     
 
 @app.get('/instrument/operations')
-def instrument_operations_endpoint(request: Request):
+def instrument_operations_endpoint(request: Request, user=Depends(verify_user_by_token)):
     figi = request.query_params.get('figi')
     return instrument_operations(figi)
     
 
 @app.get('/instrument/news_list_rated')
-def instrument_news_list_rated_endpoint(request: Request):
+def instrument_news_list_rated_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
@@ -536,7 +555,7 @@ def instrument_news_list_rated_endpoint(request: Request):
 
 
 @app.get('/instrument/news_graph')
-def instrument_news_graph_endpoint(request: Request):
+def instrument_news_graph_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_news_graph(
         uid=request.query_params.get('uid'),
         start_date_str=request.query_params.get('date_from'),
@@ -546,19 +565,19 @@ def instrument_news_graph_endpoint(request: Request):
     
 
 @app.get('/instrument/brand')
-def instrument_brand_endpoint(request: Request):
+def instrument_brand_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_brand(uid)
     
 
 @app.get('/instrument/invest_calc')
-def instrument_invest_calc_endpoint(request: Request):
+def instrument_invest_calc_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     return instrument_invest_calc(uid)
     
 
 @app.get('/instrument/tech_analysis_graph')
-def tech_analysis_graph_endpoint(request: Request):
+def tech_analysis_graph_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
@@ -567,15 +586,31 @@ def tech_analysis_graph_endpoint(request: Request):
     
 
 @app.get('/instrument/tag')
-async def instrument_tag_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_tag(shim)
-    return _to_fastapi_response(result, response)
-    
+async def instrument_tag_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_tag(
+        uid = request.query_params.get('uid'),
+        tag_name = request.query_params.get('tag_name'),
+    )
 
-@app.post('/instrument/tag')
-async def instrument_tag_endpoint(request: Request, response: Response):
-    shim = _ShimRequest(request, json_body=(await request.json() if request.method in ('POST','PUT','PATCH') else None))
-    result = instrument_tag(shim)
-    return _to_fastapi_response(result, response)
 
+@app.get('/total_info')
+def total_info(user=Depends(verify_user_by_token)):
+    return get_total_info()
+
+
+@app.get('/current_user')
+async def current_user(request: Request, user=Depends(verify_user_by_token)):
+    return user
+
+
+@app.get('/login')
+def login(request: Request):
+    if user := users.get_user_by_login_password(
+        login=request.query_params.get('login'),
+        password=request.query_params.get('password'),
+    ):
+        if user.token:
+            return get_user_by_token(token=user.token)
+        elif user.id:
+            return get_user_by_token(token=users.get_user_token(user.id))
+    return None

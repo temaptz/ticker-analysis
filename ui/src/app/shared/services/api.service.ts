@@ -18,7 +18,7 @@ import {
   InstrumentForecastsGraphItem,
   NewsListRatedResponse,
   TechAnalysisResp,
-  PredictionHistoryGraphResp, Forecast, RecommendationResp, NewsGraphItem,
+  PredictionHistoryGraphResp, Forecast, RecommendationResp, NewsGraphItem, TotalInfo, CurrentUser,
 } from '../types';
 import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
@@ -230,6 +230,23 @@ export class ApiService {
     params = params.set('tag_name', tagName);
 
     return this.http.get<string>(`${this.apiUrl}/instrument/tag`, {params: params});
+  }
+
+
+  getTotalInfo(): Observable<TotalInfo> {
+    return this.http.get<TotalInfo>(`${this.apiUrl}/total_info`);
+  }
+
+  getCurrentUser(): Observable<CurrentUser> {
+    return this.http.get<CurrentUser>(`${this.apiUrl}/current_user`);
+  }
+
+  login(login: string, password: string): Observable<CurrentUser> {
+    let params = new HttpParams();
+    params = params.set('login', login);
+    params = params.set('password', password);
+
+    return this.http.get<CurrentUser>(`${this.apiUrl}/login`, {params});
   }
 
 }

@@ -1,8 +1,9 @@
 import os
+from langchain.agents import create_react_agent
+from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
 from lib import docker, agent
 from langchain_core.globals import set_debug, set_verbose
 
@@ -32,12 +33,9 @@ llm = ChatOllama(
     temperature=0.01,
 )
 llm_with_tools = llm.bind_tools(tools=tools)
-llm_agent = create_react_agent(
-    model=llm,
-    tools=tools,
-    prompt='Ты полезный ИИ ассистент помощник. Отвечай на Русском языке.',
-    debug=True,
-    checkpointer=checkpointer,
-    name='llm_agent',
-)
+# llm_agent = create_react_agent(
+#     llm=llm,
+#     tools=tools,
+#     prompt=PromptTemplate(template='Ты полезный ИИ ассистент помощник. Отвечай на Русском языке.', input_variables=[]),
+# )
 config: RunnableConfig = {'configurable': {'thread_id': '1'}}

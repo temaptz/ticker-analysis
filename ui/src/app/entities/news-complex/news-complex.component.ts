@@ -1,7 +1,6 @@
-import { Component, DestroyRef, effect, inject, input, resource, ResourceLoaderParams, signal } from '@angular/core';
+import { Component, inject, input, resource, ResourceLoaderParams, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, firstValueFrom, forkJoin, lastValueFrom, map, of } from 'rxjs';
+import { firstValueFrom, forkJoin, map } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../shared/services/api.service';
 import { InstrumentInList, NewsListRatedResponse } from '../../shared/types';
@@ -12,7 +11,7 @@ import { RateV2Component } from '../rate-v2/rate-v2.component';
 
 @Component({
   selector: 'news-complex',
-  imports: [CommonModule, PreloaderComponent, NewsBarComponent, RateV2Component],
+  imports: [CommonModule, PreloaderComponent, RateV2Component],
   providers: [],
   templateUrl: './news-complex.component.html',
   styleUrl: './news-complex.component.scss'
@@ -44,5 +43,4 @@ export class NewsComplexComponent {
 
   private apiService = inject(ApiService);
 
-  protected readonly Object = Object;
 }

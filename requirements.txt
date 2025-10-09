@@ -16,13 +16,14 @@ yandex-cloud-ml-sdk==0.14.0
 redis
 psycopg2-binary
 sqlalchemy==2.0.43
+sqladmin==0.21.0
 matplotlib
 holidays
 gunicorn
 pydantic>2.0
 deprecation==2.1.0
 rich==14.0.0
-langgraph==0.6.6
+langgraph==0.6.8
 langchain==0.3.27
 langchain-ollama==0.3.6
 langchain_community==0.3.27
@@ -31,3 +32,4 @@ langsmith==0.4.15
 python-dotenv
 restrictedpython==8.0
 fastapi==0.117.1
+werkzeug

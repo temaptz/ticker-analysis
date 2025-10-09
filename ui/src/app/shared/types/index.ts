@@ -23,6 +23,21 @@ export interface RecommendationResp {
   long: string;
 }
 
+export interface TotalInfo {
+  news_week_count: number;
+  news_month_count: number;
+  news_count: number;
+  news_rated_week_count: number;
+  news_rated_month_count: number;
+  news_rated_count: number;
+}
+
+export interface CurrentUser {
+  login: string;
+  date_create: string;
+  token: string;
+}
+
 export interface NewsResponse {
   sources: {
     [key: string]: {
@@ -66,8 +81,6 @@ export interface NewsListRatedResponse {
   rate_v2: Partial<NewsRateV2>;
   start_date: string | Date;
   end_date: string | Date;
-  percent_rated: number | null;
-  percent_rated_total: number | null;
 }
 
 

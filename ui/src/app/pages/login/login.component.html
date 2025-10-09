@@ -1,0 +1,30 @@
+<div class="page">
+  <div
+    class="form"
+    [formGroup]="form"
+  >
+    <div>
+      <label>Логин</label>
+      <input
+        type="text"
+        formControlName="login"
+        (keydown.enter)="submit.click()"
+      >
+    </div>
+
+    <div>
+      <label>Пароль</label>
+      <input
+        type="password"
+        formControlName="password"
+        (keydown.enter)="submit.click()"
+      >
+    </div>
+
+    <button
+      #submit
+      [disabled]="form.invalid"
+      (click)="handleSubmit()"
+    >Вход</button>
+  </div>
+</div>

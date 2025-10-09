@@ -325,3 +325,27 @@ def get_is_in_favorites(instrument_uid: str) -> bool:
             return True
 
     return False
+
+
+def generate_token(user_id: str) -> str or None:
+    return utils.get_md5(f'{user_id}_hash_salt')
+
+
+def get_user_by_login_password(login: str, password: str) -> db_2.users_db.UserDB or None:
+    if user := db_2.users_db.get_user_by_login(login=login):
+        if db_2.users_db.verify_password(password=password, hashed_password=user.password_hash):
+            return user
+
+    return None
+
+
+def get_user_token(user_id: str) -> str or None:
+    if user := db_2.users_db.get_user_by_id(user_id=user_id):
+        if user.token:
+            return user.token
+
+        if generated_token := generate_token(user_id=user_id):
+            db_2.users_db.update_user_token(user_id=user_id, token=generated_token)
+            return generated_token
+
+    return None

@@ -33,11 +33,6 @@ def get_rated_news_by_instrument_uid(
         end_date=end_date,
     )
     news_ids_list = [n.news_uid for n in news_list or []]
-    news_ids_list_total = [n.news_uid for n in get_news_by_instrument_uid(
-        instrument_uid=instrument_uid,
-        start_date=news_beginning_date,
-        end_date=datetime.datetime.now().replace(minute=0, second=0, microsecond=0),
-    ) or []]
     keywords = instruments.get_instrument_keywords(uid=instrument_uid)
     response: dict = {
         'list': [],
@@ -48,14 +43,6 @@ def get_rated_news_by_instrument_uid(
                 news_ids=news_ids_list,
             ))
         },
-        'percent_rated': news_rate_v2.get_percent_rated(
-            instrument_uid=instrument_uid,
-            news_ids=news_ids_list,
-        ),
-        'percent_rated_total': news_rate_v2.get_percent_rated(
-            instrument_uid=instrument_uid,
-            news_ids=news_ids_list_total,
-        ),
         'start_date': start_date,
         'end_date': end_date,
     }
@@ -130,6 +117,23 @@ def get_influence_score(
         return influence_score
 
     return influence_score
+
+
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+def get_news(
+        start_date: datetime.datetime,
+        end_date: datetime.datetime
+) -> list[news_db.News]:
+    result = []
+
+    for i in instruments.get_instruments_white_list():
+        result.extend(get_news_by_instrument_uid(
+            instrument_uid=i.uid,
+            start_date=start_date,
+            end_date=end_date,
+        ) or [])
+
+    return result
 
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
