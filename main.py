@@ -1,7 +1,10 @@
-# import datetime
-# import os
+import os
 from dotenv import load_dotenv
 load_dotenv()
+
+# Гарантируем, что переменная окружения модели LLM установлена из .env
+if os.getenv('OLLAMA_MODEL_NAME'):
+    os.environ['OLLAMA_MODEL_NAME'] = os.getenv('OLLAMA_MODEL_NAME')
 
 from lib import (
     telegram,

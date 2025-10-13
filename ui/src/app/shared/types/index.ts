@@ -25,11 +25,11 @@ export interface RecommendationResp {
 
 export interface TotalInfo {
   news_week_count: number;
+  news_week_rated_count: number;
   news_month_count: number;
-  news_count: number;
-  news_rated_week_count: number;
-  news_rated_month_count: number;
-  news_rated_count: number;
+  news_month_rated_count: number;
+  news_total_count: number;
+  news_total_rated_count: number;
 }
 
 export interface CurrentUser {

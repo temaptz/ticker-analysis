@@ -108,7 +108,7 @@ def get_prediction_ta_1_by_uid(uid: str) -> float or None:
     x = c.get_x()
 
     try:
-        return learn.predict(x)
+        return learn.ta_1.learn.predict(x)
     except Exception as e:
         print('ERROR get_prediction_ta_1_by_uid', e)
         return None
@@ -122,7 +122,7 @@ def get_relative_prediction_ta_1_by_uid(uid: str, date_current: datetime.datetim
 
     try:
         if c.price:
-            if prediction := learn.predict(x):
+            if prediction := learn.ta_1.learn.predict(x):
                 return utils.get_change_relative_by_price(
                     main_price=c.price,
                     next_price=prediction,

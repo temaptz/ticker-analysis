@@ -30,7 +30,7 @@ def refresh_cache_loop():
                                 date_target=date_target,
                                 avg_days=3,
                                 is_ignore_cache=True,
-                        )) is not None:
+                        )) is not None and -5 <= prediction <= 5:
                             predictions_cache.set_prediction_cache(
                                 instrument_uid=instrument.uid,
                                 model_name=model_name,

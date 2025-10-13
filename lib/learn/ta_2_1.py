@@ -35,6 +35,7 @@ def get_feature_names() -> list:
         'news_influence_score_1',
         'news_influence_score_2',
         'news_influence_score_3',
+        'news_influence_score_4',
 
         'price_change_2_days_min',
         'price_change_2_days_max',
@@ -46,10 +47,26 @@ def get_feature_names() -> list:
         'price_change_3_week_max',
         'price_change_1_month_min',
         'price_change_1_month_max',
-        'price_change_3_months_min',
-        'price_change_3_months_max',
-        'price_change_6_months_min',
-        'price_change_6_months_max',
+        'price_change_2_month_min',
+        'price_change_2_month_max',
+        'price_change_3_month_min',
+        'price_change_3_month_max',
+        'price_change_4_month_min',
+        'price_change_4_month_max',
+        'price_change_5_month_min',
+        'price_change_5_month_max',
+        'price_change_6_month_min',
+        'price_change_6_month_max',
+        'price_change_7_month_min',
+        'price_change_7_month_max',
+        'price_change_8_month_min',
+        'price_change_8_month_max',
+        'price_change_9_month_min',
+        'price_change_9_month_max',
+        'price_change_10_month_min',
+        'price_change_10_month_max',
+        'price_change_11_month_min',
+        'price_change_11_month_max',
         'price_change_1_year_min',
         'price_change_1_year_max',
         'price_change_2_years_min',
@@ -62,8 +79,16 @@ def get_feature_names() -> list:
         'price_change_2_week',
         'price_change_3_week',
         'price_change_1_month',
-        'price_change_3_months',
-        'price_change_6_months',
+        'price_change_2_month',
+        'price_change_3_month',
+        'price_change_4_month',
+        'price_change_5_month',
+        'price_change_6_month',
+        'price_change_7_month',
+        'price_change_8_month',
+        'price_change_9_month',
+        'price_change_10_month',
+        'price_change_11_month',
         'price_change_1_year',
         'price_change_2_years',
         'price_change_3_years',
@@ -105,6 +130,7 @@ class Ta21LearningCard:
     news_influence_score_1: float = None  # Новостной фон 8-14 дней до даты
     news_influence_score_2: float = None  # Новостной фон 15-21 дней до даты
     news_influence_score_3: float = None  # Новостной фон 22-28 дней до даты
+    news_influence_score_4: float = None  # Новостной фон 29-35 дней до даты
 
     price_change_2_days_min: float = None # Изменение цены за 2 дня
     price_change_2_days_max: float = None # Изменение цены за 2 дня
@@ -116,10 +142,26 @@ class Ta21LearningCard:
     price_change_3_week_max: float = None # Изменение цены за 3 недели
     price_change_1_month_min: float = None # Изменение цены за 1 месяц
     price_change_1_month_max: float = None # Изменение цены за 1 месяц
-    price_change_3_months_min: float = None # Изменение цены за 3 месяца
-    price_change_3_months_max: float = None # Изменение цены за 3 месяца
-    price_change_6_months_min: float = None # Изменение цены за 6 месяцев
-    price_change_6_months_max: float = None # Изменение цены за 6 месяцев
+    price_change_2_month_min: float = None # Изменение цены за 2 месяц
+    price_change_2_month_max: float = None # Изменение цены за 2 месяц
+    price_change_3_month_min: float = None # Изменение цены за 3 месяца
+    price_change_3_month_max: float = None # Изменение цены за 3 месяца
+    price_change_4_month_min: float = None # Изменение цены за 4 месяца
+    price_change_4_month_max: float = None # Изменение цены за 4 месяца
+    price_change_5_month_min: float = None # Изменение цены за 5 месяца
+    price_change_5_month_max: float = None # Изменение цены за 5 месяца
+    price_change_6_month_min: float = None # Изменение цены за 6 месяцев
+    price_change_6_month_max: float = None # Изменение цены за 6 месяцев
+    price_change_7_month_min: float = None # Изменение цены за 7 месяца
+    price_change_7_month_max: float = None # Изменение цены за 7 месяца
+    price_change_8_month_min: float = None # Изменение цены за 8 месяца
+    price_change_8_month_max: float = None # Изменение цены за 8 месяца
+    price_change_9_month_min: float = None # Изменение цены за 9 месяца
+    price_change_9_month_max: float = None # Изменение цены за 9 месяца
+    price_change_10_month_min: float = None # Изменение цены за 10 месяца
+    price_change_10_month_max: float = None # Изменение цены за 10 месяца
+    price_change_11_month_min: float = None # Изменение цены за 11 месяца
+    price_change_11_month_max: float = None # Изменение цены за 11 месяца
     price_change_1_year_min: float = None # Изменение цены за 1 год
     price_change_1_year_max: float = None # Изменение цены за 1 год
     price_change_2_years_min: float = None # Изменение цены за 2 года
@@ -132,8 +174,16 @@ class Ta21LearningCard:
     price_change_2_week: float = None # Изменение цены за 2 недели
     price_change_3_week: float = None # Изменение цены за 3 недели
     price_change_1_month: float = None # Изменение цены за 1 месяц
-    price_change_3_months: float = None # Изменение цены за 3 месяца
-    price_change_6_months: float = None # Изменение цены за 6 месяцев
+    price_change_2_month: float = None # Изменение цены за 2 месяц
+    price_change_3_month: float = None # Изменение цены за 3 месяца
+    price_change_4_month: float = None # Изменение цены за 4 месяца
+    price_change_5_month: float = None # Изменение цены за 5 месяца
+    price_change_6_month: float = None # Изменение цены за 6 месяцев
+    price_change_7_month: float = None # Изменение цены за 7 месяцев
+    price_change_8_month: float = None # Изменение цены за 8 месяцев
+    price_change_9_month: float = None # Изменение цены за 9 месяцев
+    price_change_10_month: float = None # Изменение цены за 10 месяцев
+    price_change_11_month: float = None # Изменение цены за 11 месяцев
     price_change_1_year: float = None # Изменение цены за 1 год
     price_change_2_years: float = None # Изменение цены за 2 года
     price_change_3_years: float = None # Изменение цены за 3 года
@@ -206,6 +256,7 @@ class Ta21LearningCard:
         self.news_influence_score_1 = self.get_news_influence_score(days_from=8, days_to=14)
         self.news_influence_score_2 = self.get_news_influence_score(days_from=15, days_to=21)
         self.news_influence_score_3 = self.get_news_influence_score(days_from=22, days_to=28)
+        self.news_influence_score_4 = self.get_news_influence_score(days_from=29, days_to=35)
 
         self.price_change_2_days_min = self.get_price_change_days_extreme(days_count=2, is_max=False, is_fill_empty=is_fill_empty)
         self.price_change_2_days_max = self.get_price_change_days_extreme(days_count=2, is_max=True, is_fill_empty=is_fill_empty)
@@ -217,10 +268,26 @@ class Ta21LearningCard:
         self.price_change_3_week_max = self.get_price_change_days_extreme(days_count=7 * 3, is_max=True, is_fill_empty=is_fill_empty)
         self.price_change_1_month_min = self.get_price_change_days_extreme(days_count=30, is_max=False, is_fill_empty=is_fill_empty)
         self.price_change_1_month_max = self.get_price_change_days_extreme(days_count=30, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_3_months_min = self.get_price_change_days_extreme(days_count=30 * 3, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_3_months_max = self.get_price_change_days_extreme(days_count=30 * 3, is_max=True, is_fill_empty=is_fill_empty)
-        self.price_change_6_months_min = self.get_price_change_days_extreme(days_count=30 * 6, is_max=False, is_fill_empty=is_fill_empty)
-        self.price_change_6_months_max = self.get_price_change_days_extreme(days_count=30 * 6, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_2_month_min = self.get_price_change_days_extreme(days_count=30 * 2, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_2_month_max = self.get_price_change_days_extreme(days_count=30 * 2, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_3_month_min = self.get_price_change_days_extreme(days_count=30 * 3, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_3_month_max = self.get_price_change_days_extreme(days_count=30 * 3, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_4_month_min = self.get_price_change_days_extreme(days_count=30 * 4, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_4_month_max = self.get_price_change_days_extreme(days_count=30 * 4, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_5_month_min = self.get_price_change_days_extreme(days_count=30 * 5, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_5_month_max = self.get_price_change_days_extreme(days_count=30 * 5, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_6_month_min = self.get_price_change_days_extreme(days_count=30 * 6, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_6_month_max = self.get_price_change_days_extreme(days_count=30 * 6, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_7_month_min = self.get_price_change_days_extreme(days_count=30 * 7, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_7_month_max = self.get_price_change_days_extreme(days_count=30 * 7, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_8_month_min = self.get_price_change_days_extreme(days_count=30 * 8, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_8_month_max = self.get_price_change_days_extreme(days_count=30 * 8, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_9_month_min = self.get_price_change_days_extreme(days_count=30 * 9, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_9_month_max = self.get_price_change_days_extreme(days_count=30 * 9, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_10_month_min = self.get_price_change_days_extreme(days_count=30 * 10, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_10_month_max = self.get_price_change_days_extreme(days_count=30 * 10, is_max=True, is_fill_empty=is_fill_empty)
+        self.price_change_11_month_min = self.get_price_change_days_extreme(days_count=30 * 11, is_max=False, is_fill_empty=is_fill_empty)
+        self.price_change_11_month_max = self.get_price_change_days_extreme(days_count=30 * 11, is_max=True, is_fill_empty=is_fill_empty)
         self.price_change_1_year_min = self.get_price_change_days_extreme(days_count=365, is_max=False, is_fill_empty=is_fill_empty)
         self.price_change_1_year_max = self.get_price_change_days_extreme(days_count=365, is_max=True, is_fill_empty=is_fill_empty)
         self.price_change_2_years_min = self.get_price_change_days_extreme(days_count=365 * 2, is_max=False, is_fill_empty=is_fill_empty)
@@ -233,8 +300,16 @@ class Ta21LearningCard:
         self.price_change_2_week = self.get_price_change_days(days_count=7 * 2)
         self.price_change_3_week = self.get_price_change_days(days_count=7 * 3)
         self.price_change_1_month = self.get_price_change_days(days_count=30)
-        self.price_change_3_months = self.get_price_change_days(days_count=30 * 3)
-        self.price_change_6_months = self.get_price_change_days(days_count=30 * 6)
+        self.price_change_2_month = self.get_price_change_days(days_count=30 * 2)
+        self.price_change_3_month = self.get_price_change_days(days_count=30 * 3)
+        self.price_change_4_month = self.get_price_change_days(days_count=30 * 4)
+        self.price_change_5_month = self.get_price_change_days(days_count=30 * 5)
+        self.price_change_6_month = self.get_price_change_days(days_count=30 * 6)
+        self.price_change_7_month = self.get_price_change_days(days_count=30 * 7)
+        self.price_change_8_month = self.get_price_change_days(days_count=30 * 8)
+        self.price_change_9_month = self.get_price_change_days(days_count=30 * 9)
+        self.price_change_10_month = self.get_price_change_days(days_count=30 * 10)
+        self.price_change_11_month = self.get_price_change_days(days_count=30 * 11)
         self.price_change_1_year = self.get_price_change_days(days_count=365)
         self.price_change_2_years = self.get_price_change_days(days_count=365 * 2)
         self.price_change_3_years = self.get_price_change_days(days_count=365 * 3)
@@ -308,7 +383,7 @@ class Ta21LearningCard:
             if price := instruments.get_instrument_price_by_date(
                     uid=self.instrument.uid,
                     date=self.date - datetime.timedelta(days=days_count),
-                    delta_hours=24 if days_count < 30 else 24 * 5
+                    delta_hours=(24 if days_count < 30 else (24 * 7))
             ):
                 if price_change := utils.get_change_relative_by_price(
                         main_price=current_price,
@@ -394,6 +469,7 @@ class Ta21LearningCard:
             to_numpy_float(self.news_influence_score_1),
             to_numpy_float(self.news_influence_score_2),
             to_numpy_float(self.news_influence_score_3),
+            to_numpy_float(self.news_influence_score_4),
 
             to_numpy_float(self.price_change_2_days_min),
             to_numpy_float(self.price_change_2_days_max),
@@ -405,10 +481,26 @@ class Ta21LearningCard:
             to_numpy_float(self.price_change_3_week_max),
             to_numpy_float(self.price_change_1_month_min),
             to_numpy_float(self.price_change_1_month_max),
-            to_numpy_float(self.price_change_3_months_min),
-            to_numpy_float(self.price_change_3_months_max),
-            to_numpy_float(self.price_change_6_months_min),
-            to_numpy_float(self.price_change_6_months_max),
+            to_numpy_float(self.price_change_2_month_min),
+            to_numpy_float(self.price_change_2_month_max),
+            to_numpy_float(self.price_change_3_month_min),
+            to_numpy_float(self.price_change_3_month_max),
+            to_numpy_float(self.price_change_4_month_min),
+            to_numpy_float(self.price_change_4_month_max),
+            to_numpy_float(self.price_change_5_month_min),
+            to_numpy_float(self.price_change_5_month_max),
+            to_numpy_float(self.price_change_6_month_min),
+            to_numpy_float(self.price_change_6_month_max),
+            to_numpy_float(self.price_change_7_month_min),
+            to_numpy_float(self.price_change_7_month_max),
+            to_numpy_float(self.price_change_8_month_min),
+            to_numpy_float(self.price_change_8_month_max),
+            to_numpy_float(self.price_change_9_month_min),
+            to_numpy_float(self.price_change_9_month_max),
+            to_numpy_float(self.price_change_10_month_min),
+            to_numpy_float(self.price_change_10_month_max),
+            to_numpy_float(self.price_change_11_month_min),
+            to_numpy_float(self.price_change_11_month_max),
             to_numpy_float(self.price_change_1_year_min),
             to_numpy_float(self.price_change_1_year_max),
             to_numpy_float(self.price_change_2_years_min),
@@ -421,8 +513,16 @@ class Ta21LearningCard:
             to_numpy_float(self.price_change_2_week),
             to_numpy_float(self.price_change_3_week),
             to_numpy_float(self.price_change_1_month),
-            to_numpy_float(self.price_change_3_months),
-            to_numpy_float(self.price_change_6_months),
+            to_numpy_float(self.price_change_2_month),
+            to_numpy_float(self.price_change_3_month),
+            to_numpy_float(self.price_change_4_month),
+            to_numpy_float(self.price_change_5_month),
+            to_numpy_float(self.price_change_6_month),
+            to_numpy_float(self.price_change_7_month),
+            to_numpy_float(self.price_change_8_month),
+            to_numpy_float(self.price_change_9_month),
+            to_numpy_float(self.price_change_10_month),
+            to_numpy_float(self.price_change_11_month),
             to_numpy_float(self.price_change_1_year),
             to_numpy_float(self.price_change_2_years),
             to_numpy_float(self.price_change_3_years),
@@ -810,7 +910,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_get_record_cache_key',
+        'method': 'ta_2_1_record_cache_key',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

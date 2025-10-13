@@ -25,6 +25,8 @@ class State(TypedDict, total=False):
 def rank_last_news():
     time_start = time.perf_counter()
     graph = get_news_rank_graph()
+    news_total_count = 0
+    news_rate_success = 0
 
     for i in users.sort_instruments_cost(
             instruments_list=instruments.get_instruments_white_list()
@@ -69,15 +71,18 @@ def rank_last_news():
 
                                 logger.log_info(message=f'RANKED NEWS for {human_name}. NEWS DATE: {n.date}', is_send_telegram=False)
 
-                            # logger.log_info(
-                            #     message=f'Оценена новость для:\n{human_name}\nЗаголовок: {n.title}\nОценка: {serializer.to_json(n_rate)}',
-                            #     is_send_telegram=True,
-                            # )
+                                news_rate_success += 1
+
+                    news_total_count += 1
         except Exception as e:
             logger.log_error(method_name='rank_last_news_item', error=e)
 
     logger.log_info(
         message=f'NEWS RANK TIME: {time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - time_start))}',
+        output={
+            'news_total_count': news_total_count,
+            'news_rate_success': news_rate_success,
+        },
         is_send_telegram=True,
     )
 

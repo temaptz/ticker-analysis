@@ -25,26 +25,25 @@
       [value]="sortModeEnum.MarketValue"
     >Стоимость портфеля</mat-button-toggle>
   </mat-button-toggle-group>
+
+  @if (totalInfo.hasValue()) {
+    @let info = totalInfo.value();
+
+    <div class="total-info">
+      <h5>Оценено {{ weekPercent() }}% ({{ info!.news_week_rated_count }} / {{ info!.news_week_count }}) новостей за неделю</h5>
+      <div class="bar">
+        <div [style.width.%]="weekPercent()"></div>
+      </div>
+
+      <h5>Оценено {{ monthPercent() }}% ({{ info!.news_month_rated_count }} / {{ info!.news_month_count }}) новостей за месяц</h5>
+      <div class="bar">
+        <div [style.width.%]="monthPercent()"></div>
+      </div>
+
+      <h5>Оценено {{ totalPercent() }}% ({{ info!.news_total_rated_count }} / {{ info!.news_total_count }}) новостей всего</h5>
+      <div class="bar">
+        <div [style.width.%]="totalPercent()"></div>
+      </div>
+    </div>
+  }
 </div>
-
-@if (totalInfo.hasValue()) {
-  @let info = totalInfo.value();
-
-  <div class="total-info">
-    <h5>Оценено {{ info!.news_rated_week_count }} из {{ info!.news_week_count }} новостей за неделю</h5>
-    <div class="bar">
-      <div [style.width.%]="info!.news_rated_week_count / info!.news_week_count * 100"></div>
-    </div>
-
-    <h5>Оценено {{ info!.news_rated_month_count }} из {{ info!.news_month_count }} новостей за месяц</h5>
-    <div class="bar">
-      <div [style.width.%]="info!.news_rated_month_count / info!.news_month_count * 100"></div>
-    </div>
-
-    <h5>Оценено {{ info!.news_rated_count }} из {{ info!.news_count }} новостей всего</h5>
-    <div class="bar">
-      <div [style.width.%]="info!.news_rated_count / info!.news_count * 100"></div>
-    </div>
-    {{ info | json }}
-  </div>
-}

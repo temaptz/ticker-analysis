@@ -33,3 +33,5 @@ python-dotenv
 restrictedpython==8.0
 fastapi==0.117.1
 werkzeug
+ipywidgets
+ipython

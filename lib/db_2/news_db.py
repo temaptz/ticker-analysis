@@ -5,7 +5,7 @@ from sqlalchemy.sql import text as sql_text
 from sqlalchemy.orm import Session, declarative_base
 import datetime
 from lib.db_2 import connection
-from lib import logger, serializer
+from lib import logger
 
 engine = connection.get_engine()
 metadata = MetaData()

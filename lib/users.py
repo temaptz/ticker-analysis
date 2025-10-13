@@ -1,5 +1,5 @@
 import math
-from datetime import datetime
+import datetime
 import pytz
 from tinkoff.invest import (
     Client,
@@ -292,7 +292,7 @@ def get_instrument_buy_rate_for_sort(instrument: Instrument) -> float:
 def get_instrument_last_operation_seconds(instrument: Instrument) -> float:
     try:
         if operations := get_operations(account_id=get_analytics_account().id, figi=instrument.figi):
-            now = datetime.now(pytz.utc)
+            now = datetime.datetime.now(pytz.utc)
             closest_operation = min(operations, key=lambda op: abs(now - op.date))
             time_diff = now - closest_operation.date
 
@@ -328,7 +328,7 @@ def get_is_in_favorites(instrument_uid: str) -> bool:
 
 
 def generate_token(user_id: str) -> str or None:
-    return utils.get_md5(f'{user_id}_hash_salt')
+    return utils.get_md5(f'{user_id}_{datetime.datetime.now()}_hash_salt_001_')
 
 
 def get_user_by_login_password(login: str, password: str) -> db_2.users_db.UserDB or None:

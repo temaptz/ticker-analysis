@@ -379,53 +379,51 @@ def instrument_tag(
 
 
 def get_total_info():
-    resp = {}
-
-    news_list_week = news.news.get_news(
-        start_date=datetime.datetime.now() - datetime.timedelta(days=7),
-        end_date=datetime.datetime.now(),
-    ) or []
-    news_list_month = news.news.get_news(
-        start_date=datetime.datetime.now() - datetime.timedelta(days=30),
-        end_date=datetime.datetime.now(),
-    )
-    news_list_full = news.news.get_news(
-        start_date=news.news.news_beginning_date,
-        end_date=datetime.datetime.now(),
-    )
-
-    count_rated_week = 0
-    count_rated_month = 0
-    count_rated_full = 0
+    resp = {
+        'news_week_count': 0,
+        'news_week_rated_count': 0,
+        'news_month_count': 0,
+        'news_month_rated_count': 0,
+        'news_total_count': 0,
+        'news_total_rated_count': 0,
+    }
 
     for instrument in instruments.get_instruments_white_list():
-        for i in news_list_week:
+        for i in news.news.get_news_by_instrument_uid(
+            instrument_uid=instrument.uid,
+            start_date=datetime.datetime.now() - datetime.timedelta(days=7),
+            end_date=datetime.datetime.now(),
+        ) or []:
             if news.news_rate_v2.get_news_rate_db(
                 news_uid=i.news_uid,
                 instrument_uid=instrument.uid,
             ) is not None:
-                count_rated_week += 1
+                resp['news_week_rated_count'] += 1
+            resp['news_week_count'] += 1
 
-        for i in news_list_month:
-            if news.news_rate_v2.get_news_rate_db(
-                news_uid=i.news_uid,
+        for i in news.news.get_news_by_instrument_uid(
                 instrument_uid=instrument.uid,
-            ) is not None:
-                count_rated_month += 1
-
-        for i in news_list_full:
+                start_date=datetime.datetime.now() - datetime.timedelta(days=30),
+                end_date=datetime.datetime.now(),
+        ) or []:
             if news.news_rate_v2.get_news_rate_db(
-                news_uid=i.news_uid,
-                instrument_uid=instrument.uid,
+                    news_uid=i.news_uid,
+                    instrument_uid=instrument.uid,
             ) is not None:
-                count_rated_full += 1
+                resp['news_month_rated_count'] += 1
+            resp['news_month_count'] += 1
 
-    resp['news_week_count'] = len(news_list_week or [])
-    resp['news_month_count'] = len(news_list_month or [])
-    resp['news_count'] = len(news_list_full or [])
-    resp['news_rated_week_count'] = count_rated_week
-    resp['news_rated_month_count'] = count_rated_month
-    resp['news_rated_count'] = count_rated_full
+        for i in news.news.get_news_by_instrument_uid(
+                instrument_uid=instrument.uid,
+                start_date=news.news.news_beginning_date,
+                end_date=datetime.datetime.now(),
+        ) or []:
+            if news.news_rate_v2.get_news_rate_db(
+                    news_uid=i.news_uid,
+                    instrument_uid=instrument.uid,
+            ) is not None:
+                resp['news_total_rated_count'] += 1
+            resp['news_total_count'] += 1
 
     return resp
 
