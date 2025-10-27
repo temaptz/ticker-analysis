@@ -203,12 +203,10 @@ def llm_news_rate(state: State):
         prompt = f'''
         # ЗАДАНИЕ
         
-        Проанализируй рейтинг новостного фона за указанные периоды.  
+        Проанализируй историю изменения рейтинга новостного фона за последние пять недель.  
         Оцени, насколько текущие значения новостного рейтинга могут способствовать росту цены актива.
         
         # ПРАВИЛА
-        
-        
         1. Проанализируй динамику рейтинга новостного фона.
         2. Оцени потенциальное влияние силы и динамики новостного фона на цену актива.
         4. Итоговая оценка - одно число от 0 до 100, где:
@@ -267,7 +265,7 @@ def llm_total_buy_rate(state: State):
 
     if fundamental_rate or price_prediction_rate:
         try:
-            weights = {'fundamental_rate': 1, 'price_prediction_rate': 2.5, 'news_rate': 1, 'favorites': 0.05}
+            weights = {'fundamental_rate': 2, 'price_prediction_rate': 5, 'news_rate': 1, 'favorites': 0.07}
             calc_rate = int(
                 (
                         (fundamental_rate or 0) * weights['fundamental_rate']

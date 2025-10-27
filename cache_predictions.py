@@ -44,7 +44,7 @@ def refresh_cache_loop():
             logger.log_info(message='SUCCESS FINIS REFRESH PREDICTIONS CACHE', is_send_telegram=False)
 
             logger.log_info(
-                message=f'REFRESH PREDICTIONS CACHE TIME: {time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - time_start))}',
+                message=f'REFRESH PREDICTIONS CACHE HOURS: {((time.perf_counter() - time_start) / 3600):.2f}',
                 is_send_telegram=True,
             )
         except Exception as e:
