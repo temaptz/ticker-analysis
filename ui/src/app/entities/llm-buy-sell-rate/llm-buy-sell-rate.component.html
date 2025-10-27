@@ -1,14 +1,14 @@
 <div class="rate">
   <div
     class="buy"
-    [title]="buyConclusion.value() || '-'"
+    [matTooltip]="buyConclusion.value() || '-'"
   >
     Покупка: {{ buy.value() || '-' }}
   </div>
 
   <div
     class="sell"
-    [title]="sellConclusion.value() || '-'"
+    [matTooltip]="sellConclusion.value() || '-'"
   >
     Продажа: {{ sell.value() || '-' }}
   </div>

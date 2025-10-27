@@ -1,15 +1,16 @@
 import { Component, inject, input, resource, ResourceLoaderParams } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { MatTooltip } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 
 
 @Component({
-    selector: 'llm-buy-sell-rate',
-    imports: [CommonModule],
-    providers: [DecimalPipe],
-    templateUrl: './llm-buy-sell-rate.component.html',
-    styleUrl: './llm-buy-sell-rate.component.scss'
+  selector: 'llm-buy-sell-rate',
+  imports: [CommonModule, MatTooltip],
+  providers: [DecimalPipe],
+  templateUrl: './llm-buy-sell-rate.component.html',
+  styleUrl: './llm-buy-sell-rate.component.scss'
 })
 export class LlmBuySellRateComponent {
 
