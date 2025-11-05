@@ -239,20 +239,21 @@ def instrument_prediction(uid: Optional[str], days_future: Optional[str]):
 def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str]):
     resp = None
     date = utils.parse_json_date(date_str)
+    print('CONSENSUS 0', date)
     if uid and date:
         days = (date - datetime.datetime.now(tz=datetime.timezone.utc)).days
-        period_days = 3
+        avg_days = 3
         if days >= 7*3:
-            period_days = 7
+            avg_days = 7
         if days >= 30*2:
-            period_days = 14
+            avg_days = 14
         if days >= 30*6:
-            period_days = 30
+            avg_days = 30
         consensus = predictions.get_prediction_cache(
             instrument_uid=uid,
             date_target=date,
             model_name=learn.model.CONSENSUS,
-            avg_days=period_days,
+            avg_days=avg_days,
         )
         if consensus is not None:
             resp = utils.round_float(num=consensus, decimals=4)

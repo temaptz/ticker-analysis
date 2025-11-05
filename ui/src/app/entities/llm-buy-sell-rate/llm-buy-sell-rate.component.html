@@ -1,6 +1,7 @@
 <div class="rate">
   <div
     class="buy"
+    matTooltipClass="rate-tooltip"
     [matTooltip]="buyConclusion.value() || '-'"
   >
     Покупка: {{ buy.value() || '-' }}
@@ -8,6 +9,7 @@
 
   <div
     class="sell"
+    matTooltipClass="rate-tooltip"
     [matTooltip]="sellConclusion.value() || '-'"
   >
     Продажа: {{ sell.value() || '-' }}

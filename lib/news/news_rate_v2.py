@@ -38,8 +38,8 @@ def get_news_total_influence_score(
 ) -> float or None:
     rates: list[types_util.NewsRate2] = list()
 
-    for n_id in news_ids:
-        if rate := get_news_rate_db(instrument_uid=instrument_uid, news_uid=n_id):
+    for n_uid in news_ids:
+        if (rate := get_news_rate_db(news_uid=n_uid, instrument_uid=instrument_uid)) or rate == 0:
             rates.append(rate)
 
     if len(rates) > 0:

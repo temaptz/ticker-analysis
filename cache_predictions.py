@@ -12,7 +12,7 @@ def refresh_cache_loop():
 
             for date_target in date_utils.get_dates_interval_list(
                 date_from=(now+datetime.timedelta(days=1)),
-                date_to=(now+datetime.timedelta(days=365*1)),
+                date_to=(now+datetime.timedelta(days=365*1.5)),
                 is_order_descending=False,
             ):
                 for instrument in instruments.get_instruments_white_list():
@@ -35,16 +35,20 @@ def refresh_cache_loop():
                                 instrument_uid=instrument.uid,
                                 model_name=model_name,
                                 date_target=date_target,
-                                prediction=prediction,
+                                prediction=utils.round_float(prediction, 7),
+                            )
+                            cached_value = predictions_cache.get_prediction_cache(
+                                instrument_uid=instrument.uid,
+                                model_name=model_name,
+                                date_target=date_target,
                             )
                             logger.log_info(
-                                message=f'TARGET_DATE: |{date_target}| TICKER: [{instrument.ticker}] MODEL: {{{model_name}}} PREDICTION: <{utils.round_float(prediction, 4)}>',
+                                message=f'TARGET_DATE: |{date_target}| TICKER: [{instrument.ticker}] MODEL: {{{model_name}}} PREDICTION: <{utils.round_float(prediction, 4)}> CACHED: ({cached_value})',
                                 is_send_telegram=False,
                             )
-            logger.log_info(message='SUCCESS FINIS REFRESH PREDICTIONS CACHE', is_send_telegram=False)
 
             logger.log_info(
-                message=f'REFRESH PREDICTIONS CACHE HOURS: {((time.perf_counter() - time_start) / 3600):.2f}',
+                message=f'REFRESH PREDICTIONS CACHE FINISHED HOURS: {((time.perf_counter() - time_start) / 3600):.2f}',
                 is_send_telegram=True,
             )
         except Exception as e:

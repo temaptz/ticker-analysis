@@ -86,6 +86,9 @@ def rank_last_news():
         is_send_telegram=True,
     )
 
+    if news_total_count == 0:
+        time.sleep(3600)
+
 def get_news_rank_graph() -> CompiledStateGraph:
     checkpointer = InMemorySaver()
     graph_builder = StateGraph(State)

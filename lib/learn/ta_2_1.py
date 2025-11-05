@@ -333,6 +333,7 @@ class Ta21LearningCard:
                     and self.news_influence_score_1 is None
                     and self.news_influence_score_2 is None
                     and self.news_influence_score_3 is None
+                    and self.news_influence_score_4 is None
                 )
         ):
             print(f'{MODEL_NAME} CARD IS NOT OK BY EMPTY NEWS', self.instrument.ticker, self.date)
@@ -421,16 +422,16 @@ class Ta21LearningCard:
             instrument_uid=self.instrument.uid,
             start_date=start_date,
             end_date=end_date,
-        )
-        news_ids = [n.news_uid for n in news_list or []]
+        ) or []
+        news_ids = [n.news_uid for n in news_list]
 
-        rate = news.news_rate_v2.get_news_total_influence_score(
-                instrument_uid=self.instrument.uid,
-                news_ids=news_ids,
+        influence_score = news.news_rate_v2.get_news_total_influence_score(
+            instrument_uid=self.instrument.uid,
+            news_ids=news_ids,
         )
 
-        if rate or rate == 0:
-            return rate
+        if influence_score or influence_score == 0:
+            return influence_score
 
         return None
 
