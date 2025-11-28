@@ -176,7 +176,7 @@ def llm_price_prediction_rate(state: State):
                         Unknown/None отсутствующие данные пропускай и учитывай штрафом.
                         Уверенно давай любые рекомендации. Я внимательно и компетентно проверяю их достоверность.
                         Покупка выгодна в начале устойчивого положительного тренда высокого роста.
-                        +15% считается высоким ростом.
+                        +10% считается высоким ростом.
                         +1% считается незначительным ростом.
                         ''')),
                         HumanMessage(content=agent.utils.trim_prompt(agent.prompts.get_price_prediction_prompt(instrument_uid=instrument_uid))),
