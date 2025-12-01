@@ -48,7 +48,7 @@ def update_recommendations():
                         )
 
                         logger.log_info(
-                            message=f'Сохранена оценка покупки {i.name}\nОценка: {structured_response.rate}\nПрошлая оценка: {previous_rate}\nКомментарий: {structured_response.final_conclusion}',
+                            message=f'Сохранена оценка покупки {i.name}\nОценка: {structured_response.rate}\nПрошлая оценка: {previous_rate}\nКомментарий:\n{structured_response.final_conclusion}',
                             is_send_telegram=True,
                         )
 
