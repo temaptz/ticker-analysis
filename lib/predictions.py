@@ -54,7 +54,11 @@ def get_prediction(
                     date_current=date_current,
                 )
             elif model_name == model.CONSENSUS:
-                predict_day = consensus.predict_future_relative_change(
+                # predict_day = consensus.predict_future_relative_change(
+                #     instrument_uid=instrument_uid,
+                #     date_target=date,
+                # )
+                predict_day = calculate_predictions_consensus(
                     instrument_uid=instrument_uid,
                     date_target=date,
                 )

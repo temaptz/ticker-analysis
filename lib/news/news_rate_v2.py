@@ -1,8 +1,6 @@
 import re
-import datetime
-
 from lib.db_2 import news_db, news_rate_2_db
-from lib import instruments, yandex, cache, counter, docker, serializer, utils, logger, types_util, local_llm
+from lib import instruments, cache, utils, logger, types_util, local_llm
 
 
 @cache.ttl_cache(ttl=60*30)

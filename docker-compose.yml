@@ -132,9 +132,7 @@ services:
       dockerfile: Dockerfile
     container_name: ui
     ports:
-      - "80:80"
-      - "443:443/tcp"
-      - "443:443/udp"
+      - "8081:80"
     volumes:
       - ./certs:/etc/nginx/certs:ro
     depends_on:

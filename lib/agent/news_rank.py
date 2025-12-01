@@ -87,7 +87,7 @@ def rank_last_news():
     )
 
     if news_total_count == 0:
-        time.sleep(3600)
+        time.sleep(3600 * 6)
 
 def get_news_rank_graph() -> CompiledStateGraph:
     checkpointer = InMemorySaver()

@@ -1,6 +1,6 @@
 import time
 import datetime
-from lib import date_utils, instruments, yandex, news, db_2, types_util, utils
+from lib import date_utils, instruments, news, db_2, types_util, utils
 
 def run_rate_cycle(max_iterations_count: int = None) -> None:
     for date in date_utils.get_dates_interval_list(
