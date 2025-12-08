@@ -251,7 +251,8 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
         target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
         balance_rub = users.get_user_money_rub()
         buy_rate = agent.utils.get_buy_rate(instrument_uid=instrument_uid)
-        lot_size = instruments.get_instrument_by_uid(instrument_uid).lot or 1
+        instr = instruments.get_instrument_by_uid(instrument_uid)
+        lot_size = instr.lot or 1
         total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=buy_rate)
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
@@ -260,6 +261,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
         logger.log_info(
             message='DEBUG BUY RECOMMENDATION',
             output={
+                'ticker': instr.ticker,
                 'qty': qty,
                 'lot_size': lot_size,
                 'target_price': target_price,

@@ -250,7 +250,8 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
             account_id=users.get_analytics_account().id,
         )
         sell_rate = agent.utils.get_sell_rate(instrument_uid=instrument_uid)
-        lot_size = instruments.get_instrument_by_uid(instrument_uid).lot or 1
+        instr = instruments.get_instrument_by_uid(instrument_uid)
+        lot_size = instr.lot or 1
         qty_calc = balance_qty * agent.utils.get_sell_balance_multiply(sell_rate=sell_rate)
         qty_round = math.ceil(qty_calc / lot_size) * lot_size
         is_ok = (0 < qty_round <= qty_calc * 3)
@@ -258,6 +259,7 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
         logger.log_info(
             message='DEBUG SELL RECOMMENDATION',
             output={
+                'ticker': instr.ticker,
                 'qty_round': qty_round,
                 'qty_calc': qty_calc,
                 'lot_size': lot_size,
