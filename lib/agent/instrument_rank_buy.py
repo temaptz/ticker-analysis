@@ -148,6 +148,7 @@ def price_prediction_rate(state: State):
     max_prediction = 0
     max_prediction_date = 0
     weeks_rate = []
+    predictions_list = []
 
     if instrument_uid := state.get('instrument_uid', None):
         date_from = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -188,6 +189,7 @@ def price_prediction_rate(state: State):
 
             # print(f'BUY DAY [{day}] | PREDICT: <{pred}> | RATE: ({day_rate})')
 
+            predictions_list.append(pred)
             weeks_rate.append(day_rate)
 
         for index in range(len(weeks_rate)):
@@ -207,7 +209,7 @@ def price_prediction_rate(state: State):
                 'price_prediction_rate': rated,
                 'max_prediction': max_prediction,
                 'max_prediction_date': max_prediction_date,
-                'weeks_rate_count': len(weeks_rate),
+                'predictions': predictions_list,
             },
             ensure_ascii=False,
             is_pretty=True,

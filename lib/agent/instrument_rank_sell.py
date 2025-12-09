@@ -125,11 +125,11 @@ def invest_calc_rate(state: State):
 def price_prediction_rate(state: State):
     target_days_distance = 30 * 6
     days_before_positive_prediction = target_days_distance
+    predictions_list = []
 
     if instrument_uid := state.get('instrument_uid', None):
         date_from = datetime.datetime.now(tz=datetime.timezone.utc)
         date_to = date_from + datetime.timedelta(days=target_days_distance)
-
 
         for day in date_utils.get_dates_interval_list(
                 date_from=date_from,
@@ -142,6 +142,8 @@ def price_prediction_rate(state: State):
                 avg_days=7,
                 model_name=learn.model.CONSENSUS,
             )
+
+            predictions_list.append(pred)
 
             if pred and pred > 0:
                 delta_days = (day - date_from).days
@@ -157,6 +159,7 @@ def price_prediction_rate(state: State):
             {
                 'price_prediction_rate': rated,
                 'days_before_positive_prediction': days_before_positive_prediction,
+                'predictions': predictions_list,
             },
             ensure_ascii=False,
             is_pretty=True,
