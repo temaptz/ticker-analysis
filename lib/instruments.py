@@ -1,13 +1,11 @@
 import time
 from functools import wraps
-
 import grpc
 from typing import Optional
-
 from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils, db_2, yandex, serializer
+from lib import cache, utils, date_utils, db_2, yandex
 
 
 def catch_exhaused():

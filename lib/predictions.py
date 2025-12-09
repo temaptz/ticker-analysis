@@ -1,9 +1,5 @@
 import datetime
-import time
-
-from lib.learn.ta_1.learning_card import LearningCard
-from lib.learn.ta_1 import learn
-from lib.learn import ta_1, ta_1_1, ta_1_2, ta_2, ta_2_1, model, consensus
+from lib.learn import ta_2_1, model
 from lib import date_utils, logger, utils, instruments, cache, predictions_cache, learn
 from lib.db_2 import predictions_db
 from tinkoff.invest import CandleInterval
@@ -22,7 +18,7 @@ def get_prediction(
         day_results: list[float] = []
 
         for day in days:
-            date = date_utils.get_day_prediction_time(day)
+            day_target = date_utils.get_day_prediction_time(day)
             predict_day = None
 
             if not is_ignore_cache and date_current is None and ((cached := predictions_cache.get_prediction_cache(
@@ -31,36 +27,16 @@ def get_prediction(
                     date_target=date_target,
             )) is not None):
                 predict_day = cached
-            elif model_name == model.TA_1:
-                predict_day = get_relative_prediction_ta_1_by_uid(uid=instrument_uid, date_current=date_current)
-            elif model_name == model.TA_1_1:
-                predict_day = get_relative_prediction_ta_1_1_by_uid(uid=instrument_uid, date_current=date_current)
-            elif model_name == model.TA_1_2:
-                predict_day = ta_1_2.predict_future_relative_change(
-                    instrument_uid=instrument_uid,
-                    date_target=date,
-                    date_current=date_current,
-                )
-            elif model_name == model.TA_2:
-                predict_day = ta_2.predict_future_relative_change(
-                    instrument_uid=instrument_uid,
-                    date_target=date,
-                    date_current=date_current,
-                )
             elif model_name == model.TA_2_1:
                 predict_day = ta_2_1.predict_future_relative_change(
                     instrument_uid=instrument_uid,
-                    date_target=date,
+                    date_target=day_target,
                     date_current=date_current,
                 )
             elif model_name == model.CONSENSUS:
-                # predict_day = consensus.predict_future_relative_change(
-                #     instrument_uid=instrument_uid,
-                #     date_target=date,
-                # )
-                predict_day = calculate_predictions_consensus(
+                predict_day = ta_2_1.predict_future_relative_change(
                     instrument_uid=instrument_uid,
-                    date_target=date,
+                    date_target=day_target,
                 )
 
             if predict_day:
@@ -103,114 +79,6 @@ def get_prediction_cache(
         logger.log_error(method_name='get_prediction_cache', error=e)
 
     return None
-
-
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
-def get_prediction_ta_1_by_uid(uid: str) -> float or None:
-    c = LearningCard()
-    c.load_by_uid(uid=uid, fill_empty=True)
-    x = c.get_x()
-
-    try:
-        return learn.ta_1.learn.predict(x)
-    except Exception as e:
-        print('ERROR get_prediction_ta_1_by_uid', e)
-        return None
-
-
-@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
-def get_relative_prediction_ta_1_by_uid(uid: str, date_current: datetime.datetime = None) -> float or None:
-    c = LearningCard()
-    c.load_by_uid(uid=uid, fill_empty=True, date_current=date_current)
-    x = c.get_x()
-
-    try:
-        if c.price:
-            if prediction := learn.ta_1.learn.predict(x):
-                return utils.get_change_relative_by_price(
-                    main_price=c.price,
-                    next_price=prediction,
-                )
-    except Exception as e:
-        print('ERROR get_relative_prediction_ta_1_by_uid', e)
-
-    return None
-
-
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
-def get_prediction_ta_1_1_by_uid(uid: str) -> float or None:
-    c = ta_1_1.LearningCard()
-    c.load_by_uid(uid=uid, fill_empty=True)
-    x = c.get_x()
-
-    try:
-        return ta_1_1.predict(x)
-    except Exception as e:
-        print('ERROR get_prediction_ta_1_1_by_uid', e)
-        return None
-
-
-@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
-def get_relative_prediction_ta_1_1_by_uid(uid: str, date_current: datetime.datetime = None) -> float or None:
-    c = ta_1_1.LearningCard()
-    c.load_by_uid(uid=uid, fill_empty=True, date_current=date_current)
-    x = c.get_x()
-
-    try:
-        if c.price:
-            if prediction := ta_1_1.predict(x):
-                return utils.get_change_relative_by_price(
-                    main_price=c.price,
-                    next_price=prediction,
-                )
-    except Exception as e:
-        print('ERROR get_prediction_ta_1_1_by_uid', e)
-
-    return None
-
-
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
-def get_prediction_ta_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
-    try:
-        result = list()
-
-        for i in predictions_db.get_predictions_by_uid_date(
-            uid=uid,
-            date_from=date_from,
-            date_to=date_to,
-            model_name=model.TA_1,
-        ):
-            result.append({
-                'prediction': i.prediction,
-                'date': date_utils.parse_date(i.target_date).isoformat(),
-            })
-
-        return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
-    except Exception as e:
-        print('ERROR get_prediction_ta_1_graph_by_uid', e)
-        return []
-
-
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
-def get_prediction_ta_1_1_graph(uid: str, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
-    try:
-        result = list()
-
-        for i in predictions_db.get_predictions_by_uid_date(
-                uid=uid,
-                date_from=date_from,
-                date_to=date_to,
-                model_name=model.TA_1_1,
-        ):
-            result.append({
-                'prediction': i.prediction,
-                'date': date_utils.parse_date(i.target_date).isoformat(),
-            })
-
-        return utils.filter_array_by_date_interval(source=result, date_field='date', interval=interval)
-    except Exception as e:
-        print('ERROR get_prediction_ta_1_1_graph_by_uid', e)
-        return []
 
 
 def get_prediction_graph(uid: str, model_name: model, date_from: datetime.datetime, date_to: datetime.datetime, interval: CandleInterval) -> list:
@@ -326,54 +194,7 @@ def get_prediction_history_graph(
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
 @logger.error_logger
 def calculate_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
-    date_target_utc = date_utils.convert_to_utc(date_target)
-    pred_ta_1 = predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_1, date_target=date_target_utc)
-    pred_ta_1_1 = predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_1_1, date_target=date_target_utc)
-    pred_ta_1_2 = predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_1_2, date_target=date_target_utc)
-    pred_ta_2 = predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_2, date_target=date_target_utc)
-    pred_ta_2_1 = predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_2_1, date_target=date_target_utc)
-
-    if pred_ta_2_1 or pred_ta_2 or pred_ta_1_2:
-        weights = {
-            'pred_ta_1': 1,
-            'pred_ta_1_1': 1,
-            'pred_ta_1_2': 5,
-            'pred_ta_2': 2,
-            'pred_ta_2_1': 11,
-        }
-
-        # Собираем значения и веса
-        pred_values = [
-            (pred_ta_1, weights['pred_ta_1']),
-            (pred_ta_1_1, weights['pred_ta_1_1']),
-            (pred_ta_1_2, weights['pred_ta_1_2']),
-            (pred_ta_2, weights['pred_ta_2']),
-            (pred_ta_2_1, weights['pred_ta_2_1']),
-        ]
-
-        # Считаем взвешенное среднее только по существующим значениям
-        weighted_sum = 0
-        total_weight = 0
-        for value, weight in pred_values:
-            if value is not None:
-                weighted_sum += value * weight
-                total_weight += weight
-
-        if total_weight > 0:
-            return weighted_sum / total_weight
-
-    return None
-
-
-def get_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
-    if current_price := instruments.get_instrument_last_price_by_uid(uid=instrument_uid):
-        if c := consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target):
-            return utils.get_price_by_change_relative(
-                current_price=current_price,
-                relative_change=c,
-            )
-
-    return None
+    return predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_2_1, date_target=date_target)
 
 
 def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:

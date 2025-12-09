@@ -17,10 +17,6 @@ def refresh_cache_loop():
             ):
                 for instrument in instruments.get_instruments_white_list():
                     for model_name in [
-                        learn.model.TA_1,
-                        learn.model.TA_1_1,
-                        learn.model.TA_1_2,
-                        learn.model.TA_2,
                         learn.model.TA_2_1,
                         learn.model.CONSENSUS,
                     ]:

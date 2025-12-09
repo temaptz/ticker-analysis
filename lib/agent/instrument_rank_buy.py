@@ -1,11 +1,11 @@
+import datetime
 from typing import TypedDict
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-
-from lib import instruments, users, agent, db_2, logger
+from lib import instruments, users, agent, db_2, logger, date_utils, predictions, learn, utils, news, serializer
 
 
 class State(TypedDict, total=False):
@@ -67,9 +67,9 @@ def get_buy_rank_graph() -> CompiledStateGraph:
     graph_builder = StateGraph(State)
 
     graph_builder.add_node('llm_fundamental_rate', llm_fundamental_rate)
-    graph_builder.add_node('llm_price_prediction_rate', llm_price_prediction_rate)
-    graph_builder.add_node('llm_news_rate', llm_news_rate)
-    graph_builder.add_node('llm_total_buy_rate', llm_total_buy_rate)
+    graph_builder.add_node('llm_price_prediction_rate', price_prediction_rate)
+    graph_builder.add_node('llm_news_rate', news_rate)
+    graph_builder.add_node('llm_total_buy_rate', total_buy_rate)
 
     graph_builder.add_edge(START, 'llm_fundamental_rate')
     graph_builder.add_edge('llm_fundamental_rate', 'llm_price_prediction_rate')
@@ -141,6 +141,80 @@ def llm_fundamental_rate(state: State):
     return {}
 
 
+def price_prediction_rate(state: State):
+    final_rate = 0
+    target_price_change = 0.15
+    target_days_distance = 30 * 6
+    max_prediction = 0
+    max_prediction_date = 0
+    weeks_rate = []
+
+    if instrument_uid := state.get('instrument_uid', None):
+        date_from = datetime.datetime.now(tz=datetime.timezone.utc)
+        date_to = date_from + datetime.timedelta(days=target_days_distance)
+
+        for day in date_utils.get_dates_interval_list(
+            date_from=date_from,
+            date_to=date_to,
+            interval_seconds=(3600 * 24 * 7)
+        ):
+            day_rate = 0
+            distance_days = (day - date_from).days
+            rate_days_distance = 0
+
+            if distance_days < 30:
+                rate_days_distance = agent.utils.lerp(30 - distance_days, 0, 30, 0.9, 1)
+            elif distance_days < 90:
+                rate_days_distance = agent.utils.lerp(90 - distance_days, 0, 60, 0.5, 0.9)
+            else:
+                rate_days_distance = agent.utils.lerp(target_days_distance - distance_days, 0, target_days_distance - 90, 0, 0.5)
+
+
+
+            pred = predictions.get_prediction(
+                instrument_uid=instrument_uid,
+                date_target=day,
+                avg_days=7,
+                model_name=learn.model.CONSENSUS,
+            )
+
+            if pred and pred > 0:
+                rate_price_change = agent.utils.linear_interpolation(pred, 0, target_price_change, 0, 1)
+                day_rate = (rate_price_change + rate_days_distance) / 2
+
+                if pred > max_prediction:
+                    max_prediction = pred
+                    max_prediction_date = day
+
+            # print(f'BUY DAY [{day}] | PREDICT: <{pred}> | RATE: ({day_rate})')
+
+            weeks_rate.append(day_rate)
+
+        for index in range(len(weeks_rate)):
+            rate = weeks_rate[index]
+            next_rate = weeks_rate[(index + 1) if (index + 1) < len(weeks_rate) else index] or 0
+            avg_rate = (rate + next_rate) / 2
+
+            if avg_rate > final_rate:
+                final_rate = avg_rate
+
+    rated = int(max(0, min(final_rate, 1)) * 100)
+
+    return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
+        rate=rated,
+        final_conclusion=serializer.to_json(
+            {
+                'price_prediction_rate': rated,
+                'max_prediction': max_prediction,
+                'max_prediction_date': max_prediction_date,
+                'weeks_rate_count': len(weeks_rate),
+            },
+            ensure_ascii=False,
+            is_pretty=True,
+        )
+    )}
+
+
 def llm_price_prediction_rate(state: State):
     if instrument_uid := state.get('instrument_uid', None):
         prompt = f'''
@@ -198,6 +272,44 @@ def llm_price_prediction_rate(state: State):
     return {}
 
 
+def news_rate(state: State):
+    final_rate = 0
+    news_influence_month = 0
+    news_influence_week = 0
+    influence_delta = 0
+
+    if instrument_uid := state.get('instrument_uid', None):
+        news_influence_month = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=(datetime.datetime.now() - datetime.timedelta(days=30)),
+            end_date=datetime.datetime.now(),
+        ) or 0
+        news_influence_week = news.news.get_influence_score(
+            instrument_uid=instrument_uid,
+            start_date=(datetime.datetime.now() - datetime.timedelta(days=7)),
+            end_date=datetime.datetime.now(),
+        ) or 0
+        influence_delta = max((news_influence_week - news_influence_month), 0)
+
+        final_rate = agent.utils.linear_interpolation(influence_delta, 0, 5, 0, 1)
+
+    rated = int(max(0, min(final_rate, 1)) * 100)
+
+    return {'news_rate': agent.models.RatePercentWithConclusion(
+        rate=rated,
+        final_conclusion=serializer.to_json(
+            {
+                'news_rate': rated,
+                'news_influence_month': news_influence_month,
+                'news_influence_week': news_influence_week,
+                'influence_delta': influence_delta,
+            },
+            ensure_ascii=False,
+            is_pretty=True,
+        )
+    )}
+
+
 def llm_news_rate(state: State):
     if instrument_uid := state.get('instrument_uid', None):
         prompt = f'''
@@ -251,26 +363,26 @@ def llm_news_rate(state: State):
     return {}
 
 
-def llm_total_buy_rate(state: State):
+def total_buy_rate(state: State):
     f = state.get('fundamental_rate', None)
     price_prediction = state.get('price_prediction_rate', None)
     n = state.get('news_rate', None)
-    fundamental_rate = f.rate if (f and f.rate) else None
+    fundamental_rate = f.rate if (f and f.rate is not None) else None
     fundamental_conclusion = f.final_conclusion if (f and f.final_conclusion) else None
-    price_prediction_rate = price_prediction.rate if (price_prediction and price_prediction.rate) else None
+    price_prediction_rated = price_prediction.rate if (price_prediction and price_prediction.rate is not None) else None
     price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
-    news_rate = n.rate if (n and n.rate) else None
+    news_rated = n.rate if (n and n.rate is not None) else None
     news_conclusion = n.final_conclusion if (n and n.final_conclusion) else None
     is_in_favorites = users.get_is_in_favorites(instrument_uid=state.get('instrument_uid'))
 
-    if fundamental_rate or price_prediction_rate:
+    if fundamental_rate or price_prediction_rated:
         try:
             weights = {'fundamental_rate': 2, 'price_prediction_rate': 5, 'news_rate': 1, 'favorites': 0.07}
             calc_rate = int(
                 (
                         (fundamental_rate or 0) * weights['fundamental_rate']
-                        + (price_prediction_rate or 0) * weights['price_prediction_rate']
-                        + (news_rate or 0) * weights['news_rate']
+                        + (price_prediction_rated or 0) * weights['price_prediction_rate']
+                        + (news_rated or 0) * weights['news_rate']
                         + (100 if is_in_favorites else 0) * weights['favorites']
                 )
                 / (
@@ -284,7 +396,7 @@ def llm_total_buy_rate(state: State):
             if calc_rate or calc_rate == 0:
                 return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{fundamental_rate}\n{fundamental_conclusion}\n\n{price_prediction_rate}\n{price_prediction_conclusion}\n\n{news_rate}\n{news_conclusion}'
+                    final_conclusion=f'{fundamental_rate}\n{fundamental_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}\n\n{news_rated}\n{news_conclusion}'
                 )}
         except Exception as e:
             print('ERROR llm_total_buy_rate', e)

@@ -1,11 +1,11 @@
+import datetime
 from typing import TypedDict
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from lib import instruments, users, agent, utils, db_2, logger, invest_calc
-
+from lib import instruments, users, agent, utils, db_2, logger, invest_calc, date_utils, predictions, learn, serializer
 
 class State(TypedDict, total=False):
     human_name: str
@@ -62,9 +62,9 @@ def get_sell_rank_graph() -> CompiledStateGraph:
     checkpointer = InMemorySaver()
     graph_builder = StateGraph(State)
 
-    graph_builder.add_node('llm_invest_calc_rate', llm_invest_calc_rate)
-    graph_builder.add_node('llm_price_prediction_rate', llm_price_prediction_rate)
-    graph_builder.add_node('llm_total_sell_rate', llm_total_sell_rate)
+    graph_builder.add_node('llm_invest_calc_rate', invest_calc_rate)
+    graph_builder.add_node('llm_price_prediction_rate', price_prediction_rate)
+    graph_builder.add_node('llm_total_sell_rate', total_sell_rate)
 
     graph_builder.add_edge(START, 'llm_invest_calc_rate')
     graph_builder.add_edge('llm_invest_calc_rate', 'llm_price_prediction_rate')
@@ -80,7 +80,7 @@ def get_sell_rank_graph() -> CompiledStateGraph:
     return graph
 
 
-def llm_invest_calc_rate(state: State):
+def invest_calc_rate(state: State):
     result: State = {}
 
     try:
@@ -93,32 +93,75 @@ def llm_invest_calc_rate(state: State):
                     if p <= 0:
                         rate = 0
                     elif 0 < p <= 5:
-                        rate = round(agent.utils.lerp(p, 0, 5, 0, 29))
-                    elif 5 < p <= 10:
-                        rate = round(agent.utils.lerp(p, 5, 10, 30, 69))
-                    elif 10 < p <= 20:
-                        rate = round(agent.utils.lerp(p, 10, 20, 70, 79))
-                    elif 20 < p <= 30:
-                        rate = round(agent.utils.lerp(p, 20, 30, 80, 89))
+                        rate = round(agent.utils.lerp(p, 0, 5, 0, 50))
                     else:
-                        rate = min(100, round(agent.utils.lerp(p, 30, 60, 90, 100)))
+                        rate = min(100, round(agent.utils.lerp(p, 5, 20, 50, 100)))
 
 
                     if rate or rate == 0:
                         result = {
                             'invest_calc_rate': agent.models.RatePercentWithConclusion(
                                 rate=rate,
-                                final_conclusion=f'Финальная оценка продажи: {rate} [0-100]. potential_profit_percent: {utils.round_float(calc['potential_profit_percent'], 4)}% - потенциальная выгода в процентах',
+                                final_conclusion=serializer.to_json(
+                                    {
+                                        'invest_calc_rate': rate,
+                                        'potential_profit_percent': utils.round_float(calc['potential_profit_percent'], 4),
+                                    },
+                                    ensure_ascii=False,
+                                    is_pretty=True,
+                                )
                             )
                         }
 
     except Exception as e:
         logger.log_error(
-            method_name='llm_invest_calc_rate',
+            method_name='invest_calc_rate',
             error=e,
             is_telegram_send=False,
         )
     return result
+
+
+def price_prediction_rate(state: State):
+    target_days_distance = 30 * 6
+    days_before_positive_prediction = target_days_distance
+
+    if instrument_uid := state.get('instrument_uid', None):
+        date_from = datetime.datetime.now(tz=datetime.timezone.utc)
+        date_to = date_from + datetime.timedelta(days=target_days_distance)
+
+
+        for day in date_utils.get_dates_interval_list(
+                date_from=date_from,
+                date_to=date_to,
+                interval_seconds=(3600 * 24 * 7)
+        ):
+            pred = predictions.get_prediction(
+                instrument_uid=instrument_uid,
+                date_target=day,
+                avg_days=7,
+                model_name=learn.model.CONSENSUS,
+            )
+
+            if pred and pred > 0:
+                delta_days = (day - date_from).days
+                if delta_days < days_before_positive_prediction:
+                    days_before_positive_prediction = delta_days
+
+    final_rate = agent.utils.linear_interpolation(days_before_positive_prediction, 0, target_days_distance, 0, 1)
+    rated = int(max(0, min(final_rate, 1)) * 100)
+
+    return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
+        rate=rated,
+        final_conclusion=serializer.to_json(
+            {
+                'price_prediction_rate': rated,
+                'days_before_positive_prediction': days_before_positive_prediction,
+            },
+            ensure_ascii=False,
+            is_pretty=True,
+        )
+    )}
 
 
 def llm_price_prediction_rate(state: State):
@@ -179,21 +222,21 @@ def llm_price_prediction_rate(state: State):
     return {}
 
 
-def llm_total_sell_rate(state: State) -> State:
+def total_sell_rate(state: State) -> State:
     invest_c = state.get('invest_calc_rate', None)
     price_prediction = state.get('price_prediction_rate', None)
-    invest_rate = invest_c.rate if (invest_c and invest_c.rate) else None
+    invest_rate = invest_c.rate if (invest_c and invest_c.rate is not None) else None
     invest_rate_conclusion = invest_c.final_conclusion if (invest_c and invest_c.final_conclusion) else None
-    price_prediction_rate = price_prediction.rate if (price_prediction and price_prediction.rate) else None
+    price_prediction_rated = price_prediction.rate if (price_prediction and price_prediction.rate is not None) else None
     price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
 
-    if invest_rate or price_prediction_rate:
+    if invest_rate or price_prediction_rated:
         try:
-            weights = {'invest_rate': 2, 'price_prediction_rate': 1}
+            weights = {'invest_rate': 3, 'price_prediction_rate': 1}
             calc_rate = int(
                 (
                         (invest_rate or 0) * weights['invest_rate']
-                        + (price_prediction_rate or 0) * weights['price_prediction_rate']
+                        + (price_prediction_rated or 0) * weights['price_prediction_rate']
                 )
                 / (weights['invest_rate'] + weights['price_prediction_rate'])
             )
@@ -201,7 +244,7 @@ def llm_total_sell_rate(state: State) -> State:
             if calc_rate or calc_rate == 0:
                 return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rate}\n{price_prediction_conclusion}'
+                    final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}'
                 )}
         except Exception as e:
             print('ERROR llm_total_sell_rate', e)

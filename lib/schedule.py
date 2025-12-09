@@ -1,8 +1,6 @@
-import datetime
-import time
 import pytz
 from apscheduler.schedulers.blocking import BlockingScheduler
-from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, agent, logger, telegram, schedule_llm
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, schedule_llm
 
 
 def start_schedule() -> None:
@@ -26,15 +24,6 @@ def start_schedule() -> None:
         day_of_week='mon',
         hour=10,
         minute=20,
-        timezone=timezone
-    )
-
-    # Ежедневный сбор предсказаний нейросети
-    scheduler.add_job(
-        predictions_save.save_daily_predictions,
-        'cron',
-        hour=13,
-        minute=0,
         timezone=timezone
     )
 

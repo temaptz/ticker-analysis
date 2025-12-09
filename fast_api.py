@@ -178,10 +178,6 @@ def instrument_prediction_graph(uid: Optional[str], date_from_str: Optional[str]
     models = (models_str or '').split(',') if models_str is not None else []
     if uid and date_from and date_to and interval:
         model_names = models if len(models) else [
-            learn.model.TA_1,
-            learn.model.TA_1_1,
-            learn.model.TA_1_2,
-            learn.model.TA_2,
             learn.model.TA_2_1,
             learn.model.CONSENSUS
         ]
@@ -220,17 +216,9 @@ def instrument_prediction(uid: Optional[str], days_future: Optional[str]):
         current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
 
         resp['relative'] = {}
-        resp['relative'][learn.model.TA_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_1)
-        resp['relative'][learn.model.TA_1_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_1_1)
-        resp['relative'][learn.model.TA_1_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_1_2)
-        resp['relative'][learn.model.TA_2] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_2)
         resp['relative'][learn.model.TA_2_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_2_1)
         resp['relative'][learn.model.CONSENSUS] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.CONSENSUS)
 
-        resp[learn.model.TA_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_1])
-        resp[learn.model.TA_1_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_1_1])
-        resp[learn.model.TA_1_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_1_2])
-        resp[learn.model.TA_2] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_2])
         resp[learn.model.TA_2_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_2_1])
         resp[learn.model.CONSENSUS] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.CONSENSUS])
     return resp
@@ -239,7 +227,6 @@ def instrument_prediction(uid: Optional[str], days_future: Optional[str]):
 def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str]):
     resp = None
     date = utils.parse_json_date(date_str)
-    print('CONSENSUS 0', date)
     if uid and date:
         days = (date - datetime.datetime.now(tz=datetime.timezone.utc)).days
         avg_days = 3

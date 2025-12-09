@@ -1,3 +1,4 @@
+import math
 import re
 from langchain_core.runnables.graph import MermaidDrawMethod
 from io import BytesIO
@@ -75,6 +76,21 @@ def lerp(x: float, a: float, b: float, y0: float, y1: float) -> float:
     Замечание: сама по себе функция не обрезает результат при x вне [a,b].
     """
     return y0 + (0 if b == a else (x - a) / (b - a)) * (y1 - y0)
+
+
+def linear_interpolation(x: float, a: float, b: float, y0: float, y1: float) -> float:
+    """
+    Простая и надёжная линейная интерполяция.
+    Корректно работает при любом порядке a и b (включая отрицательные значения).
+    Возвращает значение, соответствующее позиции x на отрезке [a, b] в шкале [y0, y1].
+    Если a и b практически равны — возвращает y0 (защита от деления на ноль).
+    Результат не обрезается, если x вне [a, b].
+    """
+    x = float(x); a = float(a); b = float(b); y0 = float(y0); y1 = float(y1)
+    if math.isclose(a, b):
+        return y0
+    t = (x - a) / abs(b - a)
+    return y0 + t * (y1 - y0)
 
 
 def get_buy_balance_multiply(buy_rate: float) -> float:

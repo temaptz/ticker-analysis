@@ -18,12 +18,13 @@ ENV PYTHONUNBUFFERED=1
 
 COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install tinkoff-investments --no-deps
+# RUN pip install tinkoff-investments --no-deps
 
 
 FROM requirements
 
 COPY ./lib /app/lib
+COPY ./tinkoff /app/tinkoff
 COPY ./main.py /app/main.py
 COPY ./learn.py /app/learn.py
 COPY ./cache_predictions.py /app/cache_predictions.py
