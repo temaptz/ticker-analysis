@@ -104,10 +104,13 @@ def get_buy_balance_multiply(buy_rate: float) -> float:
 
 
 def get_sell_balance_multiply(sell_rate: float) -> float:
-    if sell_rate >= 75:
-        return lerp(sell_rate, 75, 89, 0.15, 0.50)
+    if 0 < sell_rate <= 70:
+        return lerp(sell_rate, 0, 70, 0.01, 0.2)
+    elif 70 < sell_rate <= 90:
+        return lerp(sell_rate, 70, 90, 0.2, 0.5)
+    elif 90 < sell_rate <= 100:
+        return lerp(sell_rate, 90, 100, 0.5, 1)
 
-    if sell_rate >= 90:
-        return lerp(sell_rate, 90, 100, 0.50, 1.00)
+    return 0
 
-    return lerp(sell_rate, 0, 74, 0.01, 0.15)
+
