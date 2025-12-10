@@ -94,13 +94,12 @@ def linear_interpolation(x: float, a: float, b: float, y0: float, y1: float) -> 
 
 
 def get_buy_balance_multiply(buy_rate: float) -> float:
-    if buy_rate >= 75:
-        return lerp(buy_rate, 75, 89, 0.05, 0.10)
+    if 70 < buy_rate <= 90:
+        return lerp(buy_rate, 70, 90, 0.05, 0.2)
+    elif 90 < buy_rate <= 100:
+        return lerp(buy_rate, 90, 100, 0.2, 0.5)
 
-    if buy_rate >= 90:
-        return lerp(buy_rate, 90, 100, 0.10, 0.30)
-
-    return lerp(buy_rate, 0, 74, 0.01, 0.05)
+    return 0
 
 
 def get_sell_balance_multiply(sell_rate: float) -> float:
