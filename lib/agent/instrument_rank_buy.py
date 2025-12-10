@@ -297,7 +297,13 @@ def news_rate(state: State):
         ) or 0
         influence_delta = max((news_influence_week - news_influence_month), 0)
 
-        final_rate = agent.utils.linear_interpolation(influence_delta, 0, 5, 0, 1)
+        if influence_delta > 0:
+            final_rate = agent.utils.linear_interpolation(influence_delta, 0, 5, 0.5, 1)
+        else:
+            influence_avg = (news_influence_month + news_influence_week) / 2
+            if influence_avg > 0:
+                final_rate = agent.utils.linear_interpolation(influence_avg, 0, 5, 0, 0.5)
+
 
     rated = int(max(0, min(final_rate, 1)) * 100)
 
