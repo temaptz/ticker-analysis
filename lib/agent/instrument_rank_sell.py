@@ -143,9 +143,9 @@ def price_prediction_rate(state: State):
                 model_name=learn.model.CONSENSUS,
             )
 
-            predictions_list.append(pred)
+            predictions_list.append(utils.round_float(pred, 3))
 
-            if pred and pred > 0:
+            if pred and pred > 0.01:
                 delta_days = (day - date_from).days
                 if delta_days < days_before_positive_prediction:
                     days_before_positive_prediction = delta_days
@@ -159,7 +159,7 @@ def price_prediction_rate(state: State):
             {
                 'price_prediction_rate': rated,
                 'days_before_positive_prediction': days_before_positive_prediction,
-                'predictions': predictions_list,
+                'predictions': '; '.join(predictions_list),
             },
             ensure_ascii=False,
             is_pretty=True,

@@ -189,7 +189,7 @@ def price_prediction_rate(state: State):
 
             # print(f'BUY DAY [{day}] | PREDICT: <{pred}> | RATE: ({day_rate})')
 
-            predictions_list.append(pred)
+            predictions_list.append(utils.round_float(pred, 3))
             weeks_rate.append(day_rate)
 
         for index in range(len(weeks_rate)):
@@ -209,7 +209,7 @@ def price_prediction_rate(state: State):
                 'price_prediction_rate': rated,
                 'max_prediction': max_prediction,
                 'max_prediction_date': max_prediction_date,
-                'predictions': predictions_list,
+                'predictions': '; '.join(predictions_list),
             },
             ensure_ascii=False,
             is_pretty=True,
