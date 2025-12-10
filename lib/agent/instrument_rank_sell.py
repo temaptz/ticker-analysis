@@ -126,6 +126,7 @@ def price_prediction_rate(state: State):
     target_days_distance = 30 * 6
     days_before_positive_prediction = target_days_distance
     predictions_list = []
+    is_no_predictions = True
 
     if instrument_uid := state.get('instrument_uid', None):
         date_from = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -143,15 +144,18 @@ def price_prediction_rate(state: State):
                 model_name=learn.model.CONSENSUS,
             )
 
-            predictions_list.append(utils.round_float(pred, 3))
+            predictions_list.append(utils.round_float(pred or 0, 3))
 
-            if pred and pred > 0.01:
-                delta_days = (day - date_from).days
-                if delta_days < days_before_positive_prediction:
-                    days_before_positive_prediction = delta_days
+            if pred:
+                is_no_predictions = False
+
+                if pred > 0.01:
+                    delta_days = (day - date_from).days
+                    if delta_days < days_before_positive_prediction:
+                        days_before_positive_prediction = delta_days
 
     final_rate = agent.utils.linear_interpolation(days_before_positive_prediction, 0, target_days_distance, 0, 1)
-    rated = int(max(0, min(final_rate, 1)) * 100)
+    rated = 0 if is_no_predictions else int(max(0, min(final_rate, 1)) * 100)
 
     return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
         rate=rated,
@@ -159,7 +163,7 @@ def price_prediction_rate(state: State):
             {
                 'price_prediction_rate': rated,
                 'days_before_positive_prediction': days_before_positive_prediction,
-                'predictions': '; '.join(predictions_list),
+                'predictions': '; '.join(map(str, predictions_list)),
             },
             ensure_ascii=False,
             is_pretty=True,

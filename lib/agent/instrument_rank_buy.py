@@ -149,6 +149,7 @@ def price_prediction_rate(state: State):
     max_prediction_date = 0
     weeks_rate = []
     predictions_list = []
+    is_no_predictions = True
 
     if instrument_uid := state.get('instrument_uid', None):
         date_from = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -179,13 +180,16 @@ def price_prediction_rate(state: State):
                 model_name=learn.model.CONSENSUS,
             )
 
-            if pred and pred > 0:
-                rate_price_change = agent.utils.linear_interpolation(pred, 0, target_price_change, 0, 1)
-                day_rate = (rate_price_change + rate_days_distance) / 2
+            if pred:
+                is_no_predictions = False
 
-                if pred > max_prediction:
-                    max_prediction = pred
-                    max_prediction_date = day
+                if pred > 0:
+                    rate_price_change = agent.utils.linear_interpolation(pred, 0, target_price_change, 0, 1)
+                    day_rate = (rate_price_change + rate_days_distance) / 2
+
+                    if pred > max_prediction:
+                        max_prediction = pred
+                        max_prediction_date = day
 
             # print(f'BUY DAY [{day}] | PREDICT: <{pred}> | RATE: ({day_rate})')
 
@@ -200,7 +204,7 @@ def price_prediction_rate(state: State):
             if avg_rate > final_rate:
                 final_rate = avg_rate
 
-    rated = int(max(0, min(final_rate, 1)) * 100)
+    rated = 0 if is_no_predictions else int(max(0, min(final_rate, 1)) * 100)
 
     return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
         rate=rated,
@@ -209,7 +213,7 @@ def price_prediction_rate(state: State):
                 'price_prediction_rate': rated,
                 'max_prediction': max_prediction,
                 'max_prediction_date': max_prediction_date,
-                'predictions': '; '.join(predictions_list),
+                'predictions': '; '.join(map(str, predictions_list)),
             },
             ensure_ascii=False,
             is_pretty=True,
