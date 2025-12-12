@@ -67,15 +67,15 @@ def get_buy_rank_graph() -> CompiledStateGraph:
     graph_builder = StateGraph(State)
 
     graph_builder.add_node('llm_fundamental_rate', llm_fundamental_rate)
-    graph_builder.add_node('llm_price_prediction_rate', price_prediction_rate)
-    graph_builder.add_node('llm_news_rate', news_rate)
-    graph_builder.add_node('llm_total_buy_rate', total_buy_rate)
+    graph_builder.add_node('price_prediction_rate', price_prediction_rate)
+    graph_builder.add_node('news_rate', news_rate)
+    graph_builder.add_node('total_buy_rate', total_buy_rate)
 
     graph_builder.add_edge(START, 'llm_fundamental_rate')
-    graph_builder.add_edge('llm_fundamental_rate', 'llm_price_prediction_rate')
-    graph_builder.add_edge('llm_price_prediction_rate', 'llm_news_rate')
-    graph_builder.add_edge('llm_news_rate', 'llm_total_buy_rate')
-    graph_builder.add_edge('llm_total_buy_rate', END)
+    graph_builder.add_edge('llm_fundamental_rate', 'price_prediction_rate')
+    graph_builder.add_edge('price_prediction_rate', 'news_rate')
+    graph_builder.add_edge('news_rate', 'total_buy_rate')
+    graph_builder.add_edge('total_buy_rate', END)
 
     graph = graph_builder.compile(
         checkpointer=checkpointer,
@@ -411,5 +411,5 @@ def total_buy_rate(state: State):
                     final_conclusion=f'{fundamental_rate}\n{fundamental_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}\n\n{news_rated}\n{news_conclusion}'
                 )}
         except Exception as e:
-            print('ERROR llm_total_buy_rate', e)
+            print('ERROR total_buy_rate', e)
     return {}

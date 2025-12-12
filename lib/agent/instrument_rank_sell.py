@@ -19,57 +19,72 @@ def update_recommendations():
     graph_sell = get_sell_rank_graph()
 
     for i in users.sort_instruments_for_sell(
-            instruments_list=users.get_user_instruments_list(account_id=users.get_analytics_account().id)
+            instruments_list=instruments.get_instruments_white_list()
     ):
-        try:
-            input_state: State = {
-                'human_name': instruments.get_instrument_human_name(i.uid),
-                'instrument_uid': i.uid,
-            }
+        if users.get_user_instrument_balance(instrument_uid=i.uid, account_id=users.get_analytics_account().id) > 0:
+            try:
+                input_state: State = {
+                    'human_name': instruments.get_instrument_human_name(i.uid),
+                    'instrument_uid': i.uid,
+                }
 
-            result = graph_sell.invoke(
-                input=input_state,
-                debug=True,
-                config=agent.llm.config,
+                result = graph_sell.invoke(
+                    input=input_state,
+                    debug=True,
+                    config=agent.llm.config,
+                )
+
+                if structured_response := result.get('structured_response', None):
+                    if structured_response.rate:
+                        previous_rate = agent.utils.get_sell_rate(instrument_uid=i.uid)
+
+                        db_2.instrument_tags_db.upset_tag(
+                            instrument_uid=i.uid,
+                            tag_name='llm_sell_rate',
+                            tag_value=structured_response.rate,
+                        )
+
+                        logger.log_info(
+                            message=f'Сохранена оценка продажи {i.name}\nОценка: {structured_response.rate}\nПрошлая оценка: {previous_rate}\nКомментарий:\n{structured_response.final_conclusion}',
+                            is_send_telegram=True,
+                        )
+
+                    if structured_response.final_conclusion:
+                        db_2.instrument_tags_db.upset_tag(
+                            instrument_uid=i.uid,
+                            tag_name='llm_sell_conclusion',
+                            tag_value=structured_response.final_conclusion,
+                        )
+            except Exception as e:
+                logger.log_error(method_name='update_recommendations_item sell', error=e)
+
+        else:
+            logger.log_info(
+                message=f'Удалена оценка продажи {i.ticker}',
+                is_send_telegram=False,
             )
-
-            if structured_response := result.get('structured_response', None):
-                if structured_response.rate:
-                    previous_rate = agent.utils.get_sell_rate(instrument_uid=i.uid)
-
-                    db_2.instrument_tags_db.upset_tag(
-                        instrument_uid=i.uid,
-                        tag_name='llm_sell_rate',
-                        tag_value=structured_response.rate,
-                    )
-
-                    logger.log_info(
-                        message=f'Сохранена оценка продажи {i.name}\nОценка: {structured_response.rate}\nПрошлая оценка: {previous_rate}\nКомментарий:\n{structured_response.final_conclusion}',
-                        is_send_telegram=True,
-                    )
-
-                if structured_response.final_conclusion:
-                    db_2.instrument_tags_db.upset_tag(
-                        instrument_uid=i.uid,
-                        tag_name='llm_sell_conclusion',
-                        tag_value=structured_response.final_conclusion,
-                    )
-        except Exception as e:
-            logger.log_error(method_name='update_recommendations_item sell', error=e)
+            db_2.instrument_tags_db.delete_tag(
+                instrument_uid=i.uid,
+                tag_name='llm_sell_rate',
+            )
+            db_2.instrument_tags_db.delete_tag(
+                instrument_uid=i.uid,
+                tag_name='llm_sell_conclusion',
+            )
 
 
 def get_sell_rank_graph() -> CompiledStateGraph:
     checkpointer = InMemorySaver()
     graph_builder = StateGraph(State)
 
-    graph_builder.add_node('llm_invest_calc_rate', invest_calc_rate)
-    graph_builder.add_node('llm_price_prediction_rate', price_prediction_rate)
-    graph_builder.add_node('llm_total_sell_rate', total_sell_rate)
+    graph_builder.add_node('invest_calc_rate', invest_calc_rate)
+    graph_builder.add_node('price_prediction_rate', price_prediction_rate)
+    graph_builder.add_node('total_sell_rate', total_sell_rate)
 
-    graph_builder.add_edge(START, 'llm_invest_calc_rate')
-    graph_builder.add_edge('llm_invest_calc_rate', 'llm_price_prediction_rate')
-    graph_builder.add_edge('llm_price_prediction_rate', 'llm_total_sell_rate')
-    graph_builder.add_edge('llm_total_sell_rate', END)
+    graph_builder.add_edge(START, 'invest_calc_rate')
+    graph_builder.add_edge('invest_calc_rate', 'price_prediction_rate')
+    graph_builder.add_edge('price_prediction_rate', 'total_sell_rate')
+    graph_builder.add_edge('total_sell_rate', END)
 
     graph = graph_builder.compile(
         checkpointer=checkpointer,
@@ -254,5 +269,5 @@ def total_sell_rate(state: State) -> State:
                     final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}'
                 )}
         except Exception as e:
-            print('ERROR llm_total_sell_rate', e)
+            print('ERROR total_sell_rate', e)
     return {}

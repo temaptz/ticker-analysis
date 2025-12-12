@@ -41,7 +41,7 @@ def create_orders_2():
     for instrument in users.sort_instruments_for_buy(
             instruments_list=instruments.get_instruments_white_list()
     ):
-        if len(recommendations) < 5:
+        if len(recommendations) <= 5:
             if not instrument.for_qual_investor_flag:
                 if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
                     if buy_rate >= 70:

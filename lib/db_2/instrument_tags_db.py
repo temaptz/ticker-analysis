@@ -80,3 +80,16 @@ def upset_tag(instrument_uid: str, tag_name: str, tag_value: str) -> None:
 
     with SessionLocal() as session, session.begin():
         session.execute(stmt)
+
+
+@logger.error_logger
+def delete_tag(instrument_uid: str, tag_name: str) -> None:
+    stmt = (
+        sqlalchemy.delete(TagDB)
+        .where(
+            TagDB.instrument_uid == instrument_uid,
+            TagDB.tag_name == tag_name,
+            )
+    )
+    with SessionLocal() as session, session.begin():
+        session.execute(stmt)

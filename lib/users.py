@@ -17,7 +17,7 @@ from lib import cache, instruments, utils, logger, invest_calc, predictions, db_
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_balance(instrument_uid: str, account_id: int = None, is_with_blocked: bool = True) -> int:
+def get_user_instrument_balance(instrument_uid: str, account_id: int = None) -> int:
     result = 0
 
     try:
