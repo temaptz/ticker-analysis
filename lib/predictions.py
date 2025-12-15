@@ -21,10 +21,11 @@ def get_prediction(
             day_target = date_utils.get_day_prediction_time(day)
             predict_day = None
 
-            if not is_ignore_cache and date_current is None and ((cached := predictions_cache.get_prediction_cache(
+            if is_ignore_cache is False and date_current is None and ((cached := get_prediction_cache(
                     instrument_uid=instrument_uid,
                     model_name=model_name,
                     date_target=date_target,
+                    avg_days=1,
             )) is not None):
                 predict_day = cached
             elif model_name == model.TA_2_1:
