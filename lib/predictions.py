@@ -33,11 +33,13 @@ def get_prediction(
                     instrument_uid=instrument_uid,
                     date_target=day_target,
                     date_current=date_current,
+                    is_fill_empty=True,
                 )
             elif model_name == model.CONSENSUS:
                 predict_day = ta_2_1.predict_future_relative_change(
                     instrument_uid=instrument_uid,
                     date_target=day_target,
+                    is_fill_empty=True,
                 )
 
             if predict_day:

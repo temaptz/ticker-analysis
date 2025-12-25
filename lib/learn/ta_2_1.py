@@ -832,6 +832,7 @@ def predict_future_relative_change(
         instrument_uid: str,
         date_target: datetime.datetime,
         date_current: datetime.datetime = None,
+        is_fill_empty = False,
 ) -> float or None:
     prediction_target_date = date_utils.get_day_prediction_time(date_target)
 
@@ -839,7 +840,7 @@ def predict_future_relative_change(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
         date=date_current if date_current else date_utils.get_day_prediction_time(),
         target_date=prediction_target_date,
-        fill_empty=False,
+        fill_empty=is_fill_empty,
     )
 
     if card.is_ok:
