@@ -281,8 +281,6 @@ def llm_price_prediction_rate(state: State):
 def news_rate(state: State):
     final_rate = 0
     news_influence_month = 0
-    news_influence_week = 0
-    influence_delta = 0
 
     if instrument_uid := state.get('instrument_uid', None):
         news_influence_month = news.news.get_influence_score(
@@ -295,26 +293,22 @@ def news_rate(state: State):
             start_date=(datetime.datetime.now() - datetime.timedelta(days=7)),
             end_date=datetime.datetime.now(),
         ) or 0
-        influence_delta = max((news_influence_week - news_influence_month), 0)
 
-        if influence_delta > 0:
-            final_rate = agent.utils.linear_interpolation(influence_delta, 0, 5, 0.5, 1)
+        if news_influence_month > 0:
+            if news_influence_week > news_influence_month:
+                final_rate = 100
+            else :
+                final_rate = 50
         else:
-            influence_avg = (news_influence_month + news_influence_week) / 2
-            if influence_avg > 0:
-                final_rate = agent.utils.linear_interpolation(influence_avg, 0, 5, 0, 0.5)
-
-
-    rated = int(max(0, min(final_rate, 1)) * 100)
+            final_rate = 0
 
     return {'news_rate': agent.models.RatePercentWithConclusion(
-        rate=rated,
+        rate=final_rate,
         final_conclusion=serializer.to_json(
             {
-                'news_rate': rated,
+                'final_rate': final_rate,
                 'news_influence_month': news_influence_month,
                 'news_influence_week': news_influence_week,
-                'influence_delta': influence_delta,
             },
             ensure_ascii=False,
             is_pretty=True,
