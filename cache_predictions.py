@@ -33,13 +33,13 @@ def refresh_cache_loop():
                                 date_target=date_target,
                                 prediction=utils.round_float(prediction, 7),
                             )
-                            cached_value = predictions_cache.get_prediction_cache(
-                                instrument_uid=instrument.uid,
-                                model_name=model_name,
-                                date_target=date_target,
-                            )
+                            # cached_value = predictions_cache.get_prediction_cache(
+                            #     instrument_uid=instrument.uid,
+                            #     model_name=model_name,
+                            #     date_target=date_target,
+                            # )
                             logger.log_info(
-                                message=f'TARGET_DATE: |{date_target}| TICKER: [{instrument.ticker}] MODEL: {{{model_name}}} PREDICTION: <{utils.round_float(prediction, 4)}> CACHED: ({cached_value})',
+                                message=f'TARGET_DATE: |{date_target}| TICKER: [{instrument.ticker}] MODEL: {{{model_name}}} PREDICTION: <{utils.round_float(prediction, 4)}> CACHED: ({prediction})',
                                 is_send_telegram=False,
                             )
 
