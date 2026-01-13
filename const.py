@@ -12,7 +12,6 @@ Y_API_SECRET = ''
 Y_API_FOLDER_ID = ''
 HUGGING_FACE_TOKEN = ''
 TICKER_LIST: list[str] = [
-    'LNZL',
     'OZON',
     'SBER',
     'SBERP',
@@ -85,5 +84,6 @@ TICKER_LIST: list[str] = [
     'IRAO',
     'VKCO',
     'MDMG',
+    'LNZL',
 ]
 IS_NEWS_CLASSIFY_ENABLED = False
