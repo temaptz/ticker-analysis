@@ -51,23 +51,6 @@ services:
       - postgres
     restart: no
 
-  # news_rate:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile-python-services
-  #   container_name: news_rate
-  #   volumes:
-  #     - /etc/is_my_prod:/container_host_is_prod:ro
-  #     - ./learn_models:/app/learn_models
-  #   command:
-  #     - python
-  #     - news_rate.py
-  #   depends_on:
-  #     - redis
-  #     - postgres
-  #     - ollama
-  #   restart: no
-
   apiserver:
     build:
       context: .
@@ -95,16 +78,17 @@ services:
       - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     restart: unless-stopped
 
-#  local_llm:
-#    build:
-#      context: .
-#      dockerfile: ./local_llm/Dockerfile
-#    container_name: local_llm
-#    volumes:
-#      - ./local_llm/models_cache:/app/models_cache
-#    restart: no
-#    ports:
-#      - "8090:8090"
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: ui
+    ports:
+      - "8081:80"
+    depends_on:
+      - apiserver
+      - pgadmin
+    restart: unless-stopped
 
   ollama:
     build:
@@ -126,17 +110,19 @@ services:
       retries: 12
     restart: unless-stopped
 
-  ui:
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
-    container_name: ui
-    ports:
-      - "8081:80"
-    depends_on:
-      - apiserver
-      - pgadmin
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
     restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_RUNNERS_ENABLED=true
+      - NODE_ENV=production
+      - N8N_SECURE_COOKIE=false
+    volumes:
+      - n8n_data:/home/node/.n8n
 
   postgres:
     image: postgres:alpine  # или другая стабильная версия PostgreSQL
@@ -183,3 +169,4 @@ volumes:
   pgadmin_data:
   redis_data:
   ollama_data:
+  n8n_data:
