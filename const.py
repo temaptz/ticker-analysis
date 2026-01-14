@@ -85,5 +85,7 @@ TICKER_LIST: list[str] = [
     'VKCO',
     'MDMG',
     'LNZL',
+    'ABIO',
+    'ASTR',
 ]
 IS_NEWS_CLASSIFY_ENABLED = False
