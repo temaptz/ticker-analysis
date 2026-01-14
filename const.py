@@ -87,5 +87,6 @@ TICKER_LIST: list[str] = [
     'LNZL',
     'ABIO',
     'ASTR',
+    'PLZL',
 ]
 IS_NEWS_CLASSIFY_ENABLED = False
