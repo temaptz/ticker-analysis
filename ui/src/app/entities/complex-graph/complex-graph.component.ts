@@ -505,7 +505,7 @@ export class ComplexGraphComponent {
             tooltip,
           ],
           itemStyle: {
-            color: isBuy ? '#ff0000' : '#00ff00',
+            color: isBuy ?  '#00ff00' : '#ff0000',
           }
         };
       }) ?? []
