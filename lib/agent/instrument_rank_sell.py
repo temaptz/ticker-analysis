@@ -144,7 +144,7 @@ def price_prediction_rate(state: State):
     is_no_predictions = True
 
     if instrument_uid := state.get('instrument_uid', None):
-        date_from = datetime.datetime.now(tz=datetime.timezone.utc)
+        date_from = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=3)
         date_to = date_from + datetime.timedelta(days=target_days_distance)
 
         for day in date_utils.get_dates_interval_list(
