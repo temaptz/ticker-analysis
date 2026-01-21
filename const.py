@@ -88,5 +88,7 @@ TICKER_LIST: list[str] = [
     'ABIO',
     'ASTR',
     'PLZL',
+    'BTC',
+    'ETH',
 ]
 IS_NEWS_CLASSIFY_ENABLED = False
