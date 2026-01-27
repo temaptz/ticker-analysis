@@ -5,7 +5,7 @@ import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from tinkoff.invest.schemas import IndicatorType
+from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
 
 from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, tech_analysis, yandex_disk, docker, logger
 from lib.learn import learn_utils, model
@@ -19,8 +19,30 @@ def get_feature_names() -> list:
         'country_of_risk',
         'forecast_price_change',
         'market_volume',
-        'rsi',
-        'macd',
+
+        'macd_hist_day_0',
+        'macd_hist_day_1',
+        'macd_hist_day_2',
+        'macd_hist_day_3',
+        'macd_hist_day_4',
+        'macd_hist_day_5',
+        'macd_hist_day_6',
+        'macd_hist_day_7',
+        'macd_hist_day_8',
+        'macd_hist_day_9',
+        'macd_hist_day_10',
+
+        'macd_hist_week_0',
+        'macd_hist_week_1',
+        'macd_hist_week_2',
+        'macd_hist_week_3',
+        'macd_hist_week_4',
+        'macd_hist_week_5',
+        'macd_hist_week_6',
+        'macd_hist_week_7',
+        'macd_hist_week_8',
+        'macd_hist_week_9',
+        'macd_hist_week_10',
 
         'revenue_ttm',
         'ebitda_ttm',
@@ -114,8 +136,30 @@ class Ta21LearningCard:
     target_price_change: float = None  # Прогнозируемая цена
     forecast_price_change: float = None  # Прогноз аналитиков
     market_volume: float = None # Объем торгов
-    rsi: float = None # RSI тех.индикатор
-    macd: float = None # MACD тех.индикатор
+
+    macd_hist_day_0: float = None # MACD дневной текущий
+    macd_hist_day_1: float = None # MACD дневной 1 день назад
+    macd_hist_day_2: float = None # MACD дневной 2 дня назад
+    macd_hist_day_3: float = None # MACD дневной 3 дня назад
+    macd_hist_day_4: float = None # MACD дневной 4 дня назад
+    macd_hist_day_5: float = None # MACD дневной 5 дней назад
+    macd_hist_day_6: float = None # MACD дневной 6 дней назад
+    macd_hist_day_7: float = None # MACD дневной 7 дней назад
+    macd_hist_day_8: float = None # MACD дневной 8 дней назад
+    macd_hist_day_9: float = None # MACD дневной 9 дней назад
+    macd_hist_day_10: float = None # MACD дневной 10 дней назад
+
+    macd_hist_week_0: float = None # MACD недельный текущий
+    macd_hist_week_1: float = None # MACD недельный 1 неделя назад
+    macd_hist_week_2: float = None # MACD недельный 2 недели назад
+    macd_hist_week_3: float = None # MACD недельный 3 недели назад
+    macd_hist_week_4: float = None # MACD недельный 4 недели назад
+    macd_hist_week_5: float = None # MACD недельный 5 недель назад
+    macd_hist_week_6: float = None # MACD недельный 6 недель назад
+    macd_hist_week_7: float = None # MACD недельный 7 недель назад
+    macd_hist_week_8: float = None # MACD недельный 8 недель назад
+    macd_hist_week_9: float = None # MACD недельный 9 недель назад
+    macd_hist_week_10: float = None # MACD недельный 10 недель назад
 
     revenue_ttm: float = None  # Выручка
     ebitda_ttm: float = None  # EBITDA
@@ -220,18 +264,48 @@ class Ta21LearningCard:
         self.target_price_change = self.get_target_change_relative()
         self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
         self.market_volume = instruments.get_instrument_volume(uid=self.instrument.uid, date=self.date)
-        self.rsi = tech_analysis.get_avg_tech_analysis_by_date(
-            instrument_uid=self.instrument.uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
-            date_from=self.date - datetime.timedelta(days=3),
-            date_to=self.date + datetime.timedelta(days=3),
-        )
-        self.macd = tech_analysis.get_avg_tech_analysis_by_date(
+
+        if macd_days := tech_analysis.get_tech_analysis_graph(
             instrument_uid=self.instrument.uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
-            date_from=self.date - datetime.timedelta(days=3),
-            date_to=self.date + datetime.timedelta(days=3),
-        )
+            date_from=(self.date - datetime.timedelta(days=11)),
+            date_to=self.date,
+            interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
+        ):
+            macd_days_sorted = sorted(macd_days, key=lambda x: x['date'], reverse=True)
+            if len(macd_days_sorted) >= 11:
+                self.macd_hist_day_0 = macd_days_sorted[0]['macd'] - macd_days_sorted[0]['signal']
+                self.macd_hist_day_1 = macd_days_sorted[1]['macd'] - macd_days_sorted[1]['signal']
+                self.macd_hist_day_2 = macd_days_sorted[2]['macd'] - macd_days_sorted[2]['signal']
+                self.macd_hist_day_3 = macd_days_sorted[3]['macd'] - macd_days_sorted[3]['signal']
+                self.macd_hist_day_4 = macd_days_sorted[4]['macd'] - macd_days_sorted[4]['signal']
+                self.macd_hist_day_5 = macd_days_sorted[5]['macd'] - macd_days_sorted[5]['signal']
+                self.macd_hist_day_6 = macd_days_sorted[6]['macd'] - macd_days_sorted[6]['signal']
+                self.macd_hist_day_7 = macd_days_sorted[7]['macd'] - macd_days_sorted[7]['signal']
+                self.macd_hist_day_8 = macd_days_sorted[8]['macd'] - macd_days_sorted[8]['signal']
+                self.macd_hist_day_9 = macd_days_sorted[9]['macd'] - macd_days_sorted[9]['signal']
+                self.macd_hist_day_10 = macd_days_sorted[10]['macd'] - macd_days_sorted[10]['signal']
+
+        if macd_weeks := tech_analysis.get_tech_analysis_graph(
+                instrument_uid=self.instrument.uid,
+                indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
+                date_from=(self.date - datetime.timedelta(weeks=11)),
+                date_to=self.date,
+                interval=IndicatorInterval.INDICATOR_INTERVAL_WEEK,
+        ):
+            macd_weeks_sorted = sorted(macd_weeks, key=lambda x: x['date'], reverse=True)
+            if len(macd_weeks_sorted) >= 11:
+                self.macd_hist_week_0 = macd_weeks_sorted[0]['macd'] - macd_weeks_sorted[0]['signal']
+                self.macd_hist_week_1 = macd_weeks_sorted[1]['macd'] - macd_weeks_sorted[1]['signal']
+                self.macd_hist_week_2 = macd_weeks_sorted[2]['macd'] - macd_weeks_sorted[2]['signal']
+                self.macd_hist_week_3 = macd_weeks_sorted[3]['macd'] - macd_weeks_sorted[3]['signal']
+                self.macd_hist_week_4 = macd_weeks_sorted[4]['macd'] - macd_weeks_sorted[4]['signal']
+                self.macd_hist_week_5 = macd_weeks_sorted[5]['macd'] - macd_weeks_sorted[5]['signal']
+                self.macd_hist_week_6 = macd_weeks_sorted[6]['macd'] - macd_weeks_sorted[6]['signal']
+                self.macd_hist_week_7 = macd_weeks_sorted[7]['macd'] - macd_weeks_sorted[7]['signal']
+                self.macd_hist_week_8 = macd_weeks_sorted[8]['macd'] - macd_weeks_sorted[8]['signal']
+                self.macd_hist_week_9 = macd_weeks_sorted[9]['macd'] - macd_weeks_sorted[9]['signal']
+                self.macd_hist_week_10 = macd_weeks_sorted[10]['macd'] - macd_weeks_sorted[10]['signal']
 
         if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
             self.revenue_ttm = f.revenue_ttm
@@ -454,8 +528,30 @@ class Ta21LearningCard:
             self.instrument.country_of_risk, # Код страны
             to_numpy_float(self.forecast_price_change),
             to_numpy_float(self.market_volume),
-            to_numpy_float(self.rsi),
-            to_numpy_float(self.macd),
+
+            to_numpy_float(self.macd_hist_day_0),
+            to_numpy_float(self.macd_hist_day_1),
+            to_numpy_float(self.macd_hist_day_2),
+            to_numpy_float(self.macd_hist_day_3),
+            to_numpy_float(self.macd_hist_day_4),
+            to_numpy_float(self.macd_hist_day_5),
+            to_numpy_float(self.macd_hist_day_6),
+            to_numpy_float(self.macd_hist_day_7),
+            to_numpy_float(self.macd_hist_day_8),
+            to_numpy_float(self.macd_hist_day_9),
+            to_numpy_float(self.macd_hist_day_10),
+
+            to_numpy_float(self.macd_hist_week_0),
+            to_numpy_float(self.macd_hist_week_1),
+            to_numpy_float(self.macd_hist_week_2),
+            to_numpy_float(self.macd_hist_week_3),
+            to_numpy_float(self.macd_hist_week_4),
+            to_numpy_float(self.macd_hist_week_5),
+            to_numpy_float(self.macd_hist_week_6),
+            to_numpy_float(self.macd_hist_week_7),
+            to_numpy_float(self.macd_hist_week_8),
+            to_numpy_float(self.macd_hist_week_9),
+            to_numpy_float(self.macd_hist_week_10),
 
             to_numpy_float(self.revenue_ttm),
             to_numpy_float(self.ebitda_ttm),
