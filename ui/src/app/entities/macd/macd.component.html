@@ -1,0 +1,16 @@
+@defer (when resource.hasValue()) {
+  @let res = resource.value();
+
+  <div class="container">
+    <div>
+      <div>Месяц по дням</div>
+      <echarts-graph width="100px" [height]="graphHeight" [option]="graphOptionsMini()"/>
+    </div>
+    <div>
+      <div>Год по неделям</div>
+      <echarts-graph width="350px" [height]="graphHeight" [option]="graphOptionsLong()"/>
+    </div>
+  </div>
+} @placeholder {
+  <preloader></preloader>
+}

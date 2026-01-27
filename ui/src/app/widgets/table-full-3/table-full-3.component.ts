@@ -11,8 +11,6 @@ import { ApiService } from '../../shared/services/api.service';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
-// import { ForecastComponent } from '../../entities/forecast/forecast.component';
-// import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
@@ -23,6 +21,7 @@ import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-bu
 import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/prediction-dynamic.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
+import { MacdComponent } from '../../entities/macd/macd.component';
 
 
 @Component({
@@ -34,8 +33,6 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     InstrumentLogoComponent,
     FundamentalsComponent,
     BalanceComponent,
-    // ForecastComponent,
-    // ForecastHistoryComponent,
     ComplexGraphComponent,
     MatSortModule,
     RouterModule,
@@ -46,7 +43,8 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     LlmBuySellRateComponent,
     PredictionDynamicComponent,
     DrawerComponent,
-    PreloaderComponent
+    PreloaderComponent,
+    MacdComponent
   ],
   providers: [],
   templateUrl: './table-full-3.component.html',
@@ -65,8 +63,8 @@ export class TableFull3Component {
     'logo',
     'fundamental',
     'complex',
+    'macd',
     'balance',
-    // 'forecast',
     'prediction',
     'news',
     'llm_buy_sell_rate',
