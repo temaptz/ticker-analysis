@@ -406,7 +406,7 @@ def macd_buy_rate(state: State):
         final_conclusion=serializer.to_json(
             {
                 'final_rate': final_rate,
-                'macd_hist': graph_hist,
+                'macd_days_hist': '; '.join(map(str, graph_hist)),
             },
             ensure_ascii=False,
             is_pretty=True,
@@ -432,11 +432,11 @@ def total_buy_rate(state: State):
     if fundamental_rate or price_prediction_rated:
         try:
             weights = {
-                'fundamental_rate': 2,
+                'macd_buy_rate': 7,
                 'price_prediction_rate': 5,
+                'fundamental_rate': 2,
                 'news_rate': 1,
-                'macd_buy_rate': 3,
-                'favorites': 0.07,
+                'favorites': 0.1,
             }
             calc_rate = int(
                 (

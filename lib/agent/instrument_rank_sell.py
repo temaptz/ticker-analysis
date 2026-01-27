@@ -282,7 +282,7 @@ def macd_sell_rate(state: State):
         final_conclusion=serializer.to_json(
             {
                 'final_rate': final_rate,
-                'macd_hist': graph_hist,
+                'macd_days_hist': '; '.join(map(str, graph_hist)),
             },
             ensure_ascii=False,
             is_pretty=True,
@@ -305,8 +305,8 @@ def total_sell_rate(state: State) -> State:
         try:
             weights = {
                 'invest_rate': 3,
-                'price_prediction_rate': 1,
                 'macd_sell_rate': 2,
+                'price_prediction_rate': 1,
             }
             calc_rate = int(
                 (
