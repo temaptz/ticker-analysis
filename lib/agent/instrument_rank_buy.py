@@ -5,7 +5,8 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from lib import instruments, users, agent, db_2, logger, date_utils, predictions, learn, utils, news, serializer
+from lib import instruments, users, agent, db_2, logger, date_utils, predictions, learn, utils, news, serializer, tech_analysis
+from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
 
 
 class State(TypedDict, total=False):
@@ -14,6 +15,7 @@ class State(TypedDict, total=False):
     fundamental_rate: agent.models.RatePercentWithConclusion
     price_prediction_rate: agent.models.RatePercentWithConclusion
     news_rate: agent.models.RatePercentWithConclusion
+    macd_buy_rate: agent.models.RatePercentWithConclusion
     structured_response: int
 
 
@@ -69,12 +71,14 @@ def get_buy_rank_graph() -> CompiledStateGraph:
     graph_builder.add_node('llm_fundamental_rate', llm_fundamental_rate)
     graph_builder.add_node('price_prediction_rate', price_prediction_rate)
     graph_builder.add_node('news_rate', news_rate)
+    graph_builder.add_node('macd_buy_rate', macd_buy_rate)
     graph_builder.add_node('total_buy_rate', total_buy_rate)
 
     graph_builder.add_edge(START, 'llm_fundamental_rate')
     graph_builder.add_edge('llm_fundamental_rate', 'price_prediction_rate')
     graph_builder.add_edge('price_prediction_rate', 'news_rate')
-    graph_builder.add_edge('news_rate', 'total_buy_rate')
+    graph_builder.add_edge('news_rate', 'macd_buy_rate')
+    graph_builder.add_edge('macd_buy_rate', 'total_buy_rate')
     graph_builder.add_edge('total_buy_rate', END)
 
     graph = graph_builder.compile(
@@ -369,40 +373,92 @@ def llm_news_rate(state: State):
     return {}
 
 
+def macd_buy_rate(state: State):
+    final_rate = 0
+    graph_hist = []
+
+    if instrument_uid := state.get('instrument_uid', None):
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        graph = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=instrument_uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
+            date_from=now - datetime.timedelta(days=10),
+            date_to=now,
+            interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
+        )
+
+        if graph and len(graph):
+            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)
+            graph_hist = [utils.round_float((i.get('macd', 0) - i.get('signal', 0)), 3) for i in graph_sorted]
+
+            if all(i < 0 for i in graph_hist):
+                final_rate = 50
+
+                if graph_hist[0] > graph_hist[1]:
+                    final_rate = 60
+
+                    if graph_hist[1] == min(graph_hist):
+                        final_rate = 100
+
+
+    return {'macd_buy_rate': agent.models.RatePercentWithConclusion(
+        rate=final_rate,
+        final_conclusion=serializer.to_json(
+            {
+                'final_rate': final_rate,
+                'macd_hist': graph_hist,
+            },
+            ensure_ascii=False,
+            is_pretty=True,
+        )
+    )}
+
+
 def total_buy_rate(state: State):
     f = state.get('fundamental_rate', None)
     price_prediction = state.get('price_prediction_rate', None)
     n = state.get('news_rate', None)
+    m = state.get('macd_buy_rate', None)
     fundamental_rate = f.rate if (f and f.rate is not None) else None
     fundamental_conclusion = f.final_conclusion if (f and f.final_conclusion) else None
     price_prediction_rated = price_prediction.rate if (price_prediction and price_prediction.rate is not None) else None
     price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
     news_rated = n.rate if (n and n.rate is not None) else None
     news_conclusion = n.final_conclusion if (n and n.final_conclusion) else None
+    macd_rated = m.rate if (m and m.rate is not None) else None
+    macd_conclusion = m.final_conclusion if (m and m.final_conclusion) else None
     is_in_favorites = users.get_is_in_favorites(instrument_uid=state.get('instrument_uid'))
 
     if fundamental_rate or price_prediction_rated:
         try:
-            weights = {'fundamental_rate': 2, 'price_prediction_rate': 5, 'news_rate': 1, 'favorites': 0.07}
+            weights = {
+                'fundamental_rate': 2,
+                'price_prediction_rate': 5,
+                'news_rate': 1,
+                'macd_buy_rate': 3,
+                'favorites': 0.07,
+            }
             calc_rate = int(
                 (
                         (fundamental_rate or 0) * weights['fundamental_rate']
                         + (price_prediction_rated or 0) * weights['price_prediction_rate']
                         + (news_rated or 0) * weights['news_rate']
                         + (100 if is_in_favorites else 0) * weights['favorites']
+                        + (macd_rated or 0) * weights['macd_buy_rate']
                 )
                 / (
                         weights['fundamental_rate']
                         + weights['price_prediction_rate']
                         + weights['news_rate']
                         + weights['favorites']
+                        + weights['macd_buy_rate']
                 )
             )
 
             if calc_rate or calc_rate == 0:
                 return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{fundamental_rate}\n{fundamental_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}\n\n{news_rated}\n{news_conclusion}'
+                    final_conclusion=f'{fundamental_rate}\n{fundamental_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}\n\n{news_rated}\n{news_conclusion}\n\n{macd_rated}\n{macd_conclusion}'
                 )}
         except Exception as e:
             print('ERROR total_buy_rate', e)

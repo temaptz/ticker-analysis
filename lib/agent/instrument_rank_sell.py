@@ -5,13 +5,16 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from lib import instruments, users, agent, utils, db_2, logger, invest_calc, date_utils, predictions, learn, serializer
+from lib import instruments, users, agent, utils, db_2, logger, invest_calc, date_utils, predictions, learn, serializer, tech_analysis
+from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
+
 
 class State(TypedDict, total=False):
     human_name: str
     instrument_uid: str
     invest_calc_rate: agent.models.RatePercentWithConclusion
     price_prediction_rate: agent.models.RatePercentWithConclusion
+    macd_sell_rate: agent.models.RatePercentWithConclusion
     structured_response: agent.models.RatePercentWithConclusion
 
 
@@ -79,11 +82,13 @@ def get_sell_rank_graph() -> CompiledStateGraph:
 
     graph_builder.add_node('invest_calc_rate', invest_calc_rate)
     graph_builder.add_node('price_prediction_rate', price_prediction_rate)
+    graph_builder.add_node('macd_sell_rate', macd_sell_rate)
     graph_builder.add_node('total_sell_rate', total_sell_rate)
 
     graph_builder.add_edge(START, 'invest_calc_rate')
     graph_builder.add_edge('invest_calc_rate', 'price_prediction_rate')
-    graph_builder.add_edge('price_prediction_rate', 'total_sell_rate')
+    graph_builder.add_edge('price_prediction_rate', 'macd_sell_rate')
+    graph_builder.add_edge('macd_sell_rate', 'total_sell_rate')
     graph_builder.add_edge('total_sell_rate', END)
 
     graph = graph_builder.compile(
@@ -244,29 +249,78 @@ def llm_price_prediction_rate(state: State):
     return {}
 
 
+def macd_sell_rate(state: State):
+    final_rate = 0
+    graph_hist = []
+
+    if instrument_uid := state.get('instrument_uid', None):
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        graph = tech_analysis.get_tech_analysis_graph(
+            instrument_uid=instrument_uid,
+            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
+            date_from=now - datetime.timedelta(days=10),
+            date_to=now,
+            interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
+        )
+
+        if graph and len(graph):
+            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)
+            graph_hist = [utils.round_float((i.get('macd', 0) - i.get('signal', 0)), 3) for i in graph_sorted]
+
+            if all(i > 0 for i in graph_hist):
+                final_rate = 50
+
+                if graph_hist[0] < graph_hist[1]:
+                    final_rate = 60
+
+                    if graph_hist[1] == max(graph_hist):
+                        final_rate = 100
+
+
+    return {'macd_sell_rate': agent.models.RatePercentWithConclusion(
+        rate=final_rate,
+        final_conclusion=serializer.to_json(
+            {
+                'final_rate': final_rate,
+                'macd_hist': graph_hist,
+            },
+            ensure_ascii=False,
+            is_pretty=True,
+        )
+    )}
+
+
 def total_sell_rate(state: State) -> State:
     invest_c = state.get('invest_calc_rate', None)
     price_prediction = state.get('price_prediction_rate', None)
+    macd_rate = state.get('macd_sell_rate', None)
     invest_rate = invest_c.rate if (invest_c and invest_c.rate is not None) else None
     invest_rate_conclusion = invest_c.final_conclusion if (invest_c and invest_c.final_conclusion) else None
     price_prediction_rated = price_prediction.rate if (price_prediction and price_prediction.rate is not None) else None
     price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
+    macd_rated = macd_rate.rate if (macd_rate and macd_rate.rate is not None) else None
+    macd_conclusion = macd_rate.final_conclusion if (macd_rate and macd_rate.final_conclusion) else None
 
     if invest_rate or price_prediction_rated:
         try:
-            weights = {'invest_rate': 3, 'price_prediction_rate': 1}
+            weights = {
+                'invest_rate': 3,
+                'price_prediction_rate': 1,
+                'macd_sell_rate': 2,
+            }
             calc_rate = int(
                 (
                         (invest_rate or 0) * weights['invest_rate']
                         + (price_prediction_rated or 0) * weights['price_prediction_rate']
+                        + (macd_rated or 0) * weights['macd_sell_rate']
                 )
-                / (weights['invest_rate'] + weights['price_prediction_rate'])
+                / (weights['invest_rate'] + weights['price_prediction_rate'] + weights['macd_sell_rate'])
             )
 
             if calc_rate or calc_rate == 0:
                 return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}'
+                    final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}\n\n{macd_rated}\n{macd_conclusion}'
                 )}
         except Exception as e:
             print('ERROR total_sell_rate', e)

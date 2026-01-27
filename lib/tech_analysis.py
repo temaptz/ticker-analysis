@@ -42,6 +42,7 @@ def get_tech_analysis(
         ).technical_indicators
 
 
+# @DEPRECATED
 @cache.ttl_cache(ttl=3600 * 24)
 def get_avg_tech_analysis_by_date(
         instrument_uid: str,
