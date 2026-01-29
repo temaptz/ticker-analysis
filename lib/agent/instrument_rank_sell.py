@@ -254,28 +254,10 @@ def macd_sell_rate(state: State):
     graph_hist = []
 
     if instrument_uid := state.get('instrument_uid', None):
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
-        graph = tech_analysis.get_tech_analysis_graph(
-            instrument_uid=instrument_uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
-            date_from=now - datetime.timedelta(days=10),
-            date_to=now,
-            interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
-        )
-
-        if graph and len(graph):
-            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)
-            graph_hist = [utils.round_float((i.get('macd', 0) - i.get('signal', 0)), 3) for i in graph_sorted]
-
-            if all(i > 0 for i in graph_hist):
-                final_rate = 50
-
-                if graph_hist[0] < graph_hist[1]:
-                    final_rate = 60
-
-                    if graph_hist[1] == max(graph_hist):
-                        final_rate = 100
-
+        if rated := agent.macd.macd_sell_rate(instrument_uid=instrument_uid):
+            if rated['rate'] is not None:
+                final_rate = rated['rate']
+                graph_hist = rated['graph_hist'] or []
 
     return {'macd_sell_rate': agent.models.RatePercentWithConclusion(
         rate=final_rate,
@@ -320,7 +302,7 @@ def total_sell_rate(state: State) -> State:
             if calc_rate or calc_rate == 0:
                 return {'structured_response': agent.models.RatePercentWithConclusion(
                     rate=calc_rate,
-                    final_conclusion=f'{invest_rate}\n{invest_rate_conclusion}\n\n{price_prediction_rated}\n{price_prediction_conclusion}\n\n{macd_rated}\n{macd_conclusion}'
+                    final_conclusion=f'invest: {invest_rate}\n{invest_rate_conclusion}\n\nprice: {price_prediction_rated}\n{price_prediction_conclusion}\n\nmacd: {macd_rated}\n{macd_conclusion}'
                 )}
         except Exception as e:
             print('ERROR total_sell_rate', e)

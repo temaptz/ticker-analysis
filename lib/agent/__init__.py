@@ -9,3 +9,4 @@ from . import buy
 from . import sell
 from . import prompts
 from . import news_rank
+from . import macd

@@ -1,1 +1,1 @@
-from . import model
+from . import model, ta_2_1

@@ -1,4 +1,4 @@
-from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news, agent
+from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news, agent, logger
 from lib.db_2 import db_utils
 
 
@@ -29,7 +29,6 @@ def process_single_update(text: str = None) -> None:
         fundamentals_save.save_fundamentals()
 
     elif text == '/predictions':
-        predictions_save.save_daily_predictions()
         predictions_save.save_weekly_predictions()
 
     elif text == '/news':
@@ -65,3 +64,11 @@ def process_single_update(text: str = None) -> None:
         telegram.send_message('Создание торговых заявок')
         agent.sell.create_orders()
         agent.buy.create_orders()
+
+
+def create_orders() -> None:
+    try:
+        agent.sell.create_orders_2()
+        agent.buy.create_orders_2()
+    except Exception as e:
+        logger.log_error(method_name='create_orders', error=e)
