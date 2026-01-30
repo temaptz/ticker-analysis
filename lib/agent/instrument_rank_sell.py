@@ -5,8 +5,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from lib import instruments, users, agent, utils, db_2, logger, invest_calc, date_utils, predictions, learn, serializer, tech_analysis
-from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
+from lib import instruments, users, agent, utils, db_2, logger, invest_calc, date_utils, predictions, learn, serializer
 
 
 class State(TypedDict, total=False):

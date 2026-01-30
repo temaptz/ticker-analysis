@@ -22,7 +22,6 @@ from lib import (
     # agent,
     # invest_calc,
     # learn,
-    schedule_llm,
 )
 from lib.db_2 import init, db_utils, predictions_db
 # from lib.learn import model
@@ -36,7 +35,6 @@ print('IS PROD', docker.is_prod())
 
 if docker.is_docker():
     telegram.send_message('Скрипт ticker-analysis main запущен')
-    schedule_llm.start_available_job()
     schedule.start_schedule()
 else:
     print('NOT DOCKER')

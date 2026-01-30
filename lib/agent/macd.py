@@ -1,6 +1,6 @@
 import datetime
 from lib import tech_analysis, utils
-from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
+from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 def macd_buy_rate(instrument_uid: str):
     final_rate = 0

@@ -34,3 +34,4 @@ fastapi==0.117.1
 werkzeug
 ipywidgets
 ipython
+sentry_sdk

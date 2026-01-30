@@ -1,11 +1,10 @@
-import numpy
 import numpy as np
-from tinkoff.invest import InstrumentResponse, Instrument, CandleInterval
+from t_tech.invest import InstrumentResponse, Instrument, CandleInterval
 import datetime
 import catboost
 import pandas
 from sklearn.metrics import mean_squared_error
-from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
+from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 from lib import utils, instruments, forecasts, fundamentals, news, cache, date_utils, serializer, redis_utils, tech_analysis, yandex_disk, docker, logger
 from lib.learn import learn_utils, model
@@ -14,11 +13,32 @@ from lib.learn import learn_utils, model
 def get_feature_names() -> list:
     return [
         'target_date_days',
-        'name',
+        'ticker',
         'currency',
         'country_of_risk',
         'forecast_price_change',
-        'market_volume',
+
+        'market_volume_change_day_1',
+        'market_volume_change_day_2',
+        'market_volume_change_day_3',
+        'market_volume_change_day_4',
+        'market_volume_change_day_5',
+
+        'market_volume_change_week_1',
+        'market_volume_change_week_2',
+        'market_volume_change_week_3',
+        'market_volume_change_week_4',
+
+        'vwap_change_day_1',
+        'vwap_change_day_2',
+        'vwap_change_day_3',
+        'vwap_change_day_4',
+        'vwap_change_day_5',
+
+        'vwap_change_week_1',
+        'vwap_change_week_2',
+        'vwap_change_week_3',
+        'vwap_change_week_4',
 
         'macd_hist_day_0',
         'macd_hist_day_1',
@@ -27,22 +47,12 @@ def get_feature_names() -> list:
         'macd_hist_day_4',
         'macd_hist_day_5',
         'macd_hist_day_6',
-        'macd_hist_day_7',
-        'macd_hist_day_8',
-        'macd_hist_day_9',
-        'macd_hist_day_10',
 
         'macd_hist_week_0',
         'macd_hist_week_1',
         'macd_hist_week_2',
         'macd_hist_week_3',
         'macd_hist_week_4',
-        'macd_hist_week_5',
-        'macd_hist_week_6',
-        'macd_hist_week_7',
-        'macd_hist_week_8',
-        'macd_hist_week_9',
-        'macd_hist_week_10',
 
         'revenue_ttm',
         'ebitda_ttm',
@@ -80,7 +90,7 @@ def get_feature_names() -> list:
 
 def to_numpy_float(num: float) -> float:
     if num or num == 0:
-        return numpy.float32(num)
+        return np.float32(num)
     return np.nan
 
 
@@ -96,7 +106,28 @@ class Ta21LearningCard:
     price: float = None  # Цена в дату создания прогноза
     target_price_change: float = None  # Прогнозируемая цена
     forecast_price_change: float = None  # Прогноз аналитиков
-    market_volume: float = None # Объем торгов
+
+    market_volume_change_day_1: float = None # Объем торгов вчера
+    market_volume_change_day_2: float = None # Объем торгов 2 дня назад
+    market_volume_change_day_3: float = None # Объем торгов 3 дня назад
+    market_volume_change_day_4: float = None # Объем торгов 4 дня назад
+    market_volume_change_day_5: float = None # Объем торгов 5 дней назад
+
+    market_volume_change_week_1: float = None # Объем торгов неделю назад
+    market_volume_change_week_2: float = None # Объем торгов 2 недели назад
+    market_volume_change_week_3: float = None # Объем торгов 3 недели назад
+    market_volume_change_week_4: float = None # Объем торгов 4 недели назад
+
+    vwap_change_day_1: float = None # VWAP вчера
+    vwap_change_day_2: float = None # VWAP 2 дня назад
+    vwap_change_day_3: float = None # VWAP 3 дня назад
+    vwap_change_day_4: float = None # VWAP 4 дня назад
+    vwap_change_day_5: float = None # VWAP 5 дней назад
+
+    vwap_change_week_1: float = None # VWAP 1 неделя назад
+    vwap_change_week_2: float = None # VWAP 2 недели назад
+    vwap_change_week_3: float = None # VWAP 3 недели назад
+    vwap_change_week_4: float = None # VWAP 4 недели назад
 
     macd_hist_day_0: float = None # MACD дневной текущий
     macd_hist_day_1: float = None # MACD дневной 1 день назад
@@ -105,22 +136,12 @@ class Ta21LearningCard:
     macd_hist_day_4: float = None # MACD дневной 4 дня назад
     macd_hist_day_5: float = None # MACD дневной 5 дней назад
     macd_hist_day_6: float = None # MACD дневной 6 дней назад
-    macd_hist_day_7: float = None # MACD дневной 7 дней назад
-    macd_hist_day_8: float = None # MACD дневной 8 дней назад
-    macd_hist_day_9: float = None # MACD дневной 9 дней назад
-    macd_hist_day_10: float = None # MACD дневной 10 дней назад
 
     macd_hist_week_0: float = None # MACD недельный текущий
     macd_hist_week_1: float = None # MACD недельный 1 неделя назад
     macd_hist_week_2: float = None # MACD недельный 2 недели назад
     macd_hist_week_3: float = None # MACD недельный 3 недели назад
     macd_hist_week_4: float = None # MACD недельный 4 недели назад
-    macd_hist_week_5: float = None # MACD недельный 5 недель назад
-    macd_hist_week_6: float = None # MACD недельный 6 недель назад
-    macd_hist_week_7: float = None # MACD недельный 7 недель назад
-    macd_hist_week_8: float = None # MACD недельный 8 недель назад
-    macd_hist_week_9: float = None # MACD недельный 9 недель назад
-    macd_hist_week_10: float = None # MACD недельный 10 недель назад
 
     revenue_ttm: float = None  # Выручка
     ebitda_ttm: float = None  # EBITDA
@@ -137,22 +158,22 @@ class Ta21LearningCard:
     news_influence_score_3: float = None  # Новостной фон 22-28 дней до даты
     news_influence_score_4: float = None  # Новостной фон 29-35 дней до даты
 
-    price_change_3_days: float = None # Изменение цены за 3 дня
-    price_change_1_week: float = None # Изменение цены за 1 неделю
-    price_change_2_week: float = None # Изменение цены за 2 недели
-    price_change_3_week: float = None # Изменение цены за 3 недели
-    price_change_1_month: float = None # Изменение цены за 1 месяц
-    price_change_2_month: float = None # Изменение цены за 2 месяц
-    price_change_3_month: float = None # Изменение цены за 3 месяца
-    price_change_4_month: float = None # Изменение цены за 4 месяца
-    price_change_5_month: float = None # Изменение цены за 5 месяца
-    price_change_6_month: float = None # Изменение цены за 6 месяцев
-    price_change_7_month: float = None # Изменение цены за 7 месяцев
-    price_change_8_month: float = None # Изменение цены за 8 месяцев
-    price_change_9_month: float = None # Изменение цены за 9 месяцев
-    price_change_10_month: float = None # Изменение цены за 10 месяцев
-    price_change_11_month: float = None # Изменение цены за 11 месяцев
-    price_change_1_year: float = None # Изменение цены за 1 год
+    price_change_3_days: float = None # Изменение цены за 3 дня по EMA
+    price_change_1_week: float = None # Изменение цены за 1 неделю по EMA
+    price_change_2_week: float = None # Изменение цены за 2 недели по EMA
+    price_change_3_week: float = None # Изменение цены за 3 недели по EMA
+    price_change_1_month: float = None # Изменение цены за 1 месяц по EMA
+    price_change_2_month: float = None # Изменение цены за 2 месяц по EMA
+    price_change_3_month: float = None # Изменение цены за 3 месяца по EMA
+    price_change_4_month: float = None # Изменение цены за 4 месяца по EMA
+    price_change_5_month: float = None # Изменение цены за 5 месяца по EMA
+    price_change_6_month: float = None # Изменение цены за 6 месяцев по EMA
+    price_change_7_month: float = None # Изменение цены за 7 месяцев по EMA
+    price_change_8_month: float = None # Изменение цены за 8 месяцев по EMA
+    price_change_9_month: float = None # Изменение цены за 9 месяцев по EMA
+    price_change_10_month: float = None # Изменение цены за 10 месяцев по EMA
+    price_change_11_month: float = None # Изменение цены за 11 месяцев по EMA
+    price_change_1_year: float = None # Изменение цены за 1 год по EMA
 
     def __init__(
             self,
@@ -185,17 +206,94 @@ class Ta21LearningCard:
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price_change = self.get_target_change_relative()
         self.forecast_price_change = self.get_forecast_change(is_fill_empty=is_fill_empty)
-        self.market_volume = instruments.get_instrument_volume(uid=self.instrument.uid, date=self.date)
+
+        now_market_volume = self.get_volume_ema(days_count=1)
+        self.market_volume_change_day_1 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=2),
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_day_2 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=3),
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_day_3 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=4),
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_day_4 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=5),
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_day_5 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=6),
+            next_price=now_market_volume,
+        )
+
+        self.market_volume_change_week_1 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=7), 
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_week_2 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=14), 
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_week_3 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=21), 
+            next_price=now_market_volume,
+        )
+        self.market_volume_change_week_4 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_ema(days_count=28), 
+            next_price=now_market_volume,
+        )
+
+        now_vwap = self.get_volume_vwap(days_count=1)
+        self.vwap_change_day_1 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=2),
+            next_price=now_vwap,
+        )
+        self.vwap_change_day_2 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=3),
+            next_price=now_vwap,
+        )
+        self.vwap_change_day_3 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=4),
+            next_price=now_vwap,
+        )
+        self.vwap_change_day_4 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=5),
+            next_price=now_vwap,
+        )
+        self.vwap_change_day_5 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=6),
+            next_price=now_vwap,
+        )
+
+        self.vwap_change_week_1 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=7), 
+            next_price=now_vwap,
+        )
+        self.vwap_change_week_2 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=14), 
+            next_price=now_vwap,
+        )
+        self.vwap_change_week_3 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=21), 
+            next_price=now_vwap,
+        )
+        self.vwap_change_week_4 = utils.get_change_relative_by_price(
+            main_price=self.get_volume_vwap(days_count=28), 
+            next_price=now_vwap,
+        )
 
         if macd_days := tech_analysis.get_tech_analysis_graph(
             instrument_uid=self.instrument.uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
-            date_from=(self.date - datetime.timedelta(days=11)),
-            date_to=self.date,
+            date_from=(self.date - datetime.timedelta(days=9)),
+            date_to=(self.date - datetime.timedelta(days=1)),
             interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
         ):
             macd_days_sorted = sorted(macd_days, key=lambda x: x['date'], reverse=True)
-            if len(macd_days_sorted) >= 11:
+            if len(macd_days_sorted) >= 7:
                 self.macd_hist_day_0 = macd_days_sorted[0]['macd'] - macd_days_sorted[0]['signal']
                 self.macd_hist_day_1 = macd_days_sorted[1]['macd'] - macd_days_sorted[1]['signal']
                 self.macd_hist_day_2 = macd_days_sorted[2]['macd'] - macd_days_sorted[2]['signal']
@@ -203,31 +301,21 @@ class Ta21LearningCard:
                 self.macd_hist_day_4 = macd_days_sorted[4]['macd'] - macd_days_sorted[4]['signal']
                 self.macd_hist_day_5 = macd_days_sorted[5]['macd'] - macd_days_sorted[5]['signal']
                 self.macd_hist_day_6 = macd_days_sorted[6]['macd'] - macd_days_sorted[6]['signal']
-                self.macd_hist_day_7 = macd_days_sorted[7]['macd'] - macd_days_sorted[7]['signal']
-                self.macd_hist_day_8 = macd_days_sorted[8]['macd'] - macd_days_sorted[8]['signal']
-                self.macd_hist_day_9 = macd_days_sorted[9]['macd'] - macd_days_sorted[9]['signal']
-                self.macd_hist_day_10 = macd_days_sorted[10]['macd'] - macd_days_sorted[10]['signal']
 
         if macd_weeks := tech_analysis.get_tech_analysis_graph(
                 instrument_uid=self.instrument.uid,
                 indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
-                date_from=(self.date - datetime.timedelta(weeks=11)),
-                date_to=self.date,
+                date_from=(self.date - datetime.timedelta(weeks=6)),
+                date_to=(self.date - datetime.timedelta(days=1)),
                 interval=IndicatorInterval.INDICATOR_INTERVAL_WEEK,
         ):
             macd_weeks_sorted = sorted(macd_weeks, key=lambda x: x['date'], reverse=True)
-            if len(macd_weeks_sorted) >= 11:
+            if len(macd_weeks_sorted) >= 5:
                 self.macd_hist_week_0 = macd_weeks_sorted[0]['macd'] - macd_weeks_sorted[0]['signal']
                 self.macd_hist_week_1 = macd_weeks_sorted[1]['macd'] - macd_weeks_sorted[1]['signal']
                 self.macd_hist_week_2 = macd_weeks_sorted[2]['macd'] - macd_weeks_sorted[2]['signal']
                 self.macd_hist_week_3 = macd_weeks_sorted[3]['macd'] - macd_weeks_sorted[3]['signal']
                 self.macd_hist_week_4 = macd_weeks_sorted[4]['macd'] - macd_weeks_sorted[4]['signal']
-                self.macd_hist_week_5 = macd_weeks_sorted[5]['macd'] - macd_weeks_sorted[5]['signal']
-                self.macd_hist_week_6 = macd_weeks_sorted[6]['macd'] - macd_weeks_sorted[6]['signal']
-                self.macd_hist_week_7 = macd_weeks_sorted[7]['macd'] - macd_weeks_sorted[7]['signal']
-                self.macd_hist_week_8 = macd_weeks_sorted[8]['macd'] - macd_weeks_sorted[8]['signal']
-                self.macd_hist_week_9 = macd_weeks_sorted[9]['macd'] - macd_weeks_sorted[9]['signal']
-                self.macd_hist_week_10 = macd_weeks_sorted[10]['macd'] - macd_weeks_sorted[10]['signal']
 
         if f := fundamentals.get_db_fundamentals_by_asset_uid_date(asset_uid=self.instrument.asset_uid, date=self.date)[1]:
             self.revenue_ttm = f.revenue_ttm
@@ -254,22 +342,22 @@ class Ta21LearningCard:
         self.news_influence_score_3 = self.get_news_influence_score(days_from=22, days_to=28)
         self.news_influence_score_4 = self.get_news_influence_score(days_from=29, days_to=35)
 
-        self.price_change_3_days = self.get_price_change_days(days_count=3)
-        self.price_change_1_week = self.get_price_change_days(days_count=7)
-        self.price_change_2_week = self.get_price_change_days(days_count=7 * 2)
-        self.price_change_3_week = self.get_price_change_days(days_count=7 * 3)
-        self.price_change_1_month = self.get_price_change_days(days_count=30)
-        self.price_change_2_month = self.get_price_change_days(days_count=30 * 2)
-        self.price_change_3_month = self.get_price_change_days(days_count=30 * 3)
-        self.price_change_4_month = self.get_price_change_days(days_count=30 * 4)
-        self.price_change_5_month = self.get_price_change_days(days_count=30 * 5)
-        self.price_change_6_month = self.get_price_change_days(days_count=30 * 6)
-        self.price_change_7_month = self.get_price_change_days(days_count=30 * 7)
-        self.price_change_8_month = self.get_price_change_days(days_count=30 * 8)
-        self.price_change_9_month = self.get_price_change_days(days_count=30 * 9)
-        self.price_change_10_month = self.get_price_change_days(days_count=30 * 10)
-        self.price_change_11_month = self.get_price_change_days(days_count=30 * 11)
-        self.price_change_1_year = self.get_price_change_days(days_count=365)
+        self.price_change_3_days = self.get_price_change_days_ema(days_count=3)
+        self.price_change_1_week = self.get_price_change_days_ema(days_count=7)
+        self.price_change_2_week = self.get_price_change_days_ema(days_count=7 * 2)
+        self.price_change_3_week = self.get_price_change_days_ema(days_count=7 * 3)
+        self.price_change_1_month = self.get_price_change_days_ema(days_count=30)
+        self.price_change_2_month = self.get_price_change_days_ema(days_count=30 * 2)
+        self.price_change_3_month = self.get_price_change_days_ema(days_count=30 * 3)
+        self.price_change_4_month = self.get_price_change_days_ema(days_count=30 * 4)
+        self.price_change_5_month = self.get_price_change_days_ema(days_count=30 * 5)
+        self.price_change_6_month = self.get_price_change_days_ema(days_count=30 * 6)
+        self.price_change_7_month = self.get_price_change_days_ema(days_count=30 * 7)
+        self.price_change_8_month = self.get_price_change_days_ema(days_count=30 * 8)
+        self.price_change_9_month = self.get_price_change_days_ema(days_count=30 * 9)
+        self.price_change_10_month = self.get_price_change_days_ema(days_count=30 * 10)
+        self.price_change_11_month = self.get_price_change_days_ema(days_count=30 * 11)
+        self.price_change_1_year = self.get_price_change_days_ema(days_count=365)
 
     # Проверка карточки
     def check_x(self, is_fill_empty=False):
@@ -306,7 +394,26 @@ class Ta21LearningCard:
             # self.is_ok = False
             return
 
-    def get_price_change_days(self, days_count: int) -> float or None:
+    def get_volume_ema(self, days_count: int) -> float or None:
+        if graph := instruments.get_instrument_volume_graph(
+                uid=self.instrument.uid,
+                date_to=(self.date - datetime.timedelta(days=days_count)),
+                days_count=5,
+        ):
+            if len(graph):
+                if ema_graph := tech_analysis.ema(graph):
+                    if len(ema_graph) and ema_graph[0] is not None:
+                        return ema_graph[0]
+        return None
+
+    def get_volume_vwap(self, days_count: int) -> float or None:
+        return instruments.get_instrument_vwap_by_date(
+            instrument_uid=self.instrument.uid,
+            date_to=(self.date - datetime.timedelta(days=days_count)),
+            days_count=2,
+        )
+
+    def get_price_change_days_ema(self, days_count: int) -> float or None:
         if current_price := self.price:
             if (ema_graph := tech_analysis.get_tech_analysis_graph(
                 instrument_uid=self.instrument.uid,
@@ -380,11 +487,32 @@ class Ta21LearningCard:
 
         return [
             target_days_count,
-            self.instrument.name, # Название актива.
-            self.instrument.currency, # Валюта актива.
+            self.instrument.ticker, # Тикер актива
+            self.instrument.currency, # Валюта актива
             self.instrument.country_of_risk, # Код страны
-            to_numpy_float(self.forecast_price_change),
-            to_numpy_float(self.market_volume),
+            to_numpy_float(self.forecast_price_change), # Прогноз аналитиков
+
+            to_numpy_float(self.market_volume_change_day_1),
+            to_numpy_float(self.market_volume_change_day_2),
+            to_numpy_float(self.market_volume_change_day_3),
+            to_numpy_float(self.market_volume_change_day_4),
+            to_numpy_float(self.market_volume_change_day_5),
+
+            to_numpy_float(self.market_volume_change_week_1),
+            to_numpy_float(self.market_volume_change_week_2),
+            to_numpy_float(self.market_volume_change_week_3),
+            to_numpy_float(self.market_volume_change_week_4),
+
+            to_numpy_float(self.vwap_change_day_1),
+            to_numpy_float(self.vwap_change_day_2),
+            to_numpy_float(self.vwap_change_day_3),
+            to_numpy_float(self.vwap_change_day_4),
+            to_numpy_float(self.vwap_change_day_5),
+
+            to_numpy_float(self.vwap_change_week_1),
+            to_numpy_float(self.vwap_change_week_2),
+            to_numpy_float(self.vwap_change_week_3),
+            to_numpy_float(self.vwap_change_week_4),
 
             to_numpy_float(self.macd_hist_day_0),
             to_numpy_float(self.macd_hist_day_1),
@@ -393,22 +521,12 @@ class Ta21LearningCard:
             to_numpy_float(self.macd_hist_day_4),
             to_numpy_float(self.macd_hist_day_5),
             to_numpy_float(self.macd_hist_day_6),
-            to_numpy_float(self.macd_hist_day_7),
-            to_numpy_float(self.macd_hist_day_8),
-            to_numpy_float(self.macd_hist_day_9),
-            to_numpy_float(self.macd_hist_day_10),
 
             to_numpy_float(self.macd_hist_week_0),
             to_numpy_float(self.macd_hist_week_1),
             to_numpy_float(self.macd_hist_week_2),
             to_numpy_float(self.macd_hist_week_3),
             to_numpy_float(self.macd_hist_week_4),
-            to_numpy_float(self.macd_hist_week_5),
-            to_numpy_float(self.macd_hist_week_6),
-            to_numpy_float(self.macd_hist_week_7),
-            to_numpy_float(self.macd_hist_week_8),
-            to_numpy_float(self.macd_hist_week_9),
-            to_numpy_float(self.macd_hist_week_10),
 
             to_numpy_float(self.revenue_ttm),
             to_numpy_float(self.ebitda_ttm),
@@ -472,6 +590,7 @@ def generate_data():
     counter_cached = 0
     instrument_index = 0
     records = []
+    records_keys = []
 
     print('GENERATE DATA TA-2_1')
     print(len(instruments_list))
@@ -484,18 +603,21 @@ def generate_data():
             print('DATE', date)
 
             for target_date in date_utils.get_dates_interval_list(date_from=date, date_to=date_end, is_skip_holidays=True):
-                cached_csv_record = get_record_cache(
+                record_cache_key = get_record_cache_key(
                     ticker=instrument.ticker,
                     date=date,
                     target_date=target_date,
                 )
 
-                if cached_csv_record:
-                    if cached_csv_record != 'error':
-                        if cached_csv_record.get('result', None):
-                            counter_added += 1
-                            counter_cached += 1
-                            records.append(cached_csv_record)
+                cached_csv_record = get_record_cache(key=record_cache_key)
+
+                if cached_csv_record and cached_csv_record != 'error':
+                    if cached_csv_record.get('result', None):
+                        counter_added += 1
+                        counter_cached += 1
+                        records_keys.append(record_cache_key)
+                    else:
+                        counter_error += 1
                 else:
                     card = Ta21LearningCard(
                         instrument=instrument,
@@ -508,7 +630,7 @@ def generate_data():
                         if csv_record := card.get_csv_record():
                             cache_record(card=card)
                             counter_added += 1
-                            records.append(csv_record)
+                            records_keys.append(record_cache_key)
 
                     else:
                         cache_error(
@@ -521,6 +643,9 @@ def generate_data():
                 counter_total += 1
 
                 print(f'(TA-2_1 PREPARE: {counter_total}; ERROR: {counter_error}; CACHED: {counter_cached}; ADDED: {counter_added}; redis: {redis_utils.get_redis_size_mb()}MB/{redis_utils.get_redis_max_size_mb()}MB; CURRENT_TICKER: {instrument.ticker}({instrument_index}/{len(instruments_list)}))')
+
+    for key in records_keys:
+        records.append(get_record_cache(key=key))
 
     print('TOTAL COUNT', counter_total)
     print('TOTAL RECORDS PREPARED', len(records))
@@ -550,7 +675,7 @@ def learn():
     y_array = y.values
     count_samples = len(x_array)
 
-    random_indexes = numpy.random.permutation(count_samples)
+    random_indexes = np.random.permutation(count_samples)
 
     x_array = x_array[random_indexes]
     y_array = y_array[random_indexes]
@@ -560,8 +685,8 @@ def learn():
     val_end = int(0.95 * count_samples)  # после val_end заканчивается валидационная часть
     # (оставшиеся 5% идут на тест)
 
-    x_train, x_val, x_test = numpy.split(x_array, [train_end, val_end])
-    y_train, y_val, y_test = numpy.split(y_array, [train_end, val_end])
+    x_train, x_val, x_test = np.split(x_array, [train_end, val_end])
+    y_train, y_val, y_test = np.split(y_array, [train_end, val_end])
 
     print('X_train shape:', x_train.shape)
     print('X_val shape:', x_val.shape)
@@ -619,7 +744,7 @@ def learn():
 
     y_pred_test = model_cb.predict(test_pool)
     mse_test = mean_squared_error(y_test, y_pred_test)
-    rmse_test = numpy.sqrt(mse_test)
+    rmse_test = np.sqrt(mse_test)
 
     # Формируем компактный, но информативный лог об обучении одной записью
     fit_end_dt = datetime.datetime.now()
@@ -813,12 +938,11 @@ def cache_error(
     redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24 * 3)
 
 
-def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> dict or None:
-    if record := redis_utils.storage_get(key=get_record_cache_key(
-            ticker=ticker,
-            date=date,
-            target_date=target_date,
-    )):
+def get_record_cache(key: str) -> dict or str or None:
+    if record := redis_utils.storage_get(key=key):
+        if record == 'error':
+            return 'error'
+
         if parsed_record := serializer.from_json(record):
             return parsed_record
     return None
@@ -826,7 +950,7 @@ def get_record_cache(ticker: str, date: datetime.datetime, target_date: datetime
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_record_cache_key_0',
+        'method': 'ta_2_1_record_cache_key_____00001',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

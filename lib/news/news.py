@@ -1,6 +1,6 @@
 import datetime
 
-from tinkoff.invest import CandleInterval
+from t_tech.invest import CandleInterval
 
 from lib.db_2 import news_db
 from lib import instruments, yandex, cache, serializer, utils, logger, learn, types_util, date_utils

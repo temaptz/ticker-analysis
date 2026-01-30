@@ -1,7 +1,7 @@
 import math
 import datetime
 import pytz
-from tinkoff.invest import (
+from t_tech.invest import (
     Client,
     constants,
     GetAccountsResponse,

@@ -51,6 +51,22 @@ services:
       - postgres
     restart: no
 
+  news:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    container_name: news
+    volumes:
+      - /etc/is_my_prod:/container_host_is_prod:ro
+    command:
+      - python
+      - news_rate.py
+    depends_on:
+      - redis
+      - postgres
+      - ollama
+    restart: no
+
   apiserver:
     build:
       context: .

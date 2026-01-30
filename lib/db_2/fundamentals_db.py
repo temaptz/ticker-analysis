@@ -3,7 +3,7 @@ import uuid
 from typing import Type
 from sqlalchemy import Column, DateTime, LargeBinary, String, func, UUID
 from sqlalchemy.orm import declarative_base, Session
-from tinkoff.invest import StatisticResponse
+from t_tech.invest import StatisticResponse
 
 from lib.db_2.connection import get_engine
 from lib import logger, serializer

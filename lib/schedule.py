@@ -1,6 +1,6 @@
 import pytz
 from apscheduler.schedulers.blocking import BlockingScheduler
-from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news, schedule_llm, agent
+from lib import forecasts_save, predictions_save, yandex_disk, process_task, fundamentals_save, news
 
 
 def start_schedule() -> None:
@@ -23,14 +23,25 @@ def start_schedule() -> None:
         'cron',
         day_of_week='mon',
         hour=10,
-        minute=20,
+        minute=10,
         timezone=timezone
     )
 
-    # Сбор прогнозов аналитиков
+    # Торговые оценки
+    scheduler.add_job(
+        process_task.buy_sell_rate,
+        'cron',
+        day_of_week='mon-fri',
+        hour=11,
+        minute=0,
+        timezone=timezone
+    )
+
+    # Создание торговых заявок
     scheduler.add_job(
         process_task.create_orders,
         'cron',
+        day_of_week='mon-fri',
         hour=11,
         minute=30,
         timezone=timezone
@@ -70,7 +81,5 @@ def start_schedule() -> None:
         'interval',
         seconds=30
     )
-
-    schedule_llm.register_scheduler_jobs(scheduler=scheduler)
 
     scheduler.start()

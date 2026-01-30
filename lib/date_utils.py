@@ -2,7 +2,7 @@ import holidays.countries
 from dateutil import parser
 import datetime
 from pytz import timezone
-from tinkoff.invest import CandleInterval
+from t_tech.invest import CandleInterval
 
 
 def parse_date(date: str or datetime.datetime) -> datetime.datetime or None:

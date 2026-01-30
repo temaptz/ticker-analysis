@@ -1,6 +1,6 @@
 import datetime
-from tinkoff.invest import Client, constants, StatisticResponse
-from tinkoff.invest.schemas import GetAssetFundamentalsResponse, GetAssetFundamentalsRequest
+from t_tech.invest import Client, constants, StatisticResponse
+from t_tech.invest.schemas import GetAssetFundamentalsResponse, GetAssetFundamentalsRequest
 from lib import cache, utils, serializer
 from lib.db_2 import fundamentals_db
 from const import TINKOFF_INVEST_TOKEN

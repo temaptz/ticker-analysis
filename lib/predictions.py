@@ -2,7 +2,7 @@ import datetime
 from lib.learn import ta_2_1, model
 from lib import date_utils, logger, utils, instruments, cache, predictions_cache, learn
 from lib.db_2 import predictions_db
-from tinkoff.invest import CandleInterval
+from t_tech.invest import CandleInterval
 
 
 def get_prediction(

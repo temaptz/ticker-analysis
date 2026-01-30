@@ -1,9 +1,14 @@
 import datetime
 from types import SimpleNamespace
-import tinkoff.invest
+import t_tech.invest
 import json
 import pickle
+import sys
 from lib import logger
+
+sys.modules['tinkoff'] = t_tech
+sys.modules['tinkoff.invest'] = t_tech.invest
+sys.modules['tinkoff.invest.schemas'] = t_tech.invest.schemas
 
 
 def to_json(obj, ensure_ascii=True, is_pretty=False) -> str or None:
@@ -49,7 +54,7 @@ def get_dict_by_object(input) -> dict:
     for property_name in dir(input):
         if property_name[0:2] != '__':
             property_value = getattr(input, property_name)
-            is_quotation = isinstance(property_value, tinkoff.invest.Quotation)
+            is_quotation = isinstance(property_value, t_tech.invest.Quotation)
             is_datetime = isinstance(property_value, datetime.datetime)
 
             if is_quotation:
@@ -77,7 +82,7 @@ def db_serialize(data: any) -> bytes:
     return data
 
 
-def db_deserialize(data: bytes or str)-> any:
+def db_deserialize(data: bytes or str)-> any or None:
     """
     Стабильная десериализация байтов из Redis обратно в объект Python.
     """
@@ -89,7 +94,7 @@ def db_deserialize(data: bytes or str)-> any:
     except Exception as e:
         print(f'Ошибка десериализации объекта db_deserialize: {e}')
 
-    return data
+    return None
 
 
 def dict_to_object_recursive(d):

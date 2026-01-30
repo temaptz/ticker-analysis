@@ -4,7 +4,7 @@ import sqlalchemy
 from typing import Type
 from sqlalchemy import Column, DateTime, LargeBinary, String, func, UUID
 from sqlalchemy.orm import declarative_base, Session
-from tinkoff.invest.schemas import GetForecastResponse
+from t_tech.invest.schemas import GetForecastResponse
 
 from lib.db_2.connection import get_engine  # должен возвращать SQLAlchemy engine
 from lib import logger, serializer

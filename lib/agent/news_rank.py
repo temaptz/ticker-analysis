@@ -78,10 +78,11 @@ def rank_last_news():
             logger.log_error(method_name='rank_last_news_item', error=e)
 
     logger.log_info(
-        message=f'NEWS RANK TIME: {time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - time_start))}',
+        message=f'Завершена оценка новостей',
         output={
             'news_total_count': news_total_count,
             'news_rate_success': news_rate_success,
+            'time': time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - time_start)),
         },
         is_send_telegram=True,
     )

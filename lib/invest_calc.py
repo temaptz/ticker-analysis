@@ -1,5 +1,5 @@
 import datetime
-from tinkoff.invest import Operation, OperationType, Instrument, OperationState
+from t_tech.invest import Operation, OperationType, Instrument, OperationState
 from lib import utils, instruments, users, logger, predictions
 
 class InvestCalc:

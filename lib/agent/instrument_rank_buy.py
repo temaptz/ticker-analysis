@@ -5,8 +5,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from lib import instruments, users, agent, db_2, logger, date_utils, predictions, learn, utils, news, serializer, tech_analysis
-from tinkoff.invest.schemas import IndicatorType, IndicatorInterval
+from lib import instruments, users, agent, db_2, logger, date_utils, predictions, learn, utils, news, serializer
 
 
 class State(TypedDict, total=False):
@@ -95,8 +94,10 @@ def llm_fundamental_rate(state: State):
         db_rate = db_2.instrument_tags_db.get_tag(instrument_uid=uid, tag_name='llm_fundamental_rate')
         db_conclusion = db_2.instrument_tags_db.get_tag(instrument_uid=uid, tag_name='llm_fundamental_conclusion')
 
-        # Данные будут обновляться по понедельникам. В остальные дни кэш
-        if db_rate is not None and db_rate.tag_value is not None and datetime.datetime.now(tz=datetime.timezone.utc).weekday() != 0:
+        # Данные будут обновляться при отсутствии или в первый понедельник месяца. В остальные дни кэш
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        is_first_monday = ((now.weekday() == 0) and (1 <= now.day <= 7))
+        if not is_first_monday and db_rate is not None and db_rate.tag_value is not None:
             return {'fundamental_rate': agent.models.RatePercentWithConclusion(
                 rate=int(db_rate.tag_value),
                 final_conclusion=str(db_conclusion.tag_value)

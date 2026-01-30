@@ -2,7 +2,7 @@ import time
 from functools import wraps
 import grpc
 from typing import Optional
-from tinkoff.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
+from t_tech.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
 from lib import cache, utils, date_utils, db_2, yandex
@@ -181,14 +181,14 @@ def get_instrument_keywords(uid: str) -> list[str]:
                 return yandex_value
     return []
 
-@cache.ttl_cache(ttl=3600 * 24 * 30, is_skip_empty=True)
-def get_instrument_volume(uid: str, date: datetime.datetime) -> float or None:
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
+def get_instrument_volume_by_date(uid: str, date: datetime.datetime) -> float or None:
     try:
         # Используем дневные свечи и существующую обёртку для получения истории
         to_date = date_utils.convert_to_utc(date_utils.get_day_end(date))
         candles = get_instrument_history_price_by_uid(
             uid=uid,
-            days_count=1,
+            days_count=3,
             interval=CandleInterval.CANDLE_INTERVAL_DAY,
             to_date=to_date,
         )
@@ -198,24 +198,54 @@ def get_instrument_volume(uid: str, date: datetime.datetime) -> float or None:
 
         target_local = date_utils.convert_to_local(date)
 
-        # Сначала пытаемся найти свечу именно за этот день (по локальной дате)
+        # Ищем свечу именно за этот день (по локальной дате)
         for c in candles:
             c_local = date_utils.convert_to_local(c.time)
             if c_local.date() == target_local.date():
                 return float(c.volume) if c.volume is not None else None
-
-        # Иначе берём ближайшую по времени дневную свечу
-        nearest = None
-        nearest_delta = None
-        for c in candles:
-            c_local = date_utils.convert_to_local(c.time)
-            delta = abs((target_local - c_local).total_seconds())
-            if nearest is None or delta < nearest_delta:
-                nearest = c
-                nearest_delta = delta
-
-        if nearest:
-            return float(nearest.volume) if nearest.volume is not None else None
     except Exception as e:
-        print('ERROR get_instrument_volume', e)
+        print('ERROR get_instrument_volume_by_date', e)
+    return None
+
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
+def get_instrument_volume_graph(uid: str, date_to: datetime.datetime, days_count: int) -> list[float]:
+    try:
+        result = []
+
+        for date in date_utils.get_dates_interval_list(
+            date_from=date_to - datetime.timedelta(days=days_count),
+            date_to=date_to,
+            is_order_descending=True,
+        ):
+            if (volume := get_instrument_volume_by_date(uid=uid, date=date)) is not None:
+                result.append(volume)
+
+        return result
+    except Exception as e:
+        print('ERROR get_instrument_volume_graph', e)
+    return None
+
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
+def get_instrument_vwap_by_date(instrument_uid: str, date_to: datetime.datetime, days_count: int) -> float or None:
+    try:
+        total_price_volume = 0
+        total_volume = 0
+
+        for candle in get_instrument_history_price_by_uid(
+                uid=instrument_uid,
+                to_date=date_to,
+                days_count=days_count,
+                interval=CandleInterval.CANDLE_INTERVAL_HOUR,
+        ):
+            if candle.volume:
+                if price := utils.get_price_by_candle(candle=candle):
+                    total_price_volume += (price * candle.volume)
+                    total_volume += candle.volume
+
+        if total_price_volume and total_volume:
+            return  total_price_volume / total_volume
+
+    except Exception as e:
+        print('ERROR get_instrument_vwap_by_date', e)
+
     return None

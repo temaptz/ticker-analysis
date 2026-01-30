@@ -3,8 +3,8 @@ from fastapi import FastAPI, Request, Header, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqladmin import Admin, ModelView
 from typing import Optional
-from tinkoff.invest import CandleInterval, Instrument, Quotation
-from tinkoff.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
+from t_tech.invest import CandleInterval, Instrument, Quotation
+from t_tech.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
 
 from dotenv import load_dotenv
 load_dotenv()

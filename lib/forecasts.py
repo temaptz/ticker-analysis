@@ -1,7 +1,7 @@
 import datetime
 from collections import defaultdict
-from tinkoff.invest import Client, constants, CandleInterval
-from tinkoff.invest.schemas import GetForecastResponse, GetForecastRequest
+from t_tech.invest import Client, constants, CandleInterval
+from t_tech.invest.schemas import GetForecastResponse, GetForecastRequest
 from lib.db_2 import forecasts_db
 from const import TINKOFF_INVEST_TOKEN
 from lib import cache, utils, serializer

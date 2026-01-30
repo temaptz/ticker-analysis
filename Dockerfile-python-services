@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM requirements
 
 COPY ./lib /app/lib
-COPY ./tinkoff /app/tinkoff
+COPY ./t_tech /app/t_tech
 COPY ./main.py /app/main.py
 COPY ./learn.py /app/learn.py
 COPY ./cache_predictions.py /app/cache_predictions.py

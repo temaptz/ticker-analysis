@@ -66,6 +66,14 @@ def process_single_update(text: str = None) -> None:
         agent.buy.create_orders()
 
 
+def buy_sell_rate() -> None:
+    try:
+        agent.instrument_rank_sell.update_recommendations()
+        agent.instrument_rank_buy.update_recommendations()
+    except Exception as e:
+        logger.log_error(method_name='create_orders', error=e)
+
+
 def create_orders() -> None:
     try:
         agent.sell.create_orders_2()

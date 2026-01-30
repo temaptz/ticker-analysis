@@ -4,7 +4,7 @@ import re
 import math
 import functools
 import time
-from tinkoff.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
+from t_tech.invest import MoneyValue, Quotation, HistoricCandle, CandleInterval
 import hashlib
 import numpy as np
 from html import unescape
