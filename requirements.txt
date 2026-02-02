@@ -35,3 +35,4 @@ werkzeug
 ipywidgets
 ipython
 sentry_sdk
+trendln

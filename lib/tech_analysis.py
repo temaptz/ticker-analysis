@@ -1,4 +1,5 @@
 import pandas
+import trendln
 from t_tech.invest import Client, constants
 import datetime
 
@@ -86,3 +87,7 @@ def ema(prices: list[float], period: int = None) -> list[float]:
     ).mean()
 
     return ema_series.tolist()
+
+
+def get_support_resistance_indexes(prices: list[float]) -> (list[int], list[int]):
+    return trendln.get_extrema(prices, accuracy=8)

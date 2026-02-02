@@ -29,6 +29,18 @@ def get_feature_names() -> list:
         'market_volume_change_week_3',
         'market_volume_change_week_4',
 
+        'prev_support_change_0',
+        'prev_support_change_1',
+        'prev_support_change_2',
+        'prev_support_change_3',
+        'prev_support_change_4',
+
+        'prev_resistance_change_0',
+        'prev_resistance_change_1',
+        'prev_resistance_change_2',
+        'prev_resistance_change_3',
+        'prev_resistance_change_4',
+
         'vwap_change_day_1',
         'vwap_change_day_2',
         'vwap_change_day_3',
@@ -117,6 +129,18 @@ class Ta21LearningCard:
     market_volume_change_week_2: float = None # Объем торгов 2 недели назад
     market_volume_change_week_3: float = None # Объем торгов 3 недели назад
     market_volume_change_week_4: float = None # Объем торгов 4 недели назад
+
+    prev_support_change_0: float = None # Прошлый уровень поддержки
+    prev_support_change_1: float = None # Прошлый - 1 уровень поддержки
+    prev_support_change_2: float = None # Прошлый - 2 уровень поддержки
+    prev_support_change_3: float = None # Прошлый - 3 уровень поддержки
+    prev_support_change_4: float = None # Прошлый - 4 уровень поддержки
+
+    prev_resistance_change_0: float = None # Прошлый уровень сопротивления
+    prev_resistance_change_1: float = None # Прошлый - 1 уровень сопротивления
+    prev_resistance_change_2: float = None # Прошлый - 2 уровень сопротивления
+    prev_resistance_change_3: float = None # Прошлый - 3 уровень сопротивления
+    prev_resistance_change_4: float = None # Прошлый - 4 уровень сопротивления
 
     vwap_change_day_1: float = None # VWAP вчера
     vwap_change_day_2: float = None # VWAP 2 дня назад
@@ -245,6 +269,8 @@ class Ta21LearningCard:
             main_price=self.get_volume_ema(days_count=28), 
             next_price=now_market_volume,
         )
+
+        self.fill_support_resistance()
 
         now_vwap = self.get_volume_vwap(days_count=1)
         self.vwap_change_day_1 = utils.get_change_relative_by_price(
@@ -394,6 +420,66 @@ class Ta21LearningCard:
             # self.is_ok = False
             return
 
+    def fill_support_resistance(self) -> None:
+        try:
+            candles = instruments.get_instrument_history_price_by_uid(
+                    uid=self.instrument.uid,
+                    to_date=(self.date - datetime.timedelta(days=1)),
+                    days_count=365,
+                    interval=CandleInterval.CANDLE_INTERVAL_WEEK,
+            )
+            candles_sorted_by_date = sorted(candles, key=lambda c: c.time, reverse=True)
+            prices = [utils.get_price_by_quotation(p.close) for p in candles_sorted_by_date]
+
+            supportIndexes, resistanceIndexes = tech_analysis.get_support_resistance_indexes(prices=prices)
+
+            support_candles = [candles_sorted_by_date[i] for i in supportIndexes]
+            resistance_candles = [candles_sorted_by_date[i] for i in resistanceIndexes]
+
+            self.prev_support_change_0 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(support_candles[0].close),
+            )
+            self.prev_support_change_1 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(support_candles[1].close),
+            )
+            self.prev_support_change_2 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(support_candles[2].close),
+            )
+            self.prev_support_change_3 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(support_candles[3].close),
+            )
+            self.prev_support_change_4 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(support_candles[4].close),
+            )
+            self.prev_resistance_change_0 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(resistance_candles[0].close),
+            )
+            self.prev_resistance_change_1 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(resistance_candles[1].close),
+            )
+            self.prev_resistance_change_2 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(resistance_candles[2].close),
+            )
+            self.prev_resistance_change_3 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(resistance_candles[3].close),
+            )
+            self.prev_resistance_change_4 = utils.get_change_relative_by_price(
+                main_price=self.price,
+                next_price=utils.get_price_by_quotation(resistance_candles[4].close),
+            )
+        except Exception as e:
+            print('Ta21LearningCard fill support and resistance ERROR:', e)
+            self.is_ok = False
+
     def get_volume_ema(self, days_count: int) -> float or None:
         if graph := instruments.get_instrument_volume_graph(
                 uid=self.instrument.uid,
@@ -503,6 +589,18 @@ class Ta21LearningCard:
             to_numpy_float(self.market_volume_change_week_3),
             to_numpy_float(self.market_volume_change_week_4),
 
+            to_numpy_float(self.prev_support_change_0),
+            to_numpy_float(self.prev_support_change_1),
+            to_numpy_float(self.prev_support_change_2),
+            to_numpy_float(self.prev_support_change_3),
+            to_numpy_float(self.prev_support_change_4),
+
+            to_numpy_float(self.prev_resistance_change_0),
+            to_numpy_float(self.prev_resistance_change_1),
+            to_numpy_float(self.prev_resistance_change_2),
+            to_numpy_float(self.prev_resistance_change_3),
+            to_numpy_float(self.prev_resistance_change_4),
+
             to_numpy_float(self.vwap_change_day_1),
             to_numpy_float(self.vwap_change_day_2),
             to_numpy_float(self.vwap_change_day_3),
@@ -581,8 +679,8 @@ class Ta21LearningCard:
 
 def generate_data():
     news_beginning_date2 = news.news.news_beginning_date
-    date_end = datetime.datetime.combine(datetime.datetime.now(), datetime.time(9), tzinfo=datetime.timezone.utc)
-    date_start = datetime.datetime.combine((news_beginning_date2 + datetime.timedelta(days=30)), datetime.time(9), tzinfo=datetime.timezone.utc)
+    date_end = date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
+    date_start = date_utils.get_day_prediction_time(date=(news_beginning_date2 + datetime.timedelta(days=30)))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
     counter_added = 0
@@ -950,7 +1048,7 @@ def get_record_cache(key: str) -> dict or str or None:
 
 def get_record_cache_key(ticker: str, date: datetime.datetime, target_date: datetime.datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': 'ta_2_1_record_cache_key_____00001',
+        'method': 'ta_2_1_record_cache_key_____00005',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,
