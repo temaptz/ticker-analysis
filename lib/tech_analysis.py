@@ -1,10 +1,8 @@
 import pandas
-import trendln
 from t_tech.invest import Client, constants
 import datetime
 
-from t_tech.invest.schemas import TechAnalysisItem, IndicatorType, GetTechAnalysisRequest, TypeOfPrice, \
-    IndicatorInterval, Deviation, Smoothing
+from t_tech.invest.schemas import TechAnalysisItem, IndicatorType, GetTechAnalysisRequest, TypeOfPrice, IndicatorInterval, Deviation, Smoothing
 
 from const import TINKOFF_INVEST_TOKEN
 from lib import cache, utils, date_utils
@@ -41,6 +39,38 @@ def get_tech_analysis(
                 smoothing=smoothing,
             )
         ).technical_indicators
+
+
+# @DEPRECATED use get_tech_analysis_graph
+@cache.ttl_cache(ttl=3600 * 24)
+def get_avg_tech_analysis_by_date(
+        instrument_uid: str,
+        indicator_type: IndicatorType,
+        date_from: datetime.datetime,
+        date_to: datetime.datetime,
+        interval: IndicatorInterval = IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
+        length: int = 3,
+        deviation: Deviation = None,
+        smoothing: Smoothing = None,
+) -> float or None:
+    signals = []
+
+    for i in get_tech_analysis(
+            instrument_uid=instrument_uid,
+            indicator_type=indicator_type,
+            date_from=date_from,
+            date_to=date_to,
+            interval=interval,
+            deviation=deviation,
+            smoothing=smoothing,
+            length=length,
+    ) or []:
+        if i.signal:
+            signal = utils.get_price_by_quotation(i.signal)
+            if signal or signal == 0:
+                signals.append(signal)
+
+    return sum(signals) / len(signals) if len(signals) else None
 
 
 def get_tech_analysis_graph(
@@ -87,7 +117,3 @@ def ema(prices: list[float], period: int = None) -> list[float]:
     ).mean()
 
     return ema_series.tolist()
-
-
-def get_support_resistance_indexes(prices: list[float]) -> (list[int], list[int]):
-    return trendln.get_extrema(prices, accuracy=8)

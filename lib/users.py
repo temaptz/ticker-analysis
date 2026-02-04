@@ -262,7 +262,6 @@ def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
     return float('-inf')
 
 
-@cache.ttl_cache(ttl=3600)
 def get_instrument_sell_rate_for_sort(instrument: Instrument) -> float:
     try:
         if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_sell_rate'):
@@ -275,7 +274,6 @@ def get_instrument_sell_rate_for_sort(instrument: Instrument) -> float:
     return float('-inf')
 
 
-@cache.ttl_cache(ttl=3600)
 def get_instrument_buy_rate_for_sort(instrument: Instrument) -> float:
     try:
         if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_buy_rate'):
