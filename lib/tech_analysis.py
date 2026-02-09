@@ -18,7 +18,7 @@ def get_tech_analysis(
         length: int = 3,
         deviation: Deviation = None,
         smoothing: Smoothing = None,
-) -> [TechAnalysisItem]:
+) -> list[TechAnalysisItem]:
     if indicator_type == IndicatorType.INDICATOR_TYPE_MACD and smoothing is None:
         smoothing = Smoothing(
             fast_length=12,
@@ -41,8 +41,8 @@ def get_tech_analysis(
         ).technical_indicators
 
 
-# @DEPRECATED use get_tech_analysis_graph
 @cache.ttl_cache(ttl=3600 * 24)
+# @DEPRECATED use get_tech_analysis_graph
 def get_avg_tech_analysis_by_date(
         instrument_uid: str,
         indicator_type: IndicatorType,

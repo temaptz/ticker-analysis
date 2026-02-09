@@ -117,20 +117,20 @@ def round_float(num: float, decimals: int = 10) -> float:
     return num.item() if isinstance(num, np.generic) else num
 
 
-def get_change_relative_by_price(main_price: float, next_price: float) -> float or None:
+def get_change_relative(current_value: float, next_value: float) -> float or None:
     try:
-        return (next_price - main_price) / main_price
+        return (next_value - current_value) / current_value
     except Exception as e:
-        logger.log_error(method_name='get_change_relative_by_price', error=e, is_telegram_send=False)
+        logger.log_error(method_name='get_change_relative', error=e, is_telegram_send=False)
 
     return None
 
 
-def get_price_by_change_relative(current_price: float, relative_change: float) -> float or None:
+def get_value_by_change_relative(current_value: float, relative_change: float) -> float or None:
     try:
-        return current_price + (current_price * relative_change)
+        return current_value + (current_value * relative_change)
     except Exception as e:
-        logger.log_error(method_name='get_price_by_change_relative', error=e, is_telegram_send=False)
+        logger.log_error(method_name='get_value_by_change_relative', error=e, is_telegram_send=False)
 
     return None
 

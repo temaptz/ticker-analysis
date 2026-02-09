@@ -219,8 +219,8 @@ def instrument_prediction(uid: Optional[str], days_future: Optional[str]):
         resp['relative'][learn.model.TA_2_1] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.TA_2_1)
         resp['relative'][learn.model.CONSENSUS] = predictions.get_prediction_cache(instrument_uid=uid, date_target=date_target, model_name=learn.model.CONSENSUS)
 
-        resp[learn.model.TA_2_1] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.TA_2_1])
-        resp[learn.model.CONSENSUS] = utils.get_price_by_change_relative(current_price=current_price, relative_change=resp['relative'][learn.model.CONSENSUS])
+        resp[learn.model.TA_2_1] = utils.get_value_by_change_relative(current_value=current_price, relative_change=resp['relative'][learn.model.TA_2_1])
+        resp[learn.model.CONSENSUS] = utils.get_value_by_change_relative(current_value=current_price, relative_change=resp['relative'][learn.model.CONSENSUS])
     return resp
 
 

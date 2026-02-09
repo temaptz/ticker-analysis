@@ -371,9 +371,9 @@ class Ta21LearningCard:
                         extreme_price = min(candles, key=lambda x: x.close).close
 
                     if extreme_price:
-                        if price_change := utils.get_change_relative_by_price(
-                                main_price=current_price,
-                                next_price=utils.get_price_by_quotation(extreme_price),
+                        if price_change := utils.get_change_relative(
+                                current_value=current_price,
+                                next_value=utils.get_price_by_quotation(extreme_price),
                         ):
                             return price_change
         return 0 if is_fill_empty else None
@@ -385,9 +385,9 @@ class Ta21LearningCard:
                     date=self.date - datetime.timedelta(days=days_count),
                     delta_hours=(24 if days_count < 30 else (24 * 7))
             ):
-                if price_change := utils.get_change_relative_by_price(
-                        main_price=current_price,
-                        next_price=price,
+                if price_change := utils.get_change_relative(
+                        current_value=current_price,
+                        next_value=price,
                 ):
                     return price_change
         return None
@@ -403,7 +403,7 @@ class Ta21LearningCard:
                         if price_forecast := utils.get_price_by_quotation(
                                 price=price[1].consensus.consensus
                         ):
-                            if price_change := utils.get_change_relative_by_price(main_price=current_price, next_price=price_forecast):
+                            if price_change := utils.get_change_relative(current_value=current_price, next_value=price_forecast):
                                 return price_change
         except Exception as e:
             logger.log_error(method_name='Ta21LearningCard.get_forecast_change', error=e, is_telegram_send=False)
@@ -438,7 +438,7 @@ class Ta21LearningCard:
         if self.price:
             if self.target_date < datetime.datetime.now(datetime.timezone.utc):
                 if target_price := instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date):
-                    return utils.get_change_relative_by_price(main_price=self.price, next_price=target_price)
+                    return utils.get_change_relative(current_value=self.price, next_value=target_price)
 
         return None
 
@@ -870,7 +870,7 @@ def predict_future_relative_change(
 def predict_future(instrument_uid: str, date_target: datetime.datetime) -> float or None:
     if current_price := instruments.get_instrument_last_price_by_uid(uid=instrument_uid):
         if relative_change := predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target):
-            if predict_price := utils.get_price_by_change_relative(current_price=current_price, relative_change=relative_change):
+            if predict_price := utils.get_value_by_change_relative(current_value=current_price, relative_change=relative_change):
                 return utils.round_float(predict_price, decimals=2)
 
     return None

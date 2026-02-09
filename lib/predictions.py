@@ -107,8 +107,8 @@ def get_prediction_graph(uid: str, model_name: model, date_from: datetime.dateti
                 )
 
                 if prediction_item is not None:
-                    if prediction_price := utils.get_price_by_change_relative(
-                            current_price=current_price,
+                    if prediction_price := utils.get_value_by_change_relative(
+                            current_value=current_price,
                             relative_change=prediction_item,
                     ):
                         result.append({
@@ -163,13 +163,13 @@ def get_prediction_history_graph(
                     or (model_name == learn.model.TA_2_1 and key_date < datetime.datetime(year=2025, month=8, day=18))
             ):
                 p_abs = prediction.prediction
-                p_percent = utils.get_change_relative_by_price(
-                    main_price=current_price,
-                    next_price=p_abs,
+                p_percent = utils.get_change_relative(
+                    current_value=current_price,
+                    next_value=p_abs,
                 )
             else:
-                p_abs = utils.get_price_by_change_relative(
-                    current_price=current_price,
+                p_abs = utils.get_value_by_change_relative(
+                    current_value=current_price,
                     relative_change=prediction.prediction,
                 )
                 p_percent = prediction.prediction
