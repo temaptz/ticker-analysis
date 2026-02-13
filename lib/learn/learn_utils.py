@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_catboost_metrics(model, metric_name='RMSE'):
@@ -31,3 +32,9 @@ def plot_catboost_metrics(model, metric_name='RMSE'):
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
+
+def to_numpy_float(num: float | None) -> float:
+    if num is not None:
+        return float(num)
+    return np.nan

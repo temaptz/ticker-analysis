@@ -11,7 +11,7 @@ from html import unescape
 from lib import date_utils, logger
 
 
-def get_price_by_candle(candle: HistoricCandle) -> float or None:
+def get_mid_price_by_candle(candle: HistoricCandle) -> float or None:
     try:
         return (get_price_by_quotation(price=candle.high) + get_price_by_quotation(price=candle.low)) / 2
 

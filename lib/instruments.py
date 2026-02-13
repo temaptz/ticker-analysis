@@ -128,7 +128,7 @@ def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=
                 nearest = i
 
         if nearest:
-            return utils.get_price_by_candle(nearest)
+            return utils.get_mid_price_by_candle(nearest)
 
     return None
 
@@ -238,7 +238,7 @@ def get_instrument_vwap_by_date(instrument_uid: str, date_to: datetime.datetime,
                 interval=CandleInterval.CANDLE_INTERVAL_HOUR,
         ):
             if candle.volume:
-                if price := utils.get_price_by_candle(candle=candle):
+                if price := utils.get_mid_price_by_candle(candle=candle):
                     total_price_volume += (price * candle.volume)
                     total_volume += candle.volume
 

@@ -94,12 +94,6 @@ def get_feature_names() -> list:
     ]
 
 
-def to_numpy_float(num: float) -> float:
-    if num or num == 0:
-        return np.float32(num)
-    return np.nan
-
-
 MODEL_NAME = model.TA_2_1
 
 

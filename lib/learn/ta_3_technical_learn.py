@@ -25,7 +25,7 @@ def generate_data():
         instrument_index += 1
         print('INSTRUMENT', instrument.ticker)
 
-        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, is_skip_holidays=True, is_order_descending=not docker.is_docker()):
+        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, is_skip_holidays=False, is_order_descending=not docker.is_docker()):
             print('DATE', date)
 
             for target_date_days in range(1, 20):
@@ -42,8 +42,8 @@ def generate_data():
 
                 cached_csv_record = get_record_cache(key=record_cache_key)
 
-                if cached_csv_record and cached_csv_record != 'error':
-                    if cached_csv_record.get('result', None) is not None:
+                if cached_csv_record:
+                    if cached_csv_record != 'error' and cached_csv_record.get('result', None) is not None:
                         counter_added += 1
                         counter_cached += 1
                         records_keys.append(record_cache_key)
@@ -130,16 +130,16 @@ def predict_future(
 
 def get_model_file_path():
     if docker.is_docker():
-        return '/app/learn_models/ta-3.cbm'
+        return '/app/learn_models/ta-3_technical.cbm'
 
-    return utils.get_file_abspath_recursive('ta-3.cbm', 'learn_models')
+    return utils.get_file_abspath_recursive('ta-3_technical.cbm', 'learn_models')
 
 
 def get_data_frame_csv_file_path():
     if docker.is_docker():
-        return '/app/ta-3.csv'
+        return '/app/ta-3_technical.csv'
 
-    return utils.get_file_abspath_recursive('ta-3.csv', 'data_frames')
+    return utils.get_file_abspath_recursive('ta-3_technical.csv', 'data_frames')
 
 
 def cache_record(card: learn.ta_3_technical.Ta3TechnicalAnalysisCard) -> None:
@@ -176,7 +176,7 @@ def get_record_cache(key: str) -> dict | str | None:
 
 def get_record_cache_key(ticker: str, date: datetime, target_date: datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': f'{learn.model.TA_3_tech}_record_cache_key',
+        'method': f'{learn.model.TA_3_tech}_record_cache_key_001',
         'ticker': ticker,
         'date': date,
         'target_date': target_date,

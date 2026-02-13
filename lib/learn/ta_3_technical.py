@@ -15,24 +15,19 @@ def get_feature_names() -> list:
 
     for i in range(20):
         feature_names.extend([
-            f'candle_open_{i}',
-            f'candle_close_{i}',
-            f'candle_high_{i}',
-            f'candle_low_{i}',
-            f'candle_ema50_{i}',
-            f'candle_volume_{i}',
+            f'candle_open_rel_{i}',
+            f'candle_close_rel_{i}',
+            f'candle_high_rel_{i}',
+            f'candle_low_rel_{i}',
+            f'candle_ema50_rel_{i}',
+            f'candle_volume_rel_{i}',
             f'candle_rsi_{i}',
-            f'candle_macd_{i}',
+            f'candle_macd_rel_{i}',
+            f'candle_macd_sign_{i}',
             f'candle_news_influence_score_{i}',
         ])
 
     return feature_names
-
-
-def to_numpy_float(num: float | None) -> float:
-    if num is not None:
-        return float(num)
-    return np.nan
 
 
 MODEL_NAME = learn.model.TA_3_tech
@@ -131,11 +126,10 @@ class Ta3TechnicalAnalysisCard:
 
         ema50_dict = {date_utils.parse_date(i.timestamp): utils.get_price_by_quotation(i.signal) for i in ema50_items}
         rsi_dict = {date_utils.parse_date(i.timestamp): utils.get_price_by_quotation(i.signal) for i in rsi_items}
-        macd_dict = {date_utils.parse_date(i.timestamp): (utils.get_price_by_quotation(i.macd) - utils.get_price_by_quotation(i.signal)) for i in macd_items}
+        macd_hist_dict = {date_utils.parse_date(i.timestamp): (utils.get_price_by_quotation(i.macd) - utils.get_price_by_quotation(i.signal)) for i in macd_items}
         prev_close_abs = None
 
-        volume_avg = sum(i.volume for i in price_candles) / len(price_candles)
-        macd_avg = sum((utils.get_price_by_quotation(i.macd) - utils.get_price_by_quotation(i.signal)) for i in macd_items) / len(macd_items)
+        volume_avg = sum(i.volume for i in last_candles) / len(last_candles)
 
         for candle in last_candles:
             if prev_close_abs is None:
@@ -150,35 +144,33 @@ class Ta3TechnicalAnalysisCard:
             )
 
             result.append({
-                'candle_close': utils.get_change_relative(
+                'candle_close_rel': utils.get_change_relative(
                     current_value=prev_close_abs,
                     next_value=close_abs,
                 ),
-                'candle_open': utils.get_change_relative(
+                'candle_open_rel': utils.get_change_relative(
                     current_value=close_abs,
                     next_value=utils.get_price_by_quotation(candle.open),
                 ),
-                'candle_low': utils.get_change_relative(
+                'candle_low_rel': utils.get_change_relative(
                     current_value=close_abs,
                     next_value=utils.get_price_by_quotation(candle.low),
                 ),
-                'candle_high': utils.get_change_relative(
+                'candle_high_rel': utils.get_change_relative(
                     current_value=close_abs,
                     next_value=utils.get_price_by_quotation(candle.high),
                 ),
-                'candle_ema50': utils.get_change_relative(
+                'candle_ema50_rel': utils.get_change_relative(
                     current_value=close_abs,
                     next_value=ema50_dict.get(candle.time),
                 ),
-                'candle_volume': utils.get_change_relative(
+                'candle_volume_rel': utils.get_change_relative(
                     current_value=volume_avg,
                     next_value=candle.volume,
                 ),
                 'candle_rsi': rsi_dict.get(candle.time) / 100,
-                'candle_macd': utils.get_change_relative(
-                    current_value=macd_avg,
-                    next_value=macd_dict.get(candle.time),
-                ),
+                'candle_macd_rel': macd_hist_dict.get(candle.time) / close_abs,
+                'candle_macd_sign': np.sign(macd_hist_dict.get(candle.time)),
                 'candle_news_influence_score': ((news_score / 10) if news_score else None),
             })
 
@@ -236,15 +228,16 @@ class Ta3TechnicalAnalysisCard:
         for i in range(20):
             candle = self.candles[i] if i < len(self.candles) else {}
             x.extend([
-                to_numpy_float(candle.get('candle_open')),
-                to_numpy_float(candle.get('candle_close')),
-                to_numpy_float(candle.get('candle_high')),
-                to_numpy_float(candle.get('candle_low')),
-                to_numpy_float(candle.get('candle_ema50')),
-                to_numpy_float(candle.get('candle_volume')),
-                to_numpy_float(candle.get('candle_rsi')),
-                to_numpy_float(candle.get('candle_macd')),
-                to_numpy_float(candle.get('candle_news_influence_score') or 0),
+                learn.learn_utils.to_numpy_float(candle.get('candle_open_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_close_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_high_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_low_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_ema50_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_volume_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_rsi')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_macd_rel')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_macd_sign')),
+                learn.learn_utils.to_numpy_float(candle.get('candle_news_influence_score') or 0),
             ])
 
         return x
