@@ -35,6 +35,7 @@ MODEL_NAME = learn.model.TA_3_tech
 
 class Ta3TechnicalAnalysisCard:
     is_ok: bool = True
+    is_fill_empty: bool = False
     instrument: Instrument | None = None
     date: datetime | None = None
     target_date: datetime | None = None
@@ -49,11 +50,12 @@ class Ta3TechnicalAnalysisCard:
             instrument: Instrument | None = None,
             date: datetime | None = None,
             target_date: datetime | None = None,
-            fill_empty=False
+            is_fill_empty=False,
     ):
         self.instrument = instrument
         self.date = date
         self.target_date = target_date
+        self.is_fill_empty = is_fill_empty
 
         if not self.instrument or not self.date or not self.target_date:
             self.is_ok = False
@@ -70,13 +72,13 @@ class Ta3TechnicalAnalysisCard:
 
         try:
             self.target_date_days = days_diff
-            self.fill_card(is_fill_empty=fill_empty)
+            self.fill_card()
             self.check_x()
         except Exception as e:
             print('ERROR INIT Ta3LearningCard', e)
             self.is_ok = False
 
-    def fill_card(self, is_fill_empty=False):
+    def fill_card(self):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date) if (self.target_date < datetime.now(timezone.utc)) else None
         self.candles = self.get_candles(days_count=20)
@@ -192,8 +194,9 @@ class Ta3TechnicalAnalysisCard:
         news_scores = [candle.get('candle_news_influence_score') for candle in self.candles]
         if all(score is None for score in news_scores):
             print(f'{MODEL_NAME} CARD IS NOT OK: ALL news_influence_score VALUES ARE None', self.instrument.ticker, self.date)
-            self.is_ok = False
-            return
+            if not self.is_fill_empty:
+                self.is_ok = False
+                return
 
         x_values = self.get_x()
         feature_names = get_feature_names()
@@ -215,8 +218,9 @@ class Ta3TechnicalAnalysisCard:
         if invalid_fields:
             print(f'{MODEL_NAME} CARD HAS {len(invalid_fields)} INVALID VALUES (None/NaN/Inf)', self.instrument.ticker, self.date)
             print(f'Invalid fields: {invalid_fields}')
-            self.is_ok = False
-            return
+            if not self.is_fill_empty:
+                self.is_ok = False
+                return
 
     def get_x(self) -> list[float]:
         x: list[float] = [

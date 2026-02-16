@@ -179,38 +179,32 @@ def price_prediction_rate(state: State):
         ):
             day_rate = 0
             distance_days = (day - date_from).days
-            rate_days_distance = 0
+            days_distance_multiply = 0 # Чем ближе день, тем выше оценка
 
-            if distance_days < 30:
-                rate_days_distance = agent.utils.lerp(30 - distance_days, 0, 30, 0.9, 1)
+            if distance_days < 20:
+                days_distance_multiply = agent.utils.lerp(20 - distance_days, 0, 20, 0.9, 1)
             elif distance_days < 90:
-                rate_days_distance = agent.utils.lerp(90 - distance_days, 0, 60, 0.5, 0.9)
+                days_distance_multiply = agent.utils.lerp(90 - distance_days, 0, 70, 0.5, 0.9)
             else:
-                rate_days_distance = agent.utils.lerp(target_days_distance - distance_days, 0, target_days_distance - 90, 0, 0.5)
+                days_distance_multiply = agent.utils.lerp(target_days_distance - distance_days, 0, target_days_distance - 90, 0, 0.5)
 
-
-
-            pred = predictions.get_prediction(
+            if (pred := predictions.get_prediction(
                 instrument_uid=instrument_uid,
                 date_target=day,
                 avg_days=7,
                 model_name=learn.model.CONSENSUS,
-            )
-
-            if pred:
+            )) or pred == 0:
                 is_no_predictions = False
 
                 if pred > 0:
                     rate_price_change = agent.utils.linear_interpolation(pred, 0, target_price_change, 0, 1)
-                    day_rate = (rate_price_change + rate_days_distance) / 2
+                    day_rate = rate_price_change * days_distance_multiply
 
                     if pred > max_prediction:
                         max_prediction = pred
                         max_prediction_date = day
 
-            # print(f'BUY DAY [{day}] | PREDICT: <{pred}> | RATE: ({day_rate})')
-
-            predictions_list.append(utils.round_float(pred, 3))
+            predictions_list.append(utils.round_float(pred, 3) if (pred or pred == 0) else None)
             weeks_rate.append(day_rate)
 
         for index in range(len(weeks_rate)):

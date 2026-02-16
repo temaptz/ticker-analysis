@@ -114,7 +114,7 @@ def predict_future(
         instrument=instruments.get_instrument_by_uid(uid=instrument_uid),
         date=current_date,
         target_date=prediction_target_date,
-        fill_empty=is_fill_empty,
+        is_fill_empty=is_fill_empty,
     )
 
     if card.is_ok:

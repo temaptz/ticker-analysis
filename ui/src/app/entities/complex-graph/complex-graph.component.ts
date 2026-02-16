@@ -119,6 +119,8 @@ export class ComplexGraphComponent {
               ModelNameEnum.Ta_1_2,
               ModelNameEnum.Ta_2,
               ModelNameEnum.Ta_2_1,
+              ModelNameEnum.Ta_3_tech,
+              ModelNameEnum.Ta_3_fundamental,
               ModelNameEnum.Consensus,
             ]
             : [ModelNameEnum.Consensus]
@@ -450,6 +452,34 @@ export class ComplexGraphComponent {
     } as echarts.SeriesOption;
   });
 
+  seriesTa_3_tech = computed<echarts.SeriesOption>(() => {
+    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_3_tech] ?? [];
+
+    return {
+      name: 'Предсказания TA_3_tech',
+      type: 'line',
+      showSymbol: true,
+      symbol: 'circle',
+      symbolSize: 2.5,
+      itemStyle: {
+        color: GRAPH_COLORS.ta_3_tech
+      },
+      lineStyle: {
+        width: 1,
+      },
+      encode: {
+        x: 0,
+        y: 1,
+        tooltip: 2,
+      },
+      data: predictions?.map(i => [
+        parseJSON(i.date),
+        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
+        this.formatPredictionTooltip(i)
+      ]) ?? []
+    } as echarts.SeriesOption;
+  });
+
   seriesConsensus = computed<echarts.SeriesOption>(() => {
     const predictions = this.predictionResp()?.[ModelNameEnum.Consensus] ?? [];
 
@@ -740,6 +770,7 @@ export class ComplexGraphComponent {
           this.seriesTa_1_2(),
           this.seriesTa_2(),
           this.seriesTa_2_1(),
+          this.seriesTa_3_tech(),
         );
       }
     }

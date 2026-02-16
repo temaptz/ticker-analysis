@@ -1,6 +1,6 @@
 import datetime
 from lib.learn import ta_2_1, model
-from lib import date_utils, logger, utils, instruments, cache, predictions_cache, learn
+from lib import date_utils, logger, utils, instruments, predictions_cache, learn
 from lib.db_2 import predictions_db
 from t_tech.invest import CandleInterval
 
@@ -35,11 +35,17 @@ def get_prediction(
                     date_current=date_current,
                     is_fill_empty=True,
                 )
-            elif model_name == model.CONSENSUS:
-                predict_day = ta_2_1.predict_future_relative_change(
+            elif model_name == model.TA_3_tech:
+                predict_day =learn. ta_3_technical_learn.predict_future(
                     instrument_uid=instrument_uid,
                     date_target=day_target,
+                    date_current=date_current,
                     is_fill_empty=True,
+                )
+            elif model_name == model.CONSENSUS:
+                predict_day = get_relative_predictions_consensus(
+                    instrument_uid=instrument_uid,
+                    date_target=day_target,
                 )
 
             if predict_day:
@@ -90,21 +96,22 @@ def get_prediction_graph(uid: str, model_name: model, date_from: datetime.dateti
         current_price = instruments.get_instrument_last_price_by_uid(uid=uid)
 
         if current_price is not None:
-            date_from_utc = date_utils.convert_to_utc(
-                date_utils.get_day_prediction_time(date_from)
-            )
-            date_to_utc = date_utils.convert_to_utc(date_to)
+            date_from_utc = date_utils.get_day_prediction_time(date_from)
+            date_to_utc = date_utils.get_day_prediction_time(date_to)
 
             for date in date_utils.get_dates_interval_list(
                     date_from=date_from_utc,
                     date_to=date_to_utc,
                     interval_seconds=date_utils.get_interval_sec_by_candle(interval)
             ):
-                prediction_item = get_prediction_cache(
-                    instrument_uid=uid,
-                    date_target=date,
-                    model_name=model_name,
-                )
+                if model_name == model.CONSENSUS:
+                    prediction_item = get_relative_predictions_consensus(instrument_uid=uid, date_target=date)
+                else:
+                    prediction_item = get_prediction_cache(
+                        instrument_uid=uid,
+                        date_target=date,
+                        model_name=model_name,
+                    )
 
                 if prediction_item is not None:
                     if prediction_price := utils.get_value_by_change_relative(
@@ -194,15 +201,38 @@ def get_prediction_history_graph(
     ) for k, v in sorted(result.items())}
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
-@logger.error_logger
-def calculate_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
-    return predictions_cache.get_prediction_cache(instrument_uid=instrument_uid, model_name=model.TA_2_1, date_target=date_target)
-
-
 def get_relative_predictions_consensus(instrument_uid: str, date_target: datetime.datetime) -> float or None:
-    return ta_2_1.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)
-    # return consensus.predict_future_relative_change(instrument_uid=instrument_uid, date_target=date_target)
+    weights = {
+        model.TA_2_1: 1,
+        model.TA_3_tech: 10,
+    }
+
+    prediction_ta_2_1 = get_prediction_cache(
+        instrument_uid=instrument_uid,
+        date_target=date_target,
+        model_name=model.TA_2_1,
+    )
+    prediction_ta_3_tech = get_prediction_cache(
+        instrument_uid=instrument_uid,
+        date_target=date_target,
+        model_name=model.TA_3_tech,
+    )
+
+    total_sum = 0
+    total_weight = 0
+
+    if prediction_ta_2_1 is not None:
+        total_sum += (prediction_ta_2_1 * weights[model.TA_2_1])
+        total_weight += weights[model.TA_2_1]
+
+    if prediction_ta_3_tech is not None:
+        total_sum += (prediction_ta_3_tech * weights[model.TA_3_tech])
+        total_weight += weights[model.TA_3_tech]
+
+    if total_weight > 0:
+        return total_sum / total_weight
+
+    return None
 
 
 def rebuild_points_by_interval(

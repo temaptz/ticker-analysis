@@ -44,7 +44,7 @@ services:
       - ./learn_models:/app/learn_models
     command:
       - python
-      - cache_predictions.py
+      - predict.py
     depends_on:
       - redis
       - postgres
