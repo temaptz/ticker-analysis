@@ -45,30 +45,25 @@ def refresh_cache_loop(finish_date: datetime.datetime):
                 for instrument in instruments.get_instruments_white_list():
                     for model_name in [
                         learn.model.TA_2_1,
-                        learn.model.CONSENSUS,
+                        learn.model.TA_3_tech,
                     ]:
                         if (prediction := predictions.get_prediction(
                                 instrument_uid=instrument.uid,
                                 model_name=model_name,
                                 date_target=date_target,
-                                avg_days=3,
                                 is_ignore_cache=True,
-                        )) is not None and -5 <= prediction <= 5:
+                        )) is not None and -3 <= prediction <= 3:
                             predictions_cache.set_prediction_cache(
                                 instrument_uid=instrument.uid,
                                 model_name=model_name,
                                 date_target=date_target,
-                                prediction=utils.round_float(prediction, 7),
+                                prediction=utils.round_float(prediction, 10),
                             )
-                            # cached_value = predictions_cache.get_prediction_cache(
-                            #     instrument_uid=instrument.uid,
-                            #     model_name=model_name,
-                            #     date_target=date_target,
-                            # )
-                            logger.log_info(
-                                message=f'TARGET_DATE: |{date_target}| TICKER: [{instrument.ticker}] MODEL: {{{model_name}}} PREDICTION: <{utils.round_float(prediction, 4)}>',
-                                is_send_telegram=False,
-                            )
+
+                        logger.log_info(
+                            message=f'TARGET_DATE: |{date_target}| TICKER: [{instrument.ticker}] MODEL: {{{model_name}}} PREDICTION: <{prediction if (prediction or prediction == 0) else None}>',
+                            is_send_telegram=False,
+                        )
 
                         if datetime.datetime.now(tz=datetime.timezone.utc) >= finish_date:
                             finish_log(time_total=(time.perf_counter() - time_start), last_date=date_target)
@@ -96,7 +91,8 @@ def get_next_work_day_beginning() -> datetime.datetime:
 
 def predict_infinite_loop():
     while True:
-        refresh_cache_loop(finish_date=get_next_work_day_beginning())
-        time.sleep(60)
+        next_start = get_next_work_day_beginning()
+        refresh_cache_loop(finish_date=next_start)
+        time.sleep((next_start - datetime.datetime.now(tz=datetime.timezone.utc)).total_seconds())
 
 predict_infinite_loop()
