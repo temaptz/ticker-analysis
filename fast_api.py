@@ -9,7 +9,7 @@ from t_tech.invest.schemas import IndicatorType, IndicatorInterval, Deviation, S
 from dotenv import load_dotenv
 load_dotenv()
 
-from lib import serializer, instruments, forecasts, predictions, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2, users, learn, docker
+from lib import serializer, instruments, forecasts, predictions, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2, users, learn, docker, agent
 
 app = FastAPI(title='API')
 
@@ -416,6 +416,33 @@ def get_total_info():
     return resp
 
 
+def instrument_macd_rate(instrument_uid: str, is_buy: bool):
+    if not instrument_uid:
+        return None
+    if is_buy:
+        return agent.macd.macd_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.macd.macd_sell_rate(instrument_uid=instrument_uid)
+
+
+def instrument_rsi_rate(instrument_uid: str, is_buy: bool):
+    if not instrument_uid:
+        return None
+    if is_buy:
+        return agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid)
+
+
+def instrument_tech_rate(instrument_uid: str, is_buy: bool):
+    if not instrument_uid:
+        return None
+    if is_buy:
+        return agent.price.price_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.price.price_sell_rate(instrument_uid=instrument_uid)
+
+
 @app.get('/instruments')
 def instruments_list_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instruments_list(
@@ -600,3 +627,27 @@ def login(request: Request):
         elif user.id:
             return get_user_by_token(token=users.get_user_token(user.id))
     return None
+
+
+@app.get('/instrument/macd_rate')
+def instrument_macd_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_macd_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/rsi_rate')
+def instrument_rsi_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_rsi_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/tech_rate')
+def instrument_tech_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_tech_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )

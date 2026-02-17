@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VolumeRateComponent } from './components/volume-rate.component';
 import { MacdRateComponent } from './components/macd-rate.component';
@@ -6,6 +6,8 @@ import { RsiRateComponent } from './components/rsi-rate.component';
 import { TechRateComponent } from './components/tech-rate.component';
 import { FundamentalRateComponent } from './components/fundamental-rate.component';
 import { TotalRateComponent } from './components/total-rate.component';
+import { SortModeService } from '../../shared/services/sort-mode.service';
+import { SortModeEnum } from '../../shared/types';
 
 
 @Component({
@@ -24,4 +26,20 @@ import { TotalRateComponent } from './components/total-rate.component';
 })
 export class LlmBuySellRateComponent {
   instrumentUid = input.required<string>();
+
+  private _sortModeService = inject(SortModeService);
+
+  showBuyRow = computed<boolean>(() => {
+    const mode = this._sortModeService.sortMode();
+    return mode === SortModeEnum.BuyPerspective || 
+           mode === SortModeEnum.LastOperation || 
+           mode === SortModeEnum.MarketValue;
+  });
+
+  showSellRow = computed<boolean>(() => {
+    const mode = this._sortModeService.sortMode();
+    return mode === SortModeEnum.SellPerspective || 
+           mode === SortModeEnum.LastOperation || 
+           mode === SortModeEnum.MarketValue;
+  });
 }

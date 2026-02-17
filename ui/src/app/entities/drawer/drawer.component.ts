@@ -1,9 +1,10 @@
 import { Component, computed, inject, model, resource } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonToggle, MatButtonToggleChange, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { firstValueFrom } from 'rxjs';
 import { SortModeEnum } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
-import { firstValueFrom } from 'rxjs';
+import { SortModeService } from '../../shared/services/sort-mode.service';
 
 
 @Component({
@@ -14,8 +15,6 @@ import { firstValueFrom } from 'rxjs';
   styleUrl: './drawer.component.scss'
 })
 export class DrawerComponent {
-
-  sort = model<SortModeEnum>(SortModeEnum.BuyPerspective);
 
   sortModeEnum = SortModeEnum;
 
@@ -56,6 +55,9 @@ export class DrawerComponent {
   });
 
   private _api = inject(ApiService);
+  private _sortModeService = inject(SortModeService);
+
+  sort = model<SortModeEnum>(this._sortModeService.sortMode());
 
   handleToggleDrawer(): void {
     this.isDrawerOpen = !this.isDrawerOpen;
@@ -63,6 +65,7 @@ export class DrawerComponent {
 
   handleChangeSort(e: MatButtonToggleChange): void {
     this.sort.set(e.value);
+    this._sortModeService.setSortMode(e.value);
   }
 
 }

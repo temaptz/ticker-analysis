@@ -33,7 +33,6 @@ import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/pr
     InstrumentLogoComponent,
     FundamentalsComponent,
     DrawerComponent,
-    PredictionComponent,
     ForecastComponent,
     ForecastHistoryComponent,
     ComplexGraphComponent,

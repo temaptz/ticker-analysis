@@ -1,0 +1,7 @@
+@defer (when resource.hasValue()) {
+  <div>
+    <echarts-graph [width]="graphWidth" [height]="graphHeight" [option]="graphOptionsMini()"/>
+  </div>
+} @placeholder {
+  <preloader></preloader>
+}
