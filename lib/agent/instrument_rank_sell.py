@@ -142,47 +142,17 @@ def invest_calc_rate(state: State):
 
 
 def price_prediction_rate(state: State):
-    target_days_distance = 30 * 6
-    days_before_positive_prediction = target_days_distance
-    predictions_list = []
-    is_no_predictions = True
+    rate = {}
 
     if instrument_uid := state.get('instrument_uid', None):
-        date_from = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=3)
-        date_to = date_from + datetime.timedelta(days=target_days_distance)
-
-        for day in date_utils.get_dates_interval_list(
-                date_from=date_from,
-                date_to=date_to,
-                interval_seconds=(3600 * 24 * 7)
-        ):
-            pred = predictions.get_prediction(
-                instrument_uid=instrument_uid,
-                date_target=day,
-                avg_days=7,
-                model_name=learn.model.CONSENSUS,
-            )
-
-            predictions_list.append(utils.round_float(pred or 0, 3))
-
-            if pred:
-                is_no_predictions = False
-
-                if pred > 0.01:
-                    delta_days = (day - date_from).days
-                    if delta_days < days_before_positive_prediction:
-                        days_before_positive_prediction = delta_days
-
-    final_rate = agent.utils.linear_interpolation(days_before_positive_prediction, 0, target_days_distance, 0, 1)
-    rated = 0 if is_no_predictions else int(max(0, min(final_rate, 1)) * 100)
+        rate = agent.price.price_sell_rate(instrument_uid=instrument_uid)
 
     return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
-        rate=rated,
+        rate=rate.get('rate', 0),
         final_conclusion=serializer.to_json(
             {
-                'price_prediction_rate': rated,
-                'days_before_positive_prediction': days_before_positive_prediction,
-                'predictions': '; '.join(map(str, predictions_list)),
+                'days_before_positive': rate.get('days_before_positive', 0),
+                'predictions': '; '.join(map(str, rate.get('predictions', []))),
             },
             ensure_ascii=False,
             is_pretty=True,

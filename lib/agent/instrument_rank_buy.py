@@ -159,72 +159,18 @@ def llm_fundamental_rate(state: State):
 
 
 def price_prediction_rate(state: State):
-    final_rate = 0
-    target_price_change = 0.15
-    target_days_distance = 30 * 6
-    max_prediction = 0
-    max_prediction_date = 0
-    weeks_rate = []
-    predictions_list = []
-    is_no_predictions = True
+    rate = {}
 
     if instrument_uid := state.get('instrument_uid', None):
-        date_from = datetime.datetime.now(tz=datetime.timezone.utc)
-        date_to = date_from + datetime.timedelta(days=target_days_distance)
-
-        for day in date_utils.get_dates_interval_list(
-            date_from=date_from,
-            date_to=date_to,
-            interval_seconds=(3600 * 24 * 7)
-        ):
-            day_rate = 0
-            distance_days = (day - date_from).days
-            days_distance_multiply = 0 # Чем ближе день, тем выше оценка
-
-            if distance_days < 20:
-                days_distance_multiply = agent.utils.lerp(20 - distance_days, 0, 20, 0.9, 1)
-            elif distance_days < 90:
-                days_distance_multiply = agent.utils.lerp(90 - distance_days, 0, 70, 0.5, 0.9)
-            else:
-                days_distance_multiply = agent.utils.lerp(target_days_distance - distance_days, 0, target_days_distance - 90, 0, 0.5)
-
-            if (pred := predictions.get_prediction(
-                instrument_uid=instrument_uid,
-                date_target=day,
-                avg_days=7,
-                model_name=learn.model.CONSENSUS,
-            )) or pred == 0:
-                is_no_predictions = False
-
-                if pred > 0:
-                    rate_price_change = agent.utils.linear_interpolation(pred, 0, target_price_change, 0, 1)
-                    day_rate = rate_price_change * days_distance_multiply
-
-                    if pred > max_prediction:
-                        max_prediction = pred
-                        max_prediction_date = day
-
-            predictions_list.append(utils.round_float(pred, 3) if (pred or pred == 0) else None)
-            weeks_rate.append(day_rate)
-
-        for index in range(len(weeks_rate)):
-            rate = weeks_rate[index]
-            next_rate = weeks_rate[(index + 1) if (index + 1) < len(weeks_rate) else index] or 0
-            avg_rate = (rate + next_rate) / 2
-
-            if avg_rate > final_rate:
-                final_rate = avg_rate
-
-    rated = 0 if is_no_predictions else int(max(0, min(final_rate, 1)) * 100)
+        rate = agent.price.price_buy_rate(instrument_uid=instrument_uid)
 
     return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
-        rate=rated,
+        rate=rate.get('rate', 0),
         final_conclusion=serializer.to_json(
             {
-                'price_prediction_rate': rated,
-                'max_prediction': max_prediction,
-                'max_prediction_date': max_prediction_date,
-                'predictions': '; '.join(map(str, predictions_list)),
+                'max_prediction_value': rate.get('max_prediction_value', 0),
+                'max_prediction_date': rate.get('max_prediction_date', 0),
+                'predictions': '; '.join(map(str, rate.get('predictions', []))),
             },
             ensure_ascii=False,
             is_pretty=True,
