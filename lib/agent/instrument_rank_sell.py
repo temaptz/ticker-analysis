@@ -242,37 +242,11 @@ def macd_sell_rate(state: State):
 
 
 def total_sell_rate(state: State) -> State:
-    invest_c = state.get('invest_calc_rate', None)
-    price_prediction = state.get('price_prediction_rate', None)
-    macd_rate = state.get('macd_sell_rate', None)
-    invest_rate = invest_c.rate if (invest_c and invest_c.rate is not None) else None
-    invest_rate_conclusion = invest_c.final_conclusion if (invest_c and invest_c.final_conclusion) else None
-    price_prediction_rated = price_prediction.rate if (price_prediction and price_prediction.rate is not None) else None
-    price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
-    macd_rated = macd_rate.rate if (macd_rate and macd_rate.rate is not None) else None
-    macd_conclusion = macd_rate.final_conclusion if (macd_rate and macd_rate.final_conclusion) else None
+    result = agent.buy_sell_rate.get_total_sell_rate(instrument_uid=state.get('instrument_uid'))
 
-    if invest_rate or price_prediction_rated:
-        try:
-            weights = {
-                'invest_rate': 3,
-                'macd_sell_rate': 2,
-                'price_prediction_rate': 1,
-            }
-            calc_rate = int(
-                (
-                        (invest_rate or 0) * weights['invest_rate']
-                        + (price_prediction_rated or 0) * weights['price_prediction_rate']
-                        + (macd_rated or 0) * weights['macd_sell_rate']
-                )
-                / (weights['invest_rate'] + weights['price_prediction_rate'] + weights['macd_sell_rate'])
-            )
-
-            if calc_rate or calc_rate == 0:
-                return {'structured_response': agent.models.RatePercentWithConclusion(
-                    rate=calc_rate,
-                    final_conclusion=f'invest: {invest_rate}\n{invest_rate_conclusion}\n\nprice: {price_prediction_rated}\n{price_prediction_conclusion}\n\nmacd: {macd_rated}\n{macd_conclusion}'
-                )}
-        except Exception as e:
-            print('ERROR total_sell_rate', e)
+    if result and (result.get('rate') or result.get('rate') == 0):
+        return {'structured_response': agent.models.RatePercentWithConclusion(
+            rate=result['rate'] * 100,
+            final_conclusion=result['conclusion']
+        )}
     return {}

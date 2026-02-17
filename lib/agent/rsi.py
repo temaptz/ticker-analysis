@@ -20,7 +20,7 @@ def rsi_buy_rate(instrument_uid: str):
         )
 
         if graph and len(graph):
-            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)[:RSI_CANDLES_COUNT]
+            graph_sorted = sorted(graph, key=lambda x: x.timestamp, reverse=True)[:RSI_CANDLES_COUNT]
             if graph_sorted[0].signal:
                 rsi_value = utils.get_price_by_quotation(graph_sorted[0].signal)
 
@@ -48,7 +48,7 @@ def rsi_sell_rate(instrument_uid: str):
         )
 
         if graph and len(graph):
-            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)[:RSI_CANDLES_COUNT]
+            graph_sorted = sorted(graph, key=lambda x: x.timestamp, reverse=True)[:RSI_CANDLES_COUNT]
             if graph_sorted[0].signal:
                 rsi_value = utils.get_price_by_quotation(graph_sorted[0].signal)
 

@@ -351,51 +351,11 @@ def macd_buy_rate(state: State):
 
 
 def total_buy_rate(state: State):
-    f = state.get('fundamental_rate', None)
-    price_prediction = state.get('price_prediction_rate', None)
-    n = state.get('news_rate', None)
-    m = state.get('macd_buy_rate', None)
-    fundamental_rate = f.rate if (f and f.rate is not None) else None
-    fundamental_conclusion = f.final_conclusion if (f and f.final_conclusion) else None
-    price_prediction_rated = price_prediction.rate if (price_prediction and price_prediction.rate is not None) else None
-    price_prediction_conclusion = price_prediction.final_conclusion if (price_prediction and price_prediction.final_conclusion) else None
-    news_rated = n.rate if (n and n.rate is not None) else None
-    news_conclusion = n.final_conclusion if (n and n.final_conclusion) else None
-    macd_rated = m.rate if (m and m.rate is not None) else None
-    macd_conclusion = m.final_conclusion if (m and m.final_conclusion) else None
-    is_in_favorites = users.get_is_in_favorites(instrument_uid=state.get('instrument_uid'))
+    result = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=state.get('instrument_uid'))
 
-    if fundamental_rate or price_prediction_rated:
-        try:
-            weights = {
-                'macd_buy_rate': 7,
-                'price_prediction_rate': 5,
-                'fundamental_rate': 2,
-                'news_rate': 1,
-                'favorites': 0.1,
-            }
-            calc_rate = int(
-                (
-                        (fundamental_rate or 0) * weights['fundamental_rate']
-                        + (price_prediction_rated or 0) * weights['price_prediction_rate']
-                        + (news_rated or 0) * weights['news_rate']
-                        + (100 if is_in_favorites else 0) * weights['favorites']
-                        + (macd_rated or 0) * weights['macd_buy_rate']
-                )
-                / (
-                        weights['fundamental_rate']
-                        + weights['price_prediction_rate']
-                        + weights['news_rate']
-                        + weights['favorites']
-                        + weights['macd_buy_rate']
-                )
-            )
-
-            if calc_rate or calc_rate == 0:
-                return {'structured_response': agent.models.RatePercentWithConclusion(
-                    rate=calc_rate,
-                    final_conclusion=f'fundamental: {fundamental_rate}\n{fundamental_conclusion}\n\nprice: {price_prediction_rated}\n{price_prediction_conclusion}\n\nnews: {news_rated}\n{news_conclusion}\n\nmacd: {macd_rated}\n{macd_conclusion}'
-                )}
-        except Exception as e:
-            print('ERROR total_buy_rate', e)
+    if result and (result.get('rate') or result.get('rate') == 0):
+        return {'structured_response': agent.models.RatePercentWithConclusion(
+            rate=result['rate'] * 100,
+            final_conclusion=result['conclusion']
+        )}
     return {}

@@ -1,24 +1,25 @@
 import { Component, inject, input, resource, ResourceLoaderParams } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
+import { BuySellTotalRateResp } from '../../../shared/types';
 
 @Component({
   selector: 'total-rate',
   imports: [CommonModule, MatTooltip],
   template: `
     <div class="rate-cell">
-      @if (rate.value(); as rateValue) {
+      @if (rateData.value(); as data) {
         <div
           class="rate-value"
-          [matTooltip]="conclusion.value() || '-'"
+          [matTooltip]="data.conclusion || '-'"
           matTooltipClass="rate-tooltip"
         >
-          {{ rateValue }}
+          {{ data.rate | number:'1.2-2' }}
         </div>
         <div class="rate-label">итого</div>
-      } @else if (rate.isLoading()) {
+      } @else if (rateData.isLoading()) {
         <div class="rate-value">...</div>
         <div class="rate-label">итого</div>
       } @else {
@@ -52,22 +53,12 @@ export class TotalRateComponent {
 
   apiService = inject(ApiService);
 
-  rate = resource<string, string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
-      this.apiService.getInstrumentTag(
-        params.request,
-        this.isBuy() ? 'llm_buy_rate' : 'llm_sell_rate'
-      )
-    )
-  });
-
-  conclusion = resource<string, string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
-      this.apiService.getInstrumentTag(
-        params.request,
-        this.isBuy() ? 'llm_buy_conclusion' : 'llm_sell_conclusion'
+  rateData = resource<BuySellTotalRateResp, { uid: string, isBuy: boolean }>({
+    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
+    loader: (params: ResourceLoaderParams<{ uid: string, isBuy: boolean }>) => firstValueFrom(
+      this.apiService.getBuySellTotalRate(
+        params.request.uid,
+        params.request.isBuy
       )
     )
   });

@@ -22,6 +22,7 @@ import {
   MacdRateResp,
   RsiRateResp,
   TechRateResp,
+  BuySellTotalRateResp,
 } from '../types';
 import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
@@ -274,6 +275,14 @@ export class ApiService {
     params = params.set('is_buy', isBuy.toString());
 
     return this.http.get<TechRateResp>(`${this.apiUrl}/instrument/tech_rate`, {params});
+  }
+
+  getBuySellTotalRate(uid: string, isBuy: boolean): Observable<BuySellTotalRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<BuySellTotalRateResp>(`${this.apiUrl}/instrument/buy_sell_total_rate`, {params});
   }
 
 }

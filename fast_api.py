@@ -443,6 +443,24 @@ def instrument_tech_rate(instrument_uid: str, is_buy: bool):
         return agent.price.price_sell_rate(instrument_uid=instrument_uid)
 
 
+def instrument_buy_sell_total_rate(instrument_uid: str, is_buy: bool):
+    if not instrument_uid:
+        return None
+    
+    if is_buy:
+        rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid)
+        return {
+            'rate': int(rate) if rate else 0,
+            'conclusion': f'Combined rate from MACD, RSI, and Tech analysis'
+        }
+    else:
+        rate = agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid)
+        return {
+            'rate': int(rate) if rate else 0,
+            'conclusion': f'Combined rate from MACD, RSI, and Tech analysis'
+        }
+
+
 @app.get('/instruments')
 def instruments_list_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instruments_list(
@@ -648,6 +666,14 @@ def instrument_rsi_rate_endpoint(request: Request, user=Depends(verify_user_by_t
 @app.get('/instrument/tech_rate')
 def instrument_tech_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_tech_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/buy_sell_total_rate')
+def instrument_buy_sell_total_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_buy_sell_total_rate(
         instrument_uid=request.query_params.get('uid'),
         is_buy=request.query_params.get('is_buy') == 'true',
     )

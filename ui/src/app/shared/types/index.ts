@@ -228,3 +228,8 @@ export interface TechRateResp {
   days_before_positive?: number;
   predictions: (number | null)[];
 }
+
+export interface BuySellTotalRateResp {
+  rate: number;
+  conclusion: string;
+}
