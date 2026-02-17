@@ -1,11 +1,12 @@
 import datetime
 from lib import date_utils, agent, utils, logger, learn, predictions
+from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 
 def price_buy_rate(instrument_uid: str):
     final_rate = 0
     final_rate_percent = 0
     target_price_change = 0.1
-    target_days_distance = 20
+    target_days_distance = TARGET_MAX_DAYS_COUNT
     max_prediction = 0
     max_prediction_date = 0
     weeks_rate = []
@@ -26,8 +27,8 @@ def price_buy_rate(instrument_uid: str):
             distance_days = (day - date_from).days
             days_distance_multiply = 0 # Чем ближе день, тем выше оценка
 
-            if distance_days < 20:
-                days_distance_multiply = agent.utils.lerp(20 - distance_days, 0, 20, 0.75, 1)
+            if distance_days < TARGET_MAX_DAYS_COUNT:
+                days_distance_multiply = agent.utils.lerp(TARGET_MAX_DAYS_COUNT - distance_days, 0, TARGET_MAX_DAYS_COUNT, 0.75, 1)
             elif distance_days < 90:
                 days_distance_multiply = agent.utils.lerp(90 - distance_days, 0, 70, 0.5, 0.75)
             else:
@@ -36,7 +37,7 @@ def price_buy_rate(instrument_uid: str):
             if (pred := predictions.get_prediction(
                     instrument_uid=instrument_uid,
                     date_target=day,
-                    model_name=learn.model.CONSENSUS,
+                    model_name=learn.model.TA_3_tech,
             )) or pred == 0:
                 is_no_predictions = False
 
@@ -74,7 +75,7 @@ def price_buy_rate(instrument_uid: str):
 
 def price_sell_rate(instrument_uid: str):
     final_rate_percent = 0
-    target_days_distance = 20
+    target_days_distance = TARGET_MAX_DAYS_COUNT
     days_before_positive_prediction = target_days_distance
     predictions_list = []
     is_no_predictions = True
@@ -92,7 +93,7 @@ def price_sell_rate(instrument_uid: str):
             pred = predictions.get_prediction(
                 instrument_uid=instrument_uid,
                 date_target=day,
-                model_name=learn.model.CONSENSUS,
+                model_name=learn.model.TA_3_tech,
             )
 
             predictions_list.append(utils.round_float(pred or 0, 3))

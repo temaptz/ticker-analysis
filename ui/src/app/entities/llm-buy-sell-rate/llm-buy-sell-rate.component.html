@@ -1,17 +1,19 @@
-<div class="rate">
-  <div
-    class="buy"
-    matTooltipClass="rate-tooltip"
-    [matTooltip]="buyConclusion.value() || '-'"
-  >
-    Покупка: {{ buy.value() || '-' }}
+<div class="rate-table">
+  <div class="rate-row buy-row">
+    <volume-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
+    <macd-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
+    <rsi-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
+    <tech-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
+    <fundamental-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
+    <total-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
   </div>
 
-  <div
-    class="sell"
-    matTooltipClass="rate-tooltip"
-    [matTooltip]="sellConclusion.value() || '-'"
-  >
-    Продажа: {{ sell.value() || '-' }}
+  <div class="rate-row sell-row">
+    <volume-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
+    <macd-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
+    <rsi-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
+    <tech-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
+    <fundamental-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
+    <total-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
   </div>
 </div>

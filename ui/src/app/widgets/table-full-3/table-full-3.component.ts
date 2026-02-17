@@ -21,7 +21,6 @@ import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-bu
 import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/prediction-dynamic.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
-import { MacdComponent } from '../../entities/macd/macd.component';
 
 
 @Component({
@@ -44,7 +43,6 @@ import { MacdComponent } from '../../entities/macd/macd.component';
     PredictionDynamicComponent,
     DrawerComponent,
     PreloaderComponent,
-    MacdComponent
   ],
   providers: [],
   templateUrl: './table-full-3.component.html',
@@ -63,7 +61,6 @@ export class TableFull3Component {
     'logo',
     'fundamental',
     'complex',
-    'macd',
     'balance',
     'prediction',
     'news',

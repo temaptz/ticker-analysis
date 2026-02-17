@@ -1,18 +1,28 @@
-.rate {
+.rate-table {
   display: flex;
   flex-direction: column;
   gap: 10px;
   font-size: 1em;
 }
 
-.buy {
-  color: green;
-  white-space: nowrap;
+.rate-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 15px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 2px solid;
+  align-items: end;
 }
 
-.sell {
+.buy-row {
+  border-color: green;
+  color: green;
+}
+
+.sell-row {
+  border-color: red;
   color: red;
-  white-space: nowrap;
 }
 
 ::ng-deep .rate-tooltip .mat-mdc-tooltip-surface {

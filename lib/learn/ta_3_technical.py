@@ -5,6 +5,9 @@ from datetime import datetime, timedelta, timezone
 
 from lib import utils, instruments, news, date_utils, tech_analysis, learn
 
+TARGET_MIN_DAYS_COUNT = 1
+TARGET_MAX_DAYS_COUNT = 20
+CANDLES_COUNT = 20
 
 def get_feature_names() -> list:
     feature_names = [
@@ -13,7 +16,7 @@ def get_feature_names() -> list:
         'country_of_risk',
     ]
 
-    for i in range(20):
+    for i in range(CANDLES_COUNT):
         feature_names.extend([
             f'candle_open_rel_{i}',
             f'candle_close_rel_{i}',
@@ -66,7 +69,7 @@ class Ta3TechnicalAnalysisCard:
             return
 
         days_diff = (target_date - date).days
-        if days_diff < 1 or days_diff > 20:
+        if days_diff < TARGET_MIN_DAYS_COUNT or days_diff > TARGET_MAX_DAYS_COUNT:
             self.is_ok = False
             return
 
@@ -81,7 +84,7 @@ class Ta3TechnicalAnalysisCard:
     def fill_card(self):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.target_date) if (self.target_date < datetime.now(timezone.utc)) else None
-        self.candles = self.get_candles(days_count=20)
+        self.candles = self.get_candles(days_count=CANDLES_COUNT)
 
     def get_candles(self, days_count: int) -> list:
         result = []
@@ -186,7 +189,7 @@ class Ta3TechnicalAnalysisCard:
             self.is_ok = False
             return
 
-        if len(self.candles) != 20:
+        if len(self.candles) != CANDLES_COUNT:
             print(f'{MODEL_NAME} CARD IS NOT OK BY DAILY CANDLES', self.instrument.ticker, self.date)
             self.is_ok = False
             return
@@ -229,7 +232,7 @@ class Ta3TechnicalAnalysisCard:
             self.instrument.country_of_risk,
         ]
 
-        for i in range(20):
+        for i in range(CANDLES_COUNT):
             candle = self.candles[i] if i < len(self.candles) else {}
             x.extend([
                 learn.learn_utils.to_numpy_float(candle.get('candle_open_rel')),

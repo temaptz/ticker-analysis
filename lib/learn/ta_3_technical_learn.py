@@ -28,7 +28,7 @@ def generate_data():
         for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, is_skip_holidays=False, is_order_descending=not docker.is_docker()):
             print('DATE', date)
 
-            for target_date_days in range(1, 20):
+            for target_date_days in range(learn.ta_3_technical.TARGET_MIN_DAYS_COUNT, learn.ta_3_technical.TARGET_MAX_DAYS_COUNT):
                 target_date = date + timedelta(days=target_date_days)
 
                 if target_date > date_end:

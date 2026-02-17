@@ -2,6 +2,8 @@ import datetime
 from lib import tech_analysis, agent, utils, logger
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
+RSI_CANDLES_COUNT = 7
+
 def rsi_buy_rate(instrument_uid: str):
     final_rate = 0
     rsi_value = None
@@ -12,13 +14,13 @@ def rsi_buy_rate(instrument_uid: str):
         graph = tech_analysis.get_tech_analysis(
             instrument_uid=instrument_uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
-            date_from=now - datetime.timedelta(days=7),
+            date_from=now - datetime.timedelta(days=20),
             date_to=now,
             interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
         )
 
         if graph and len(graph):
-            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)
+            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)[:RSI_CANDLES_COUNT]
             if graph_sorted[0].signal:
                 rsi_value = utils.get_price_by_quotation(graph_sorted[0].signal)
 
@@ -40,13 +42,13 @@ def rsi_sell_rate(instrument_uid: str):
         graph = tech_analysis.get_tech_analysis(
             instrument_uid=instrument_uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
-            date_from=now - datetime.timedelta(days=7),
+            date_from=now - datetime.timedelta(days=20),
             date_to=now,
             interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
         )
 
         if graph and len(graph):
-            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)
+            graph_sorted = sorted(graph, key=lambda x: x['date'], reverse=True)[:RSI_CANDLES_COUNT]
             if graph_sorted[0].signal:
                 rsi_value = utils.get_price_by_quotation(graph_sorted[0].signal)
 

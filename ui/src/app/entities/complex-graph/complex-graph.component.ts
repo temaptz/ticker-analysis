@@ -28,12 +28,11 @@ import {
   ComplexGraphControlComponent,
   ComplexGraphControlOptions
 } from '../complex-graph-control/complex-graph-control.component';
-import { NewsGraphComponent } from '../news-graph/news-graph.component';
 
 
 @Component({
   selector: 'complex-graph',
-  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent, NewsGraphComponent],
+  imports: [CommonModule, PreloaderComponent, EchartsGraphComponent, ComplexGraphControlComponent],
   providers: [PriceFormatPipe],
   templateUrl: './complex-graph.component.html',
   styleUrl: './complex-graph.component.scss'

@@ -1,49 +1,27 @@
-import { Component, inject, input, resource, ResourceLoaderParams } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
-import { MatTooltip } from '@angular/material/tooltip';
-import { firstValueFrom } from 'rxjs';
-import { ApiService } from '../../shared/services/api.service';
+import { Component, input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { VolumeRateComponent } from './components/volume-rate.component';
+import { MacdRateComponent } from './components/macd-rate.component';
+import { RsiRateComponent } from './components/rsi-rate.component';
+import { TechRateComponent } from './components/tech-rate.component';
+import { FundamentalRateComponent } from './components/fundamental-rate.component';
+import { TotalRateComponent } from './components/total-rate.component';
 
 
 @Component({
   selector: 'llm-buy-sell-rate',
-  imports: [CommonModule, MatTooltip],
-  providers: [DecimalPipe],
+  imports: [
+    CommonModule,
+    VolumeRateComponent,
+    MacdRateComponent,
+    RsiRateComponent,
+    TechRateComponent,
+    FundamentalRateComponent,
+    TotalRateComponent
+  ],
   templateUrl: './llm-buy-sell-rate.component.html',
   styleUrl: './llm-buy-sell-rate.component.scss'
 })
 export class LlmBuySellRateComponent {
-
-  instrumentUid = input.required<string>()
-
-  buy = resource<string, string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
-      this.apiService.getInstrumentTag(params.request, 'llm_buy_rate'),
-    )
-  });
-
-  buyConclusion = resource<string, string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
-      this.apiService.getInstrumentTag(params.request, 'llm_buy_conclusion'),
-    )
-  });
-
-  sell = resource<string, string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
-      this.apiService.getInstrumentTag(params.request, 'llm_sell_rate'),
-    )
-  });
-
-  sellConclusion = resource<string, string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
-      this.apiService.getInstrumentTag(params.request, 'llm_sell_conclusion'),
-    )
-  });
-
-  apiService = inject(ApiService);
-
+  instrumentUid = input.required<string>();
 }

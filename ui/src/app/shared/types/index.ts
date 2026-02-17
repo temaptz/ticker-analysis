@@ -210,3 +210,21 @@ export interface Operation {
   date: string;
   operation_type: OperationTypeEnum;
 }
+
+export interface MacdRateResp {
+  rate: number;
+  graph_hist: number[];
+}
+
+export interface RsiRateResp {
+  rate: number;
+  rsi_value: number | null;
+}
+
+export interface TechRateResp {
+  rate: number;
+  max_prediction_date?: number;
+  max_prediction_value?: number;
+  days_before_positive?: number;
+  predictions: (number | null)[];
+}

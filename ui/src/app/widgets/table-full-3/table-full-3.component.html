@@ -70,13 +70,6 @@
       </td>
     </ng-container>
 
-    <ng-container matColumnDef="macd">
-      <th mat-header-cell *matHeaderCellDef>MACD</th>
-      <td mat-cell *matCellDef="let instrument">
-        <macd [instrumentUid]="instrument.uid"/>
-      </td>
-    </ng-container>
-
     <ng-container matColumnDef="balance">
       <th mat-header-cell *matHeaderCellDef>Баланс</th>
       <td mat-cell *matCellDef="let instrument">

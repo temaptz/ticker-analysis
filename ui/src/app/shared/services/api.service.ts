@@ -19,6 +19,9 @@ import {
   NewsListRatedResponse,
   TechAnalysisResp,
   PredictionHistoryGraphResp, Forecast, RecommendationResp, NewsGraphItem, TotalInfo, CurrentUser,
+  MacdRateResp,
+  RsiRateResp,
+  TechRateResp,
 } from '../types';
 import { CandleInterval } from '../enums';
 import { SortModeEnum } from '../types';
@@ -30,7 +33,7 @@ import { SortModeEnum } from '../types';
 export class ApiService {
 
   private apiUrl = isDevMode()
-    ? 'http://localhost:8000'
+    ? 'http://localhost:8081/api'
     : '/api';
 
   constructor(
@@ -247,6 +250,30 @@ export class ApiService {
     params = params.set('password', password);
 
     return this.http.get<CurrentUser>(`${this.apiUrl}/login`, {params});
+  }
+
+  getInstrumentMacdRate(uid: string, isBuy: boolean): Observable<MacdRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<MacdRateResp>(`${this.apiUrl}/instrument/macd_rate`, {params});
+  }
+
+  getInstrumentRsiRate(uid: string, isBuy: boolean): Observable<RsiRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<RsiRateResp>(`${this.apiUrl}/instrument/rsi_rate`, {params});
+  }
+
+  getInstrumentTechRate(uid: string, isBuy: boolean): Observable<TechRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<TechRateResp>(`${this.apiUrl}/instrument/tech_rate`, {params});
   }
 
 }
