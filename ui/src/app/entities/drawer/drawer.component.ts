@@ -5,11 +5,13 @@ import { firstValueFrom } from 'rxjs';
 import { SortModeEnum } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
 import { SortModeService } from '../../shared/services/sort-mode.service';
+import { GraphControlSettingsService } from '../../shared/services/graph-control-settings.service';
+import { ComplexGraphControlComponent, ComplexGraphControlOptions } from '../complex-graph-control/complex-graph-control.component';
 
 
 @Component({
   selector: 'drawer',
-  imports: [CommonModule, MatButtonToggleGroup, MatButtonToggle],
+  imports: [CommonModule, MatButtonToggleGroup, MatButtonToggle, ComplexGraphControlComponent],
   providers: [],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss'
@@ -56,8 +58,10 @@ export class DrawerComponent {
 
   private _api = inject(ApiService);
   private _sortModeService = inject(SortModeService);
+  private _graphControlSettingsService = inject(GraphControlSettingsService);
 
   sort = model<SortModeEnum>(this._sortModeService.sortMode());
+  graphSettings = this._graphControlSettingsService.settings;
 
   handleToggleDrawer(): void {
     this.isDrawerOpen = !this.isDrawerOpen;
@@ -66,6 +70,10 @@ export class DrawerComponent {
   handleChangeSort(e: MatButtonToggleChange): void {
     this.sort.set(e.value);
     this._sortModeService.setSortMode(e.value);
+  }
+
+  handleChangeGraphSettings(options: ComplexGraphControlOptions): void {
+    this._graphControlSettingsService.updateSettings(options);
   }
 
 }

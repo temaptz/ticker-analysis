@@ -39,9 +39,9 @@ export interface ComplexGraphControlOptions {
 })
 export class ComplexGraphControlComponent {
 
-  historyDaysCount = input(0, {transform: numberAttribute});
-  interval = input<CandleInterval | null>(null);
-  futureDaysCount = input(0, {transform: numberAttribute});
+  historyDaysCount = input(90, {transform: numberAttribute});
+  interval = input<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
+  futureDaysCount = input(90, {transform: numberAttribute});
   isShowTechAnalysis = input(false, {transform: booleanAttribute});
   techAnalysisOptions = input<TechAnalysisOptions>({});
   isShowNews = input(false, {transform: booleanAttribute});

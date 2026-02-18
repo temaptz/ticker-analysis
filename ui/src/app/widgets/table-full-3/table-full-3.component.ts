@@ -18,7 +18,6 @@ import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
-import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/prediction-dynamic.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 
@@ -40,7 +39,6 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     PriceFormatPipe,
     NewsComplexComponent,
     LlmBuySellRateComponent,
-    PredictionDynamicComponent,
     DrawerComponent,
     PreloaderComponent,
   ],

@@ -5,6 +5,7 @@ import { combineLatest, debounceTime, map, of, switchMap, tap } from 'rxjs';
 import { addDays, endOfDay, isAfter, parseJSON, startOfDay, subDays } from 'date-fns';
 import * as echarts from 'echarts';
 import { ApiService } from '../../shared/services/api.service';
+import { GraphControlSettingsService } from '../../shared/services/graph-control-settings.service';
 import { GRAPH_COLORS } from '../../shared/const';
 import {
   Instrument,
@@ -847,6 +848,9 @@ export class ComplexGraphComponent {
 
   private appService = inject(ApiService);
   private priceFormatPipe = inject(PriceFormatPipe);
+  private graphControlSettingsService = inject(GraphControlSettingsService);
+
+  graphSettings = computed(() => this.graphControlSettingsService.settings());
 
   private formatPredictionTooltip(prediction: PredictionGraph): string {
     return `${prediction.prediction} (${(prediction.prediction_percent > 0) ? '+' : ''}${prediction.prediction_percent}%)`;
@@ -854,64 +858,38 @@ export class ComplexGraphComponent {
 
   constructor() {
     effect(() => {
-      this.daysHistory.set(this.historyDaysCount());
-      this.historyInterval.set(this.interval());
-      this.daysFuture.set(this.futureDaysCount());
-      this.isShowNewsGraph.set(this.isShowNewsGraphInput());
-      this.isShowTa_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
-      this.isShowTa_1_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
-      this.isShowTa_1_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
-      this.isShowTa_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
-      this.isShowTa_2_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
-      this.isShowModelsGraph.set(this.isShowModelsGraphInput());
-      this.isShowForecastsGraph.set(this.isShowForecasts());
+      const settings = this.graphControlSettingsService.settings();
+      
+      if (this.isShowControl()) {
+        this.daysHistory.set(settings.historyDaysCount);
+        this.historyInterval.set(settings.interval);
+        this.daysFuture.set(settings.futureDaysCount);
+        this.isShowNewsGraph.set(settings.isShowNews);
+        this.isShowTa_1_PredictionsHistory.set(settings.isShowTa_1_PredictionsHistory);
+        this.isShowTa_1_1_PredictionsHistory.set(settings.isShowTa_1_1_PredictionsHistory);
+        this.isShowTa_1_2_PredictionsHistory.set(settings.isShowTa_1_2_PredictionsHistory);
+        this.isShowTa_2_PredictionsHistory.set(settings.isShowTa_2_PredictionsHistory);
+        this.isShowTa_2_1_PredictionsHistory.set(settings.isShowTa_2_1_PredictionsHistory);
+        this.isShowModelsGraph.set(settings.isShowModels);
+        this.isShowForecastsGraph.set(settings.isShowForecasts);
+      } else {
+        this.daysHistory.set(this.historyDaysCount());
+        this.historyInterval.set(this.interval());
+        this.daysFuture.set(this.futureDaysCount());
+        this.isShowNewsGraph.set(this.isShowNewsGraphInput());
+        this.isShowTa_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+        this.isShowTa_1_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+        this.isShowTa_1_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+        this.isShowTa_2_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+        this.isShowTa_2_1_PredictionsHistory.set(this.isShowPredictionsHistoryInput());
+        this.isShowModelsGraph.set(this.isShowModelsGraphInput());
+        this.isShowForecastsGraph.set(this.isShowForecasts());
+      }
     });
   }
 
   handleChangeControl(options: ComplexGraphControlOptions): void {
-    if (options.historyDaysCount !== this.daysHistory()) {
-      this.daysHistory.set(options.historyDaysCount);
-    }
-
-    if (options.interval !== this.historyInterval()) {
-      this.historyInterval.set(options.interval);
-    }
-
-    if (options.futureDaysCount !== this.daysFuture()) {
-      this.daysFuture.set(options.futureDaysCount);
-    }
-
-    if (options.isShowNews !== this.isShowNewsGraph()) {
-      this.isShowNewsGraph.set(options.isShowNews);
-    }
-
-    if (options.isShowTa_1_PredictionsHistory !== this.isShowTa_1_PredictionsHistory()) {
-      this.isShowTa_1_PredictionsHistory.set(options.isShowTa_1_PredictionsHistory);
-    }
-
-    if (options.isShowTa_1_1_PredictionsHistory !== this.isShowTa_1_1_PredictionsHistory()) {
-      this.isShowTa_1_1_PredictionsHistory.set(options.isShowTa_1_1_PredictionsHistory);
-    }
-
-    if (options.isShowTa_1_2_PredictionsHistory !== this.isShowTa_1_2_PredictionsHistory()) {
-      this.isShowTa_1_2_PredictionsHistory.set(options.isShowTa_1_2_PredictionsHistory);
-    }
-
-    if (options.isShowTa_2_PredictionsHistory !== this.isShowTa_2_PredictionsHistory()) {
-      this.isShowTa_2_PredictionsHistory.set(options.isShowTa_2_PredictionsHistory);
-    }
-
-    if (options.isShowTa_2_1_PredictionsHistory !== this.isShowTa_2_1_PredictionsHistory()) {
-      this.isShowTa_2_1_PredictionsHistory.set(options.isShowTa_2_1_PredictionsHistory);
-    }
-
-    if (options.isShowModels !== this.isShowModelsGraph()) {
-      this.isShowModelsGraph.set(options.isShowModels);
-    }
-
-    if (options.isShowForecasts !== this.isShowForecastsGraph()) {
-      this.isShowForecastsGraph.set(options.isShowForecasts);
-    }
+    this.graphControlSettingsService.updateSettings(options);
   }
 
   handleChangeTechAnalysis(options: TechAnalysisOptions): void {

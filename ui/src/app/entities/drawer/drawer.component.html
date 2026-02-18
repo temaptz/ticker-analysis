@@ -46,4 +46,19 @@
       </div>
     </div>
   }
+
+  <complex-graph-control
+    [historyDaysCount]="graphSettings().historyDaysCount"
+    [interval]="graphSettings().interval"
+    [futureDaysCount]="graphSettings().futureDaysCount"
+    [isShowNews]="graphSettings().isShowNews"
+    [isShowTa_1_PredictionsHistory]="graphSettings().isShowTa_1_PredictionsHistory"
+    [isShowTa_1_1_PredictionsHistory]="graphSettings().isShowTa_1_1_PredictionsHistory"
+    [isShowTa_1_2_PredictionsHistory]="graphSettings().isShowTa_1_2_PredictionsHistory"
+    [isShowTa_2_PredictionsHistory]="graphSettings().isShowTa_2_PredictionsHistory"
+    [isShowTa_2_1_PredictionsHistory]="graphSettings().isShowTa_2_1_PredictionsHistory"
+    [isShowModels]="graphSettings().isShowModels"
+    [isShowForecasts]="graphSettings().isShowForecasts"
+    (onChange)="handleChangeGraphSettings($event)"
+  />
 </div>
