@@ -21,7 +21,7 @@ import { TechMiniGraphComponent } from './tech/tech-mini-graph.component';
           [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
-          {{ (data.rate / 100) | number:'1.0-5' }}
+          {{ (data.rate / 100) | number:'1.2-2' }}
         </div>
         <div class="rate-label" [style.color]="techColor">tech</div>
       } @else if (rateData.isLoading()) {
@@ -72,18 +72,20 @@ export class TechRateComponent {
   getTooltip(data: TechRateResp): string {
     const parts: string[] = [];
     
+    parts.push(`rate: ${data.rate / 100}`);
+    
     if (data.max_prediction_date !== undefined) {
       parts.push(`max_prediction_date: ${data.max_prediction_date}`);
     }
     if (data.max_prediction_value !== undefined) {
-      parts.push(`max_prediction_value: ${this.decimalPipe.transform(data.max_prediction_value, '1.0-3')}`);
+      parts.push(`max_prediction_value: ${data.max_prediction_value}`);
     }
     if (data.days_before_positive !== undefined) {
       parts.push(`days_before_positive: ${data.days_before_positive}`);
     }
     
     const predictionsStr = data.predictions
-      .map(v => v !== null ? this.decimalPipe.transform(v, '1.0-3') : 'null')
+      .map(v => v !== null ? v : 'null')
       .join(', ');
     parts.push(`predictions: [${predictionsStr}]`);
     

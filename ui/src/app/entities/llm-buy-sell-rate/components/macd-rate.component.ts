@@ -19,7 +19,7 @@ import { MacdMiniGraphComponent } from './macd/macd-mini-graph.component';
           [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
-          {{ (data.rate / 100) | number:'1.0-5' }}
+          {{ (data.rate / 100) | number:'1.2-2' }}
         </div>
         <div class="rate-label">macd</div>
       } @else if (rateData.isLoading()) {
@@ -66,6 +66,9 @@ export class MacdRateComponent {
   });
 
   getTooltip(data: MacdRateResp): string {
-    return `graph_hist: ${data.graph_hist.map(v => this.decimalPipe.transform(v, '1.0-3')).join(', ')}`;
+    const parts: string[] = [];
+    parts.push(`rate: ${data.rate / 100}`);
+    parts.push(`graph_hist: [${data.graph_hist.join(', ')}]`);
+    return parts.join('\n');
   }
 }

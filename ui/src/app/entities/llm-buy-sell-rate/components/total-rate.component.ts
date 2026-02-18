@@ -1,5 +1,5 @@
 import { Component, inject, input, resource, ResourceLoaderParams } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
 import { firstValueFrom, map } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
@@ -8,12 +8,13 @@ import { BuySellTotalRateResp } from '../../../shared/types';
 @Component({
   selector: 'total-rate',
   imports: [CommonModule, MatTooltip],
+  providers: [DecimalPipe],
   template: `
     <div class="rate-cell">
       @if (rateData.value(); as data) {
         <div
           class="rate-value"
-          [matTooltip]="data.conclusion || '-'"
+          [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
           {{ data.rate | number:'1.2-2' }}
@@ -52,6 +53,7 @@ export class TotalRateComponent {
   isBuy = input.required<boolean>();
 
   apiService = inject(ApiService);
+  decimalPipe = inject(DecimalPipe);
 
   rateData = resource<BuySellTotalRateResp, { uid: string, isBuy: boolean }>({
     request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
@@ -62,4 +64,13 @@ export class TotalRateComponent {
       )
     )
   });
+
+  getTooltip(data: BuySellTotalRateResp): string {
+    const parts: string[] = [];
+    parts.push(`rate: ${data.rate}`);
+    if (data.conclusion) {
+      parts.push(`conclusion: ${data.conclusion}`);
+    }
+    return parts.join('\n');
+  }
 }

@@ -19,7 +19,7 @@ import { RsiMiniGraphComponent } from './rsi/rsi-mini-graph.component';
           [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
-          {{ (data.rate / 100) | number:'1.0-5' }}
+          {{ (data.rate / 100) | number:'1.2-2' }}
         </div>
         <div class="rate-label">rsi</div>
       } @else if (rateData.isLoading()) {
@@ -66,6 +66,9 @@ export class RsiRateComponent {
   });
 
   getTooltip(data: RsiRateResp): string {
-    return `rsi_value: ${data.rsi_value !== null ? this.decimalPipe.transform(data.rsi_value, '1.0-3') : 'null'}`;
+    const parts: string[] = [];
+    parts.push(`rate: ${data.rate / 100}`);
+    parts.push(`rsi_value: ${data.rsi_value !== null ? data.rsi_value : 'null'}`);
+    return parts.join('\n');
   }
 }
