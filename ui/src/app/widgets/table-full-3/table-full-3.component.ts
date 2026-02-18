@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
@@ -53,6 +53,17 @@ export class TableFull3Component {
   isLoaded = signal<boolean>(false);
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
   sortTickers = signal<SortModeEnum>(SortModeEnum.BuyPerspective)
+
+  ratingColumnTitle = computed<string>(() => {
+    const mode = this.sortTickers();
+    if (mode === SortModeEnum.BuyPerspective) {
+      return 'Рейтинг покупки';
+    } else if (mode === SortModeEnum.SellPerspective) {
+      return 'Рейтинг продажи';
+    } else {
+      return 'Рейтинг покупки и продажи';
+    }
+  });
 
   protected readonly CandleInterval = CandleInterval;
   protected readonly tableItemHeightPx = 265;
