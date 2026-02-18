@@ -1,5 +1,4 @@
-import datetime
-from lib import users, serializer, db_2, agent, news, invest_calc, utils
+from lib import agent
 
 
 def get_total_buy_rate(instrument_uid: str) -> dict:
