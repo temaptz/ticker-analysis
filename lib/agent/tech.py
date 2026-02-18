@@ -2,7 +2,7 @@ import datetime
 from lib import date_utils, agent, utils, logger, learn, predictions
 from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 
-def price_buy_rate(instrument_uid: str):
+def get_tech_buy_rate(instrument_uid: str):
     final_rate = 0
     final_rate_percent = 0
     target_price_change = 0.1
@@ -73,7 +73,7 @@ def price_buy_rate(instrument_uid: str):
     }
 
 
-def price_sell_rate(instrument_uid: str):
+def get_tech_sell_rate(instrument_uid: str):
     final_rate_percent = 0
     target_days_distance = TARGET_MAX_DAYS_COUNT
     days_before_positive_prediction = target_days_distance

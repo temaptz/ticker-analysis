@@ -4,7 +4,7 @@ from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 MACD_CANDLES_COUNT = 7
 
-def macd_buy_rate(instrument_uid: str):
+def macd_buy_rate(instrument_uid: str) -> dict:
     final_rate = 0
     graph_hist = []
     now = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -21,20 +21,20 @@ def macd_buy_rate(instrument_uid: str):
         graph_hist = [utils.round_float((i.get('macd', 0) - i.get('signal', 0)), 3) for i in graph_sorted]
 
         if all(i < 0 for i in graph_hist):
-            final_rate = 50
+            final_rate = 0.5
 
             if graph_hist[0] > graph_hist[1]:
-                final_rate = 60
+                final_rate = 0.6
 
                 if graph_hist[1] == min(graph_hist):
-                    final_rate = 100
+                    final_rate = 1
                 elif graph_hist[2] == min(graph_hist) and graph_hist[1] > graph_hist[2]:
-                    final_rate = 70
+                    final_rate = 0.7
 
     return {'rate': final_rate, 'graph_hist': graph_hist}
 
 
-def macd_sell_rate(instrument_uid: str):
+def macd_sell_rate(instrument_uid: str) -> dict:
     final_rate = 0
     graph_hist = []
     now = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -51,14 +51,14 @@ def macd_sell_rate(instrument_uid: str):
         graph_hist = [utils.round_float((i.get('macd', 0) - i.get('signal', 0)), 3) for i in graph_sorted]
 
         if all(i > 0 for i in graph_hist):
-            final_rate = 50
+            final_rate = 0.5
 
             if graph_hist[0] < graph_hist[1]:
-                final_rate = 60
+                final_rate = 0.6
 
                 if graph_hist[1] == max(graph_hist):
-                    final_rate = 100
+                    final_rate = 1
                 elif graph_hist[2] == max(graph_hist) and graph_hist[1] < graph_hist[2]:
-                    final_rate = 70
+                    final_rate = 0.7
 
     return {'rate': final_rate, 'graph_hist': graph_hist}

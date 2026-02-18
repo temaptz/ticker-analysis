@@ -25,7 +25,7 @@ def rsi_buy_rate(instrument_uid: str):
                 rsi_value = utils.get_price_by_quotation(graph_sorted[0].signal)
 
                 if rsi_value and rsi_value < 50:
-                    final_rate = agent.utils.linear_interpolation(rsi_value, 0, 50, 100, 50)
+                    final_rate = agent.utils.linear_interpolation(rsi_value, 0, 50, 1, 0.5)
     except Exception as e:
         logger.log_error(method_name='rsi_buy_rate', error=e, is_telegram_send=False)
 
@@ -53,7 +53,7 @@ def rsi_sell_rate(instrument_uid: str):
                 rsi_value = utils.get_price_by_quotation(graph_sorted[0].signal)
 
                 if rsi_value and rsi_value > 50:
-                    final_rate = agent.utils.linear_interpolation(rsi_value, 50, 100, 50, 100)
+                    final_rate = agent.utils.linear_interpolation(rsi_value, 50, 100, 0.5, 1)
     except Exception as e:
         logger.log_error(method_name='rsi_sell_rate', error=e, is_telegram_send=False)
 

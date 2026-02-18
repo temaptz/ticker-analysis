@@ -162,7 +162,7 @@ def price_prediction_rate(state: State):
     rate = {}
 
     if instrument_uid := state.get('instrument_uid', None):
-        rate = agent.price.price_buy_rate(instrument_uid=instrument_uid)
+        rate = agent.price.get_tech_buy_rate(instrument_uid=instrument_uid)
 
     return {'price_prediction_rate': agent.models.RatePercentWithConclusion(
         rate=rate.get('rate', 0),
