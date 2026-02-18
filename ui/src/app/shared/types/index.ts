@@ -213,23 +213,20 @@ export interface Operation {
 
 export interface MacdRateResp {
   rate: number;
-  graph_hist: number[];
+  debug: Record<string, any>;
 }
 
 export interface RsiRateResp {
   rate: number;
-  rsi_value: number | null;
+  debug: Record<string, any>;
 }
 
 export interface TechRateResp {
   rate: number;
-  max_prediction_date?: number;
-  max_prediction_value?: number;
-  days_before_positive?: number;
-  predictions: (number | null)[];
+  debug: Record<string, any>;
 }
 
 export interface BuySellTotalRateResp {
   rate: number;
-  conclusion: string;
+  debug: Record<string, any>;
 }

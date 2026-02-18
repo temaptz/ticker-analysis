@@ -66,9 +66,6 @@ export class RsiRateComponent {
   });
 
   getTooltip(data: RsiRateResp): string {
-    const parts: string[] = [];
-    parts.push(`rate: ${data.rate / 100}`);
-    parts.push(`rsi_value: ${data.rsi_value !== null ? data.rsi_value : 'null'}`);
-    return parts.join('\n');
+    return JSON.stringify(data.debug, null, 2);
   }
 }

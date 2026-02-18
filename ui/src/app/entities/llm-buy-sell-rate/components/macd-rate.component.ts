@@ -66,9 +66,6 @@ export class MacdRateComponent {
   });
 
   getTooltip(data: MacdRateResp): string {
-    const parts: string[] = [];
-    parts.push(`rate: ${data.rate / 100}`);
-    parts.push(`graph_hist: [${data.graph_hist.join(', ')}]`);
-    return parts.join('\n');
+    return JSON.stringify(data.debug, null, 2);
   }
 }

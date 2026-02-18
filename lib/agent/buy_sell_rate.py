@@ -38,14 +38,19 @@ def get_total_buy_rate(instrument_uid: str) -> dict:
 
     return {
         'rate': final_rate,
-        'macd_rate': macd_rated_value,
-        'rsi_rate': rsi_rated_value,
-        'tech_rate': tech_rated_value,
+        'debug': {
+            'macd': macd_rated_value,
+            'rsi': rsi_rated_value,
+            'tech': tech_rated_value,
+        },
     }
 
 
 def get_total_sell_rate(instrument_uid: str) -> dict:
     final_rate = 0
+    macd_rated_value = None
+    rsi_rated_value = None
+    tech_rated_value = None
     macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid)
     rsi_rated = agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid)
     tech_rated = agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid)
@@ -78,4 +83,9 @@ def get_total_sell_rate(instrument_uid: str) -> dict:
 
     return {
         'rate': final_rate,
+        'debug': {
+            'macd': macd_rated_value,
+            'rsi': rsi_rated_value,
+            'tech': tech_rated_value,
+        },
     }

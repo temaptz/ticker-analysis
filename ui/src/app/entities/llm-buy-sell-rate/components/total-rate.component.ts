@@ -66,11 +66,6 @@ export class TotalRateComponent {
   });
 
   getTooltip(data: BuySellTotalRateResp): string {
-    const parts: string[] = [];
-    parts.push(`rate: ${data.rate}`);
-    if (data.conclusion) {
-      parts.push(`conclusion: ${data.conclusion}`);
-    }
-    return parts.join('\n');
+    return JSON.stringify(data.debug, null, 2);
   }
 }

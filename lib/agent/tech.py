@@ -67,9 +67,11 @@ def get_tech_buy_rate(instrument_uid: str):
 
     return {
         'rate': final_rate_percent,
-        'max_prediction_date': max_prediction_date,
-        'max_prediction_value': max_prediction,
-        'predictions': predictions_list,
+        'debug': {
+            'max_prediction_date': max_prediction_date,
+            'max_prediction_value': max_prediction,
+            'predictions': predictions_list,
+        },
     }
 
 
@@ -114,6 +116,8 @@ def get_tech_sell_rate(instrument_uid: str):
 
     return {
         'rate': final_rate_percent,
-        'days_before_positive': days_before_positive_prediction,
-        'predictions': predictions_list,
+        'debug': {
+            'days_before_positive': days_before_positive_prediction,
+            'predictions': predictions_list,
+        },
     }

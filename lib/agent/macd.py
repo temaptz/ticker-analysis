@@ -31,7 +31,12 @@ def macd_buy_rate(instrument_uid: str) -> dict:
                 elif graph_hist[2] == min(graph_hist) and graph_hist[1] > graph_hist[2]:
                     final_rate = 0.7
 
-    return {'rate': final_rate, 'graph_hist': graph_hist}
+    return {
+        'rate': final_rate,
+        'debug': {
+            'graph_hist': graph_hist,
+        },
+    }
 
 
 def macd_sell_rate(instrument_uid: str) -> dict:
@@ -61,4 +66,9 @@ def macd_sell_rate(instrument_uid: str) -> dict:
                 elif graph_hist[2] == max(graph_hist) and graph_hist[1] < graph_hist[2]:
                     final_rate = 0.7
 
-    return {'rate': final_rate, 'graph_hist': graph_hist}
+    return {
+        'rate': final_rate,
+        'debug': {
+            'graph_hist': graph_hist,
+        },
+    }

@@ -29,7 +29,12 @@ def rsi_buy_rate(instrument_uid: str):
     except Exception as e:
         logger.log_error(method_name='rsi_buy_rate', error=e, is_telegram_send=False)
 
-    return {'rate': final_rate, 'rsi_value': rsi_value}
+    return {
+        'rate': final_rate,
+        'debug': {
+            'rsi_value': rsi_value,
+        },
+    }
 
 
 def rsi_sell_rate(instrument_uid: str):
@@ -57,4 +62,9 @@ def rsi_sell_rate(instrument_uid: str):
     except Exception as e:
         logger.log_error(method_name='rsi_sell_rate', error=e, is_telegram_send=False)
 
-    return {'rate': final_rate, 'rsi_value': rsi_value}
+    return {
+        'rate': final_rate,
+        'debug': {
+            'rsi_value': rsi_value,
+        },
+    }
