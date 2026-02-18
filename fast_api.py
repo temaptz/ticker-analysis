@@ -438,9 +438,9 @@ def instrument_tech_rate(instrument_uid: str, is_buy: bool):
     if not instrument_uid:
         return None
     if is_buy:
-        return agent.price.price_buy_rate(instrument_uid=instrument_uid)
+        return agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid)
     else:
-        return agent.price.price_sell_rate(instrument_uid=instrument_uid)
+        return agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid)
 
 
 def instrument_buy_sell_total_rate(instrument_uid: str, is_buy: bool):
