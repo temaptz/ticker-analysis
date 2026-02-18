@@ -62,7 +62,6 @@ export class TableFull3Component {
     'fundamental',
     'complex',
     'balance',
-    'prediction',
     'news',
     'llm_buy_sell_rate',
   ];

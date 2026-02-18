@@ -71,24 +71,17 @@
     </ng-container>
 
     <ng-container matColumnDef="balance">
-      <th mat-header-cell *matHeaderCellDef>Баланс</th>
+      <th mat-header-cell *matHeaderCellDef>Цена, Баланс</th>
       <td mat-cell *matCellDef="let instrument">
+        <div>
+          У
+          Цена: <b>{{ instrument.uid | currentPriceByUid | async | priceFormat }}</b>
+        </div>
+        <br><br>
         <balance
           [instrumentUid]="instrument.uid"
           [instrumentFigi]="instrument.figi"
         ></balance>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="prediction">
-      <th mat-header-cell *matHeaderCellDef>Цена + прогноз на месяц</th>
-      <td mat-cell *matCellDef="let instrument">
-        <div>
-          Текущая: <b>{{ instrument.uid | currentPriceByUid | async | priceFormat }}</b>
-        </div>
-        <br>
-        <br>
-        <prediction-dynamic [instrumentUid]="instrument.uid"></prediction-dynamic>
       </td>
     </ng-container>
 
