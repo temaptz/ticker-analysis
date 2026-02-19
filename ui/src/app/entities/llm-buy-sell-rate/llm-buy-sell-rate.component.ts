@@ -1,13 +1,13 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VolumeRateComponent } from './components/volume-rate.component';
-import { MacdRateComponent } from './components/macd-rate.component';
-import { RsiRateComponent } from './components/rsi-rate.component';
-import { TechRateComponent } from './components/tech-rate.component';
-import { NewsRateComponent } from './components/news-rate.component';
-import { FundamentalRateComponent } from './components/fundamental-rate.component';
-import { ProfitRateComponent } from './components/profit-rate.component';
-import { TotalRateComponent } from './components/total-rate.component';
+import { VolumeRateComponent } from './components/volume-rate/volume-rate.component';
+import { MacdRateComponent } from './components/macd-rate/macd-rate.component';
+import { RsiRateComponent } from './components/rsi-rate/rsi-rate.component';
+import { TechRateComponent } from './components/tech-rate/tech-rate.component';
+import { NewsRateComponent } from './components/news-rate/news-rate.component';
+import { FundamentalRateComponent } from './components/fundamental-rate/fundamental-rate.component';
+import { ProfitRateComponent } from './components/profit-rate/profit-rate.component';
+import { TotalRateComponent } from './components/total-rate/total-rate.component';
 import { SortModeService } from '../../shared/services/sort-mode.service';
 import { SortModeEnum } from '../../shared/types';
 

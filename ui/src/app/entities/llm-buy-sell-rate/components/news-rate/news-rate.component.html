@@ -1,0 +1,23 @@
+<div class="rate-wrapper">
+  <div class="rate-cell">
+    <news-mini-graph [instrumentUid]="instrumentUid()"/>
+    @if (rateData.value(); as data) {
+      <div
+        class="rate-value"
+        [style.color]="newsColor"
+        [matTooltip]="getTooltip(data)"
+        matTooltipClass="rate-tooltip"
+      >
+        {{ data.rate | number:'1.2-2' }}
+      </div>
+      <div class="rate-label" [style.color]="newsColor">news</div>
+    } @else if (rateData.isLoading()) {
+      <div class="rate-value" [style.color]="newsColor">...</div>
+      <div class="rate-label" [style.color]="newsColor">news</div>
+    } @else {
+      <div class="rate-value" [style.color]="newsColor">-</div>
+      <div class="rate-label" [style.color]="newsColor">news</div>
+    }
+  </div>
+  <vertical-scale [color]="newsColor" [value]="rateData.value()?.rate ?? 0"/>
+</div>

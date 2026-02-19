@@ -1,0 +1,23 @@
+<div class="rate-wrapper">
+  <div class="rate-cell">
+    <rsi-mini-graph [instrumentUid]="instrumentUid()"/>
+    @if (rateData.value(); as data) {
+      <div
+        class="rate-value"
+        [style.color]="rsiColor"
+        [matTooltip]="getTooltip(data)"
+        matTooltipClass="rate-tooltip"
+      >
+        {{ data.rate | number:'1.2-2' }}
+      </div>
+      <div class="rate-label" [style.color]="rsiColor">rsi</div>
+    } @else if (rateData.isLoading()) {
+      <div class="rate-value" [style.color]="rsiColor">...</div>
+      <div class="rate-label" [style.color]="rsiColor">rsi</div>
+    } @else {
+      <div class="rate-value" [style.color]="rsiColor">-</div>
+      <div class="rate-label" [style.color]="rsiColor">rsi</div>
+    }
+  </div>
+  <vertical-scale [color]="rsiColor" [value]="rateData.value()?.rate ?? 0"/>
+</div>

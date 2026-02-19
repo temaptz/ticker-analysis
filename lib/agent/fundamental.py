@@ -7,7 +7,7 @@ def get_fundamental_buy_rate(instrument_uid: str):
     try:
         llm_tag = db_2.instrument_tags_db.get_tag(instrument_uid=instrument_uid, tag_name='llm_fundamental_rate')
         if llm_tag and (llm_tag.tag_value or llm_tag.tag_value == 0):
-            final_rate = llm_tag.tag_value / 100
+            final_rate = float(llm_tag.tag_value) / 100
 
     except Exception as e:
         logger.log_error(method_name='get_fundamental_buy_rate', error=e, is_telegram_send=False)

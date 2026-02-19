@@ -1,0 +1,31 @@
+<div class="rate-wrapper">
+  <div class="rate-cell">
+    @if (rateData.value(); as data) {
+      <div class="profit-percent">
+        @if (data.debug?.['potential_profit_percent'] != null) {
+          <span [style.color]="data.debug?.['potential_profit_percent'] >= 0 ? '#4caf50' : '#f44336'">
+            {{ data.debug?.['potential_profit_percent'] >= 0 ? '+' : '' }}{{ data.debug?.['potential_profit_percent'] | number:'1.2-2' }}%
+          </span>
+        }
+      </div>
+      <div
+        class="rate-value"
+        [style.color]="profitColor"
+        [matTooltip]="getTooltip(data)"
+        matTooltipClass="rate-tooltip"
+      >
+        {{ data.rate | number:'1.2-2' }}
+      </div>
+      <div class="rate-label" [style.color]="profitColor">profit</div>
+    } @else if (rateData.isLoading()) {
+      <div class="profit-percent">&nbsp;</div>
+      <div class="rate-value" [style.color]="profitColor">...</div>
+      <div class="rate-label" [style.color]="profitColor">profit</div>
+    } @else {
+      <div class="profit-percent">&nbsp;</div>
+      <div class="rate-value" [style.color]="profitColor">-</div>
+      <div class="rate-label" [style.color]="profitColor">profit</div>
+    }
+  </div>
+  <vertical-scale [color]="profitColor" [value]="rateData.value()?.rate ?? 0"/>
+</div>

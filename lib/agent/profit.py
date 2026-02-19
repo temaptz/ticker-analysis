@@ -13,13 +13,14 @@ def get_profit_buy_rate(instrument_uid: str):
         'rate': final_rate,
         'debug': {
             'rate': final_rate,
+            'potential_profit_percent': None,
         },
     }
 
 
 def get_profit_sell_rate(instrument_uid: str):
     final_rate = 0
-    potential_profit_percent = 0
+    potential_profit_percent = None
 
     try:
         if calc := invest_calc.get_invest_calc_by_instrument_uid(

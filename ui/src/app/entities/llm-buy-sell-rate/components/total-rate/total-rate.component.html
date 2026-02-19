@@ -1,0 +1,21 @@
+<div class="rate-wrapper">
+  <div class="rate-cell">
+    @if (rateData.value(); as data) {
+      <div
+        class="rate-value"
+        [matTooltip]="getTooltip(data)"
+        matTooltipClass="rate-tooltip"
+      >
+        {{ data.rate | number:'1.2-2' }}
+      </div>
+      <div class="rate-label">итого</div>
+    } @else if (rateData.isLoading()) {
+      <div class="rate-value">...</div>
+      <div class="rate-label">итого</div>
+    } @else {
+      <div class="rate-value">-</div>
+      <div class="rate-label">итого</div>
+    }
+  </div>
+  <vertical-scale [color]="totalColor" [value]="rateData.value()?.rate ?? 0"/>
+</div>

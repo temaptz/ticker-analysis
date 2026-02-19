@@ -1,0 +1,20 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.scale-track {
+  width: 3px;
+  height: 100px;
+  border-radius: 1.5px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.scale-fill {
+  width: 100%;
+  border-radius: 1.5px;
+  transition: height 0.3s ease;
+}

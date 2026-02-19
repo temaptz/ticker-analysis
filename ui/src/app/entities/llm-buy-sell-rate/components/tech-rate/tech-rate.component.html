@@ -1,0 +1,23 @@
+<div class="rate-wrapper">
+  <div class="rate-cell">
+    <tech-mini-graph [instrumentUid]="instrumentUid()"/>
+    @if (rateData.value(); as data) {
+      <div
+        class="rate-value"
+        [style.color]="techColor"
+        [matTooltip]="getTooltip(data)"
+        matTooltipClass="rate-tooltip"
+      >
+        {{ data.rate | number:'1.2-2' }}
+      </div>
+      <div class="rate-label" [style.color]="techColor">tech</div>
+    } @else if (rateData.isLoading()) {
+      <div class="rate-value" [style.color]="techColor">...</div>
+      <div class="rate-label" [style.color]="techColor">tech</div>
+    } @else {
+      <div class="rate-value" [style.color]="techColor">-</div>
+      <div class="rate-label" [style.color]="techColor">tech</div>
+    }
+  </div>
+  <vertical-scale [color]="techColor" [value]="rateData.value()?.rate ?? 0"/>
+</div>

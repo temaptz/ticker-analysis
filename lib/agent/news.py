@@ -10,7 +10,7 @@ def get_news_buy_rate(instrument_uid: str):
     try:
         influence_score = get_news_influence_score(instrument_uid=instrument_uid)
 
-        if influence_score > 0:
+        if influence_score is not None and influence_score > 0:
             final_rate = 1
     except Exception as e:
         logger.log_error(method_name='get_news_buy_rate', error=e, is_telegram_send=False)
@@ -34,7 +34,7 @@ def get_news_sell_rate(instrument_uid: str):
     try:
         influence_score = get_news_influence_score(instrument_uid=instrument_uid)
 
-        if influence_score < 0:
+        if influence_score is not None and influence_score < 0:
             final_rate = 1
     except Exception as e:
         logger.log_error(method_name='get_news_sell_rate', error=e, is_telegram_send=False)
