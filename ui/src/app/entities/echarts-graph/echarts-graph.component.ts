@@ -43,8 +43,11 @@ export class EchartsGraphComponent implements AfterViewInit, OnChanges {
   }
 
   private initChart(): void {
-    this.chart = echarts.init(this.chartElRef?.nativeElement);
-    this.chart.setOption(this.option());
+    this.chart = echarts.init(this.chartElRef?.nativeElement, null, { renderer: 'svg' });
+    this.chart.setOption({
+      animation: false,
+      ...this.option(),
+    });
   }
 
 }

@@ -21,9 +21,8 @@ const TARGET_MAX_DAYS_COUNT = 20;
 })
 export class TechMiniGraphComponent {
   instrumentUid = input.required<InstrumentInList['uid']>();
-
-  graphWidth = '50px';
-  graphHeight = '50px';
+  graphWidth = input<string>('75px');
+  graphHeight = input<string>('60px');
 
   private _startDate = new Date();
   private _endDate = addDays(this._startDate, TARGET_MAX_DAYS_COUNT);
@@ -65,6 +64,9 @@ export class TechMiniGraphComponent {
     const yMin = minValue - padding;
     const yMax = maxValue + padding;
 
+    const buyValues = values.map(v => (v > 0 ? v : null));
+    const sellValues = values.map(v => (v <= 0 ? v : null));
+
     return <echarts.EChartsOption>{
       grid: { top: 2, right: 2, bottom: 2, left: 2 },
       xAxis: {
@@ -86,21 +88,30 @@ export class TechMiniGraphComponent {
       series: [
         {
           type: 'line',
-          smooth: true,
+          smooth: false,
           showSymbol: false,
-          lineStyle: {
-            width: 1,
-            color: GRAPH_COLORS.ta_3_tech
-          },
-          data: values,
+          connectNulls: false,
+          lineStyle: { width: 1, color: GRAPH_COLORS.buy },
+          itemStyle: { color: GRAPH_COLORS.buy },
+          data: buyValues,
           markLine: {
             silent: true,
             symbol: 'none',
+            animation: false,
             data: [
               { yAxis: 0, label: { show: false }, lineStyle: { color: '#999', width: 1.5, type: 'dashed' } },
-            ]
+            ],
           }
-        }
+        },
+        {
+          type: 'line',
+          smooth: false,
+          showSymbol: false,
+          connectNulls: false,
+          lineStyle: { width: 1, color: GRAPH_COLORS.sell },
+          itemStyle: { color: GRAPH_COLORS.sell },
+          data: sellValues,
+        },
       ]
     };
   }

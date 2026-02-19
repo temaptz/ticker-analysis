@@ -21,9 +21,8 @@ const NEWS_GRAPH_DAYS = 20;
 })
 export class NewsMiniGraphComponent {
   instrumentUid = input.required<InstrumentInList['uid']>();
-
-  graphWidth = '50px';
-  graphHeight = '50px';
+  graphWidth = input<string>('75px');
+  graphHeight = input<string>('60px');
 
   private _endDate = new Date();
   private _startDate = subDays(this._endDate, NEWS_GRAPH_DAYS);
@@ -94,9 +93,10 @@ export class NewsMiniGraphComponent {
           markLine: {
             silent: true,
             symbol: 'none',
+            animation: false,
             data: [
               { yAxis: 0, label: { show: false }, lineStyle: { color: '#999', width: 1.5, type: 'dashed' } },
-            ]
+            ],
           }
         }
       ]

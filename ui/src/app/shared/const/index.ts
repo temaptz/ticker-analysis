@@ -21,5 +21,8 @@ export const GRAPH_COLORS = {
   // Рейтинги агента
   volume_rate: '#FF6D00',        // насыщенный оранжевый
   profit_rate: '#00B0FF',        // яркий голубой
-  total_rate: '#555555',          // белый (итого)
+  total_rate: '#ffd700',          // белый (итого)
+
+  buy: '#00ff00',
+  sell: '#ff0000',
 }

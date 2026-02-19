@@ -365,11 +365,19 @@ def instrument_invest_calc(uid: Optional[str]):
     return invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid, account_id=users.get_analytics_account().id)
 
 
-def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_date_str: Optional[str], interval_str: Optional[str]):
+def tech_analysis_graph(
+        uid: Optional[str],
+        start_date_str: Optional[str],
+        end_date_str: Optional[str],
+        interval_str: Optional[str],
+        length_str: Optional[str],
+):
     resp = {}
     date_from = date_utils.parse_date(start_date_str)
     date_to = date_utils.parse_date(end_date_str)
     interval = IndicatorInterval(int(interval_str)) if interval_str else None
+    length = int(length_str) if length_str else None
+
     if uid and date_from and date_to and interval:
         resp['RSI'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
@@ -377,6 +385,7 @@ def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_d
             date_from=date_from,
             date_to=date_to,
             interval=interval,
+            length=length,
         )
         resp['BB'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
@@ -385,6 +394,7 @@ def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_d
             date_to=date_to,
             interval=interval,
             deviation=Deviation(deviation_multiplier=Quotation(units=2, nano=0)),
+            length=length,
         )
         resp['EMA'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
@@ -392,6 +402,7 @@ def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_d
             date_from=date_from,
             date_to=date_to,
             interval=interval,
+            length=length,
         )
         resp['SMA'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
@@ -399,6 +410,7 @@ def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_d
             date_from=date_from,
             date_to=date_to,
             interval=interval,
+            length=length,
         )
         resp['MACD'] = tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
@@ -410,7 +422,8 @@ def tech_analysis_graph(uid: Optional[str], start_date_str: Optional[str], end_d
                 fast_length=12,
                 slow_length=26,
                 signal_smoothing=9,
-            )
+            ),
+            length=length,
         )
     return resp
 
@@ -688,7 +701,8 @@ def tech_analysis_graph_endpoint(request: Request, user=Depends(verify_user_by_t
     start_date = request.query_params.get('start_date')
     end_date = request.query_params.get('end_date')
     interval = request.query_params.get('interval')
-    return tech_analysis_graph(uid, start_date, end_date, interval)
+    length = request.query_params.get('length')
+    return tech_analysis_graph(uid, start_date, end_date, interval, length)
     
 
 @app.get('/instrument/tag')

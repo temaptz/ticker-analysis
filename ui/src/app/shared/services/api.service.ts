@@ -179,7 +179,7 @@ export class ApiService {
     return this.http.get<InvestCalc>(`${this.apiUrl}/instrument/invest_calc`, {params: params});
   }
 
-  getInstrumentTechGraph(uid: string, startDate?: Date, endDate?: Date, interval?: CandleInterval): Observable<TechAnalysisResp> {
+  getInstrumentTechGraph(uid: string, startDate?: Date, endDate?: Date, interval?: CandleInterval, length?: number): Observable<TechAnalysisResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
 
@@ -190,6 +190,10 @@ export class ApiService {
 
     if (interval) {
       params = params.set('interval', interval.toString());
+    }
+
+    if (length) {
+      params = params.set('length', length);
     }
 
     return this.http.get<TechAnalysisResp>(`${this.apiUrl}/instrument/tech_analysis_graph`, {params: params});

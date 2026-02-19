@@ -1,7 +1,7 @@
-import { Component, computed, inject, input, resource, ResourceLoaderParams, } from '@angular/core';
+import { Component, computed, inject, input, resource, ResourceLoaderParams } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
-import { subDays } from 'date-fns';
+import { firstValueFrom, startWith } from 'rxjs';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../../../shared/services/api.service';
 import { InstrumentInList, TechAnalysisResp } from '../../../../shared/types';
 import { CandleInterval } from '../../../../shared/enums';
@@ -19,24 +19,25 @@ import * as echarts from 'echarts';
 })
 export class RsiMiniGraphComponent {
   instrumentUid = input.required<InstrumentInList['uid']>();
+  graphWidth = input<string>('75px');
+  graphHeight = input<string>('60px');
 
-  graphWidth = '50px';
-  graphHeight = '50px';
+  private static readonly RSI_CANDLES_COUNT = 7;
 
   private _endDate = new Date();
-  private _startDateMini = subDays(this._endDate, 20);
 
   resource = resource<TechAnalysisResp, {uid: string, dateStartMini: Date, dateEnd: Date}>({
     request: () => ({
       uid: this.instrumentUid(),
-      dateStartMini: this._startDateMini,
-      dateEnd: this._endDate,
+      dateStartMini: subDays(startOfDay(this._endDate), RsiMiniGraphComponent.RSI_CANDLES_COUNT),
+      dateEnd: endOfDay(this._endDate),
     }),
     loader: (params: ResourceLoaderParams<{uid: string, dateStartMini: Date, dateEnd: Date}>) => firstValueFrom(this._apiService.getInstrumentTechGraph(
       params.request.uid,
       params.request.dateStartMini,
       params.request.dateEnd,
       CandleInterval.CANDLE_INTERVAL_DAY,
+      14,
     )),
   });
 
@@ -47,13 +48,14 @@ export class RsiMiniGraphComponent {
   });
 
   private _getChartOptions(graph: TechAnalysisResp['RSI']): echarts.EChartsOption {
-    const limitedGraph = graph.slice(-7);
+    const limitedGraph = graph.slice(-RsiMiniGraphComponent.RSI_CANDLES_COUNT);
     const values = limitedGraph.map(i => i?.signal ?? 0);
 
     return <echarts.EChartsOption>{
-      grid: { top: 2, right: 2, bottom: 2, left: 2 },
+      grid: { top: 0, right: 0, bottom: 0, left: 0 },
       xAxis: {
         type: 'category',
+        boundaryGap: false,
         data: limitedGraph.map(i => new Date(i.date)),
         axisLabel: { show: false },
         axisTick: { show: false },
@@ -73,23 +75,20 @@ export class RsiMiniGraphComponent {
           type: 'line',
           smooth: true,
           showSymbol: false,
-          lineStyle: {
-            width: 1,
-          },
-          itemStyle: {
-            color: '#2196F3',
-          },
+          lineStyle: { width: 1 },
+          itemStyle: { color: '#2196F3' },
           data: values,
           markLine: {
             silent: true,
             symbol: 'none',
+            animation: false,
             data: [
               { yAxis: 30, label: { show: false }, lineStyle: { color: '#999', width: 0.5, type: 'dashed' } },
               { yAxis: 50, label: { show: false }, lineStyle: { color: '#999', width: 1.5, type: 'dashed' } },
               { yAxis: 70, label: { show: false }, lineStyle: { color: '#999', width: 0.5, type: 'dashed' } },
-            ]
-          }
-        }
+            ],
+          },
+        },
       ]
     };
   }
