@@ -1,9 +1,11 @@
 import datetime
-from lib import tech_analysis, utils
+from lib import tech_analysis, utils, cache
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 MACD_CANDLES_COUNT = 7
 
+
+@cache.ttl_cache(ttl=3600)
 def macd_buy_rate(instrument_uid: str) -> dict:
     final_rate = 0
     graph_hist = []
@@ -40,6 +42,7 @@ def macd_buy_rate(instrument_uid: str) -> dict:
     }
 
 
+@cache.ttl_cache(ttl=3600)
 def macd_sell_rate(instrument_uid: str) -> dict:
     final_rate = 0
     graph_hist = []

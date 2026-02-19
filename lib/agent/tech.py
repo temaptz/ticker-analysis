@@ -1,7 +1,9 @@
 import datetime
-from lib import date_utils, agent, utils, logger, learn, predictions
+from lib import date_utils, agent, utils, logger, learn, predictions, cache
 from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 
+
+@cache.ttl_cache(ttl=3600)
 def get_tech_buy_rate(instrument_uid: str):
     final_rate_value = 0
     target_price_change = 0.1
@@ -61,6 +63,7 @@ def get_tech_buy_rate(instrument_uid: str):
     }
 
 
+@cache.ttl_cache(ttl=3600)
 def get_tech_sell_rate(instrument_uid: str):
     final_rate_value = 0
     days_before_positive_prediction = None

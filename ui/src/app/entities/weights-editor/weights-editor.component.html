@@ -1,56 +1,59 @@
 <div class="weights-editor">
   <p class="weights-label">Веса оценки</p>
 
-  <div class="weights-toggle">
-    <button class="weights-toggle-btn" [class.active]="isBuy()" (click)="handleToggle(true)">Покупка</button>
-    <button class="weights-toggle-btn" [class.active]="!isBuy()" (click)="handleToggle(false)">Продажа</button>
+  <div class="weights-columns">
+    <div class="weights-column">
+      <p class="weights-column-title weights-column-title--buy">Покупка</p>
+
+      @if (buyWeights.hasValue()) {
+        <div class="weights-list">
+          @for (key of weightKeys; track key) {
+            <div class="weight-row" [style.background]="getWeightBg(true, key)" [style.color]="getWeightColor(true, key)">
+              <span class="weight-name">{{ getLabel(key) }}</span>
+              <input
+                class="weight-input"
+                type="number"
+                step="0.1"
+                [value]="getWeightValue(true, key)"
+                (input)="handleWeightChange(true, key, $event)"
+              />
+            </div>
+          }
+        </div>
+
+        @if (isBuyDirty()) {
+          <button class="save-btn" [disabled]="isSaving()" (click)="handleSave(true)">
+            {{ isSaving() ? 'Сохранение...' : 'Сохранить' }}
+          </button>
+        }
+      }
+    </div>
+
+    <div class="weights-column">
+      <p class="weights-column-title weights-column-title--sell">Продажа</p>
+
+      @if (sellWeights.hasValue()) {
+        <div class="weights-list">
+          @for (key of weightKeys; track key) {
+            <div class="weight-row" [style.background]="getWeightBg(false, key)" [style.color]="getWeightColor(false, key)">
+              <span class="weight-name">{{ getLabel(key) }}</span>
+              <input
+                class="weight-input"
+                type="number"
+                step="0.1"
+                [value]="getWeightValue(false, key)"
+                (input)="handleWeightChange(false, key, $event)"
+              />
+            </div>
+          }
+        </div>
+
+        @if (isSellDirty()) {
+          <button class="save-btn" [disabled]="isSaving()" (click)="handleSave(false)">
+            {{ isSaving() ? 'Сохранение...' : 'Сохранить' }}
+          </button>
+        }
+      }
+    </div>
   </div>
-
-  @if (isBuy()) {
-    @if (buyWeights.hasValue()) {
-      <div class="weights-list">
-        @for (key of weightKeys; track key) {
-          <div class="weight-row">
-            <span class="weight-name">{{ getLabel(key) }}</span>
-            <input
-              class="weight-input"
-              type="number"
-              step="0.1"
-              [value]="getWeightValue(true, key)"
-              (input)="handleWeightChange(true, key, $event)"
-            />
-          </div>
-        }
-      </div>
-
-      @if (isBuyDirty()) {
-        <button class="save-btn" [disabled]="isSaving()" (click)="handleSave(true)">
-          {{ isSaving() ? 'Сохранение...' : 'Сохранить' }}
-        </button>
-      }
-    }
-  } @else {
-    @if (sellWeights.hasValue()) {
-      <div class="weights-list">
-        @for (key of weightKeys; track key) {
-          <div class="weight-row">
-            <span class="weight-name">{{ getLabel(key) }}</span>
-            <input
-              class="weight-input"
-              type="number"
-              step="0.1"
-              [value]="getWeightValue(false, key)"
-              (input)="handleWeightChange(false, key, $event)"
-            />
-          </div>
-        }
-      </div>
-
-      @if (isSellDirty()) {
-        <button class="save-btn" [disabled]="isSaving()" (click)="handleSave(false)">
-          {{ isSaving() ? 'Сохранение...' : 'Сохранить' }}
-        </button>
-      }
-    }
-  }
 </div>

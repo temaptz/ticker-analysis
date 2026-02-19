@@ -1,8 +1,10 @@
 import datetime
-from lib import logger, news, date_utils
+from lib import logger, news, date_utils, cache
 
 NEWS_CANDLES_COUNT = 7
 
+
+@cache.ttl_cache(ttl=3600)
 def get_news_buy_rate(instrument_uid: str):
     final_rate = 0
     influence_score = None
@@ -27,6 +29,7 @@ def get_news_buy_rate(instrument_uid: str):
     }
 
 
+@cache.ttl_cache(ttl=3600)
 def get_news_sell_rate(instrument_uid: str):
     final_rate = 0
     influence_score = None

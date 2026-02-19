@@ -1,9 +1,11 @@
 import datetime
-from lib import tech_analysis, agent, utils, logger, date_utils
+from lib import tech_analysis, agent, utils, logger, date_utils, cache
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval, TechAnalysisItem
 
 RSI_CANDLES_COUNT = 7
 
+
+@cache.ttl_cache(ttl=3600)
 def rsi_buy_rate(instrument_uid: str):
     final_rate = 0
     rsi_value = None
@@ -29,6 +31,7 @@ def rsi_buy_rate(instrument_uid: str):
     }
 
 
+@cache.ttl_cache(ttl=3600)
 def rsi_sell_rate(instrument_uid: str):
     final_rate = 0
     rsi_value = None

@@ -29,8 +29,6 @@ export class WeightsEditorComponent {
 
   private _api = inject(ApiService);
 
-  isBuy = signal<boolean>(true);
-
   buyWeights = resource({
     loader: () => firstValueFrom(this._api.getBuySellWeights(true)),
   });
@@ -63,6 +61,17 @@ export class WeightsEditorComponent {
   getWeightValue(isBuy: boolean, key: WeightKey): number {
     const weights = this.getEditWeights(isBuy);
     return weights ? weights[key] : 0;
+  }
+
+  getWeightBg(isBuy: boolean, key: WeightKey): string {
+    const value = this.getWeightValue(isBuy, key);
+    const alpha = Math.min(Math.max(value / 30, 0), 1);
+    return `rgba(63, 81, 181, ${alpha.toFixed(2)})`;
+  }
+
+  getWeightColor(isBuy: boolean, key: WeightKey): string {
+    const value = this.getWeightValue(isBuy, key);
+    return value / 30 > 0.45 ? '#fff' : '#333';
   }
 
   handleWeightChange(isBuy: boolean, key: WeightKey, event: Event): void {
@@ -101,8 +110,5 @@ export class WeightsEditorComponent {
     }
   }
 
-  handleToggle(isBuy: boolean): void {
-    this.isBuy.set(isBuy);
-  }
 
 }

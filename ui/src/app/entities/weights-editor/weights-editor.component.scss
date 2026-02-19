@@ -4,7 +4,7 @@
 }
 
 .weights-label {
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -12,62 +12,69 @@
   color: #888;
 }
 
-.weights-toggle {
+.weights-columns {
   display: flex;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 12px;
 }
 
-.weights-toggle-btn {
-  padding: 5px 12px;
-  border: 1.5px solid #d0d0d0;
-  border-radius: 20px;
-  background: #f5f5f5;
-  color: #333;
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
-  white-space: nowrap;
+.weights-column {
+  flex: 1;
+  min-width: 0;
+}
 
-  &:hover {
-    border-color: #1976d2;
-    color: #1976d2;
-    background: #e8f0fe;
+.weights-column-title {
+  margin: 0 0 6px 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+
+  &--buy {
+    background: #e8f5e9;
+    color: #2e7d32;
   }
 
-  &.active {
-    background: #1976d2;
-    border-color: #1976d2;
-    color: #fff;
-    font-weight: 600;
+  &--sell {
+    background: #fce4ec;
+    color: #c62828;
   }
 }
 
 .weights-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .weight-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background .2s, color .2s;
 }
 
 .weight-name {
-  min-width: 120px;
-  font-size: 13px;
-  color: #333;
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: inherit;
+  transition: color .2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .weight-input {
-  width: 80px;
-  padding: 4px 8px;
+  width: 64px;
+  padding: 3px 6px;
   border: 1.5px solid #d0d0d0;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
   outline: none;
   transition: border-color .15s;
@@ -78,13 +85,14 @@
 }
 
 .save-btn {
-  margin-top: 10px;
-  padding: 6px 18px;
+  margin-top: 8px;
+  width: 100%;
+  padding: 5px 12px;
   border: none;
   border-radius: 20px;
   background: #1976d2;
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;

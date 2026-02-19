@@ -1,4 +1,4 @@
-from lib import logger, invest_calc, users, agent, utils, serializer
+from lib import logger, invest_calc, users, agent, cache
 
 
 def get_profit_buy_rate(instrument_uid: str):
@@ -18,6 +18,7 @@ def get_profit_buy_rate(instrument_uid: str):
     }
 
 
+@cache.ttl_cache(ttl=3600)
 def get_profit_sell_rate(instrument_uid: str):
     final_rate = 0
     potential_profit_percent = None
