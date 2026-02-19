@@ -15,6 +15,7 @@ import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.p
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
+import { DrawerStateService } from '../../shared/services/drawer-state.service';
 import { PredictionComponent } from '../../entities/prediction/prediction.component';
 import { ForecastComponent } from '../../entities/forecast/forecast.component';
 import { ForecastHistoryComponent } from '../../entities/forecast-history/forecast-history.component';
@@ -72,6 +73,8 @@ export class TableFullComponent {
     'news',
     'llm_buy_sell_rate',
   ];
+
+  drawerState = inject(DrawerStateService);
 
   private appService = inject(ApiService);
 

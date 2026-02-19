@@ -2,6 +2,8 @@
   width: calc(100vw - 16px);
   height: calc(100vh - 16px);
   border: 1px solid gray;
+  transition: width .3s ease-in-out;
+  overflow-x: auto;
 }
 
 table::ng-deep {

@@ -1,27 +1,27 @@
 <div class="rate-table">
   @if (showBuyRow()) {
     <div class="rate-row buy-row">
-      <volume-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <macd-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <rsi-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <tech-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <news-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <fundamental-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <profit-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
-      <total-rate [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <volume [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <macd [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <rsi [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <tech [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <news [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <fundamental [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <profit [instrumentUid]="instrumentUid()" [isBuy]="true" />
+      <total [instrumentUid]="instrumentUid()" [isBuy]="true" />
     </div>
   }
 
   @if (showSellRow()) {
     <div class="rate-row sell-row">
-      <volume-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <macd-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <rsi-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <tech-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <news-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <fundamental-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <profit-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
-      <total-rate [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <volume [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <macd [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <rsi [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <tech [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <news [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <fundamental [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <profit [instrumentUid]="instrumentUid()" [isBuy]="false" />
+      <total [instrumentUid]="instrumentUid()" [isBuy]="false" />
     </div>
   }
 </div>

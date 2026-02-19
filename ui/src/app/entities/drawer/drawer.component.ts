@@ -1,17 +1,18 @@
 import { Component, computed, inject, model, resource } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonToggle, MatButtonToggleChange, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { firstValueFrom } from 'rxjs';
 import { SortModeEnum } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
 import { SortModeService } from '../../shared/services/sort-mode.service';
 import { GraphControlSettingsService } from '../../shared/services/graph-control-settings.service';
+import { DrawerStateService } from '../../shared/services/drawer-state.service';
 import { ComplexGraphControlComponent, ComplexGraphControlOptions } from '../complex-graph-control/complex-graph-control.component';
 
 
 @Component({
   selector: 'drawer',
-  imports: [CommonModule, MatButtonToggleGroup, MatButtonToggle, ComplexGraphControlComponent],
+  imports: [CommonModule, ComplexGraphControlComponent],
   providers: [],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss'
@@ -20,7 +21,8 @@ export class DrawerComponent {
 
   sortModeEnum = SortModeEnum;
 
-  isDrawerOpen = false;
+  private _drawerStateService = inject(DrawerStateService);
+  isDrawerOpen = this._drawerStateService.isOpen;
 
   totalInfo = resource({
     loader: () => firstValueFrom(this._api.getTotalInfo()),
@@ -64,12 +66,17 @@ export class DrawerComponent {
   graphSettings = this._graphControlSettingsService.settings;
 
   handleToggleDrawer(): void {
-    this.isDrawerOpen = !this.isDrawerOpen;
+    this._drawerStateService.toggle();
   }
 
   handleChangeSort(e: MatButtonToggleChange): void {
     this.sort.set(e.value);
     this._sortModeService.setSortMode(e.value);
+  }
+
+  setSort(mode: SortModeEnum): void {
+    this.sort.set(mode);
+    this._sortModeService.setSortMode(mode);
   }
 
   handleChangeGraphSettings(options: ComplexGraphControlOptions): void {

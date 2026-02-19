@@ -244,6 +244,80 @@ def sort_instruments_last_operation(instruments_list: list[Instrument]) -> list[
     return sorted(instruments_list, key=get_instrument_last_operation_seconds, reverse=False)
 
 
+def sort_instruments_by_volume_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.volume.get_volume_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_volume_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.volume.get_volume_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_macd_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.macd.macd_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_macd_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.macd.macd_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_rsi_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.rsi.rsi_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_rsi_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.rsi.rsi_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_tech_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.tech.get_tech_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_tech_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.tech.get_tech_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_news_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.news.get_news_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_news_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.news.get_news_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_fundamental_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.fundamental.get_fundamental_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_fundamental_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.fundamental.get_fundamental_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_profit_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.profit.get_profit_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_profit_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.profit.get_profit_sell_rate, i), reverse=True)
+
+
+def sort_instruments_by_total_rate_buy(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.buy_sell_rate.get_total_buy_rate, i), reverse=True)
+
+
+def sort_instruments_by_total_rate_sell(instruments_list: list[Instrument]) -> list[Instrument]:
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.buy_sell_rate.get_total_sell_rate, i), reverse=True)
+
+
+def _get_agent_rate(rate_fn, instrument: Instrument) -> float:
+    try:
+        result = rate_fn(instrument_uid=instrument.uid)
+        if result and result.get('rate') is not None:
+            return result['rate']
+    except Exception as e:
+        logger.log_error(method_name='_get_agent_rate', error=e)
+    return float('-inf')
+
+
 @cache.ttl_cache(ttl=3600)
 def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
     try:

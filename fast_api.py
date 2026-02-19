@@ -80,6 +80,70 @@ def instruments_list(sort: int or str) -> list[Instrument]:
         sorted_list = users.sort_instruments_cost(
             instruments_list=sorted_list
         )
+    elif sort and (sort == 5 or sort == '5'):
+        sorted_list = users.sort_instruments_by_volume_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 6 or sort == '6'):
+        sorted_list = users.sort_instruments_by_volume_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 7 or sort == '7'):
+        sorted_list = users.sort_instruments_by_macd_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 8 or sort == '8'):
+        sorted_list = users.sort_instruments_by_macd_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 9 or sort == '9'):
+        sorted_list = users.sort_instruments_by_rsi_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 10 or sort == '10'):
+        sorted_list = users.sort_instruments_by_rsi_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 11 or sort == '11'):
+        sorted_list = users.sort_instruments_by_tech_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 12 or sort == '12'):
+        sorted_list = users.sort_instruments_by_tech_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 13 or sort == '13'):
+        sorted_list = users.sort_instruments_by_news_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 14 or sort == '14'):
+        sorted_list = users.sort_instruments_by_news_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 15 or sort == '15'):
+        sorted_list = users.sort_instruments_by_fundamental_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 16 or sort == '16'):
+        sorted_list = users.sort_instruments_by_fundamental_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 17 or sort == '17'):
+        sorted_list = users.sort_instruments_by_profit_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 18 or sort == '18'):
+        sorted_list = users.sort_instruments_by_profit_sell(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 19 or sort == '19'):
+        sorted_list = users.sort_instruments_by_total_rate_buy(
+            instruments_list=sorted_list
+        )
+    elif sort and (sort == 20 or sort == '20'):
+        sorted_list = users.sort_instruments_by_total_rate_sell(
+            instruments_list=sorted_list
+        )
 
     return sorted_list
 

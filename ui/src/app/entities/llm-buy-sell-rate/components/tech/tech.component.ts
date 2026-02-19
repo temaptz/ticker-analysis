@@ -5,17 +5,17 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../shared/services/api.service';
 import { TechRateResp } from '../../../../shared/types';
 import { GRAPH_COLORS } from '../../../../shared/const';
-import { TechMiniGraphComponent } from '../tech/tech-mini-graph.component';
+import { TechMiniGraphComponent } from '../tech-mini-graph/tech-mini-graph.component';
 import { VerticalScaleComponent } from '../vertical-scale/vertical-scale.component';
 
 @Component({
-  selector: 'tech-rate',
+  selector: 'tech',
   imports: [CommonModule, MatTooltip, TechMiniGraphComponent, VerticalScaleComponent],
   providers: [DecimalPipe],
-  templateUrl: './tech-rate.component.html',
-  styleUrl: './tech-rate.component.scss'
+  templateUrl: './tech.component.html',
+  styleUrl: './tech.component.scss'
 })
-export class TechRateComponent {
+export class TechComponent {
   instrumentUid = input.required<string>();
   isBuy = input.required<boolean>();
 

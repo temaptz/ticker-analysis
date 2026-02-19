@@ -5,3 +5,13 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+$drawer-width: 950px;
+
+body.drawer-open {
+  cdk-virtual-scroll-viewport.table-container,
+  .table-container {
+    width: calc(100vw - 16px - #{$drawer-width}) !important;
+    overflow-x: auto;
+  }
+}

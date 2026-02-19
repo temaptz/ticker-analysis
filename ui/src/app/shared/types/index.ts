@@ -186,6 +186,22 @@ export enum SortModeEnum {
   SellPerspective = 2,
   LastOperation = 3,
   MarketValue = 4,
+  BuyVolume = 5,
+  SellVolume = 6,
+  BuyMacd = 7,
+  SellMacd = 8,
+  BuyRsi = 9,
+  SellRsi = 10,
+  BuyTech = 11,
+  SellTech = 12,
+  BuyNews = 13,
+  SellNews = 14,
+  BuyFundamental = 15,
+  SellFundamental = 16,
+  BuyProfit = 17,
+  SellProfit = 18,
+  BuyTotalRate = 19,
+  SellTotalRate = 20,
 }
 
 export interface TechAnalysisOptions {

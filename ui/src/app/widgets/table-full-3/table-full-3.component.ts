@@ -19,6 +19,7 @@ import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
+import { DrawerStateService } from '../../shared/services/drawer-state.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 
 
@@ -74,6 +75,8 @@ export class TableFull3Component {
     'balance',
     'llm_buy_sell_rate',
   ];
+
+  drawerState = inject(DrawerStateService);
 
   private appService = inject(ApiService);
 

@@ -5,26 +5,33 @@
 
 <div
   class="drawer"
-  [class.hidden]="!isDrawerOpen"
+  [class.hidden]="!isDrawerOpen()"
 >
-  <mat-button-toggle-group name="Сортировка" (change)="handleChangeSort($event)">
-    <mat-button-toggle
-      [checked]="sort() === sortModeEnum.BuyPerspective"
-      [value]="sortModeEnum.BuyPerspective"
-    >Покупка</mat-button-toggle>
-    <mat-button-toggle
-      [checked]="sort() === sortModeEnum.SellPerspective"
-      [value]="sortModeEnum.SellPerspective"
-    >Продажа</mat-button-toggle>
-    <mat-button-toggle
-      [checked]="sort() === sortModeEnum.LastOperation"
-      [value]="sortModeEnum.LastOperation"
-    >Последняя операция</mat-button-toggle>
-    <mat-button-toggle
-      [checked]="sort() === sortModeEnum.MarketValue"
-      [value]="sortModeEnum.MarketValue"
-    >Стоимость портфеля</mat-button-toggle>
-  </mat-button-toggle-group>
+  <div class="sort-section">
+    <p class="sort-label">Сортировка</p>
+    <div class="sort-buttons">
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyPerspective" (click)="setSort(sortModeEnum.BuyPerspective)">Покупка</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellPerspective" (click)="setSort(sortModeEnum.SellPerspective)">Продажа</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.LastOperation" (click)="setSort(sortModeEnum.LastOperation)">Последняя операция</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.MarketValue" (click)="setSort(sortModeEnum.MarketValue)">Стоимость портфеля</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyTotalRate" (click)="setSort(sortModeEnum.BuyTotalRate)">Итог ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellTotalRate" (click)="setSort(sortModeEnum.SellTotalRate)">Итог ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyMacd" (click)="setSort(sortModeEnum.BuyMacd)">MACD ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellMacd" (click)="setSort(sortModeEnum.SellMacd)">MACD ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyRsi" (click)="setSort(sortModeEnum.BuyRsi)">RSI ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellRsi" (click)="setSort(sortModeEnum.SellRsi)">RSI ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyTech" (click)="setSort(sortModeEnum.BuyTech)">Тех. ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellTech" (click)="setSort(sortModeEnum.SellTech)">Тех. ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyNews" (click)="setSort(sortModeEnum.BuyNews)">Новости ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellNews" (click)="setSort(sortModeEnum.SellNews)">Новости ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyFundamental" (click)="setSort(sortModeEnum.BuyFundamental)">Фундам. ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellFundamental" (click)="setSort(sortModeEnum.SellFundamental)">Фундам. ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyProfit" (click)="setSort(sortModeEnum.BuyProfit)">Прибыль ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellProfit" (click)="setSort(sortModeEnum.SellProfit)">Прибыль ↓</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyVolume" (click)="setSort(sortModeEnum.BuyVolume)">Объём ↑</button>
+      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellVolume" (click)="setSort(sortModeEnum.SellVolume)">Объём ↓</button>
+    </div>
+  </div>
 
   @if (totalInfo.hasValue()) {
     @let info = totalInfo.value();

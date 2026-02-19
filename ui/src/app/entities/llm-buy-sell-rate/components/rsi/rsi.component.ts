@@ -1,39 +1,36 @@
 import { Component, inject, input, resource, ResourceLoaderParams } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../shared/services/api.service';
-import { BuySellTotalRateResp } from '../../../../shared/types';
+import { RsiRateResp } from '../../../../shared/types';
+import { RsiMiniGraphComponent } from '../rsi-mini-graph/rsi-mini-graph.component';
 import { GRAPH_COLORS } from '../../../../shared/const';
 import { VerticalScaleComponent } from '../vertical-scale/vertical-scale.component';
 
 @Component({
-  selector: 'total-rate',
-  imports: [CommonModule, MatTooltip, VerticalScaleComponent],
+  selector: 'rsi',
+  imports: [CommonModule, MatTooltip, RsiMiniGraphComponent, VerticalScaleComponent],
   providers: [DecimalPipe],
-  templateUrl: './total-rate.component.html',
-  styleUrl: './total-rate.component.scss'
+  templateUrl: './rsi.component.html',
+  styleUrl: './rsi.component.scss'
 })
-export class TotalRateComponent {
+export class RsiComponent {
   instrumentUid = input.required<string>();
   isBuy = input.required<boolean>();
 
   apiService = inject(ApiService);
   decimalPipe = inject(DecimalPipe);
 
-  totalColor = GRAPH_COLORS.total_rate;
+  rsiColor = GRAPH_COLORS.tech_rsi;
 
-  rateData = resource<BuySellTotalRateResp, { uid: string, isBuy: boolean }>({
+  rateData = resource({
     request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string, isBuy: boolean }>) => firstValueFrom(
-      this.apiService.getBuySellTotalRate(
-        params.request.uid,
-        params.request.isBuy
-      )
-    )
+    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
+      firstValueFrom(this.apiService.getInstrumentRsiRate(params.request.uid, params.request.isBuy))
   });
 
-  getTooltip(data: BuySellTotalRateResp): string {
+  getTooltip(data: RsiRateResp): string {
     return JSON.stringify(data.debug, null, 2);
   }
 }

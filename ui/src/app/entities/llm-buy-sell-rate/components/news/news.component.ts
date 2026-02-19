@@ -3,34 +3,34 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../shared/services/api.service';
-import { RsiRateResp } from '../../../../shared/types';
-import { RsiMiniGraphComponent } from '../rsi/rsi-mini-graph.component';
+import { NewsRateResp } from '../../../../shared/types';
 import { GRAPH_COLORS } from '../../../../shared/const';
+import { NewsMiniGraphComponent } from '../news-mini-graph/news-mini-graph.component';
 import { VerticalScaleComponent } from '../vertical-scale/vertical-scale.component';
 
 @Component({
-  selector: 'rsi-rate',
-  imports: [CommonModule, MatTooltip, RsiMiniGraphComponent, VerticalScaleComponent],
+  selector: 'news',
+  imports: [CommonModule, MatTooltip, NewsMiniGraphComponent, VerticalScaleComponent],
   providers: [DecimalPipe],
-  templateUrl: './rsi-rate.component.html',
-  styleUrl: './rsi-rate.component.scss'
+  templateUrl: './news.component.html',
+  styleUrl: './news.component.scss'
 })
-export class RsiRateComponent {
+export class NewsComponent {
   instrumentUid = input.required<string>();
   isBuy = input.required<boolean>();
 
   apiService = inject(ApiService);
   decimalPipe = inject(DecimalPipe);
 
-  rsiColor = GRAPH_COLORS.tech_rsi;
+  newsColor = GRAPH_COLORS.news_influence_score;
 
   rateData = resource({
     request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
     loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentRsiRate(params.request.uid, params.request.isBuy))
+      firstValueFrom(this.apiService.getInstrumentNewsRate(params.request.uid, params.request.isBuy))
   });
 
-  getTooltip(data: RsiRateResp): string {
+  getTooltip(data: NewsRateResp): string {
     return JSON.stringify(data.debug, null, 2);
   }
 }
