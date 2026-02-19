@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, resource, ResourceLoaderParams } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import { subDays } from 'date-fns';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../../../shared/services/api.service';
 import { InstrumentInList, NewsGraphItem } from '../../../../shared/types';
 import { CandleInterval } from '../../../../shared/enums';
@@ -24,8 +24,8 @@ export class NewsMiniGraphComponent {
   graphWidth = input<string>('75px');
   graphHeight = input<string>('60px');
 
-  private _endDate = new Date();
-  private _startDate = subDays(this._endDate, NEWS_GRAPH_DAYS);
+  private _endDate = endOfDay(new Date());
+  private _startDate = subDays(startOfDay(this._endDate), 14);
 
   resource = resource<NewsGraphItem[], {uid: string, dateStart: Date, dateEnd: Date}>({
     request: () => ({

@@ -1,13 +1,14 @@
 import { Component, computed, inject, input, resource, ResourceLoaderParams } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import { subDays } from 'date-fns';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../../../shared/services/api.service';
 import { InstrumentInList, TechAnalysisGraphItem } from '../../../../shared/types';
 import { CandleInterval, IndicatorType } from '../../../../shared/enums';
 import { PreloaderComponent } from '../../../preloader/preloader.component';
 import { EchartsGraphComponent } from '../../../echarts-graph/echarts-graph.component';
 import * as echarts from 'echarts';
+import { GRAPH_COLORS } from '../../../../shared/const';
 
 
 @Component({
@@ -22,8 +23,8 @@ export class MacdMiniGraphComponent {
   graphWidth = input<string>('75px');
   graphHeight = input<string>('60px');
 
-  private _endDate = new Date();
-  private _startDateMini = subDays(this._endDate, 20);
+  private _endDate = endOfDay(new Date());
+  private _startDateMini = subDays(startOfDay(this._endDate), 7);
 
   resource = resource<TechAnalysisGraphItem[], {uid: string, dateStartMini: Date, dateEnd: Date}>({
     request: () => ({
@@ -47,8 +48,7 @@ export class MacdMiniGraphComponent {
   });
 
   private _getChartOptions(graph: TechAnalysisGraphItem[]): echarts.EChartsOption {
-    const limitedGraph = graph.slice(-7);
-    const histValues = limitedGraph.map(i => (i?.macd ?? 0) - (i?.signal ?? 0));
+    const histValues = graph.map(i => (i?.macd ?? 0) - (i?.signal ?? 0));
     const absMax = histValues.length > 0
       ? Math.max(Math.abs(Math.min(...histValues)), Math.abs(Math.max(...histValues)))
       : 1;
@@ -57,7 +57,7 @@ export class MacdMiniGraphComponent {
       grid: { top: 0, right: 0, bottom: 0, left: 0 },
       xAxis: {
         type: 'category',
-        data: limitedGraph.map(i => new Date(i.date)),
+        data: graph.map(i => new Date(i.date)),
         axisLabel: { show: false },
         axisTick: { show: false },
         axisLine: { show: false },
@@ -77,7 +77,7 @@ export class MacdMiniGraphComponent {
           barWidth: '90%',
           data: histValues.map(value => ({
             value,
-            itemStyle: { color: value >= 0 ? '#4caf50' : '#f44336' },
+            itemStyle: { color: value >= 0 ? GRAPH_COLORS.buy : GRAPH_COLORS.sell },
           })),
         },
       ],

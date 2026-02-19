@@ -24,8 +24,6 @@ if not docker.is_prod():
 
 admin = Admin(app, db_2.connection.get_engine())
 
-db_2.weights.init_table()
-
 class UserAdmin(ModelView, model=db_2.users_db.UserDB):
     column_list = [
         db_2.users_db.UserDB.id,

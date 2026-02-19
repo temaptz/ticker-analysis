@@ -25,6 +25,7 @@ def get_tech_analysis(
             slow_length=26,
             signal_smoothing=9,
         )
+    length = length if (length is not None) else 3
     with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
         return client.market_data.get_tech_analysis(
             request=GetTechAnalysisRequest(
