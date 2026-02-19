@@ -16,11 +16,12 @@ import {
   PredictionGraph,
   PredictionGraphResp,
   PredictionHistoryGraphResp,
+  TechAnalysisGraphItem,
   TechAnalysisOptions,
   TechAnalysisResp,
 } from '../../shared/types';
 import { getPriceByQuotation, getRoundPrice } from '../../utils';
-import { CandleInterval, ModelNameEnum, OperationTypeEnum } from '../../shared/enums';
+import { CandleInterval, IndicatorType, ModelNameEnum, OperationTypeEnum } from '../../shared/enums';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { EchartsGraphComponent } from '../echarts-graph/echarts-graph.component';
@@ -185,19 +186,41 @@ export class ComplexGraphComponent {
       toObservable(this.daysFuture),
       toObservable(this.historyInterval),
       toObservable(this.isShowTechAnalysis),
+      toObservable(this.techAnalysisOptions),
     ])
       .pipe(
         debounceTime(0),
         tap(() => this.isLoadedTechAnalysis.set(false)),
-        switchMap(([uid, historyDays, futureDays, interval, isShowTechAnalysis]) => isShowTechAnalysis
-          ? this.appService.getInstrumentTechGraph(
-            uid,
-            startOfDay(subDays(new Date(), historyDays)),
-            endOfDay(addDays(new Date(), futureDays)),
-            interval
-          )
-          : of(null)
-        ),
+        switchMap(([uid, historyDays, futureDays, interval, isShowTechAnalysis, options]) => {
+          if (!isShowTechAnalysis) return of(null);
+
+          const startDate = startOfDay(subDays(new Date(), historyDays));
+          const endDate = endOfDay(addDays(new Date(), futureDays));
+
+          const indicators: { key: keyof TechAnalysisResp; type: IndicatorType; flag: boolean }[] = [
+            { key: 'RSI', type: IndicatorType.INDICATOR_TYPE_RSI, flag: !!options?.isShowRSI },
+            { key: 'BB', type: IndicatorType.INDICATOR_TYPE_BB, flag: !!options?.isShowBB },
+            { key: 'EMA', type: IndicatorType.INDICATOR_TYPE_EMA, flag: !!options?.isShowEMA },
+            { key: 'SMA', type: IndicatorType.INDICATOR_TYPE_SMA, flag: !!options?.isShowSMA },
+            { key: 'MACD', type: IndicatorType.INDICATOR_TYPE_MACD, flag: !!options?.isShowMACD },
+          ];
+
+          const activeIndicators = indicators.filter(i => i.flag);
+          if (activeIndicators.length === 0) return of(null);
+
+          return combineLatest(
+            activeIndicators.map(ind =>
+              this.appService.getInstrumentTechGraph(uid, ind.type, startDate, endDate, interval)
+                .pipe(map(data => ({ key: ind.key, data })))
+            )
+          ).pipe(
+            map(results => {
+              const resp: TechAnalysisResp = { RSI: [], BB: [], EMA: [], SMA: [], MACD: [] };
+              results.forEach(r => resp[r.key] = r.data);
+              return resp;
+            })
+          );
+        }),
         tap(() => this.isLoadedTechAnalysis.set(true)),
       )
   );

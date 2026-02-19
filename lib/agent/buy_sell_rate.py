@@ -1,4 +1,4 @@
-from lib import agent
+from lib import agent, db_2, logger
 
 
 def get_total_buy_rate(instrument_uid: str) -> dict:
@@ -18,15 +18,7 @@ def get_total_buy_rate(instrument_uid: str) -> dict:
     volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid)
     profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid)
 
-    weights = {
-        'macd': 1,
-        'rsi': 1,
-        'tech': 1,
-        'news': 1,
-        'fundamental': 1,
-        'volume': 1,
-        'profit': 1,
-    }
+    weights = get_buy_weights()
 
     if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated:
         macd_rated_value = macd_rated.get('rate', None)
@@ -96,15 +88,7 @@ def get_total_sell_rate(instrument_uid: str) -> dict:
     volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid)
     profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid)
 
-    weights = {
-        'macd': 1,
-        'rsi': 1,
-        'tech': 1,
-        'news': 1,
-        'fundamental': 1,
-        'volume': 1,
-        'profit': 1,
-    }
+    weights = get_sell_weights()
 
     if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated:
         macd_rated_value = macd_rated.get('rate', None)
@@ -155,3 +139,52 @@ def get_total_sell_rate(instrument_uid: str) -> dict:
             'profit': profit_rated_value,
         },
     }
+
+
+def get_buy_weights() -> dict:
+    weights = {
+        'macd': get_weight_db(name='buy_macd') or 0,
+        'rsi': get_sell_weights(name='buy_rsi') or 0,
+        'tech': get_sell_weights(name='buy_tech') or 0,
+        'news': get_sell_weights(name='buy_news') or 0,
+        'fundamental': get_sell_weights(name='buy_fundamental') or 0,
+        'volume': get_sell_weights(name='buy_volume') or 0,
+        'profit': get_sell_weights(name='buy_profit') or 0,
+    }
+
+    return weights
+
+
+def get_sell_weights() -> dict:
+    weights = {
+        'macd': get_weight_db(name='buy_macd') or 0,
+        'rsi': get_sell_weights(name='buy_rsi') or 0,
+        'tech': get_sell_weights(name='buy_tech') or 0,
+        'news': get_sell_weights(name='buy_news') or 0,
+        'fundamental': get_sell_weights(name='buy_fundamental') or 0,
+        'volume': get_sell_weights(name='buy_volume') or 0,
+        'profit': get_sell_weights(name='buy_profit') or 0,
+    }
+
+    return weights
+
+
+def get_weight_db(name: str) -> float or None:
+    try:
+        if weight_db := db_2.weights.get_weight(name=name):
+            if weight_db.value:
+                return float(weight_db.value)
+    except Exception as e:
+        logger.log_error(method_name='get_weight_db', error=e, is_telegram_send=False)
+    return None
+
+
+def set_weight_db(name: str, value: float) -> None:
+    try:
+        db_2.weights.upset_weight(
+            name=name,
+            value=value,
+        )
+    except Exception as e:
+        logger.log_error(method_name='set_weight_db', error=e, is_telegram_send=False)
+    return None

@@ -17,7 +17,7 @@ import {
   InvestCalc,
   InstrumentForecastsGraphItem,
   NewsListRatedResponse,
-  TechAnalysisResp,
+  TechAnalysisGraphItem,
   PredictionHistoryGraphResp, Forecast, RecommendationResp, NewsGraphItem, TotalInfo, CurrentUser,
   MacdRateResp,
   RsiRateResp,
@@ -28,7 +28,7 @@ import {
   ProfitRateResp,
   BuySellTotalRateResp,
 } from '../types';
-import { CandleInterval } from '../enums';
+import { CandleInterval, IndicatorType } from '../enums';
 import { SortModeEnum } from '../types';
 
 
@@ -179,9 +179,10 @@ export class ApiService {
     return this.http.get<InvestCalc>(`${this.apiUrl}/instrument/invest_calc`, {params: params});
   }
 
-  getInstrumentTechGraph(uid: string, startDate?: Date, endDate?: Date, interval?: CandleInterval, length?: number): Observable<TechAnalysisResp> {
+  getInstrumentTechGraph(uid: string, indicatorType: IndicatorType, startDate?: Date, endDate?: Date, interval?: CandleInterval, length?: number): Observable<TechAnalysisGraphItem[]> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('indicator_type', indicatorType.toString());
 
     if (startDate && endDate) {
       params = params.set('start_date', startDate.toJSON());
@@ -196,7 +197,7 @@ export class ApiService {
       params = params.set('length', length);
     }
 
-    return this.http.get<TechAnalysisResp>(`${this.apiUrl}/instrument/tech_analysis_graph`, {params: params});
+    return this.http.get<TechAnalysisGraphItem[]>(`${this.apiUrl}/instrument/tech_analysis_graph`, {params: params});
   }
 
   getInstrumentNewsListRated(uid: string, startDate: Date, endDate: Date, isWithContent = false): Observable<NewsListRatedResponse> {

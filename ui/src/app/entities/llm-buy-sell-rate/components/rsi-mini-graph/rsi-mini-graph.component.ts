@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { firstValueFrom, startWith } from 'rxjs';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { ApiService } from '../../../../shared/services/api.service';
-import { InstrumentInList, TechAnalysisResp } from '../../../../shared/types';
-import { CandleInterval } from '../../../../shared/enums';
+import { InstrumentInList, TechAnalysisGraphItem } from '../../../../shared/types';
+import { CandleInterval, IndicatorType } from '../../../../shared/enums';
 import { PreloaderComponent } from '../../../preloader/preloader.component';
 import { EchartsGraphComponent } from '../../../echarts-graph/echarts-graph.component';
 import * as echarts from 'echarts';
@@ -26,7 +26,7 @@ export class RsiMiniGraphComponent {
 
   private _endDate = new Date();
 
-  resource = resource<TechAnalysisResp, {uid: string, dateStartMini: Date, dateEnd: Date}>({
+  resource = resource<TechAnalysisGraphItem[], {uid: string, dateStartMini: Date, dateEnd: Date}>({
     request: () => ({
       uid: this.instrumentUid(),
       dateStartMini: subDays(startOfDay(this._endDate), RsiMiniGraphComponent.RSI_CANDLES_COUNT),
@@ -34,6 +34,7 @@ export class RsiMiniGraphComponent {
     }),
     loader: (params: ResourceLoaderParams<{uid: string, dateStartMini: Date, dateEnd: Date}>) => firstValueFrom(this._apiService.getInstrumentTechGraph(
       params.request.uid,
+      IndicatorType.INDICATOR_TYPE_RSI,
       params.request.dateStartMini,
       params.request.dateEnd,
       CandleInterval.CANDLE_INTERVAL_DAY,
@@ -44,10 +45,10 @@ export class RsiMiniGraphComponent {
   private _apiService = inject(ApiService);
 
   graphOptionsMini = computed<echarts.EChartsOption>(() => {
-    return this._getChartOptions(this.resource.value()?.RSI ?? []);
+    return this._getChartOptions(this.resource.value() ?? []);
   });
 
-  private _getChartOptions(graph: TechAnalysisResp['RSI']): echarts.EChartsOption {
+  private _getChartOptions(graph: TechAnalysisGraphItem[]): echarts.EChartsOption {
     const limitedGraph = graph.slice(-RsiMiniGraphComponent.RSI_CANDLES_COUNT);
     const values = limitedGraph.map(i => i?.signal ?? 0);
 

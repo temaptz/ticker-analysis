@@ -1,4 +1,4 @@
-from lib.db_2 import forecasts_db, gpt_requests_db, news_db, predictions_db, fundamentals_db, news_classify_requests, news_rate_2_db, instrument_tags_db, users_db
+from lib.db_2 import forecasts_db, gpt_requests_db, news_db, predictions_db, fundamentals_db, news_classify_requests, news_rate_2_db, instrument_tags_db, users_db, weights
 
 
 def init_db() -> None:
@@ -12,3 +12,4 @@ def init_db() -> None:
     news_rate_2_db.init_table()
     instrument_tags_db.init_table()
     users_db.init_table()
+    weights.init_table()

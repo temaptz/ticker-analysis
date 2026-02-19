@@ -27,6 +27,14 @@ export enum ModelNameEnum {
   Consensus =  'consensus',
 }
 
+export enum IndicatorType {
+  INDICATOR_TYPE_BB = 1,
+  INDICATOR_TYPE_EMA = 2,
+  INDICATOR_TYPE_RSI = 3,
+  INDICATOR_TYPE_MACD = 4,
+  INDICATOR_TYPE_SMA = 5,
+}
+
 export enum OperationTypeEnum {
   Buy = 15,
   Sell = 22,

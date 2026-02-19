@@ -371,61 +371,29 @@ def tech_analysis_graph(
         end_date_str: Optional[str],
         interval_str: Optional[str],
         length_str: Optional[str],
+        indicator_type_str: Optional[str] = None,
 ):
-    resp = {}
     date_from = date_utils.parse_date(start_date_str)
     date_to = date_utils.parse_date(end_date_str)
     interval = IndicatorInterval(int(interval_str)) if interval_str else None
     length = int(length_str) if length_str else None
+    indicator_type = IndicatorType(int(indicator_type_str)) if indicator_type_str else None
 
-    if uid and date_from and date_to and interval:
-        resp['RSI'] = tech_analysis.get_tech_analysis_graph(
+    if uid and date_from and date_to and interval and indicator_type:
+        deviation = Deviation(deviation_multiplier=Quotation(units=2, nano=0)) if indicator_type == IndicatorType.INDICATOR_TYPE_BB else None
+        smoothing = Smoothing(fast_length=12, slow_length=26, signal_smoothing=9) if indicator_type == IndicatorType.INDICATOR_TYPE_MACD else None
+
+        return tech_analysis.get_tech_analysis_graph(
             instrument_uid=uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
+            indicator_type=indicator_type,
             date_from=date_from,
             date_to=date_to,
             interval=interval,
             length=length,
+            deviation=deviation,
+            smoothing=smoothing,
         )
-        resp['BB'] = tech_analysis.get_tech_analysis_graph(
-            instrument_uid=uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_BB,
-            date_from=date_from,
-            date_to=date_to,
-            interval=interval,
-            deviation=Deviation(deviation_multiplier=Quotation(units=2, nano=0)),
-            length=length,
-        )
-        resp['EMA'] = tech_analysis.get_tech_analysis_graph(
-            instrument_uid=uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_EMA,
-            date_from=date_from,
-            date_to=date_to,
-            interval=interval,
-            length=length,
-        )
-        resp['SMA'] = tech_analysis.get_tech_analysis_graph(
-            instrument_uid=uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
-            date_from=date_from,
-            date_to=date_to,
-            interval=interval,
-            length=length,
-        )
-        resp['MACD'] = tech_analysis.get_tech_analysis_graph(
-            instrument_uid=uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
-            date_from=date_from,
-            date_to=date_to,
-            interval=interval,
-            smoothing=Smoothing(
-                fast_length=12,
-                slow_length=26,
-                signal_smoothing=9,
-            ),
-            length=length,
-        )
-    return resp
+    return []
 
 
 def instrument_tag(
@@ -702,7 +670,8 @@ def tech_analysis_graph_endpoint(request: Request, user=Depends(verify_user_by_t
     end_date = request.query_params.get('end_date')
     interval = request.query_params.get('interval')
     length = request.query_params.get('length')
-    return tech_analysis_graph(uid, start_date, end_date, interval, length)
+    indicator_type = request.query_params.get('indicator_type')
+    return tech_analysis_graph(uid, start_date, end_date, interval, length, indicator_type)
     
 
 @app.get('/instrument/tag')
