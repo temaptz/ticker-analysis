@@ -75,6 +75,38 @@ $drawer-width: 950px;
     color: #fff;
     font-weight: 600;
   }
+
+  &--buy {
+    border-color: #00ff00;
+
+    &:hover {
+      border-color: #00ff00;
+      color: #00aa00;
+      background: #f0fff0;
+    }
+
+    &.active {
+      background: #00ff00;
+      border-color: #00ff00;
+      color: #1a1a1a;
+    }
+  }
+
+  &--sell {
+    border-color: #ff0000;
+
+    &:hover {
+      border-color: #ff0000;
+      color: #cc0000;
+      background: #fff0f0;
+    }
+
+    &.active {
+      background: #ff0000;
+      border-color: #ff0000;
+      color: #fff;
+    }
+  }
 }
 
 .total-info {

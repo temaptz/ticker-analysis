@@ -266,3 +266,13 @@ export interface BuySellTotalRateResp {
   rate: number;
   debug: Record<string, any>;
 }
+
+export interface BuySellWeights {
+  macd: number;
+  rsi: number;
+  tech: number;
+  news: number;
+  fundamental: number;
+  volume: number;
+  profit: number;
+}

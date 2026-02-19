@@ -8,11 +8,12 @@ import { SortModeService } from '../../shared/services/sort-mode.service';
 import { GraphControlSettingsService } from '../../shared/services/graph-control-settings.service';
 import { DrawerStateService } from '../../shared/services/drawer-state.service';
 import { ComplexGraphControlComponent, ComplexGraphControlOptions } from '../complex-graph-control/complex-graph-control.component';
+import { WeightsEditorComponent } from '../weights-editor/weights-editor.component';
 
 
 @Component({
   selector: 'drawer',
-  imports: [CommonModule, ComplexGraphControlComponent],
+  imports: [CommonModule, ComplexGraphControlComponent, WeightsEditorComponent],
   providers: [],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss'

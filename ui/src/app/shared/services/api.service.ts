@@ -27,6 +27,7 @@ import {
   VolumeRateResp,
   ProfitRateResp,
   BuySellTotalRateResp,
+  BuySellWeights,
 } from '../types';
 import { CandleInterval, IndicatorType } from '../enums';
 import { SortModeEnum } from '../types';
@@ -324,6 +325,20 @@ export class ApiService {
     params = params.set('is_buy', isBuy.toString());
 
     return this.http.get<BuySellTotalRateResp>(`${this.apiUrl}/instrument/buy_sell_total_rate`, {params});
+  }
+
+  getBuySellWeights(isBuy: boolean): Observable<BuySellWeights> {
+    let params = new HttpParams();
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<BuySellWeights>(`${this.apiUrl}/buy_sell_weights`, {params});
+  }
+
+  setBuySellWeights(isBuy: boolean, weights: BuySellWeights): Observable<{status: string}> {
+    return this.http.post<{status: string}>(`${this.apiUrl}/buy_sell_weights`, {
+      is_buy: isBuy,
+      weights,
+    });
   }
 
 }

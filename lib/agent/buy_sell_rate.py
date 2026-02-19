@@ -144,12 +144,12 @@ def get_total_sell_rate(instrument_uid: str) -> dict:
 def get_buy_weights() -> dict:
     weights = {
         'macd': get_weight_db(name='buy_macd') or 0,
-        'rsi': get_sell_weights(name='buy_rsi') or 0,
-        'tech': get_sell_weights(name='buy_tech') or 0,
-        'news': get_sell_weights(name='buy_news') or 0,
-        'fundamental': get_sell_weights(name='buy_fundamental') or 0,
-        'volume': get_sell_weights(name='buy_volume') or 0,
-        'profit': get_sell_weights(name='buy_profit') or 0,
+        'rsi': get_weight_db(name='buy_rsi') or 0,
+        'tech': get_weight_db(name='buy_tech') or 0,
+        'news': get_weight_db(name='buy_news') or 0,
+        'fundamental': get_weight_db(name='buy_fundamental') or 0,
+        'volume': get_weight_db(name='buy_volume') or 0,
+        'profit': get_weight_db(name='buy_profit') or 0,
     }
 
     return weights
@@ -157,13 +157,13 @@ def get_buy_weights() -> dict:
 
 def get_sell_weights() -> dict:
     weights = {
-        'macd': get_weight_db(name='buy_macd') or 0,
-        'rsi': get_sell_weights(name='buy_rsi') or 0,
-        'tech': get_sell_weights(name='buy_tech') or 0,
-        'news': get_sell_weights(name='buy_news') or 0,
-        'fundamental': get_sell_weights(name='buy_fundamental') or 0,
-        'volume': get_sell_weights(name='buy_volume') or 0,
-        'profit': get_sell_weights(name='buy_profit') or 0,
+        'macd': get_weight_db(name='sell_macd') or 0,
+        'rsi': get_weight_db(name='sell_rsi') or 0,
+        'tech': get_weight_db(name='sell_tech') or 0,
+        'news': get_weight_db(name='sell_news') or 0,
+        'fundamental': get_weight_db(name='sell_fundamental') or 0,
+        'volume': get_weight_db(name='sell_volume') or 0,
+        'profit': get_weight_db(name='sell_profit') or 0,
     }
 
     return weights
@@ -172,7 +172,7 @@ def get_sell_weights() -> dict:
 def get_weight_db(name: str) -> float or None:
     try:
         if weight_db := db_2.weights.get_weight(name=name):
-            if weight_db.value:
+            if weight_db.value is not None:
                 return float(weight_db.value)
     except Exception as e:
         logger.log_error(method_name='get_weight_db', error=e, is_telegram_send=False)

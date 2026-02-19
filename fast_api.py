@@ -24,6 +24,8 @@ if not docker.is_prod():
 
 admin = Admin(app, db_2.connection.get_engine())
 
+db_2.weights.init_table()
+
 class UserAdmin(ModelView, model=db_2.users_db.UserDB):
     column_list = [
         db_2.users_db.UserDB.id,
@@ -517,6 +519,22 @@ def instrument_buy_sell_total_rate(instrument_uid: str, is_buy: bool):
         return agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid)
 
 
+def get_buy_sell_weights(is_buy: bool):
+    if is_buy:
+        return agent.buy_sell_rate.get_buy_weights()
+    else:
+        return agent.buy_sell_rate.get_sell_weights()
+
+
+def set_buy_sell_weights(is_buy: bool, weights: dict):
+    prefix = 'buy' if is_buy else 'sell'
+    for key, value in weights.items():
+        agent.buy_sell_rate.set_weight_db(
+            name=f'{prefix}_{key}',
+            value=float(value),
+        )
+
+
 @app.get('/instruments')
 def instruments_list_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instruments_list(
@@ -767,3 +785,20 @@ def instrument_buy_sell_total_rate_endpoint(request: Request, user=Depends(verif
         instrument_uid=request.query_params.get('uid'),
         is_buy=request.query_params.get('is_buy') == 'true',
     )
+
+
+@app.get('/buy_sell_weights')
+def buy_sell_weights_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return get_buy_sell_weights(
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.post('/buy_sell_weights')
+async def set_buy_sell_weights_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    body = await request.json()
+    set_buy_sell_weights(
+        is_buy=body.get('is_buy', True),
+        weights=body.get('weights', {}),
+    )
+    return {'status': 'ok'}
