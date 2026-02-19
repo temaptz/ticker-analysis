@@ -67,7 +67,7 @@ export class NewsGraphComponent {
               symbol: 'circle',
               symbolSize: 2.5,
               itemStyle: {
-                color: GRAPH_COLORS.influence_score
+                color: GRAPH_COLORS.news_influence_score
               },
               lineStyle: {
                 width: 1,

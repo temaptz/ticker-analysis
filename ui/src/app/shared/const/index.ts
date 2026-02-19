@@ -9,7 +9,7 @@ export const GRAPH_COLORS = {
   consensus: '#007700',
   forecasts: '#B0BEC5',
   history: '#99cfcf',
-  influence_score: '#009900',
+  news_influence_score: '#009900',
 
   // Технические индикаторы (новые, уникальные цвета)
   tech_rsi: '#FF3D00',     // ярко-оранжево-красный (контрастный к E91E63 и FF9800)
@@ -17,4 +17,8 @@ export const GRAPH_COLORS = {
   tech_ema: '#FFEA00',     // солнечно-жёлтый (отличается от AEEA00 и FDD835)
   tech_sma: '#8BC34A',     // мягкий зелёный (не как 00FF6A)
   tech_macd: '#651FFF',    // насыщенный синий-фиолетовый (уникальный, не как D500F9);
+
+  // Рейтинги агента
+  volume_rate: '#FF6D00',        // насыщенный оранжевый
+  profit_rate: '#00B0FF',        // яркий голубой
 }

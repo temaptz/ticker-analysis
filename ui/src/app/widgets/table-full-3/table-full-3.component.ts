@@ -8,6 +8,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { switchMap, tap } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
+import { SortModeService } from '../../shared/services/sort-mode.service';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
@@ -16,7 +17,6 @@ import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.p
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
-import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
@@ -37,7 +37,6 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     TableVirtualScrollModule,
     CurrentPriceByUidPipe,
     PriceFormatPipe,
-    NewsComplexComponent,
     LlmBuySellRateComponent,
     DrawerComponent,
     PreloaderComponent,
@@ -50,7 +49,9 @@ export class TableFull3Component {
 
   isLoaded = signal<boolean>(false);
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
-  sortTickers = signal<SortModeEnum>(SortModeEnum.BuyPerspective)
+
+  private _sortModeService = inject(SortModeService);
+  sortTickers = this._sortModeService.sortMode;
 
   ratingColumnTitle = computed<string>(() => {
     const mode = this.sortTickers();
@@ -71,23 +72,14 @@ export class TableFull3Component {
     'fundamental',
     'complex',
     'balance',
-    'news',
     'llm_buy_sell_rate',
   ];
 
   private appService = inject(ApiService);
 
-  private ls = localStorage;
-  private lsKey = 'sortTickers';
-
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
-    const ls = this.ls.getItem(this.lsKey);
-    if (ls) {
-      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.BuyPerspective);
-    }
-
     toObservable(this.sortTickers)
       .pipe(
         tap(() => this.isLoaded.set(false)),
@@ -98,7 +90,7 @@ export class TableFull3Component {
   }
 
   handleChangeSort(): void {
-    this.ls.setItem(this.lsKey, JSON.stringify(this.sortTickers()));
+    // persisted via SortModeService
   }
 
 }

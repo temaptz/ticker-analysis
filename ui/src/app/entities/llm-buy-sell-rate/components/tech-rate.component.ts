@@ -21,7 +21,7 @@ import { TechMiniGraphComponent } from './tech/tech-mini-graph.component';
           [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
-          {{ (data.rate / 100) | number:'1.2-2' }}
+          {{ data.rate | number:'1.2-2' }}
         </div>
         <div class="rate-label" [style.color]="techColor">tech</div>
       } @else if (rateData.isLoading()) {

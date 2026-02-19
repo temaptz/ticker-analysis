@@ -3,12 +3,11 @@ from lib import date_utils, agent, utils, logger, learn, predictions
 from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 
 def get_tech_buy_rate(instrument_uid: str):
-    final_rate = 0
     final_rate_value = 0
     target_price_change = 0.1
     max_prediction = 0
     max_prediction_date = 0
-    weeks_rate = []
+    days_rates = []
     predictions_list = []
     is_no_predictions = True
 
@@ -24,13 +23,7 @@ def get_tech_buy_rate(instrument_uid: str):
         ):
             day_rate = 0
             distance_days = (day - date_from).days
-            days_distance_multiply = agent.utils.lerp(
-                TARGET_MAX_DAYS_COUNT - distance_days,
-                0,
-                TARGET_MAX_DAYS_COUNT,
-                0.01,
-                1,
-            )
+            days_distance_multiply = agent.utils.linear_interpolation(distance_days, 0, TARGET_MAX_DAYS_COUNT, 1, 0.1)
 
             if (pred := predictions.get_prediction(
                     instrument_uid=instrument_uid,
@@ -48,15 +41,9 @@ def get_tech_buy_rate(instrument_uid: str):
                         max_prediction_date = day
 
             predictions_list.append(utils.round_float(pred, 3) if (pred or pred == 0) else None)
-            weeks_rate.append(day_rate)
+            days_rates.append(day_rate)
 
-        for index in range(len(weeks_rate)):
-            rate = weeks_rate[index]
-            next_rate = weeks_rate[(index + 1) if (index + 1) < len(weeks_rate) else index] or 0
-            avg_rate = (rate + next_rate) / 2
-
-            if avg_rate > final_rate:
-                final_rate = avg_rate
+        final_rate = max(days_rates)
 
         final_rate_value = 0 if is_no_predictions else max(0, min(final_rate, 1))
 
@@ -66,6 +53,7 @@ def get_tech_buy_rate(instrument_uid: str):
     return {
         'rate': final_rate_value,
         'debug': {
+            'rate': final_rate_value,
             'max_prediction_date': max_prediction_date,
             'max_prediction_value': max_prediction,
             'predictions': predictions_list,
@@ -105,13 +93,9 @@ def get_tech_sell_rate(instrument_uid: str):
                     if days_before_positive_prediction is None or delta_days < days_before_positive_prediction:
                         days_before_positive_prediction = delta_days
 
-        final_rate = agent.utils.linear_interpolation(
-            days_before_positive_prediction,
-            0,
-            TARGET_MAX_DAYS_COUNT,
-            0,
-            1,
-        )
+        days_lerp = days_before_positive_prediction if (days_before_positive_prediction is not None) else TARGET_MAX_DAYS_COUNT
+        final_rate = agent.utils.linear_interpolation(days_lerp, 0, TARGET_MAX_DAYS_COUNT, 0, 1)
+
         final_rate_value = 0 if is_no_predictions else max(0, min(final_rate, 1))
 
     except Exception as e:
@@ -120,6 +104,7 @@ def get_tech_sell_rate(instrument_uid: str):
     return {
         'rate': final_rate_value,
         'debug': {
+            'rate': final_rate_value,
             'days_before_positive': days_before_positive_prediction,
             'predictions': predictions_list,
         },

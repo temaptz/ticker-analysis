@@ -22,6 +22,10 @@ import {
   MacdRateResp,
   RsiRateResp,
   TechRateResp,
+  NewsRateResp,
+  FundamentalRateResp,
+  VolumeRateResp,
+  ProfitRateResp,
   BuySellTotalRateResp,
 } from '../types';
 import { CandleInterval } from '../enums';
@@ -275,6 +279,38 @@ export class ApiService {
     params = params.set('is_buy', isBuy.toString());
 
     return this.http.get<TechRateResp>(`${this.apiUrl}/instrument/tech_rate`, {params});
+  }
+
+  getInstrumentNewsRate(uid: string, isBuy: boolean): Observable<NewsRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<NewsRateResp>(`${this.apiUrl}/instrument/news_rate`, {params});
+  }
+
+  getInstrumentFundamentalRate(uid: string, isBuy: boolean): Observable<FundamentalRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<FundamentalRateResp>(`${this.apiUrl}/instrument/fundamental_rate`, {params});
+  }
+
+  getInstrumentVolumeRate(uid: string, isBuy: boolean): Observable<VolumeRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<VolumeRateResp>(`${this.apiUrl}/instrument/volume_rate`, {params});
+  }
+
+  getInstrumentProfitRate(uid: string, isBuy: boolean): Observable<ProfitRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('is_buy', isBuy.toString());
+
+    return this.http.get<ProfitRateResp>(`${this.apiUrl}/instrument/profit_rate`, {params});
   }
 
   getBuySellTotalRate(uid: string, isBuy: boolean): Observable<BuySellTotalRateResp> {

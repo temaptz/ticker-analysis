@@ -735,7 +735,7 @@ export class ComplexGraphComponent {
       symbolSize: 2.5,
       yAxisIndex: 1,
       itemStyle: {
-        color: GRAPH_COLORS.influence_score,
+        color: GRAPH_COLORS.news_influence_score,
       },
       lineStyle: {
         width: 2,
@@ -859,7 +859,7 @@ export class ComplexGraphComponent {
   constructor() {
     effect(() => {
       const settings = this.graphControlSettingsService.settings();
-      
+
       if (this.isShowControl()) {
         this.daysHistory.set(settings.historyDaysCount);
         this.historyInterval.set(settings.interval);

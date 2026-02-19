@@ -19,7 +19,7 @@ import { RsiMiniGraphComponent } from './rsi/rsi-mini-graph.component';
           [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
-          {{ (data.rate / 100) | number:'1.2-2' }}
+          {{ data.rate | number:'1.2-2' }}
         </div>
         <div class="rate-label">rsi</div>
       } @else if (rateData.isLoading()) {

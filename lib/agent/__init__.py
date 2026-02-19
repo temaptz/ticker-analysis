@@ -12,4 +12,8 @@ from . import news_rank
 from . import macd
 from . import tech
 from . import rsi
+from . import news
+from . import fundamental
+from . import volume
+from . import profit
 from . import buy_sell_rate

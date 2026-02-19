@@ -19,7 +19,7 @@ import { MacdMiniGraphComponent } from './macd/macd-mini-graph.component';
           [matTooltip]="getTooltip(data)"
           matTooltipClass="rate-tooltip"
         >
-          {{ (data.rate / 100) | number:'1.2-2' }}
+          {{ data.rate | number:'1.2-2' }}
         </div>
         <div class="rate-label">macd</div>
       } @else if (rateData.isLoading()) {

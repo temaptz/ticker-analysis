@@ -67,6 +67,7 @@ def trim_prompt(prompt: str) -> str:
     return ''
 
 
+# DEPRECATED
 def lerp(x: float, a: float, b: float, y0: float, y1: float) -> float:
     """
     Линейная интерполяция.

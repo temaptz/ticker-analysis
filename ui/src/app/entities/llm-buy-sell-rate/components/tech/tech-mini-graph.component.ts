@@ -59,8 +59,8 @@ export class TechMiniGraphComponent {
       return {};
     }
     
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values, 0);
+    const maxValue = Math.max(...values, 0);
     const padding = (maxValue - minValue) * 0.1 || 0.1;
     const yMin = minValue - padding;
     const yMax = maxValue + padding;
@@ -81,15 +81,7 @@ export class TechMiniGraphComponent {
         axisLabel: { show: false },
         axisTick: { show: false },
         axisLine: { show: false },
-        splitLine: {
-          show: true,
-          lineStyle: {
-            color: '#e0e0e0',
-            width: 0.5,
-            type: 'solid'
-          }
-        },
-        splitNumber: 2,
+        splitLine: { show: false },
       },
       series: [
         {
@@ -104,13 +96,8 @@ export class TechMiniGraphComponent {
           markLine: {
             silent: true,
             symbol: 'none',
-            lineStyle: {
-              color: '#999',
-              width: 1,
-              type: 'dashed'
-            },
             data: [
-              { yAxis: 0, label: { show: false } }
+              { yAxis: 0, label: { show: false }, lineStyle: { color: '#999', width: 1.5, type: 'dashed' } },
             ]
           }
         }

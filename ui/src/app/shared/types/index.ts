@@ -226,6 +226,26 @@ export interface TechRateResp {
   debug: Record<string, any>;
 }
 
+export interface NewsRateResp {
+  rate: number;
+  debug: Record<string, any>;
+}
+
+export interface FundamentalRateResp {
+  rate: number;
+  debug: Record<string, any>;
+}
+
+export interface VolumeRateResp {
+  rate: number;
+  debug: Record<string, any>;
+}
+
+export interface ProfitRateResp {
+  rate: number;
+  debug: Record<string, any>;
+}
+
 export interface BuySellTotalRateResp {
   rate: number;
   debug: Record<string, any>;

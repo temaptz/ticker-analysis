@@ -66,15 +66,7 @@ export class RsiMiniGraphComponent {
         axisLabel: { show: false },
         axisTick: { show: false },
         axisLine: { show: false },
-        splitLine: {
-          show: true,
-          lineStyle: {
-            color: '#e0e0e0',
-            width: 0.5,
-            type: 'solid'
-          }
-        },
-        splitNumber: 4,
+        splitLine: { show: false },
       },
       series: [
         {
@@ -91,15 +83,10 @@ export class RsiMiniGraphComponent {
           markLine: {
             silent: true,
             symbol: 'none',
-            lineStyle: {
-              color: '#999',
-              width: 1,
-              type: 'dashed'
-            },
             data: [
-              { yAxis: 30, label: { show: false } },
-              { yAxis: 50, label: { show: false } },
-              { yAxis: 70, label: { show: false } }
+              { yAxis: 30, label: { show: false }, lineStyle: { color: '#999', width: 0.5, type: 'dashed' } },
+              { yAxis: 50, label: { show: false }, lineStyle: { color: '#999', width: 1.5, type: 'dashed' } },
+              { yAxis: 70, label: { show: false }, lineStyle: { color: '#999', width: 0.5, type: 'dashed' } },
             ]
           }
         }

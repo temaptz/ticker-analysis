@@ -33,7 +33,7 @@ def get_tech_analysis(
                 from_=date_from,
                 to=date_to,
                 interval=interval,
-                type_of_price=TypeOfPrice.TYPE_OF_PRICE_AVG,
+                type_of_price=TypeOfPrice.TYPE_OF_PRICE_CLOSE,
                 length=length,
                 deviation=deviation,
                 smoothing=smoothing,

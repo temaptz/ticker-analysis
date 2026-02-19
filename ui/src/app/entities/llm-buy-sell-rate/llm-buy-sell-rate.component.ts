@@ -4,7 +4,9 @@ import { VolumeRateComponent } from './components/volume-rate.component';
 import { MacdRateComponent } from './components/macd-rate.component';
 import { RsiRateComponent } from './components/rsi-rate.component';
 import { TechRateComponent } from './components/tech-rate.component';
+import { NewsRateComponent } from './components/news-rate.component';
 import { FundamentalRateComponent } from './components/fundamental-rate.component';
+import { ProfitRateComponent } from './components/profit-rate.component';
 import { TotalRateComponent } from './components/total-rate.component';
 import { SortModeService } from '../../shared/services/sort-mode.service';
 import { SortModeEnum } from '../../shared/types';
@@ -18,7 +20,9 @@ import { SortModeEnum } from '../../shared/types';
     MacdRateComponent,
     RsiRateComponent,
     TechRateComponent,
+    NewsRateComponent,
     FundamentalRateComponent,
+    ProfitRateComponent,
     TotalRateComponent
   ],
   templateUrl: './llm-buy-sell-rate.component.html',

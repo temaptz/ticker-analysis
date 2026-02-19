@@ -437,6 +437,34 @@ def instrument_tech_rate(instrument_uid: str, is_buy: bool):
         return agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid)
 
 
+def instrument_news_rate(instrument_uid: str, is_buy: bool):
+    if is_buy:
+        return agent.news.get_news_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.news.get_news_sell_rate(instrument_uid=instrument_uid)
+
+
+def instrument_fundamental_rate(instrument_uid: str, is_buy: bool):
+    if is_buy:
+        return agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid)
+
+
+def instrument_volume_rate(instrument_uid: str, is_buy: bool):
+    if is_buy:
+        return agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid)
+
+
+def instrument_profit_rate(instrument_uid: str, is_buy: bool):
+    if is_buy:
+        return agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid)
+    else:
+        return agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid)
+
+
 def instrument_buy_sell_total_rate(instrument_uid: str, is_buy: bool):
     if is_buy:
         return agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid)
@@ -649,6 +677,38 @@ def instrument_rsi_rate_endpoint(request: Request, user=Depends(verify_user_by_t
 @app.get('/instrument/tech_rate')
 def instrument_tech_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_tech_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/news_rate')
+def instrument_news_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_news_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/fundamental_rate')
+def instrument_fundamental_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_fundamental_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/volume_rate')
+def instrument_volume_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_volume_rate(
+        instrument_uid=request.query_params.get('uid'),
+        is_buy=request.query_params.get('is_buy') == 'true',
+    )
+
+
+@app.get('/instrument/profit_rate')
+def instrument_profit_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return instrument_profit_rate(
         instrument_uid=request.query_params.get('uid'),
         is_buy=request.query_params.get('is_buy') == 'true',
     )

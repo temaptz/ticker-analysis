@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap, tap } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
+import { SortModeService } from '../../shared/services/sort-mode.service';
 import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
@@ -53,8 +54,10 @@ import { PredictionDynamicComponent } from '../../entities/prediction-dynamic/pr
 export class TableFullComponent {
 
   isLoaded = signal<boolean>(false);
-  sortTickers = signal<SortModeEnum>(SortModeEnum.BuyPerspective)
   dataSource = new MatTableDataSource<InstrumentInList>([])
+
+  private _sortModeService = inject(SortModeService);
+  sortTickers = this._sortModeService.sortMode;
 
   protected readonly CandleInterval = CandleInterval;
   protected readonly tableItemHeightPx = 265;
@@ -72,9 +75,6 @@ export class TableFullComponent {
 
   private appService = inject(ApiService);
 
-  private ls = localStorage;
-  private lsKey = 'sortTickers';
-
   @ViewChild(MatSort) sort!: MatSort;
 
   private instruments = toSignal(
@@ -86,11 +86,6 @@ export class TableFullComponent {
   )
 
   constructor() {
-    const ls = this.ls.getItem(this.lsKey);
-    if (ls) {
-      this.sortTickers.set(JSON.parse(ls) ?? SortModeEnum.BuyPerspective);
-    }
-
     effect(() => {
       const instruments = this.instruments();
       this.dataSource.data = instruments ?? [];
@@ -98,7 +93,7 @@ export class TableFullComponent {
   }
 
   handleChangeSort(): void {
-    this.ls.setItem(this.lsKey, JSON.stringify(this.sortTickers()));
+    // persisted via SortModeService
   }
 
 }

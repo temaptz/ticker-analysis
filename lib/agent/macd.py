@@ -34,6 +34,7 @@ def macd_buy_rate(instrument_uid: str) -> dict:
     return {
         'rate': final_rate,
         'debug': {
+            'rate': final_rate,
             'graph_hist': graph_hist,
         },
     }
@@ -69,6 +70,7 @@ def macd_sell_rate(instrument_uid: str) -> dict:
     return {
         'rate': final_rate,
         'debug': {
+            'rate': final_rate,
             'graph_hist': graph_hist,
         },
     }
