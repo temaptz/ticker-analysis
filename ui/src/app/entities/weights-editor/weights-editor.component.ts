@@ -65,13 +65,13 @@ export class WeightsEditorComponent {
 
   getWeightBg(isBuy: boolean, key: WeightKey): string {
     const value = this.getWeightValue(isBuy, key);
-    const alpha = Math.min(Math.max(value / 30, 0), 1);
+    const alpha = Math.min(Math.max(value / 100, 0), 1);
     return `rgba(63, 81, 181, ${alpha.toFixed(2)})`;
   }
 
   getWeightColor(isBuy: boolean, key: WeightKey): string {
     const value = this.getWeightValue(isBuy, key);
-    return value / 30 > 0.45 ? '#fff' : '#333';
+    return value / 100 > 0.45 ? '#fff' : '#333';
   }
 
   handleWeightChange(isBuy: boolean, key: WeightKey, event: Event): void {
