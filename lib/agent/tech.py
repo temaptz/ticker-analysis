@@ -23,9 +23,7 @@ def get_tech_buy_rate(instrument_uid: str):
                 date_to=date_to,
                 interval_seconds=(3600 * 24)
         ):
-            day_rate = 0
-            distance_days = (day - date_from).days
-            days_distance_multiply = agent.utils.linear_interpolation(distance_days, 0, TARGET_MAX_DAYS_COUNT, 1, 0.1)
+            day_rate = None
 
             if (pred := predictions.get_prediction(
                     instrument_uid=instrument_uid,
@@ -34,9 +32,8 @@ def get_tech_buy_rate(instrument_uid: str):
             )) or pred == 0:
                 is_no_predictions = False
 
-                if 0 < pred < 1:
-                    rate_price_change = agent.utils.linear_interpolation(pred, 0, target_prediction_value, 0, 1)
-                    day_rate = rate_price_change * days_distance_multiply
+                if 0 < pred < (target_prediction_value * 10):
+                    day_rate = agent.utils.linear_interpolation(pred, 0, target_prediction_value, 0, 1)
 
                     if pred > max_prediction:
                         max_prediction = pred
