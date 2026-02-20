@@ -28,14 +28,14 @@ def start_schedule() -> None:
     )
 
     # Торговые оценки
-    scheduler.add_job(
-        process_task.buy_sell_rate,
-        'cron',
-        day_of_week='mon-fri',
-        hour=11,
-        minute=0,
-        timezone=timezone
-    )
+    # scheduler.add_job(
+    #     process_task.buy_sell_rate,
+    #     'cron',
+    #     day_of_week='mon-fri',
+    #     hour=11,
+    #     minute=0,
+    #     timezone=timezone
+    # )
 
     # Создание торговых заявок
     scheduler.add_job(
@@ -43,7 +43,7 @@ def start_schedule() -> None:
         'cron',
         day_of_week='mon-fri',
         hour=11,
-        minute=30,
+        minute=0,
         timezone=timezone
     )
 

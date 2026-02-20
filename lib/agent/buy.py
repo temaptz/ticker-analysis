@@ -51,10 +51,26 @@ def create_orders_2():
                             recommendations.append(rec)
                             logger.log_info(message='CREATED BUY RECOMMENDATION', output=rec, is_send_telegram=False)
 
+
+def create_orders_3():
+    recommendations: list[BuyRecommendation] = []
+
+    for instrument in users.sort_instruments_by_total_rate_buy(
+            instruments_list=instruments.get_instruments_white_list()
+    ):
+        if len(recommendations) <= 5:
+            if not instrument.for_qual_investor_flag:
+                if buy_rate := agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument.uid):
+                    if buy_rate.get('rate', 0) >= 0.7:
+                        if rec := get_buy_recommendation_by_uid(
+                                instrument_uid=instrument.uid,
+                        ):
+                            recommendations.append(rec)
+                            logger.log_info(message='Добавлена рекомендация на покупку', output=rec, is_send_telegram=False)
+
+
     for recommendation in recommendations:
         rec: BuyRecommendation = recommendation
-        print('CREATE BUY ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
-        print('CREATE BUY ORDER', rec)
         if rec.qty > 0:
             price = round(rec.target_price, 1)
             if users.post_buy_order(
@@ -250,10 +266,10 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
     try:
         target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
         balance_rub = users.get_user_money_rub()
-        buy_rate = agent.utils.get_buy_rate(instrument_uid=instrument_uid)
+        buy_rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid)
         instr = instruments.get_instrument_by_uid(instrument_uid)
         lot_size = instr.lot or 1
-        total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=buy_rate)
+        total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=(buy_rate.get('rate', 0) * 100))
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
         is_ok = (total_price <= total_price_calc * 2)

@@ -73,6 +73,45 @@ def create_orders_2():
                 )
 
 
+def create_orders_3():
+    recommendations: list[SellRecommendation] = []
+
+    for instrument in users.sort_instruments_for_sell(
+            instruments_list=users.get_user_instruments_list(account_id=users.get_analytics_account().id)
+    ):
+        if len(recommendations) <= 5:
+            if sell_rate := agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument.uid):
+                if sell_rate.get('rate', 0) >= 0.7:
+                    if calc := invest_calc.get_invest_calc_by_instrument_uid(
+                            instrument_uid=instrument.uid,
+                    ):
+                        if calc['potential_profit_percent'] > 3:
+                            if rec := get_sell_recommendation_by_uid(
+                                    instrument_uid=instrument.uid,
+                            ):
+                                if rec.qty > 0:
+                                    recommendations.append(rec)
+                                    logger.log_info(message='Добавлена рекомендация на продажу', output=rec, is_send_telegram=False)
+
+    for rec in recommendations:
+        if rec.qty > 0:
+            price = round(rec.target_price, 1)
+
+            if users.post_sell_order(
+                    instrument_uid=rec.instrument_uid,
+                    price_rub=price,
+                    quantity_lots=utils.get_lots_qty(
+                        qty=rec.qty,
+                        instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
+                    ),
+            ):
+                name = instruments.get_instrument_human_name(rec.instrument_uid)
+                logger.log_info(
+                    message=f'Создана заявка на продажу для: "{name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей',
+                    is_send_telegram=True,
+                )
+
+
 def create_orders():
     graph = get_buy_graph()
     # agent.utils.draw_graph(graph)
@@ -249,10 +288,10 @@ def get_sell_recommendation_by_uid(instrument_uid: str) -> SellRecommendation or
             instrument_uid=instrument_uid,
             account_id=users.get_analytics_account().id,
         )
-        sell_rate = agent.utils.get_sell_rate(instrument_uid=instrument_uid)
+        sell_rate = agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid)
         instr = instruments.get_instrument_by_uid(instrument_uid)
         lot_size = instr.lot or 1
-        qty_calc = balance_qty * agent.utils.get_sell_balance_multiply(sell_rate=sell_rate)
+        qty_calc = balance_qty * agent.utils.get_sell_balance_multiply(sell_rate=(sell_rate.get('rate', 0) * 100))
         qty_round = math.ceil(qty_calc / lot_size) * lot_size
         is_ok = (0 < qty_round <= qty_calc * 3)
 

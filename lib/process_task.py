@@ -76,7 +76,7 @@ def buy_sell_rate() -> None:
 
 def create_orders() -> None:
     try:
-        agent.sell.create_orders_2()
-        agent.buy.create_orders_2()
+        agent.sell.create_orders_3()
+        agent.buy.create_orders_3()
     except Exception as e:
         logger.log_error(method_name='create_orders', error=e)

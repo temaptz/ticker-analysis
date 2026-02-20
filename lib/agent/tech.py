@@ -6,7 +6,7 @@ from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 @cache.ttl_cache(ttl=3600)
 def get_tech_buy_rate(instrument_uid: str):
     final_rate_value = 0
-    target_price_change = 0.1
+    target_prediction_value = 0.05
     max_prediction = 0
     max_prediction_date = 0
     days_rates = []
@@ -35,7 +35,7 @@ def get_tech_buy_rate(instrument_uid: str):
                 is_no_predictions = False
 
                 if pred > 0:
-                    rate_price_change = agent.utils.linear_interpolation(pred, 0, target_price_change, 0, 1)
+                    rate_price_change = agent.utils.linear_interpolation(pred, 0, target_prediction_value, 0, 1)
                     day_rate = rate_price_change * days_distance_multiply
 
                     if pred > max_prediction:
@@ -58,6 +58,7 @@ def get_tech_buy_rate(instrument_uid: str):
             'rate': final_rate_value,
             'max_prediction_date': max_prediction_date,
             'max_prediction_value': max_prediction,
+            'target_prediction_value': target_prediction_value,
             'predictions': predictions_list,
         },
     }
