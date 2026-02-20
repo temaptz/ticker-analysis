@@ -262,7 +262,12 @@ def final_parser(state: State) -> State:
     return result
 
 
-def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or None:
+def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation:
+    is_ok = False
+    target_price = None
+    qty_round = None
+    total_price = None
+
     try:
         target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
         balance_rub = users.get_user_money_rub()
@@ -286,17 +291,14 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation or N
                 'delta_percent': utils.round_float(num=((total_price - total_price_calc) / total_price_calc * 100), decimals=2),
                 'is_ok': is_ok,
             },
-            is_send_telegram=True,
+            is_send_telegram=False,
         )
-        
-        if is_ok:
-            return BuyRecommendation(
-                instrument_uid=instrument_uid,
-                target_price=target_price,
-                qty=qty,
-                total_price=total_price,
-            )
     except Exception as e:
         print('ERROR get_buy_recommendation_by_uid', e)
 
-    return None
+    return BuyRecommendation(
+        instrument_uid=instrument_uid,
+        target_price=target_price,
+        qty=qty_round if is_ok else 0,
+        total_price=total_price,
+    )

@@ -533,6 +533,134 @@ def set_buy_sell_weights(is_buy: bool, weights: dict):
         )
 
 
+def get_buy_recommendation(instrument_uid: str):
+    return serializer.get_dict_by_object_recursive(
+        agent.buy.get_buy_recommendation_by_uid(instrument_uid=instrument_uid)
+    )
+
+
+def get_sell_recommendation(instrument_uid: str):
+    return serializer.get_dict_by_object_recursive(
+        agent.sell.get_sell_recommendation_by_uid(instrument_uid=instrument_uid)
+    )
+
+
+def _serialize_money(mv) -> dict:
+    if not mv:
+        return {'units': 0, 'nano': 0, 'currency': ''}
+    return {'units': mv.units, 'nano': mv.nano, 'currency': mv.currency}
+
+
+def _serialize_order(order) -> dict:
+    return {
+        'order_id': order.order_id,
+        'direction': order.direction.value if hasattr(order.direction, 'value') else int(order.direction),
+        'execution_report_status': order.execution_report_status.value if hasattr(order.execution_report_status, 'value') else int(order.execution_report_status),
+        'lots_requested': order.lots_requested,
+        'lots_executed': order.lots_executed,
+        'initial_order_price': _serialize_money(order.initial_order_price),
+        'executed_order_price': _serialize_money(order.executed_order_price),
+        'total_order_amount': _serialize_money(order.total_order_amount),
+        'initial_security_price': _serialize_money(order.initial_security_price),
+        'figi': order.figi,
+        'instrument_uid': order.instrument_uid,
+        'currency': order.currency,
+        'order_date': str(order.order_date) if order.order_date else None,
+    }
+
+
+def get_instrument_active_orders(instrument_uid: str):
+    from t_tech.invest import Client, constants
+    from const import TINKOFF_INVEST_TOKEN
+    from lib import instruments as _instr
+    result = []
+    try:
+        account = users.get_analytics_account()
+        if not account:
+            return result
+        figi = None
+        try:
+            figi = _instr.get_instrument_by_uid(uid=instrument_uid).figi
+        except Exception:
+            pass
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            orders_resp = client.orders.get_orders(account_id=account.id)
+            for order in orders_resp.orders:
+                if order.instrument_uid == instrument_uid or (figi and order.figi == figi):
+                    result.append(_serialize_order(order))
+    except Exception as e:
+        print('ERROR get_instrument_active_orders', e)
+    return result
+
+
+def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: float, is_buy: bool):
+    print(f'create_instrument_order uid={instrument_uid} qty={quantity_lots} price={price_rub} is_buy={is_buy}')
+    last_error = [None]
+
+    def _buy():
+        import math
+        from lib import instruments as _instr, utils as _utils
+        from t_tech.invest import Client, constants, OrderType, OrderDirection
+        from const import TINKOFF_INVEST_TOKEN
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            price_increment = _utils.get_price_by_quotation(
+                price=_instr.get_instrument_by_uid(uid=instrument_uid).min_price_increment
+            )
+            price = _utils.get_quotation_by_price(math.floor(price_rub / price_increment) * price_increment)
+            return client.orders.post_order(
+                instrument_id=instrument_uid,
+                quantity=quantity_lots,
+                price=price,
+                account_id=users.get_analytics_account().id,
+                order_type=OrderType.ORDER_TYPE_LIMIT,
+                direction=OrderDirection.ORDER_DIRECTION_BUY,
+            )
+
+    def _sell():
+        import math
+        from lib import instruments as _instr, utils as _utils
+        from t_tech.invest import Client, constants, OrderType, OrderDirection
+        from const import TINKOFF_INVEST_TOKEN
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            price_increment = _utils.get_price_by_quotation(
+                price=_instr.get_instrument_by_uid(uid=instrument_uid).min_price_increment
+            )
+            price = _utils.get_quotation_by_price(math.ceil(price_rub / price_increment) * price_increment)
+            return client.orders.post_order(
+                instrument_id=instrument_uid,
+                quantity=quantity_lots,
+                price=price,
+                account_id=users.get_analytics_account().id,
+                order_type=OrderType.ORDER_TYPE_LIMIT,
+                direction=OrderDirection.ORDER_DIRECTION_SELL,
+            )
+
+    try:
+        resp = _buy() if is_buy else _sell()
+        print(f'create_instrument_order resp={resp}')
+        if resp:
+            return serializer.get_dict_by_object_recursive(resp)
+        raise ValueError('Empty response from broker API')
+    except Exception as e:
+        print(f'create_instrument_order EXCEPTION: {e}')
+        raise e
+
+
+def cancel_instrument_order(order_id: str):
+    from t_tech.invest import Client, constants
+    from const import TINKOFF_INVEST_TOKEN
+    try:
+        account = users.get_analytics_account()
+        if not account:
+            return None
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            resp = client.orders.cancel_order(account_id=account.id, order_id=order_id)
+            return serializer.get_dict_by_object_recursive(resp)
+    except Exception as e:
+        print('ERROR cancel_instrument_order', e)
+    return None
+
+
 @app.get('/instruments')
 def instruments_list_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instruments_list(
@@ -800,3 +928,49 @@ async def set_buy_sell_weights_endpoint(request: Request, user=Depends(verify_us
         weights=body.get('weights', {}),
     )
     return {'status': 'ok'}
+
+
+@app.get('/instrument/buy_recommendation')
+def buy_recommendation_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return get_buy_recommendation(
+        instrument_uid=request.query_params.get('uid'),
+    )
+
+
+@app.get('/instrument/sell_recommendation')
+def sell_recommendation_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return get_sell_recommendation(
+        instrument_uid=request.query_params.get('uid'),
+    )
+
+
+@app.get('/instrument/active_orders')
+def instrument_active_orders_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    return get_instrument_active_orders(
+        instrument_uid=request.query_params.get('uid'),
+    )
+
+
+@app.post('/instrument/order')
+async def create_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    body = await request.json()
+    print(f'POST /instrument/order body={body}')
+    try:
+        result = create_instrument_order(
+            instrument_uid=body.get('instrument_uid'),
+            quantity_lots=int(body.get('quantity_lots', 1)),
+            price_rub=float(body.get('price_rub')),
+            is_buy=bool(body.get('is_buy', True)),
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete('/instrument/order')
+async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    order_id = request.query_params.get('order_id')
+    result = cancel_instrument_order(order_id=order_id)
+    if result is not None:
+        return result
+    raise HTTPException(status_code=400, detail='Failed to cancel order')

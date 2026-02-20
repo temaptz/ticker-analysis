@@ -276,3 +276,42 @@ export interface BuySellWeights {
   volume: number;
   profit: number;
 }
+
+export interface BuyRecommendation {
+  instrument_uid: string;
+  target_price: number;
+  qty: number;
+  total_price: number;
+}
+
+export interface SellRecommendation {
+  instrument_uid: string;
+  target_price: number;
+  qty: number;
+}
+
+export interface ActiveOrder {
+  order_id: string;
+  execution_report_status: number;
+  lots_requested: number;
+  lots_executed: number;
+  initial_order_price: any;
+  executed_order_price: any;
+  total_order_amount: any;
+  average_position_price: any;
+  initial_security_price: any;
+  figi: string;
+  direction: number;
+  currency: string;
+  order_type: number;
+  order_date: string;
+  instrument_uid: string;
+  order_request_id: string;
+}
+
+export interface CreateOrderRequest {
+  instrument_uid: string;
+  quantity_lots: number;
+  price_rub: number;
+  is_buy: boolean;
+}

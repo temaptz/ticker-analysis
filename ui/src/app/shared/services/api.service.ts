@@ -28,6 +28,10 @@ import {
   ProfitRateResp,
   BuySellTotalRateResp,
   BuySellWeights,
+  BuyRecommendation,
+  SellRecommendation,
+  ActiveOrder,
+  CreateOrderRequest,
 } from '../types';
 import { CandleInterval, IndicatorType } from '../enums';
 import { SortModeEnum } from '../types';
@@ -339,6 +343,34 @@ export class ApiService {
       is_buy: isBuy,
       weights,
     });
+  }
+
+  getBuyRecommendation(uid: string): Observable<BuyRecommendation | null> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    return this.http.get<BuyRecommendation | null>(`${this.apiUrl}/instrument/buy_recommendation`, {params});
+  }
+
+  getSellRecommendation(uid: string): Observable<SellRecommendation | null> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    return this.http.get<SellRecommendation | null>(`${this.apiUrl}/instrument/sell_recommendation`, {params});
+  }
+
+  getInstrumentActiveOrders(uid: string): Observable<ActiveOrder[]> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    return this.http.get<ActiveOrder[]>(`${this.apiUrl}/instrument/active_orders`, {params});
+  }
+
+  createOrder(req: CreateOrderRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/instrument/order`, req);
+  }
+
+  cancelOrder(orderId: string): Observable<any> {
+    let params = new HttpParams();
+    params = params.set('order_id', orderId);
+    return this.http.delete<any>(`${this.apiUrl}/instrument/order`, {params});
   }
 
 }

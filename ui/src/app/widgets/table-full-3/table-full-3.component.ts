@@ -21,6 +21,7 @@ import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-bu
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { DrawerStateService } from '../../shared/services/drawer-state.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
+import { InstrumentOrdersComponent } from '../../entities/instrument-orders/instrument-orders.component';
 
 
 @Component({
@@ -41,6 +42,7 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
     LlmBuySellRateComponent,
     DrawerComponent,
     PreloaderComponent,
+    InstrumentOrdersComponent,
   ],
   providers: [],
   templateUrl: './table-full-3.component.html',
@@ -74,6 +76,7 @@ export class TableFull3Component {
     'complex',
     'balance',
     'llm_buy_sell_rate',
+    'instrument_orders',
   ];
 
   drawerState = inject(DrawerStateService);

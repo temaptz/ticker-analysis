@@ -1,0 +1,81 @@
+.orders-container {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.85em;
+}
+
+.orders-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  width: max-content;
+}
+
+.buy-section {
+  border-color: #2e7d32;
+  background: rgba(46, 125, 50, 0.03);
+}
+
+.sell-section {
+  border-color: #c62828;
+  background: rgba(198, 40, 40, 0.03);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-title {
+  font-weight: 700;
+  font-size: 0.9em;
+}
+
+.buy-header .section-title {
+  color: #2e7d32;
+}
+
+.sell-header .section-title {
+  color: #c62828;
+}
+
+.refresh-btn {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+
+  ::ng-deep .mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+  }
+}
+
+.section-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 6px;
+  align-items: flex-start;
+  overflow-x: auto;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+}
+
+.no-rec {
+  color: #aaa;
+  font-size: 0.8em;
+  font-style: italic;
+  align-self: center;
+}
+

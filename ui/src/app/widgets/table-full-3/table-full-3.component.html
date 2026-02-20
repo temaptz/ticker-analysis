@@ -91,6 +91,13 @@
       </td>
     </ng-container>
 
+    <ng-container matColumnDef="instrument_orders">
+      <th mat-header-cell *matHeaderCellDef>Заявки</th>
+      <td mat-cell *matCellDef="let instrument">
+        <instrument-orders [instrumentUid]="instrument.uid"></instrument-orders>
+      </td>
+    </ng-container>
+
     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
 
     <tr

@@ -1,0 +1,93 @@
+<div class="orders-container">
+
+    <!-- BUY SECTION -->
+    <div class="orders-section buy-section">
+      <div class="section-header buy-header">
+        <span class="section-title">Покупка</span>
+        <button mat-icon-button class="refresh-btn" (click)="loadBuyRecommendation(); loadActiveOrders()" title="Обновить">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+
+      <div class="section-row">
+        <!-- Active buy orders -->
+        @if (isOrdersLoading()) {
+          <div class="loading-row">
+            <mat-spinner diameter="14"></mat-spinner>
+          </div>
+        } @else {
+          @for (order of activeOrdersBuy(); track order.order_id) {
+            <order-card
+              [instrumentUid]="instrumentUid()"
+              [isBuy]="true"
+              [activeOrder]="order"
+              (orderCancelled)="onOrderCancelled()"
+            ></order-card>
+          }
+        }
+
+        <!-- Buy recommendation -->
+        @if (isBuyRecLoading()) {
+          <div class="loading-row">
+            <mat-spinner diameter="14"></mat-spinner>
+          </div>
+        } @else if (buyRecommendation()) {
+          <order-card
+            [instrumentUid]="instrumentUid()"
+            [isBuy]="true"
+            [recommendation]="buyRecommendation()"
+            (orderCreated)="onOrderCreated()"
+          ></order-card>
+        } @else {
+          <div class="no-rec">нет рекомендации</div>
+        }
+
+      </div>
+    </div>
+
+    <!-- SELL SECTION -->
+    <div class="orders-section sell-section">
+      <div class="section-header sell-header">
+        <span class="section-title">Продажа</span>
+        <button mat-icon-button class="refresh-btn" (click)="loadSellRecommendation(); loadActiveOrders()" title="Обновить">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+
+      <div class="section-row">
+        <!-- Active sell orders -->
+        @if (isOrdersLoading()) {
+          <div class="loading-row">
+            <mat-spinner diameter="14"></mat-spinner>
+          </div>
+        } @else {
+          @for (order of activeOrdersSell(); track order.order_id) {
+            <order-card
+              [instrumentUid]="instrumentUid()"
+              [isBuy]="false"
+              [activeOrder]="order"
+              (orderCancelled)="onOrderCancelled()"
+            ></order-card>
+          }
+        }
+
+        <!-- Sell recommendation -->
+        @if (isSellRecLoading()) {
+          <div class="loading-row">
+            <mat-spinner diameter="14"></mat-spinner>
+          </div>
+        } @else if (sellRecommendation()) {
+          <order-card
+            [instrumentUid]="instrumentUid()"
+            [isBuy]="false"
+            [recommendation]="sellRecommendation()"
+            (orderCreated)="onOrderCreated()"
+          ></order-card>
+        } @else {
+          <div class="no-rec">нет рекомендации</div>
+        }
+
+      </div>
+    </div>
+
+</div>

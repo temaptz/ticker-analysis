@@ -1,0 +1,172 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.order-card {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.92em;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.buy-card {
+  border-color: #2e7d32;
+  background: rgba(46, 125, 50, 0.04);
+}
+
+.sell-card {
+  border-color: #c62828;
+  background: rgba(198, 40, 40, 0.04);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.direction-badge {
+  font-weight: 700;
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.buy-badge {
+  color: #2e7d32;
+  background: rgba(46, 125, 50, 0.12);
+}
+
+.sell-badge {
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.12);
+}
+
+.real-badge {
+  font-size: 0.8em;
+  color: #1565c0;
+  background: rgba(21, 101, 192, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.potential-badge {
+  font-size: 0.8em;
+  color: #6a1b9a;
+  background: rgba(106, 27, 154, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-label {
+  color: #888;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.field-value {
+  font-weight: 600;
+  text-align: right;
+
+  &.highlight {
+    font-size: 1em;
+  }
+}
+
+.edit-input {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 0.85em;
+  height: 20px;
+  width: 80px;
+  text-align: right;
+  outline: none;
+  background: transparent;
+  color: inherit;
+
+  &:focus {
+    border-color: #888;
+    background: #fff;
+  }
+}
+
+.edit-input-sm {
+  width: 46px;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.create-btn {
+  border: none;
+  border-radius: 3px;
+  padding: 2px 10px;
+  font-size: 0.85em;
+  height: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  &:not(:disabled):hover {
+    opacity: 0.82;
+  }
+}
+
+.create-btn-buy {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.create-btn-sell {
+  background: #c62828;
+  color: #fff;
+}
+
+.create-btn-cancel {
+  background: #555;
+  color: #fff;
+}
+
+.error-msg {
+  color: #c62828;
+  font-size: 0.78em;
+  margin-top: 2px;
+  word-break: break-word;
+}
+
