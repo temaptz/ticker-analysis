@@ -93,6 +93,6 @@ def predict_infinite_loop():
     while True:
         next_start = get_next_work_day_beginning()
         refresh_cache_loop(finish_date=next_start)
-        time.sleep((next_start - datetime.datetime.now(tz=datetime.timezone.utc)).total_seconds())
+        time.sleep(max(0.0, (next_start - datetime.datetime.now(tz=datetime.timezone.utc)).total_seconds()))
 
 predict_infinite_loop()
