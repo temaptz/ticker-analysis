@@ -34,7 +34,7 @@ def get_tech_buy_rate(instrument_uid: str):
             )) or pred == 0:
                 is_no_predictions = False
 
-                if pred > 0:
+                if 0 < pred < 1:
                     rate_price_change = agent.utils.linear_interpolation(pred, 0, target_prediction_value, 0, 1)
                     day_rate = rate_price_change * days_distance_multiply
 
