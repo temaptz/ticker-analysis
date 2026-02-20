@@ -10,7 +10,6 @@ import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table
 import { ApiService } from '../../shared/services/api.service';
 import { SortModeService } from '../../shared/services/sort-mode.service';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
-import { FundamentalsComponent } from '../../entities/fundamentals/fundamentals.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.pipe';
@@ -19,7 +18,6 @@ import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
 import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
-import { DrawerStateService } from '../../shared/services/drawer-state.service';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { InstrumentOrdersComponent } from '../../entities/instrument-orders/instrument-orders.component';
 
@@ -31,7 +29,6 @@ import { InstrumentOrdersComponent } from '../../entities/instrument-orders/inst
     MatTableModule,
     ScrollingModule,
     InstrumentLogoComponent,
-    FundamentalsComponent,
     BalanceComponent,
     ComplexGraphComponent,
     MatSortModule,
@@ -72,14 +69,11 @@ export class TableFull3Component {
 
   displayedColumns: string[] = [
     'logo',
-    'fundamental',
     'complex',
     'balance',
     'llm_buy_sell_rate',
     'instrument_orders',
   ];
-
-  drawerState = inject(DrawerStateService);
 
   private appService = inject(ApiService);
 

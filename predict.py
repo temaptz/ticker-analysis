@@ -52,7 +52,7 @@ def refresh_cache_loop(finish_date: datetime.datetime):
                                 model_name=model_name,
                                 date_target=date_target,
                                 is_ignore_cache=True,
-                        )) is not None and -3 <= prediction <= 3:
+                        )) is not None and -2 <= prediction <= 2:
                             predictions_cache.set_prediction_cache(
                                 instrument_uid=instrument.uid,
                                 model_name=model_name,

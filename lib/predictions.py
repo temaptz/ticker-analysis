@@ -36,12 +36,14 @@ def get_prediction(
                     is_fill_empty=True,
                 )
             elif model_name == model.TA_3_tech:
-                predict_day =learn. ta_3_technical_learn.predict_future(
+                p = learn.ta_3_technical_learn.predict_future(
                     instrument_uid=instrument_uid,
                     date_target=day_target,
                     date_current=date_current,
                     is_fill_empty=True,
                 )
+                if p is not None and -2 < p < 2:
+                    predict_day = p
             elif model_name == model.CONSENSUS:
                 predict_day = get_relative_predictions_consensus(
                     instrument_uid=instrument_uid,
