@@ -89,7 +89,7 @@ def get_tech_sell_rate(instrument_uid: str):
             if pred:
                 is_no_predictions = False
 
-                if pred > 0.01:
+                if pred > 0.005:
                     delta_days = (day - date_from).days
                     if days_before_positive_prediction is None or delta_days < days_before_positive_prediction:
                         days_before_positive_prediction = delta_days
