@@ -154,7 +154,7 @@ def get_user_instrument_operations(instrument_figi: str, account_id: int = None)
     return result
 
 
-@cache.ttl_cache(ttl=3600 * 24)
+@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True)
 def get_accounts() -> GetAccountsResponse.accounts:
     result = []
 

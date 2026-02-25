@@ -7,6 +7,7 @@ from t_tech.invest import Client, CandleInterval, constants
 from const import TINKOFF_INVEST_TOKEN
 from lib import logger, redis_utils, utils, date_utils
 from lib.db_2 import candles_db
+import candles_tech_analysis
 
 
 @asynccontextmanager
@@ -36,6 +37,26 @@ class CandleResponse(BaseModel):
     min_price: float
     max_price: float
     volume: float
+
+
+class TechAnalysisRequest(BaseModel):
+    instrument_ticker: str
+    indicator_type: int
+    date_from: datetime.datetime
+    date_to: datetime.datetime
+    interval: int
+    length: Optional[int] = None
+    deviation_multiplier: Optional[float] = None
+    fast_length: Optional[int] = None
+    slow_length: Optional[int] = None
+    signal_smoothing: Optional[int] = None
+
+
+class TechAnalysisResponse(BaseModel):
+    timestamp: datetime.datetime
+    signal: Optional[float] = None
+    middle_band: Optional[float] = None
+    macd: Optional[float] = None
 
 
 def get_candle_interval_from_string(interval_str: str) -> CandleInterval:
@@ -267,6 +288,88 @@ async def get_candles(request: CandleRequest):
         
     except Exception as e:
         logger.log_error(method_name='get_candles', error=e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/tech_analysis", response_model=list[TechAnalysisResponse])
+async def get_tech_analysis(request: TechAnalysisRequest):
+    """
+    Calculate technical analysis indicators for an instrument
+    
+    Supported indicators:
+    - 1: Bollinger Bands (BB)
+    - 2: Exponential Moving Average (EMA)
+    - 3: Relative Strength Index (RSI)
+    - 4: Moving Average Convergence Divergence (MACD)
+    - 6: On-Balance Volume (OBV)
+    - 7: Simple Moving Average (SMA)
+    """
+    try:
+        ticker = request.instrument_ticker
+        indicator_type_int = request.indicator_type
+        date_from = request.date_from
+        date_to = request.date_to
+        interval_int = request.interval
+        
+        if date_from.tzinfo is None:
+            date_from = date_from.replace(tzinfo=datetime.timezone.utc)
+        else:
+            date_from = date_from.astimezone(datetime.timezone.utc)
+            
+        if date_to.tzinfo is None:
+            date_to = date_to.replace(tzinfo=datetime.timezone.utc)
+        else:
+            date_to = date_to.astimezone(datetime.timezone.utc)
+        
+        indicator_type = candles_tech_analysis.map_tinkoff_indicator_type(indicator_type_int)
+        candle_interval_str = candles_tech_analysis.map_tinkoff_interval(interval_int)
+        
+        candle_request = CandleRequest(
+            instrument_ticker=ticker,
+            date_from=date_from,
+            date_to=date_to,
+            interval=candle_interval_str
+        )
+        
+        candles_response = await get_candles(candle_request)
+        
+        candles_data = [
+            {
+                'ticker': c.ticker,
+                'date': c.date,
+                'open_price': c.open_price,
+                'close_price': c.close_price,
+                'min_price': c.min_price,
+                'max_price': c.max_price,
+                'volume': c.volume
+            }
+            for c in candles_response
+        ]
+        
+        indicators = candles_tech_analysis.calculate_indicator(
+            candles=candles_data,
+            indicator_type=indicator_type,
+            length=request.length,
+            deviation_multiplier=request.deviation_multiplier,
+            fast_length=request.fast_length,
+            slow_length=request.slow_length,
+            signal_smoothing=request.signal_smoothing
+        )
+        
+        response = [
+            TechAnalysisResponse(
+                timestamp=ind['timestamp'],
+                signal=ind['signal'],
+                middle_band=ind['middle_band'],
+                macd=ind['macd']
+            )
+            for ind in indicators
+        ]
+        
+        return response
+        
+    except Exception as e:
+        logger.log_error(method_name='get_tech_analysis', error=e)
         raise HTTPException(status_code=500, detail=str(e))
 
 

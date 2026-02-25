@@ -30,5 +30,6 @@ COPY predict.py /app/predict.py
 COPY ./news_rate.py /app/news_rate.py
 COPY ./fast_api.py /app/fast_api.py
 COPY ./candles.py /app/candles.py
+COPY ./candles_tech_analysis.py /app/candles_tech_analysis.py
 COPY ./const.py /app/const.py
 COPY ./.env /app/.env
