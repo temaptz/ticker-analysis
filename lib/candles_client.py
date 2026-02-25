@@ -29,9 +29,9 @@ def get_candles(
     interval: CandleInterval
 ) -> list[HistoricCandle]:
     try:
-        response = requests.post(
+        response = requests.get(
             f'{CANDLES_SERVICE_URL}/candles',
-            json={
+            params={
                 'instrument_ticker': ticker,
                 'date_from': date_from.isoformat(),
                 'date_to': date_to.isoformat(),

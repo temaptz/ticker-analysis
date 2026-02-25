@@ -192,13 +192,16 @@ def save_incomplete_candle_to_cache(candle: dict, ttl: int = 3600) -> None:
     redis_utils.cache_set(key=cache_key, value=candle, ttl_sec=ttl)
 
 
-@app.post("/candles", response_model=list[CandleResponse])
-async def get_candles(request: CandleRequest):
+@app.get("/candles", response_model=list[CandleResponse])
+async def get_candles(
+    instrument_ticker: str,
+    date_from: datetime.datetime,
+    date_to: datetime.datetime,
+    interval: str
+):
     try:
-        ticker = request.instrument_ticker
-        date_from = request.date_from
-        date_to = request.date_to
-        interval = get_candle_interval_from_string(request.interval)
+        ticker = instrument_ticker
+        interval = get_candle_interval_from_string(interval)
         
         if date_from.tzinfo is None:
             date_from = date_from.replace(tzinfo=datetime.timezone.utc)
@@ -235,7 +238,8 @@ async def get_candles(request: CandleRequest):
         missing_ranges = candles_db.get_missing_date_ranges(
             ticker=ticker,
             date_from=date_from_utc,
-            date_to=date_to_utc
+            date_to=date_to_utc,
+            existing_candles=db_candles
         )
         
         fetched_candles = []
@@ -291,8 +295,19 @@ async def get_candles(request: CandleRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/tech_analysis", response_model=list[TechAnalysisResponse])
-async def get_tech_analysis(request: TechAnalysisRequest):
+@app.get("/tech_analysis", response_model=list[TechAnalysisResponse])
+async def get_tech_analysis(
+    instrument_ticker: str,
+    indicator_type: int,
+    date_from: datetime.datetime,
+    date_to: datetime.datetime,
+    interval: int,
+    length: Optional[int] = None,
+    deviation_multiplier: Optional[float] = None,
+    fast_length: Optional[int] = None,
+    slow_length: Optional[int] = None,
+    signal_smoothing: Optional[int] = None
+):
     """
     Calculate technical analysis indicators for an instrument
     
@@ -305,11 +320,9 @@ async def get_tech_analysis(request: TechAnalysisRequest):
     - 7: Simple Moving Average (SMA)
     """
     try:
-        ticker = request.instrument_ticker
-        indicator_type_int = request.indicator_type
-        date_from = request.date_from
-        date_to = request.date_to
-        interval_int = request.interval
+        ticker = instrument_ticker
+        indicator_type_int = indicator_type
+        interval_int = interval
         
         if date_from.tzinfo is None:
             date_from = date_from.replace(tzinfo=datetime.timezone.utc)
@@ -324,14 +337,12 @@ async def get_tech_analysis(request: TechAnalysisRequest):
         indicator_type = candles_tech_analysis.map_tinkoff_indicator_type(indicator_type_int)
         candle_interval_str = candles_tech_analysis.map_tinkoff_interval(interval_int)
         
-        candle_request = CandleRequest(
+        candles_response = await get_candles(
             instrument_ticker=ticker,
             date_from=date_from,
             date_to=date_to,
             interval=candle_interval_str
         )
-        
-        candles_response = await get_candles(candle_request)
         
         candles_data = [
             {
@@ -349,11 +360,11 @@ async def get_tech_analysis(request: TechAnalysisRequest):
         indicators = candles_tech_analysis.calculate_indicator(
             candles=candles_data,
             indicator_type=indicator_type,
-            length=request.length,
-            deviation_multiplier=request.deviation_multiplier,
-            fast_length=request.fast_length,
-            slow_length=request.slow_length,
-            signal_smoothing=request.signal_smoothing
+            length=length,
+            deviation_multiplier=deviation_multiplier,
+            fast_length=fast_length,
+            slow_length=slow_length,
+            signal_smoothing=signal_smoothing
         )
         
         response = [

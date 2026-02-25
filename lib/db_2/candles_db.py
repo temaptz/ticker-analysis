@@ -25,6 +25,7 @@ class CandleDB(Base):
 
     __table_args__ = (
         Index('idx_ticker_date', 'ticker', 'date'),
+        Index('idx_ticker_date_complete', 'ticker', 'date', 'is_complete'),
     )
 
 
@@ -49,6 +50,21 @@ def init_table() -> None:
             Base.metadata.create_all(engine, checkfirst=False)
         else:
             Base.metadata.create_all(engine, checkfirst=True)
+            
+            with engine.connect() as conn:
+                result = conn.execute(text("""
+                    SELECT 1 FROM pg_indexes 
+                    WHERE indexname = 'idx_ticker_date_complete'
+                """))
+                
+                if not result.fetchone():
+                    print('Creating composite index idx_ticker_date_complete...')
+                    conn.execute(text("""
+                        CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ticker_date_complete 
+                        ON candles (ticker, date, is_complete)
+                    """))
+                    conn.commit()
+                    print('Composite index created successfully')
     else:
         Base.metadata.create_all(engine, checkfirst=True)
 
@@ -157,48 +173,72 @@ def bulk_insert_candles(candles: list[dict]) -> None:
 def get_missing_date_ranges(
     ticker: str,
     date_from: datetime.datetime,
-    date_to: datetime.datetime
+    date_to: datetime.datetime,
+    existing_candles: Optional[list[CandleDB]] = None
 ) -> list[tuple[datetime.datetime, datetime.datetime]]:
-    with Session(engine) as session:
-        if date_from.tzinfo is not None:
-            date_from = date_from.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-        if date_to.tzinfo is not None:
-            date_to = date_to.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    """
+    Find missing date ranges in candle data.
+    
+    Args:
+        ticker: Instrument ticker
+        date_from: Start date
+        date_to: End date
+        existing_candles: Optional list of existing candles to reuse (avoids duplicate DB query)
+    
+    Returns:
+        List of (start, end) tuples representing missing date ranges
+    
+    Time complexity: O(n log n) where n = number of existing candles
+    """
+    if date_from.tzinfo is not None:
+        date_from = date_from.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    if date_to.tzinfo is not None:
+        date_to = date_to.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    
+    if existing_candles is None:
+        with Session(engine) as session:
+            existing_candles = session.query(CandleDB).filter(
+                and_(
+                    CandleDB.ticker == ticker,
+                    CandleDB.date >= date_from,
+                    CandleDB.date <= date_to,
+                    CandleDB.is_complete == True
+                )
+            ).order_by(CandleDB.date).all()
+    
+    if not existing_candles:
+        return [(date_from, date_to)]
+    
+    existing_dates_sorted = sorted([
+        c.date.date() if isinstance(c.date, datetime.datetime) else c.date 
+        for c in existing_candles
+    ])
+    
+    missing_ranges = []
+    date_from_date = date_from.date() if isinstance(date_from, datetime.datetime) else date_from
+    date_to_date = date_to.date() if isinstance(date_to, datetime.datetime) else date_to
+    
+    if existing_dates_sorted[0] > date_from_date:
+        missing_ranges.append((
+            date_from,
+            datetime.datetime.combine(existing_dates_sorted[0] - datetime.timedelta(days=1), datetime.time.max)
+        ))
+    
+    for i in range(len(existing_dates_sorted) - 1):
+        current = existing_dates_sorted[i]
+        next_date = existing_dates_sorted[i + 1]
+        gap_days = (next_date - current).days
         
-        existing_dates = session.query(CandleDB.date).filter(
-            and_(
-                CandleDB.ticker == ticker,
-                CandleDB.date >= date_from,
-                CandleDB.date <= date_to,
-                CandleDB.is_complete == True
-            )
-        ).order_by(CandleDB.date).all()
-        
-        existing_dates_set = {d[0].date() if isinstance(d[0], datetime.datetime) else d[0] for d in existing_dates}
-        
-        missing_ranges = []
-        current_date = date_from.date() if isinstance(date_from, datetime.datetime) else date_from
-        end_date = date_to.date() if isinstance(date_to, datetime.datetime) else date_to
-        range_start = None
-        
-        while current_date <= end_date:
-            if current_date not in existing_dates_set:
-                if range_start is None:
-                    range_start = current_date
-            else:
-                if range_start is not None:
-                    missing_ranges.append((
-                        datetime.datetime.combine(range_start, datetime.time.min),
-                        datetime.datetime.combine(current_date - datetime.timedelta(days=1), datetime.time.max)
-                    ))
-                    range_start = None
-            
-            current_date += datetime.timedelta(days=1)
-        
-        if range_start is not None:
+        if gap_days > 1:
             missing_ranges.append((
-                datetime.datetime.combine(range_start, datetime.time.min),
-                datetime.datetime.combine(end_date, datetime.time.max)
+                datetime.datetime.combine(current + datetime.timedelta(days=1), datetime.time.min),
+                datetime.datetime.combine(next_date - datetime.timedelta(days=1), datetime.time.max)
             ))
-        
-        return missing_ranges
+    
+    if existing_dates_sorted[-1] < date_to_date:
+        missing_ranges.append((
+            datetime.datetime.combine(existing_dates_sorted[-1] + datetime.timedelta(days=1), datetime.time.min),
+            date_to
+        ))
+    
+    return missing_ranges
