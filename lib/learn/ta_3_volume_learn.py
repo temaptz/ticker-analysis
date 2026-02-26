@@ -44,6 +44,7 @@ def generate_data():
                 card = learn.ta_3_volume.Ta3VolumeAnalysisCard(
                     instrument=instrument,
                     date=date,
+                    is_fill_empty=False,
                 )
 
                 if card.is_ok and card.get_y() is not None:
@@ -51,11 +52,6 @@ def generate_data():
                         cache_record(card=card)
                         counter_added += 1
                         records_keys.append(record_cache_key)
-
-                        print('CARD')
-                        print(csv_record)
-
-                        return
 
                 else:
                     cache_error(
