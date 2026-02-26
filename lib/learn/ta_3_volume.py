@@ -73,102 +73,40 @@ class Ta3VolumeAnalysisCard:
     def fill_card(self):
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_result = self._get_target_result()
-        self.candles = self.get_candles(days_count=CANDLES_COUNT)
+        self.candles = self.get_candles()
 
-    def get_candles(self, days_count: int) -> list:
+    def get_candles(self) -> list:
         result = []
-        date_from = self.date - timedelta(days=80)
-        date_to = (self.date - timedelta(days=1)).replace(hour=20, minute=59, second=59)
+        date_from = self.date.replace(hour=21, minute=0, second=0) - timedelta(days=(CANDLES_COUNT + 10))
+        date_to = self.date.replace(hour=20, minute=59, second=59) - timedelta(days=1)
 
         price_candles = instruments.get_instrument_history_price_by_uid(
             uid=self.instrument.uid,
-            days_count=days_count + 50,
+            days_count=(CANDLES_COUNT + 10),
             interval=CandleInterval.CANDLE_INTERVAL_DAY,
             to_date=date_to,
         )
 
-        if not price_candles:
+        if not price_candles or len(price_candles) < CANDLES_COUNT:
             return []
 
         price_candles = sorted(price_candles, key=lambda x: x.time)
-        price_candles = [c for c in price_candles if getattr(c, 'is_complete', True)]
-        last_candles = price_candles[-(days_count + 1):]
-
-        ema50_items = tech_analysis.get_tech_analysis(
-            instrument_uid=self.instrument.uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_EMA,
-            date_from=date_from,
-            date_to=date_to,
-            interval=tech_analysis.IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
-        )
-
+        last_candles = price_candles[-CANDLES_COUNT:]
         rsi_items = tech_analysis.get_tech_analysis(
             instrument_uid=self.instrument.uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
             date_from=date_from,
             date_to=date_to,
             interval=tech_analysis.IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
+            length=14
         )
-
-        macd_items = tech_analysis.get_tech_analysis(
-            instrument_uid=self.instrument.uid,
-            indicator_type=IndicatorType.INDICATOR_TYPE_MACD,
-            date_from=date_from,
-            date_to=date_to,
-            interval=tech_analysis.IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
-        )
-
-        ema50_dict = {date_utils.parse_date(i.timestamp): utils.get_price_by_quotation(i.signal) for i in ema50_items}
         rsi_dict = {date_utils.parse_date(i.timestamp): utils.get_price_by_quotation(i.signal) for i in rsi_items}
-        macd_hist_dict = {date_utils.parse_date(i.timestamp): (utils.get_price_by_quotation(i.macd) - utils.get_price_by_quotation(i.signal)) for i in macd_items}
-        prev_close_abs = None
-
-        volume_avg = sum(i.volume for i in last_candles) / len(last_candles)
 
         for candle in last_candles:
-            if prev_close_abs is None:
-                prev_close_abs = utils.get_price_by_quotation(candle.close)
-                continue
-
-            close_abs = utils.get_price_by_quotation(candle.close)
-            news_score = news.news.get_influence_score(
-                instrument_uid=self.instrument.uid,
-                start_date=(candle.time - timedelta(days=3)),
-                end_date=candle.time,
-            )
-
             result.append({
-                'candle_close_rel': utils.get_change_relative(
-                    current_value=prev_close_abs,
-                    next_value=close_abs,
-                ),
-                'candle_open_rel': utils.get_change_relative(
-                    current_value=close_abs,
-                    next_value=utils.get_price_by_quotation(candle.open),
-                ),
-                'candle_low_rel': utils.get_change_relative(
-                    current_value=close_abs,
-                    next_value=utils.get_price_by_quotation(candle.low),
-                ),
-                'candle_high_rel': utils.get_change_relative(
-                    current_value=close_abs,
-                    next_value=utils.get_price_by_quotation(candle.high),
-                ),
-                'candle_ema50_rel': utils.get_change_relative(
-                    current_value=close_abs,
-                    next_value=ema50_dict.get(candle.time),
-                ),
-                'candle_volume_rel': utils.get_change_relative(
-                    current_value=volume_avg,
-                    next_value=candle.volume,
-                ),
-                'candle_rsi': rsi_dict.get(candle.time) / 100,
-                'candle_macd_rel': macd_hist_dict.get(candle.time) / close_abs,
-                'candle_macd_sign': np.sign(macd_hist_dict.get(candle.time)),
-                'candle_news_influence_score': ((news_score / 10) if news_score else None),
+                'volume': 0,
+                'rsi': rsi_dict.get(date_utils.parse_date(candle.time)),
             })
-
-            prev_close_abs = close_abs
 
         return result
 
