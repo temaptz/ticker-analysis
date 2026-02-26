@@ -5,7 +5,7 @@ from typing import Optional
 from t_tech.invest import Client, CandleInterval, constants, InstrumentIdType, HistoricCandle, Instrument
 import datetime
 from const import TINKOFF_INVEST_TOKEN, TICKER_LIST
-from lib import cache, utils, date_utils, db_2, yandex, candles_client
+from lib import cache, utils, date_utils, db_2, yandex
 
 
 def catch_exhaused():
@@ -85,58 +85,52 @@ def get_instrument_last_price_by_uid(uid: str) -> float or None:
     return None
 
 
-# @cache.ttl_cache(ttl=(60 * 3), is_skip_empty=True)
+@cache.ttl_cache(ttl=(3600 * 24 * 10), is_skip_empty=True)
+@catch_exhaused()
 def get_instrument_history_price_by_uid(uid: str, days_count: int, interval: CandleInterval, to_date: datetime.datetime) -> list[HistoricCandle]:
-    instrument = get_instrument_by_uid(uid=uid)
-    if not instrument:
-        return []
-    
-    return candles_client.get_candles(
-        ticker=instrument.ticker,
-        date_from=(to_date - datetime.timedelta(days=days_count)),
-        date_to=to_date,
-        interval=interval
-    )
+    with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.market_data.get_candles(
+            instrument_id=uid,
+            from_=(to_date - datetime.timedelta(days=days_count)),
+            to=to_date,
+            interval=interval
+        ).candles or []
 
 
-@cache.ttl_cache(ttl=60, is_skip_empty=True)
+@cache.ttl_cache(ttl=(3600 * 24 * 10), is_skip_empty=True)
+@catch_exhaused()
 def get_instrument_price_by_date(uid: str, date: datetime.datetime, delta_hours=24) -> float or None:
     if date.date() == datetime.datetime.now().date():
         return get_instrument_last_price_by_uid(uid=uid)
 
-    instrument = get_instrument_by_uid(uid=uid)
-    if not instrument:
-        return None
-    
-    date_local = date_utils.convert_to_local(date=date)
-    date_utc = date_utils.convert_to_utc(date=date)
-    
-    candles = candles_client.get_candles(
-        ticker=instrument.ticker,
-        date_from=date_utc - datetime.timedelta(hours=delta_hours),
-        date_to=date_utc + datetime.timedelta(hours=delta_hours),
-        interval=(CandleInterval.CANDLE_INTERVAL_HOUR if delta_hours < 48 else CandleInterval.CANDLE_INTERVAL_DAY)
-    )
+    with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+        date_local = date_utils.convert_to_local(date=date)
+        date_utc = date_utils.convert_to_utc(date=date)
+        candles = client.market_data.get_candles(
+            instrument_id=uid,
+            from_=date_utc - datetime.timedelta(hours=delta_hours),
+            to=date_utc + datetime.timedelta(hours=delta_hours),
+            interval=(CandleInterval.CANDLE_INTERVAL_HOUR if delta_hours < 48 else CandleInterval.CANDLE_INTERVAL_DAY)
+        ).candles
 
-    nearest: HistoricCandle or None = None
+        nearest: HistoricCandle or None = None
 
-    for i in candles:
-        time_local = date_utils.convert_to_local(i.time)
+        for i in candles:
+            time_local = date_utils.convert_to_local(i.time)
+
+            if nearest:
+                delta_sec_i = (date_local - time_local).total_seconds()
+                delta_sec_nearest = (date_local - date_utils.convert_to_local(nearest.time)).total_seconds()
+
+                if delta_sec_i < delta_sec_nearest:
+                    nearest = i
+            else:
+                nearest = i
 
         if nearest:
-            delta_sec_i = abs((date_local - time_local).total_seconds())
-            delta_sec_nearest = abs((date_local - date_utils.convert_to_local(nearest.time)).total_seconds())
-
-            if delta_sec_i < delta_sec_nearest:
-                nearest = i
-        else:
-            nearest = i
-
-    if nearest:
-        return utils.get_mid_price_by_candle(nearest)
+            return utils.get_mid_price_by_candle(nearest)
 
     return None
-
 
 @cache.ttl_cache(ttl=3600 * 24 * 10, is_skip_empty=True)
 def get_instrument_human_name(uid: str) -> Optional[str]:

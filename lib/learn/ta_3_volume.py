@@ -4,7 +4,7 @@ from t_tech.invest import Instrument, CandleInterval
 from t_tech.invest.schemas import IndicatorType
 from datetime import datetime, timedelta, timezone
 
-from lib import utils, instruments, news, date_utils, tech_analysis, learn
+from lib import utils, instruments, date_utils, tech_analysis, learn
 
 TARGET_MIN_DAYS_COUNT = 1
 TARGET_MAX_DAYS_COUNT = 20
@@ -20,16 +20,8 @@ def get_feature_names() -> list:
 
     for i in range(CANDLES_COUNT):
         feature_names.extend([
-            f'candle_open_rel_{i}',
-            f'candle_close_rel_{i}',
-            f'candle_high_rel_{i}',
-            f'candle_low_rel_{i}',
-            f'candle_ema50_rel_{i}',
-            f'candle_volume_rel_{i}',
-            f'candle_rsi_{i}',
-            f'candle_macd_rel_{i}',
-            f'candle_macd_sign_{i}',
-            f'candle_news_influence_score_{i}',
+            f'volume_norm_{i}',
+            f'rsi_norm_{i}',
         ])
 
     return feature_names
@@ -102,10 +94,27 @@ class Ta3VolumeAnalysisCard:
         )
         rsi_dict = {date_utils.parse_date(i.timestamp): utils.get_price_by_quotation(i.signal) for i in rsi_items}
 
-        for candle in last_candles:
+        volumes = [float(candle.volume) if candle.volume else 0 for candle in price_candles]
+        
+        ma_fast = tech_analysis.ema(volumes, 12)
+        ma_slow = tech_analysis.ema(volumes, 26)
+        
+        pvo_values = []
+        for i in range(len(ma_fast)):
+            if ma_slow[i] != 0:
+                pvo = (ma_fast[i] - ma_slow[i]) / ma_slow[i]
+            else:
+                pvo = 0
+            pvo_values.append(pvo)
+        
+        sign_values = tech_analysis.ema(pvo_values, 9)
+        volume_hist_values = [pvo_values[i] - sign_values[i] for i in range(len(pvo_values))]
+        volume_hist_last = volume_hist_values[-CANDLES_COUNT:]
+
+        for i, candle in enumerate(last_candles):
             result.append({
-                'volume': 0,
-                'rsi': rsi_dict.get(date_utils.parse_date(candle.time)),
+                'volume_norm': volume_hist_last[i] * 10,
+                'rsi_norm': rsi_dict.get(date_utils.parse_date(candle.time)) / 100,
             })
 
         return result
@@ -115,60 +124,39 @@ class Ta3VolumeAnalysisCard:
         target_to = target_from + timedelta(days=10)
 
         if target_to < datetime.now(timezone.utc):
-            if sma_graph := tech_analysis.get_tech_analysis(
+            if ema_graph := tech_analysis.get_tech_analysis(
                 instrument_uid=self.instrument.uid,
-                indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
+                indicator_type=IndicatorType.INDICATOR_TYPE_EMA,
                 date_from=target_from,
                 date_to=target_to,
                 interval=tech_analysis.IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
             ):
-                sma_values = [utils.get_price_by_quotation(i.signal) for i in sma_graph]
-                if (sma_max := max(sma_values)) or sma_max == 0:
-                    sma_max_change = utils.get_change_relative(
-                        current_value=self.price,
-                        next_value=sma_max,
-                    )
-                    if sma_max_change is not None:
-                        if sma_max_change < -0.01:
-                            return TargetResult.lower
-                        elif sma_max_change > 0.01:
-                            return TargetResult.upper
-                        else:
-                            return TargetResult.same
+                ema_sorted = sorted(ema_graph, key=lambda x: x.timestamp)
+                ema_newest = utils.get_price_by_quotation(ema_sorted[-1].signal)
+
+                if ema_newest is not None:
+                    if ema_newest < -0.01:
+                        return TargetResult.lower
+                    elif ema_newest > 0.01:
+                        return TargetResult.upper
+                    else:
+                        return TargetResult.same
+
         return None
 
     def check_x(self):
-        if self.price is None:
-            print(f'{MODEL_NAME} CARD IS NOT OK BY CURRENT PRICE', self.instrument.ticker, self.date)
-            self.is_ok = False
-            return
-
-        if len(self.candles) != CANDLES_COUNT:
-            print(f'{MODEL_NAME} CARD IS NOT OK BY DAILY CANDLES', self.instrument.ticker, self.date)
-            self.is_ok = False
-            return
-
-        news_scores = [candle.get('candle_news_influence_score') for candle in self.candles]
-        if all(score is None for score in news_scores):
-            print(f'{MODEL_NAME} CARD IS NOT OK: ALL news_influence_score VALUES ARE None', self.instrument.ticker, self.date)
-            if not self.is_fill_empty:
-                self.is_ok = False
-                return
-
         x_values = self.get_x()
         feature_names = get_feature_names()
-        
+
         def is_invalid(x):
             if x is None:
                 return True
             if isinstance(x, (int, float, np.floating)):
                 return not np.isfinite(x)
             return False
-        
+
         invalid_fields = []
         for name, value in zip(feature_names, x_values):
-            if 'news_influence_score' in name:
-                continue
             if is_invalid(value):
                 invalid_fields.append(name)
         
@@ -180,33 +168,19 @@ class Ta3VolumeAnalysisCard:
                 return
 
     def get_x(self) -> list[float]:
-        x: list[float] = [
-            self.target_date_days,
-            self.instrument.currency,
-            self.instrument.country_of_risk,
-        ]
+        x: list[float] = []
 
         for i in range(CANDLES_COUNT):
             candle = self.candles[i] if i < len(self.candles) else {}
             x.extend([
-                learn.learn_utils.to_numpy_float(candle.get('candle_open_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_close_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_high_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_low_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_ema50_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_volume_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_rsi')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_macd_rel')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_macd_sign')),
-                learn.learn_utils.to_numpy_float(candle.get('candle_news_influence_score') or 0),
+                learn.learn_utils.to_numpy_float(candle.get('volume_norm')),
+                learn.learn_utils.to_numpy_float(candle.get('rsi_norm')),
             ])
 
         return x
 
     def get_y(self) -> float or None:
-        if self.price and self.target_price:
-            return utils.get_change_relative(current_value=self.price, next_value=self.target_price)
-        return None
+        return self.target_result
 
     def get_csv_record(self) -> dict:
         result = {}

@@ -11,4 +11,3 @@ from . import instrument_tags_db
 from . import users_db
 from . import init
 from . import weights
-from . import candles_db

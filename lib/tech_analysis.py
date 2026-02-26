@@ -5,7 +5,7 @@ import datetime
 from t_tech.invest.schemas import TechAnalysisItem, IndicatorType, GetTechAnalysisRequest, TypeOfPrice, IndicatorInterval, Deviation, Smoothing
 
 from const import TINKOFF_INVEST_TOKEN
-from lib import cache, utils, date_utils, instruments, tech_analysis_client
+from lib import cache, utils, date_utils
 
 
 @cache.ttl_cache(ttl=3600 * 24)
@@ -26,35 +26,20 @@ def get_tech_analysis(
             signal_smoothing=9,
         )
     length = length if (length is not None) else 3
-    
-    instrument = instruments.get_instrument_by_uid(uid=instrument_uid)
-    if not instrument:
-        return []
-    
-    deviation_multiplier = None
-    if deviation and deviation.deviation_multiplier:
-        deviation_multiplier = utils.get_price_by_quotation(deviation.deviation_multiplier)
-    
-    fast_length = None
-    slow_length = None
-    signal_smoothing_val = None
-    if smoothing:
-        fast_length = smoothing.fast_length
-        slow_length = smoothing.slow_length
-        signal_smoothing_val = smoothing.signal_smoothing
-    
-    return tech_analysis_client.get_tech_analysis_from_service(
-        instrument_ticker=instrument.ticker,
-        indicator_type=indicator_type.value,
-        date_from=date_from,
-        date_to=date_to,
-        interval=interval.value,
-        length=length,
-        deviation_multiplier=deviation_multiplier,
-        fast_length=fast_length,
-        slow_length=slow_length,
-        signal_smoothing=signal_smoothing_val
-    )
+    with Client(token=TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+        return client.market_data.get_tech_analysis(
+            request=GetTechAnalysisRequest(
+                indicator_type=indicator_type,
+                instrument_uid=instrument_uid,
+                from_=date_from,
+                to=date_to,
+                interval=interval,
+                type_of_price=TypeOfPrice.TYPE_OF_PRICE_CLOSE,
+                length=length,
+                deviation=deviation,
+                smoothing=smoothing,
+            )
+        ).technical_indicators
 
 
 @cache.ttl_cache(ttl=3600 * 24)
@@ -121,14 +106,11 @@ def get_tech_analysis_graph(
     return result
 
 
-def ema(prices: list[float], period: int = None) -> list[float]:
-    if not period:
-        period = len(prices)
-
+def ema(prices: list[float], length: int = 9) -> list[float]:
     s = pandas.Series(prices)
 
     ema_series = s.ewm(
-        span=period,
+        span=length,
         adjust=False
     ).mean()
 

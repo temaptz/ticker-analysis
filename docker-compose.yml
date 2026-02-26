@@ -13,7 +13,6 @@ services:
     depends_on:
       - redis
       - postgres
-      - candles
     environment:
       - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     restart: unless-stopped
@@ -32,7 +31,6 @@ services:
     depends_on:
       - redis
       - postgres
-      - candles
     restart: no
 
   predict:
@@ -49,7 +47,6 @@ services:
     depends_on:
       - redis
       - postgres
-      - candles
     restart: no
 
   news:
@@ -67,25 +64,6 @@ services:
       - postgres
       - ollama
     restart: no
-
-  candles:
-    build:
-      context: .
-      dockerfile: Dockerfile-python-services
-    container_name: candles
-    volumes:
-      - /etc/is_my_prod:/container_host_is_prod:ro
-    command: >
-      uvicorn candles:app
-      --host 0.0.0.0
-      --port 8001
-      --workers 2
-      --loop uvloop
-      --timeout-keep-alive 5
-    depends_on:
-      - redis
-      - postgres
-    restart: unless-stopped
 
   apiserver:
     build:
@@ -110,7 +88,6 @@ services:
     depends_on:
       - redis
       - postgres
-      - candles
     environment:
       - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     restart: unless-stopped
