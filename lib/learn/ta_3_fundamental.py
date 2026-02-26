@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any, Union
 
 from lib import utils, instruments, fundamentals, forecasts, learn, tech_analysis, date_utils, agent
+from t_tech.invest import StatisticResponse
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 MODEL_NAME = learn.model.TA_3_fundamental
@@ -24,20 +25,16 @@ FUNDAMENTAL_FIELDS = [
     'total_debt_to_equity_mrq', # Соотношение долга к собственному капиталу
     'total_debt_to_ebitda_mrq', # Total Debt/EBITDA
     'ebitda_ttm', # EBITDA
+    'revenue_ttm',
+    'total_debt_mrq',
+    'eps_ttm',
+    'pe_ratio_ttm',
+    'ev_to_ebitda_mrq',
+    'dividend_payout_ratio_fy',
 ]
 
 def get_feature_names() -> List[str]:
-    feature_names = [
-        'currency',
-        'country_of_risk',
-
-        'forecast_price_change',
-    ]
-
-    for i in range(REPORTS_COUNT):
-        feature_names.extend([f'{field_name}_{i}' for field_name in FUNDAMENTAL_FIELDS])
-
-    return feature_names
+    return FUNDAMENTAL_FIELDS
 
 
 class Ta3FundamentalAnalysisCard:
@@ -47,6 +44,7 @@ class Ta3FundamentalAnalysisCard:
     price: Optional[float] = None
     forecast_price_change: Optional[float] = None
     target_profit_percent: Optional[float] = None
+    fundamentals: Optional[StatisticResponse] = None
 
     fundamentals_history: List[Dict[str, Any]] = []
 
@@ -54,7 +52,7 @@ class Ta3FundamentalAnalysisCard:
             self,
             instrument: instruments.Instrument,
             date: datetime,
-            fill_empty: bool = False
+            is_fill_empty: bool = False,
     ):
         self.instrument = instrument
         self.date = date
@@ -63,7 +61,7 @@ class Ta3FundamentalAnalysisCard:
             self.is_ok = False
             return
 
-        if date + timedelta(days=250) > datetime.now(timezone.utc): # Надо MAX_DAYS пока так потерпим
+        if date > datetime.now(timezone.utc):
             self.is_ok = False
             return
 
@@ -81,35 +79,12 @@ class Ta3FundamentalAnalysisCard:
 
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
         self.target_profit_percent = self._get_target_profit_percent()
-        self.fundamentals_history = self._get_fundamentals_history()
 
-    def _get_fundamentals_history(self) -> List[Dict[str, Any]]:
-        result = []
-
-        if prev_fundamentals := fundamentals.get_db_fundamentals_by_asset_uid_date_2(
+        if f := fundamentals.get_db_fundamentals_by_asset_uid_date_2(
                 asset_uid=self.instrument.asset_uid,
                 date=(self.date - timedelta(days=(REPORT_DURATION_DAYS + 30)))
         ):
-            for date in date_utils.get_dates_interval_list(
-                date_from=(self.date - timedelta(days=REPORT_DURATION_DAYS)),
-                date_to=self.date,
-                interval_seconds=((REPORT_DURATION_DAYS / (REPORTS_COUNT - 1)) * 3600 * 24),
-                is_order_descending=False,
-            ):
-                if current_fundamentals := fundamentals.get_db_fundamentals_by_asset_uid_date_2(
-                    asset_uid=self.instrument.asset_uid,
-                    date=date
-                ):
-                    result.append({
-                        field: utils.get_change_relative(
-                            current_value=getattr(prev_fundamentals, field, None),
-                            next_value=getattr(current_fundamentals, field, None),
-                        ) for field in FUNDAMENTAL_FIELDS
-                    })
-
-                    prev_fundamentals = current_fundamentals
-
-        return result
+            self.fundamentals = f
 
     def _get_forecast_price_change(self, is_fill_empty: bool = False) -> Optional[float]:
         try:
@@ -151,12 +126,6 @@ class Ta3FundamentalAnalysisCard:
             self.is_ok = False
             return
 
-        if len(self.fundamentals_history) < 5:
-            print(f'{MODEL_NAME} CARD IS NOT OK BY FUNDAMENTALS HISTORY', self.instrument.ticker if self.instrument else 'None', self.date)
-            print(f'Received {len(self.fundamentals_history)} quarters, need 5')
-            self.is_ok = False
-            return
-
         x_values = self.get_x()
         feature_names = get_feature_names()
 
@@ -179,16 +148,26 @@ class Ta3FundamentalAnalysisCard:
             return
 
     def get_x(self) -> list[float]:
-        x: list[float] = [
-            self.instrument.currency,
-            self.instrument.country_of_risk,
-            self.forecast_price_change,
+        return [
+            learn.learn_utils.to_numpy_float(self.fundamentals.market_capitalization),
+            learn.learn_utils.to_numpy_float(self.fundamentals.high_price_last_52_weeks),
+            learn.learn_utils.to_numpy_float(self.fundamentals.low_price_last_52_weeks),
+            learn.learn_utils.to_numpy_float(self.fundamentals.average_daily_volume_last_10_days),
+            learn.learn_utils.to_numpy_float(self.fundamentals.average_daily_volume_last_4_weeks),
+            learn.learn_utils.to_numpy_float(self.fundamentals.beta),
+            learn.learn_utils.to_numpy_float(self.fundamentals.shares_outstanding),
+            learn.learn_utils.to_numpy_float(self.fundamentals.price_to_book_ttm),
+            learn.learn_utils.to_numpy_float(self.fundamentals.total_enterprise_value_mrq),
+            learn.learn_utils.to_numpy_float(self.fundamentals.total_debt_to_equity_mrq),
+            learn.learn_utils.to_numpy_float(self.fundamentals.total_debt_to_ebitda_mrq),
+            learn.learn_utils.to_numpy_float(self.fundamentals.ebitda_ttm),
+            learn.learn_utils.to_numpy_float(self.fundamentals.revenue_ttm),
+            learn.learn_utils.to_numpy_float(self.fundamentals.total_debt_mrq),
+            learn.learn_utils.to_numpy_float(self.fundamentals.eps_ttm),
+            learn.learn_utils.to_numpy_float(self.fundamentals.pe_ratio_ttm),
+            learn.learn_utils.to_numpy_float(self.fundamentals.ev_to_ebitda_mrq),
+            learn.learn_utils.to_numpy_float(self.fundamentals.dividend_payout_ratio_fy),
         ]
-
-        for i in self.fundamentals_history:
-            x.extend([learn.learn_utils.to_numpy_float(i.get(field, None)) for field in FUNDAMENTAL_FIELDS])
-
-        return x
 
     def get_y(self) -> Optional[float]:
         return self.target_profit_percent or None
