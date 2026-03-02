@@ -6,8 +6,6 @@ from datetime import datetime, timedelta, timezone
 
 from lib import utils, instruments, date_utils, tech_analysis, learn, graph_printing
 
-TARGET_MIN_DAYS_COUNT = 1
-TARGET_MAX_DAYS_COUNT = 20
 CANDLES_COUNT = 20
 
 class TargetResult(IntEnum):

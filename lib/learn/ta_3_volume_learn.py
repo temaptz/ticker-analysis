@@ -5,8 +5,7 @@ from catboost import CatBoostRegressor
 from lib import utils, instruments, learn, news, date_utils, serializer, redis_utils, yandex_disk, docker, logger
 
 def generate_data():
-    yesterday = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=1))
-    date_end = yesterday
+    date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_volume.CANDLES_COUNT))
     date_start = date_end - timedelta(days=(365 * 1))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
