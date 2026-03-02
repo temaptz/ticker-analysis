@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
+import { WeightsService } from '../../shared/services/weights.service';
 import { BuySellWeights } from '../../shared/types';
+import { WeightIndicatorComponent } from '../../shared/components/weight-indicator/weight-indicator.component';
 
 
 const WEIGHT_LABELS: Record<keyof BuySellWeights, string> = {
@@ -21,13 +23,14 @@ type WeightKey = keyof BuySellWeights;
 
 @Component({
   selector: 'weights-editor',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, WeightIndicatorComponent],
   templateUrl: './weights-editor.component.html',
   styleUrl: './weights-editor.component.scss',
 })
 export class WeightsEditorComponent {
 
   private _api = inject(ApiService);
+  private _weightsService = inject(WeightsService);
 
   buyWeights = resource({
     loader: () => firstValueFrom(this._api.getBuySellWeights(true)),
@@ -63,15 +66,20 @@ export class WeightsEditorComponent {
     return weights ? weights[key] : 0;
   }
 
+  getWeightValuePercent(isBuy: boolean, key: WeightKey): number {
+    const weights = this.getEditWeights(isBuy);
+    return weights ? (weights[key] ?? 0) * 100 : 0;
+  }
+
   getWeightBg(isBuy: boolean, key: WeightKey): string {
     const value = this.getWeightValue(isBuy, key);
-    const alpha = Math.min(Math.max(value / 100, 0), 1);
+    const alpha = Math.min(Math.max(value, 0), 1);
     return `rgba(63, 81, 181, ${alpha.toFixed(2)})`;
   }
 
   getWeightColor(isBuy: boolean, key: WeightKey): string {
     const value = this.getWeightValue(isBuy, key);
-    return value / 100 > 0.45 ? '#fff' : '#333';
+    return value > 0.45 ? '#fff' : '#333';
   }
 
   handleWeightChange(isBuy: boolean, key: WeightKey, event: Event): void {
@@ -96,6 +104,7 @@ export class WeightsEditorComponent {
     this.isSaving.set(true);
     try {
       await firstValueFrom(this._api.setBuySellWeights(isBuy, weights));
+      await this._weightsService.loadWeights();
       if (isBuy) {
         this.editBuyWeights.set(null);
         this.isBuyDirty.set(false);

@@ -25,4 +25,5 @@ export const GRAPH_COLORS = {
 
   buy: '#00ff00',
   sell: '#ff0000',
+  weight_indicator: 'rgba(63, 81, 181, 1)',
 }

@@ -11,12 +11,15 @@
         {{ data.rate | number:'1.2-2' }}
       </div>
       <div class="rate-label" [style.color]="newsColor">news</div>
+      <weight-indicator [weight]="weight()"/>
     } @else if (rateData.isLoading()) {
       <div class="rate-value" [style.color]="newsColor">...</div>
       <div class="rate-label" [style.color]="newsColor">news</div>
+      <weight-indicator [weight]="weight()"/>
     } @else {
       <div class="rate-value" [style.color]="newsColor">-</div>
       <div class="rate-label" [style.color]="newsColor">news</div>
+      <weight-indicator [weight]="weight()"/>
     }
   </div>
   <vertical-scale [color]="newsColor" [value]="rateData.value()?.rate ?? 0"/>

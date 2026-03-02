@@ -17,9 +17,18 @@
   opacity: 0.7;
 }
 
+.value {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .rate-value {
   margin-top: 3px;
-  font-size: 24px;
+  font-size: 48px;
   font-weight: 500;
   cursor: help;
+  color: gray;
 }

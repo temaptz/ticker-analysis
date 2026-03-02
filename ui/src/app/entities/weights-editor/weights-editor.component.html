@@ -17,6 +17,7 @@
                 [value]="getWeightValue(true, key)"
                 (input)="handleWeightChange(true, key, $event)"
               />
+              <weight-indicator [weight]="getWeightValuePercent(true, key)"/>
             </div>
           }
         </div>
@@ -44,6 +45,7 @@
                 [value]="getWeightValue(false, key)"
                 (input)="handleWeightChange(false, key, $event)"
               />
+              <weight-indicator [weight]="getWeightValuePercent(false, key)"/>
             </div>
           }
         </div>

@@ -105,10 +105,13 @@ def predict_future(
     if card.is_ok:
         model_cb = CatBoostRegressor()
         model_cb.load_model(get_model_file_path())
-        prediction = model_cb.predict(data=card.get_x())
+        prediction = model_cb.predict(
+            data=card.get_x(),
+            prediction_type='Class'
+        )
 
-        if prediction is not None and prediction in [learn.ta_3_volume.TargetResult.lower._name_, learn.ta_3_volume.TargetResult.upper._name_, learn.ta_3_volume.TargetResult.same._name_]:
-            return prediction
+        if prediction is not None and prediction[0] and prediction[0] in ['upper', 'lower', 'same']:
+            return prediction[0]
 
     return None
 

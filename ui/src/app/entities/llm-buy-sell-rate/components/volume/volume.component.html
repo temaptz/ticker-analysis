@@ -1,6 +1,15 @@
 <div class="rate-wrapper">
   <div class="rate-cell">
     @if (rateData.value(); as data) {
+      <div class="value">
+        @if (isPredictionUpper()) {
+          <span [style.color]="GRAPH_COLORS.buy">&nearr;</span>
+        } @else if (isPredictionLower()) {
+          <span [style.color]="GRAPH_COLORS.sell">&searr;</span>
+        } @else if (isPredictionSame()) {
+          <span>&rarrc;</span>
+        }
+      </div>
       <div
         class="rate-value"
         [style.color]="volumeColor"
@@ -10,12 +19,15 @@
         {{ data.rate | number:'1.2-2' }}
       </div>
       <div class="rate-label" [style.color]="volumeColor">volume</div>
+      <weight-indicator [weight]="weight()"/>
     } @else if (rateData.isLoading()) {
       <div class="rate-value" [style.color]="volumeColor">...</div>
       <div class="rate-label" [style.color]="volumeColor">volume</div>
+      <weight-indicator [weight]="weight()"/>
     } @else {
       <div class="rate-value" [style.color]="volumeColor">-</div>
       <div class="rate-label" [style.color]="volumeColor">volume</div>
+      <weight-indicator [weight]="weight()"/>
     }
   </div>
   <vertical-scale [color]="volumeColor" [value]="rateData.value()?.rate ?? 0"/>

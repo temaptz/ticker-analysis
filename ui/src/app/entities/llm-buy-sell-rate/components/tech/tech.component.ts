@@ -1,16 +1,18 @@
-import { Component, inject, input, resource, ResourceLoaderParams } from '@angular/core';
+import { Component, inject, input, resource, ResourceLoaderParams, computed } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../../shared/services/api.service';
+import { WeightsService } from '../../../../shared/services/weights.service';
 import { TechRateResp } from '../../../../shared/types';
 import { GRAPH_COLORS } from '../../../../shared/const';
 import { TechMiniGraphComponent } from '../tech-mini-graph/tech-mini-graph.component';
 import { VerticalScaleComponent } from '../vertical-scale/vertical-scale.component';
+import { WeightIndicatorComponent } from '../../../../shared/components/weight-indicator/weight-indicator.component';
 
 @Component({
   selector: 'tech',
-  imports: [CommonModule, MatTooltip, TechMiniGraphComponent, VerticalScaleComponent],
+  imports: [CommonModule, MatTooltip, TechMiniGraphComponent, VerticalScaleComponent, WeightIndicatorComponent],
   providers: [DecimalPipe],
   templateUrl: './tech.component.html',
   styleUrl: './tech.component.scss'
@@ -20,9 +22,12 @@ export class TechComponent {
   isBuy = input.required<boolean>();
 
   apiService = inject(ApiService);
+  private weightsService = inject(WeightsService);
   decimalPipe = inject(DecimalPipe);
 
   techColor = GRAPH_COLORS.ta_3_tech;
+
+  weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'tech'));
 
   rateData = resource({
     request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
