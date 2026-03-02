@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime, timedelta, timezone
 from catboost import CatBoostRegressor
 
-from lib import utils, instruments, learn, news, date_utils, serializer, redis_utils, yandex_disk, docker, logger
+from lib import utils, instruments, learn, date_utils, serializer, redis_utils, yandex_disk, docker, logger
 
 def generate_data():
     date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_volume.CANDLES_COUNT))
