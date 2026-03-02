@@ -138,24 +138,24 @@ class Ta3VolumeAnalysisCard:
         target_to = target_from + timedelta(days=10)
 
         if target_to < datetime.now(timezone.utc):
-            if ema_graph := tech_analysis.get_tech_analysis(
+            if (ema_graph := tech_analysis.get_tech_analysis(
                 instrument_uid=self.instrument.uid,
                 indicator_type=IndicatorType.INDICATOR_TYPE_EMA,
                 date_from=target_from,
                 date_to=target_to,
                 interval=tech_analysis.IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
-            ):
+            )) and ema_graph is not None:
                 ema_sorted = sorted(ema_graph, key=lambda x: x.timestamp)
-                ema_newest = utils.get_price_by_quotation(ema_sorted[-1].signal)
+                ema_newest = utils.get_price_by_quotation(ema_sorted[-1].signal) if ema_sorted[-1] else None
                 ema_newest_change = utils.get_change_relative(
                     current_value=self.price,
                     next_value=ema_newest,
-                )
+                ) if ema_newest else None
 
-                if ema_newest is not None:
-                    if ema_newest < -0.025:
+                if ema_newest_change is not None:
+                    if ema_newest_change < -0.025:
                         return TargetResult.lower._name_
-                    elif ema_newest > 0.025:
+                    elif ema_newest_change > 0.025:
                         return TargetResult.upper._name_
                     else:
                         return TargetResult.same._name_

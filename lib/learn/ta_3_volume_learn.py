@@ -6,7 +6,7 @@ from lib import utils, instruments, learn, date_utils, serializer, redis_utils, 
 
 def generate_data():
     date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_volume.CANDLES_COUNT))
-    date_start = date_end - timedelta(days=(365 * 1))
+    date_start = date_end - timedelta(days=(365 * 10))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
     counter_added = 0
@@ -158,7 +158,7 @@ def get_record_cache(key: str) -> dict | str | None:
 
 def get_record_cache_key(ticker: str, date: datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': f'{learn.model.TA_3_volume}_record_cache_key_005',
+        'method': f'{learn.model.TA_3_volume}_record_cache_key_007',
         'ticker': ticker,
         'date': date,
     }))
