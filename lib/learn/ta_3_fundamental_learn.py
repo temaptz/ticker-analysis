@@ -83,7 +83,7 @@ def generate_data():
 
     print('DATA FRAME FILE SAVED')
 
-    file_name = f'data_frame_ta_3_{date_utils.get_local_time_log_str()}.csv'
+    file_name = f'data_frame_ta_3_fundamental_{date_utils.get_local_time_log_str()}.csv'
 
     yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
 

@@ -135,7 +135,7 @@ class Ta3VolumeAnalysisCard:
 
         return result
 
-    def _get_target_result(self) -> TargetResult | None:
+    def _get_target_result(self) -> str | None:
         target_from = self.date + timedelta(days=1)
         target_to = target_from + timedelta(days=10)
 
@@ -149,14 +149,18 @@ class Ta3VolumeAnalysisCard:
             ):
                 ema_sorted = sorted(ema_graph, key=lambda x: x.timestamp)
                 ema_newest = utils.get_price_by_quotation(ema_sorted[-1].signal)
+                ema_newest_change = utils.get_change_relative(
+                    current_value=self.price,
+                    next_value=ema_newest,
+                )
 
                 if ema_newest is not None:
-                    if ema_newest < -0.01:
-                        return TargetResult.lower
-                    elif ema_newest > 0.01:
-                        return TargetResult.upper
+                    if ema_newest < -0.025:
+                        return TargetResult.lower._name_
+                    elif ema_newest > 0.025:
+                        return TargetResult.upper._name_
                     else:
-                        return TargetResult.same
+                        return TargetResult.same._name_
 
         return None
 

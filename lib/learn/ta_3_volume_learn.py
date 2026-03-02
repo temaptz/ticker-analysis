@@ -7,7 +7,7 @@ from lib import utils, instruments, learn, news, date_utils, serializer, redis_u
 def generate_data():
     yesterday = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=1))
     date_end = yesterday
-    date_start = date_end - timedelta(days=(365 * 10))
+    date_start = date_end - timedelta(days=(365 * 1))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
     counter_added = 0
@@ -83,7 +83,7 @@ def generate_data():
 
     print('DATA FRAME FILE SAVED')
 
-    file_name = f'data_frame_ta_3_{date_utils.get_local_time_log_str()}.csv'
+    file_name = f'data_frame_ta_3_volume_{date_utils.get_local_time_log_str()}.csv'
 
     yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
 
@@ -94,7 +94,7 @@ def predict_future(
         instrument_uid: str,
         date_current: datetime | None = None,
         is_fill_empty=False,
-) -> float | None:
+) -> str | None:
     current_date = date_current if date_current else date_utils.get_day_prediction_time()
 
     card = learn.ta_3_volume.Ta3VolumeAnalysisCard(
@@ -108,8 +108,8 @@ def predict_future(
         model_cb.load_model(get_model_file_path())
         prediction = model_cb.predict(data=card.get_x())
 
-        if prediction is not None:
-            return utils.round_float(prediction)
+        if prediction is not None and prediction in [learn.ta_3_volume.TargetResult.lower._name_, learn.ta_3_volume.TargetResult.upper._name_, learn.ta_3_volume.TargetResult.same._name_]:
+            return prediction
 
     return None
 
@@ -159,7 +159,7 @@ def get_record_cache(key: str) -> dict | str | None:
 
 def get_record_cache_key(ticker: str, date: datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': f'{learn.model.TA_3_volume}_record_cache_key_003',
+        'method': f'{learn.model.TA_3_volume}_record_cache_key_005',
         'ticker': ticker,
         'date': date,
     }))
