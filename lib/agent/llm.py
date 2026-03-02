@@ -19,8 +19,6 @@ tools = [
 
 checkpointer = MemorySaver()
 
-if not os.getenv('OLLAMA_MODEL_NAME'):
-    raise RuntimeError('OLLAMA_MODEL_NAME is required and must be set (no defaults).')
 model_name = os.getenv('OLLAMA_MODEL_NAME')
 llm = ChatOllama(
     base_url=f'http://{'ollama' if docker.is_docker() else 'localhost'}:11434',
@@ -29,8 +27,8 @@ llm = ChatOllama(
     name='llm_ollama',
     num_ctx=16384,
     temperature=0.01,
-)
-llm_with_tools = llm.bind_tools(tools=tools)
+) if model_name else None
+llm_with_tools = llm.bind_tools(tools=tools) if llm else None
 # llm_agent = create_react_agent(
 #     llm=llm,
 #     tools=tools,

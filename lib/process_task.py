@@ -54,11 +54,7 @@ def process_single_update(text: str = None) -> None:
         cache.clean()
 
     elif text == '/recommendation':
-        telegram.send_message('Подготовка инвестиционных рекомендаций продажа')
-        agent.instrument_rank_sell.update_recommendations()
-        telegram.send_message('Подготовка инвестиционных рекомендаций покупка')
-        agent.instrument_rank_buy.update_recommendations()
-        telegram.send_message(message='Инвестиционные рекомендации обновлены')
+        telegram.send_message(message='Отключено')
 
     elif text == '/trade':
         telegram.send_message('Создание торговых заявок')
@@ -66,12 +62,12 @@ def process_single_update(text: str = None) -> None:
         agent.buy.create_orders()
 
 
-def buy_sell_rate() -> None:
-    try:
-        agent.instrument_rank_sell.update_recommendations()
-        agent.instrument_rank_buy.update_recommendations()
-    except Exception as e:
-        logger.log_error(method_name='create_orders', error=e)
+# def buy_sell_rate() -> None:
+#     try:
+#         agent.instrument_rank_sell.update_recommendations()
+#         agent.instrument_rank_buy.update_recommendations()
+#     except Exception as e:
+#         logger.log_error(method_name='create_orders', error=e)
 
 
 def create_orders() -> None:

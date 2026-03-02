@@ -7,8 +7,8 @@ from t_tech.invest import StatisticResponse
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 MODEL_NAME = learn.model.TA_3_fundamental
-MIN_DAYS = 90 # Минимальное количество дней до прогнозного периода
-MAX_DAYS = 370 # Максимальное количество дней до прогнозного периода
+MIN_TARGET_DAYS = 90 # Минимальное количество дней до прогнозного периода
+MAX_TARGET_DAYS = 370 # Максимальное количество дней до прогнозного периода
 REPORT_DURATION_DAYS = 90 # Это период за который собирается отчетность
 REPORTS_COUNT = 3 # Количество отчетов
 
@@ -106,8 +106,8 @@ class Ta3FundamentalAnalysisCard:
         if (tech := tech_analysis.get_tech_analysis(
             instrument_uid=self.instrument.uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
-            date_from=(self.date + timedelta(days=MIN_DAYS)),
-            date_to=(self.date + timedelta(days=MAX_DAYS)),
+            date_from=(self.date + timedelta(days=MIN_TARGET_DAYS)),
+            date_to=(self.date + timedelta(days=MAX_TARGET_DAYS)),
             interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
             length=30,
         )) and len(tech):

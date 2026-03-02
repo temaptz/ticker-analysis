@@ -159,7 +159,7 @@ def get_record_cache(key: str) -> dict | str | None:
 
 def get_record_cache_key(ticker: str, date: datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': f'{learn.model.TA_3_volume}_record_cache_key_001',
+        'method': f'{learn.model.TA_3_volume}_record_cache_key_003',
         'ticker': ticker,
         'date': date,
     }))

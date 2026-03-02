@@ -1,9 +1,9 @@
 <div class="rate-wrapper">
   <div class="rate-cell">
     @if (rateData.value(); as data) {
-      <div class="profit-percent">
+      <div class="value">
         @if (data.debug?.['potential_profit_percent'] != null) {
-          <span [style.color]="data.debug?.['potential_profit_percent'] >= 0 ? '#4caf50' : '#f44336'">
+          <span [style.color]="data.debug?.['potential_profit_percent'] >= 0 ? GRAPH_COLORS.buy : GRAPH_COLORS.sell">
             {{ data.debug?.['potential_profit_percent'] >= 0 ? '+' : '' }}{{ data.debug?.['potential_profit_percent'] | number:'1.2-2' }}%
           </span>
         }

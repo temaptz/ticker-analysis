@@ -32,4 +32,6 @@ export class FundamentalComponent {
   getTooltip(data: FundamentalRateResp): string {
     return JSON.stringify(data.debug, null, 2);
   }
+
+  protected readonly GRAPH_COLORS = GRAPH_COLORS;
 }

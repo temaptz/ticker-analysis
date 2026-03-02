@@ -6,7 +6,7 @@ from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 @cache.ttl_cache(ttl=3600)
 def get_tech_buy_rate(instrument_uid: str):
     final_rate_value = 0
-    target_prediction_value = 0.03
+    target_prediction_value = 0.025 # +2.5%
     max_prediction = 0
     max_prediction_date = 0
     days_rates = []

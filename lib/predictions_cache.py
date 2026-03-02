@@ -5,7 +5,7 @@ from lib import learn, redis_utils
 def get_prediction_cache(
         instrument_uid: str,
         model_name: learn.model,
-        date_target: datetime.datetime,
+        date_target: datetime.datetime = None,
     ) -> float or None:
     if cache_key := get_cache_key(
             instrument_uid=instrument_uid,
@@ -20,8 +20,8 @@ def get_prediction_cache(
 def set_prediction_cache(
         instrument_uid: str,
         model_name: learn.model,
-        date_target: datetime.datetime,
         prediction: float,
+        date_target: datetime.datetime = None,
 ):
     if cache_key := get_cache_key(
             instrument_uid=instrument_uid,

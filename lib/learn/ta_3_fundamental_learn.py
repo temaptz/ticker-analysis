@@ -5,10 +5,8 @@ from catboost import CatBoostRegressor
 from lib import utils, instruments, learn, news, date_utils, serializer, redis_utils, yandex_disk, docker, logger
 
 def generate_data():
-    news_beginning_date = news.news.news_beginning_date
-    yesterday = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=1))
-    date_end = yesterday
-    date_start = date_utils.get_day_prediction_time(date=(news_beginning_date + timedelta(days=30)))
+    date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_fundamental.MAX_TARGET_DAYS))
+    date_start = date_utils.get_day_prediction_time(date=datetime(year=2025, month=2, day=1, tzinfo=timezone.utc))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
     counter_added = 0
@@ -25,15 +23,12 @@ def generate_data():
         instrument_index += 1
         print('INSTRUMENT', instrument.ticker)
 
-        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, is_skip_holidays=False, is_order_descending=not docker.is_docker()):
+        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, interval_seconds=(3600 * 24 * 7), is_skip_holidays=False, is_order_descending=not docker.is_docker()):
             print('DATE', date)
-            if target_date > date_end:
-                continue
 
             record_cache_key = get_record_cache_key(
                 ticker=instrument.ticker,
                 date=date,
-                target_date=target_date,
             )
 
             cached_csv_record = get_record_cache(key=record_cache_key)

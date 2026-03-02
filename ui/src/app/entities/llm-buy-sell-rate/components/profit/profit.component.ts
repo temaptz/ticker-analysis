@@ -32,4 +32,6 @@ export class ProfitComponent {
   getTooltip(data: ProfitRateResp): string {
     return JSON.stringify(data.debug, null, 2);
   }
+
+  protected readonly GRAPH_COLORS = GRAPH_COLORS;
 }

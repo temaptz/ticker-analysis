@@ -4,7 +4,7 @@ from t_tech.invest import Instrument, CandleInterval
 from t_tech.invest.schemas import IndicatorType
 from datetime import datetime, timedelta, timezone
 
-from lib import utils, instruments, date_utils, tech_analysis, learn
+from lib import utils, instruments, date_utils, tech_analysis, learn, graph_printing
 
 TARGET_MIN_DAYS_COUNT = 1
 TARGET_MAX_DAYS_COUNT = 20
@@ -101,7 +101,7 @@ class Ta3VolumeAnalysisCard:
         
         pvo_values = []
         for i in range(len(ma_fast)):
-            if ma_slow[i] != 0:
+            if ma_slow[i] is not None and ma_fast[i] is not None and ma_slow[i] != 0:
                 pvo = (ma_fast[i] - ma_slow[i]) / ma_slow[i]
             else:
                 pvo = 0
@@ -111,11 +111,27 @@ class Ta3VolumeAnalysisCard:
         volume_hist_values = [pvo_values[i] - sign_values[i] for i in range(len(pvo_values))]
         volume_hist_last = volume_hist_values[-CANDLES_COUNT:]
 
+        dates = []
         for i, candle in enumerate(last_candles):
+            candle_date = date_utils.parse_date(candle.time)
+            dates.append(candle_date)
             result.append({
-                'volume_norm': volume_hist_last[i] * 10,
-                'rsi_norm': rsi_dict.get(date_utils.parse_date(candle.time)) / 100,
+                'volume_norm': volume_hist_last[i],
+                'rsi_norm': rsi_dict.get(candle_date) / 100,
             })
+
+        # volume_norm_data = [c['volume_norm'] for c in result]
+        # rsi_norm_data = [c['rsi_norm'] for c in result]
+        #
+        # print("\n" + "="*120)
+        # print("VOLUME NORM (PVO Histogram * 10)")
+        # print("="*120)
+        # graph_printing.print_graph(y_data=volume_norm_data, date_from=dates[0], date_to=dates[-1])
+        #
+        # print("="*120)
+        # print("RSI NORM (RSI / 100)")
+        # print("="*120)
+        # graph_printing.print_graph(y_data=rsi_norm_data, date_from=dates[0], date_to=dates[-1])
 
         return result
 
