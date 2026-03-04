@@ -4,7 +4,7 @@
       <div class="value">
         @if (data.debug?.['prediction'] != null) {
           <span [style.color]="data.debug?.['prediction'] >= 0 ? GRAPH_COLORS.buy : GRAPH_COLORS.sell">
-            {{ data.debug?.['prediction'] >= 0 ? '+' : '' }}{{ data.debug?.['prediction'] | number:'1.2-2' }}%
+            {{ data.debug?.['prediction'] >= 0 ? '+' : '' }}{{ (data.debug?.['prediction'] ?? 0) * 100 | number:'1.4-4' }}%
           </span>
         }
       </div>
