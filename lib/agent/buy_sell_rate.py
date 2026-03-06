@@ -1,7 +1,7 @@
 from lib import agent, db_2, logger
 
 
-def get_total_buy_rate(instrument_uid: str) -> dict:
+def get_total_buy_rate(instrument_uid: str, account_id: str) -> dict:
     final_rate = 0
     macd_rated_value = None
     rsi_rated_value =None
@@ -16,7 +16,7 @@ def get_total_buy_rate(instrument_uid: str) -> dict:
     news_rated = agent.news.get_news_buy_rate(instrument_uid=instrument_uid)
     fundamental_rated = agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid)
     volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid)
-    profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid)
+    profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
 
     weights = get_buy_weights()
 
@@ -71,7 +71,7 @@ def get_total_buy_rate(instrument_uid: str) -> dict:
     }
 
 
-def get_total_sell_rate(instrument_uid: str) -> dict:
+def get_total_sell_rate(instrument_uid: str, account_id: str) -> dict:
     final_rate = 0
     macd_rated_value = None
     rsi_rated_value = None
@@ -86,7 +86,7 @@ def get_total_sell_rate(instrument_uid: str) -> dict:
     news_rated = agent.news.get_news_sell_rate(instrument_uid=instrument_uid)
     fundamental_rated = agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid)
     volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid)
-    profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid)
+    profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
 
     weights = get_sell_weights()
 

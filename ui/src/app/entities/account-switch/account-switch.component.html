@@ -1,0 +1,20 @@
+@if (accounts.hasValue()) {
+  @let accountsList = accounts.value();
+  <div [formGroup]="form" class="account-section">
+    <p class="account-label">Портфель</p>
+    <select
+      class="account-select"
+      formControlName="accountId"
+    >
+      @for (account of accountsList; track account.id) {
+        <option [value]="account.id">{{ account.name }}</option>
+      }
+    </select>
+
+    @if (userMoneyRub.value() !== undefined) {
+      <p class="account-balance">Баланс: {{ userMoneyRub.value() | number:'1.2-2' }} ₽</p>
+    } @else if (userMoneyRub.isLoading()) {
+      <p class="account-balance">Загрузка баланса...</p>
+    }
+  </div>
+}

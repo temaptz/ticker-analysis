@@ -5,7 +5,7 @@
     <div class="weights-column">
       <p class="weights-column-title weights-column-title--buy">Покупка</p>
 
-      @if (buyWeights.hasValue()) {
+      @if (buyWeights()) {
         <div class="weights-list">
           @for (key of weightKeys; track key) {
             <div class="weight-row" [style.background]="getWeightBg(true, key)" [style.color]="getWeightColor(true, key)">
@@ -33,7 +33,7 @@
     <div class="weights-column">
       <p class="weights-column-title weights-column-title--sell">Продажа</p>
 
-      @if (sellWeights.hasValue()) {
+      @if (sellWeights()) {
         <div class="weights-list">
           @for (key of weightKeys; track key) {
             <div class="weight-row" [style.background]="getWeightBg(false, key)" [style.color]="getWeightColor(false, key)">

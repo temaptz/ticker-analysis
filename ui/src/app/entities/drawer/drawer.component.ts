@@ -1,19 +1,21 @@
 import { Component, computed, inject, model, resource } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { SortModeEnum } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
 import { SortModeService } from '../../shared/services/sort-mode.service';
 import { GraphControlSettingsService } from '../../shared/services/graph-control-settings.service';
 import { DrawerStateService } from '../../shared/services/drawer-state.service';
+import { AccountService } from '../../shared/services/account.service';
 import { ComplexGraphControlComponent, ComplexGraphControlOptions } from '../complex-graph-control/complex-graph-control.component';
 import { WeightsEditorComponent } from '../weights-editor/weights-editor.component';
+import { AccountSwitchComponent } from '../account-switch/account-switch.component';
 
 
 @Component({
   selector: 'drawer',
-  imports: [CommonModule, ComplexGraphControlComponent, WeightsEditorComponent],
+  imports: [CommonModule, FormsModule, ComplexGraphControlComponent, WeightsEditorComponent, AccountSwitchComponent],
   providers: [],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss'
@@ -23,7 +25,11 @@ export class DrawerComponent {
   sortModeEnum = SortModeEnum;
 
   private _drawerStateService = inject(DrawerStateService);
+  private _accountService = inject(AccountService);
+
   isDrawerOpen = this._drawerStateService.isOpen;
+
+  accounts = this._accountService.accounts;
 
   totalInfo = resource({
     loader: () => firstValueFrom(this._api.getTotalInfo()),
@@ -68,11 +74,6 @@ export class DrawerComponent {
 
   handleToggleDrawer(): void {
     this._drawerStateService.toggle();
-  }
-
-  handleChangeSort(e: MatButtonToggleChange): void {
-    this.sort.set(e.value);
-    this._sortModeService.setSortMode(e.value);
   }
 
   setSort(mode: SortModeEnum): void {

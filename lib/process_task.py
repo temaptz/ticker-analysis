@@ -1,4 +1,4 @@
-from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news, agent, logger
+from lib import cache, yandex_disk, forecasts_save, predictions_save, fundamentals_save, docker, counter, redis_utils, telegram, news, agent, logger, users
 from lib.db_2 import db_utils
 
 
@@ -72,7 +72,7 @@ def process_single_update(text: str = None) -> None:
 
 def create_orders() -> None:
     try:
-        agent.sell.create_orders_3()
-        agent.buy.create_orders_3()
+        agent.sell.create_orders_3(account_id=users.get_analytics_account().id)
+        agent.buy.create_orders_3(account_id=users.get_analytics_account().id)
     except Exception as e:
         logger.log_error(method_name='create_orders', error=e)

@@ -1,4 +1,4 @@
-@if (!isLoaded()) {
+@if (instrumentsResource.isLoading()) {
   <div class="preloader">
     <preloader></preloader>
   </div>
@@ -11,6 +11,7 @@
   class="table-container"
   appendOnly
   [tvsItemSize]="tableItemHeightPx"
+  [bufferMultiplier]="0.1"
   [headerEnabled]="true"
 >
   <table
@@ -103,5 +104,4 @@
 
 <drawer
   [(sort)]="sortTickers"
-  (sortChange)="handleChangeSort()"
 ></drawer>

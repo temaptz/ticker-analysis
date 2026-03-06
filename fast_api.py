@@ -61,24 +61,18 @@ def get_request_token(request: Request):
     return request.headers.get('Authorization')
 
 
-def instruments_list(sort: int or str) -> list[Instrument]:
+def instruments_list(sort: int or str, account_id: Optional[str]) -> list[Instrument]:
     sorted_list = instruments.get_instruments_white_list()
 
-    if sort and (sort == 1 or sort == '1'):
-        sorted_list = users.sort_instruments_for_buy(
-            instruments_list=sorted_list
-        )
-    elif sort and (sort == 2 or sort == '2'):
-        sorted_list = users.sort_instruments_for_sell(
-            instruments_list=sorted_list
-        )
-    elif sort and (sort == 3 or sort == '3'):
+    if sort and (sort == 3 or sort == '3'):
         sorted_list = users.sort_instruments_last_operation(
-            instruments_list=sorted_list
+            instruments_list=sorted_list,
+            account_id=account_id,
         )
     elif sort and (sort == 4 or sort == '4'):
         sorted_list = users.sort_instruments_cost(
-            instruments_list=sorted_list
+            instruments_list=sorted_list,
+            account_id=account_id,
         )
     elif sort and (sort == 5 or sort == '5'):
         sorted_list = users.sort_instruments_by_volume_buy(
@@ -130,19 +124,23 @@ def instruments_list(sort: int or str) -> list[Instrument]:
         )
     elif sort and (sort == 17 or sort == '17'):
         sorted_list = users.sort_instruments_by_profit_buy(
-            instruments_list=sorted_list
+            instruments_list=sorted_list,
+            account_id=account_id,
         )
     elif sort and (sort == 18 or sort == '18'):
         sorted_list = users.sort_instruments_by_profit_sell(
-            instruments_list=sorted_list
+            instruments_list=sorted_list,
+            account_id=account_id,
         )
     elif sort and (sort == 19 or sort == '19'):
         sorted_list = users.sort_instruments_by_total_rate_buy(
-            instruments_list=sorted_list
+            instruments_list=sorted_list,
+            account_id=account_id,
         )
     elif sort and (sort == 20 or sort == '20'):
         sorted_list = users.sort_instruments_by_total_rate_sell(
-            instruments_list=sorted_list
+            instruments_list=sorted_list,
+            account_id=account_id,
         )
 
     return sorted_list
@@ -311,16 +309,16 @@ def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str])
     return resp
 
 
-def instrument_balance(uid: Optional[str]):
+def instrument_balance(uid: Optional[str], account_id: Optional[int] = None):
     if not uid:
         return None
-    return users.get_user_instrument_balance(instrument_uid=uid)
+    return users.get_user_instrument_balance(instrument_uid=uid, account_id=account_id)
 
 
-def instrument_operations(figi: Optional[str]):
-    if not figi:
+def instrument_operations(figi: Optional[str], account_id: Optional[int] = None):
+    if not figi or not account_id:
         return None
-    return users.get_user_instrument_operations(instrument_figi=figi, account_id=users.get_analytics_account().id)
+    return users.get_user_instrument_operations(instrument_figi=figi, account_id=account_id)
 
 
 def instrument_news_list_rated(uid: Optional[str], start_date_str: Optional[str], end_date_str: Optional[str]):
@@ -359,10 +357,10 @@ def instrument_brand(uid: Optional[str]):
     return None
 
 
-def instrument_invest_calc(uid: Optional[str]):
-    if not uid:
+def instrument_invest_calc(uid: Optional[str], account_id: Optional[str]):
+    if not uid or not account_id:
         return None
-    return invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid, account_id=users.get_analytics_account().id)
+    return invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=uid, account_id=account_id)
 
 
 def tech_analysis_graph(
@@ -503,18 +501,18 @@ def instrument_volume_rate(instrument_uid: str, is_buy: bool):
         return agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid)
 
 
-def instrument_profit_rate(instrument_uid: str, is_buy: bool):
+def instrument_profit_rate(instrument_uid: str, account_id: str, is_buy: bool):
     if is_buy:
-        return agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid)
+        return agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
     else:
-        return agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid)
+        return agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
 
 
-def instrument_buy_sell_total_rate(instrument_uid: str, is_buy: bool):
+def instrument_buy_sell_total_rate(instrument_uid: str, account_id: str, is_buy: bool):
     if is_buy:
-        return agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid)
+        return agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
     else:
-        return agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid)
+        return agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
 
 
 def get_buy_sell_weights(is_buy: bool):
@@ -533,15 +531,15 @@ def set_buy_sell_weights(is_buy: bool, weights: dict):
         )
 
 
-def get_buy_recommendation(instrument_uid: str):
+def get_buy_recommendation(instrument_uid: str, account_id: str):
     return serializer.get_dict_by_object_recursive(
-        agent.buy.get_buy_recommendation_by_uid(instrument_uid=instrument_uid)
+        agent.buy.get_buy_recommendation_by_uid(instrument_uid=instrument_uid, account_id=account_id)
     )
 
 
-def get_sell_recommendation(instrument_uid: str):
+def get_sell_recommendation(instrument_uid: str, account_id: str):
     return serializer.get_dict_by_object_recursive(
-        agent.sell.get_sell_recommendation_by_uid(instrument_uid=instrument_uid)
+        agent.sell.get_sell_recommendation_by_uid(instrument_uid=instrument_uid, account_id=account_id)
     )
 
 
@@ -569,22 +567,19 @@ def _serialize_order(order) -> dict:
     }
 
 
-def get_instrument_active_orders(instrument_uid: str):
+def get_instrument_active_orders(instrument_uid: str, account_id: Optional[int] = None):
     from t_tech.invest import Client, constants
     from const import TINKOFF_INVEST_TOKEN
     from lib import instruments as _instr
     result = []
     try:
-        account = users.get_analytics_account()
-        if not account:
-            return result
         figi = None
         try:
             figi = _instr.get_instrument_by_uid(uid=instrument_uid).figi
         except Exception:
             pass
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            orders_resp = client.orders.get_orders(account_id=account.id)
+            orders_resp = client.orders.get_orders(account_id=account_id)
             for order in orders_resp.orders:
                 if order.instrument_uid == instrument_uid or (figi and order.figi == figi):
                     result.append(_serialize_order(order))
@@ -593,8 +588,8 @@ def get_instrument_active_orders(instrument_uid: str):
     return result
 
 
-def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: float, is_buy: bool):
-    print(f'create_instrument_order uid={instrument_uid} qty={quantity_lots} price={price_rub} is_buy={is_buy}')
+def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: float, is_buy: bool, account_id: Optional[int] = None):
+    print(f'create_instrument_order uid={instrument_uid} qty={quantity_lots} price={price_rub} is_buy={is_buy} account_id={account_id}')
     last_error = [None]
 
     def _buy():
@@ -611,7 +606,7 @@ def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: 
                 instrument_id=instrument_uid,
                 quantity=quantity_lots,
                 price=price,
-                account_id=users.get_analytics_account().id,
+                account_id=account_id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
                 direction=OrderDirection.ORDER_DIRECTION_BUY,
             )
@@ -630,7 +625,7 @@ def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: 
                 instrument_id=instrument_uid,
                 quantity=quantity_lots,
                 price=price,
-                account_id=users.get_analytics_account().id,
+                account_id=account_id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
                 direction=OrderDirection.ORDER_DIRECTION_SELL,
             )
@@ -646,15 +641,12 @@ def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: 
         raise e
 
 
-def cancel_instrument_order(order_id: str):
+def cancel_instrument_order(order_id: str, account_id: Optional[int] = None):
     from t_tech.invest import Client, constants
     from const import TINKOFF_INVEST_TOKEN
     try:
-        account = users.get_analytics_account()
-        if not account:
-            return None
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            resp = client.orders.cancel_order(account_id=account.id, order_id=order_id)
+            resp = client.orders.cancel_order(account_id=account_id, order_id=order_id)
             return serializer.get_dict_by_object_recursive(resp)
     except Exception as e:
         print('ERROR cancel_instrument_order', e)
@@ -665,6 +657,7 @@ def cancel_instrument_order(order_id: str):
 def instruments_list_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instruments_list(
         sort=request.query_params.get('sort'),
+        account_id=request.query_params.get('account_id'),
     )
     
 
@@ -768,13 +761,17 @@ def instrument_prediction_consensus_endpoint(request: Request, user=Depends(veri
 @app.get('/instrument/balance')
 def instrument_balance_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
-    return instrument_balance(uid)
+    account_id = request.query_params.get('account_id')
+    account_id_int = int(account_id) if account_id else None
+    return instrument_balance(uid, account_id_int)
     
 
 @app.get('/instrument/operations')
 def instrument_operations_endpoint(request: Request, user=Depends(verify_user_by_token)):
     figi = request.query_params.get('figi')
-    return instrument_operations(figi)
+    account_id = request.query_params.get('account_id')
+    account_id_int = int(account_id) if account_id else None
+    return instrument_operations(figi, account_id_int)
     
 
 @app.get('/instrument/news_list_rated')
@@ -804,7 +801,8 @@ def instrument_brand_endpoint(request: Request, user=Depends(verify_user_by_toke
 @app.get('/instrument/invest_calc')
 def instrument_invest_calc_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
-    return instrument_invest_calc(uid)
+    account_id = request.query_params.get('account_id')
+    return instrument_invest_calc(uid, account_id)
     
 
 @app.get('/instrument/tech_analysis_graph')
@@ -829,6 +827,18 @@ async def instrument_tag_endpoint(request: Request, user=Depends(verify_user_by_
 @app.get('/total_info')
 def total_info(user=Depends(verify_user_by_token)):
     return get_total_info()
+
+
+@app.get('/accounts')
+def accounts_endpoint(user=Depends(verify_user_by_token)):
+    return [serializer.get_dict_by_object_recursive(a) for a in users.get_accounts()]
+
+
+@app.get('/user_money_rub')
+def user_money_rub_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    account_id = request.query_params.get('account_id')
+    account_id_int = int(account_id) if account_id else None
+    return users.get_user_money_rub(account_id=account_id_int)
 
 
 @app.get('/current_user')
@@ -901,6 +911,7 @@ def instrument_volume_rate_endpoint(request: Request, user=Depends(verify_user_b
 def instrument_profit_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_profit_rate(
         instrument_uid=request.query_params.get('uid'),
+        account_id=request.query_params.get('account_id'),
         is_buy=request.query_params.get('is_buy') == 'true',
     )
 
@@ -909,6 +920,7 @@ def instrument_profit_rate_endpoint(request: Request, user=Depends(verify_user_b
 def instrument_buy_sell_total_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return instrument_buy_sell_total_rate(
         instrument_uid=request.query_params.get('uid'),
+        account_id=request.query_params.get('account_id'),
         is_buy=request.query_params.get('is_buy') == 'true',
     )
 
@@ -934,6 +946,7 @@ async def set_buy_sell_weights_endpoint(request: Request, user=Depends(verify_us
 def buy_recommendation_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return get_buy_recommendation(
         instrument_uid=request.query_params.get('uid'),
+        account_id=request.query_params.get('account_id'),
     )
 
 
@@ -941,13 +954,17 @@ def buy_recommendation_endpoint(request: Request, user=Depends(verify_user_by_to
 def sell_recommendation_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return get_sell_recommendation(
         instrument_uid=request.query_params.get('uid'),
+        account_id=request.query_params.get('account_id'),
     )
 
 
 @app.get('/instrument/active_orders')
 def instrument_active_orders_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    account_id = request.query_params.get('account_id')
+    account_id_int = int(account_id) if account_id else None
     return get_instrument_active_orders(
         instrument_uid=request.query_params.get('uid'),
+        account_id=account_id_int,
     )
 
 
@@ -955,12 +972,15 @@ def instrument_active_orders_endpoint(request: Request, user=Depends(verify_user
 async def create_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
     body = await request.json()
     print(f'POST /instrument/order body={body}')
+    account_id = body.get('account_id')
+    account_id_int = int(account_id) if account_id else None
     try:
         result = create_instrument_order(
             instrument_uid=body.get('instrument_uid'),
             quantity_lots=int(body.get('quantity_lots', 1)),
             price_rub=float(body.get('price_rub')),
             is_buy=bool(body.get('is_buy', True)),
+            account_id=account_id_int,
         )
         return result
     except Exception as e:
@@ -970,7 +990,9 @@ async def create_instrument_order_endpoint(request: Request, user=Depends(verify
 @app.delete('/instrument/order')
 async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
     order_id = request.query_params.get('order_id')
-    result = cancel_instrument_order(order_id=order_id)
+    account_id = request.query_params.get('account_id')
+    account_id_int = int(account_id) if account_id else None
+    result = cancel_instrument_order(order_id=order_id, account_id=account_id_int)
     if result is not None:
         return result
     raise HTTPException(status_code=400, detail='Failed to cancel order')

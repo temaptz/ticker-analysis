@@ -83,7 +83,7 @@ class InvestCalc:
 
 
 @logger.error_logger
-def get_invest_calc_by_instrument_uid(instrument_uid: str, account_id: int = None) -> dict or None:
+def get_invest_calc_by_instrument_uid(instrument_uid: str, account_id: str = None) -> dict or None:
     result = {
         'balance': None,
         'current_price': None,
@@ -99,26 +99,24 @@ def get_invest_calc_by_instrument_uid(instrument_uid: str, account_id: int = Non
 
     if instrument and current_price:
         balance_qty = users.get_user_instrument_balance(instrument_uid=instrument_uid, account_id=account_id)
+        operations = users.get_user_instrument_operations(instrument_figi=instrument.figi, account_id=account_id)
 
-        if balance_qty:
-            operations = users.get_user_instrument_operations(instrument_figi=instrument.figi, account_id=account_id)
+        if operations and len(operations) > 0:
+            calc = InvestCalc(
+                operations=operations,
+                current_price=current_price,
+                balance_qty=balance_qty,
+            )
 
-            if operations and len(operations) > 0:
-                calc = InvestCalc(
-                    operations=operations,
-                    current_price=current_price,
-                    balance_qty=balance_qty,
-                )
+            result['balance'] = balance_qty
+            result['current_price'] = current_price
+            result['market_value'] = calc.get_market_value()
+            result['potential_profit'] = calc.get_profit()
+            result['potential_profit_percent'] = calc.get_profit_percentage()
+            result['avg_price'] = calc.get_average_price()
+            result['operations'] = operations
 
-                result['balance'] = balance_qty
-                result['current_price'] = current_price
-                result['market_value'] = calc.get_market_value()
-                result['potential_profit'] = calc.get_profit()
-                result['potential_profit_percent'] = calc.get_profit_percentage()
-                result['avg_price'] = calc.get_average_price()
-                result['operations'] = operations
-
-                return result
+            return result
 
     return None
 

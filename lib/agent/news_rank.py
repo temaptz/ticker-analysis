@@ -29,7 +29,8 @@ def rank_last_news():
     news_rate_success = 0
 
     for i in users.sort_instruments_cost(
-            instruments_list=instruments.get_instruments_white_list()
+            instruments_list=instruments.get_instruments_white_list(),
+            account_id=users.get_analytics_account().id,
     ):
         try:
             if human_name := instruments.get_instrument_human_name(uid=i.uid):

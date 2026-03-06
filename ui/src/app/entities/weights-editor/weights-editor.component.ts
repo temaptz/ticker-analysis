@@ -1,4 +1,4 @@
-import { Component, inject, resource, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -32,13 +32,8 @@ export class WeightsEditorComponent {
   private _api = inject(ApiService);
   private _weightsService = inject(WeightsService);
 
-  buyWeights = resource({
-    loader: () => firstValueFrom(this._api.getBuySellWeights(true)),
-  });
-
-  sellWeights = resource({
-    loader: () => firstValueFrom(this._api.getBuySellWeights(false)),
-  });
+  buyWeights = this._weightsService.buyWeights;
+  sellWeights = this._weightsService.sellWeights;
 
   editBuyWeights = signal<BuySellWeights | null>(null);
   editSellWeights = signal<BuySellWeights | null>(null);
@@ -56,9 +51,9 @@ export class WeightsEditorComponent {
 
   getEditWeights(isBuy: boolean): BuySellWeights | null {
     if (isBuy) {
-      return this.editBuyWeights() ?? this.buyWeights.value() ?? null;
+      return this.editBuyWeights() ?? this.buyWeights() ?? null;
     }
-    return this.editSellWeights() ?? this.sellWeights.value() ?? null;
+    return this.editSellWeights() ?? this.sellWeights() ?? null;
   }
 
   getWeightValue(isBuy: boolean, key: WeightKey): number {
@@ -108,11 +103,9 @@ export class WeightsEditorComponent {
       if (isBuy) {
         this.editBuyWeights.set(null);
         this.isBuyDirty.set(false);
-        this.buyWeights.reload();
       } else {
         this.editSellWeights.set(null);
         this.isSellDirty.set(false);
-        this.sellWeights.reload();
       }
     } finally {
       this.isSaving.set(false);

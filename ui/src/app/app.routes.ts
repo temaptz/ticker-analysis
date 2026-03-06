@@ -18,11 +18,6 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'full',
-    loadComponent: () => import('./pages/list-full/list-full.component').then(c => c.ListFullComponent),
-    canActivate: [authGuard]
-  },
-  {
     path: 'ticker/:ticker/fundamentals',
     loadComponent: () => import('./pages/fundamentals-page/fundamentals-page.component').then(c => c.FundamentalsPageComponent),
     canActivate: [authGuard]

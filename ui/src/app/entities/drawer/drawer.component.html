@@ -7,11 +7,11 @@
   class="drawer"
   [class.hidden]="!isDrawerOpen()"
 >
+  <account-switch/>
+
   <div class="sort-section">
     <p class="sort-label">Сортировка</p>
     <div class="sort-buttons">
-      <button class="sort-btn" [class.active]="sort() === sortModeEnum.BuyPerspective" (click)="setSort(sortModeEnum.BuyPerspective)">Покупка</button>
-      <button class="sort-btn" [class.active]="sort() === sortModeEnum.SellPerspective" (click)="setSort(sortModeEnum.SellPerspective)">Продажа</button>
       <button class="sort-btn" [class.active]="sort() === sortModeEnum.LastOperation" (click)="setSort(sortModeEnum.LastOperation)">Последняя операция</button>
       <button class="sort-btn" [class.active]="sort() === sortModeEnum.MarketValue" (click)="setSort(sortModeEnum.MarketValue)">Стоимость портфеля</button>
       <button class="sort-btn sort-btn--buy" [class.active]="sort() === sortModeEnum.BuyTotalRate" (click)="setSort(sortModeEnum.BuyTotalRate)">Итог</button>

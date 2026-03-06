@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../shared/services/api.service';
+import { AccountService } from '../../shared/services/account.service';
 import { ActiveOrder, BuyRecommendation, SellRecommendation } from '../../shared/types';
 
 
@@ -32,6 +33,7 @@ export class OrderCardComponent implements OnChanges {
 
   private initialized = false;
   private apiService = inject(ApiService);
+  private accountService = inject(AccountService);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['recommendation'] && !this.initialized) {
@@ -87,12 +89,13 @@ export class OrderCardComponent implements OnChanges {
     this.isLoading.set(true);
 
     this.errorMessage.set(null);
+    const accountId = this.accountService.selectedAccountId();
     this.apiService.createOrder({
       instrument_uid: this.instrumentUid(),
       quantity_lots: qty,
       price_rub: price,
       is_buy: this.isBuy(),
-    }).subscribe({
+    }, accountId ?? undefined).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.orderCreated.emit();
@@ -109,7 +112,8 @@ export class OrderCardComponent implements OnChanges {
     const order = this.order;
     if (!order) return;
     this.isLoading.set(true);
-    this.apiService.cancelOrder(order.order_id).subscribe({
+    const accountId = this.accountService.selectedAccountId();
+    this.apiService.cancelOrder(order.order_id, accountId ?? undefined).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.orderCancelled.emit();

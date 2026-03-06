@@ -1,14 +1,14 @@
-import { Component, computed, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, inject, resource, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { switchMap, tap } from 'rxjs';
+import { MatSortModule } from '@angular/material/sort';
+import { firstValueFrom } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
 import { SortModeService } from '../../shared/services/sort-mode.service';
+import { AccountService } from '../../shared/services/account.service';
 import { InstrumentLogoComponent } from '../../entities/instrument-logo/instrument-logo.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
@@ -46,12 +46,28 @@ import { InstrumentOrdersComponent } from '../../entities/instrument-orders/inst
   styleUrl: './table-full-3.component.scss'
 })
 export class TableFull3Component {
-
   isLoaded = signal<boolean>(false);
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
 
   private _sortModeService = inject(SortModeService);
+  private _accountService = inject(AccountService);
+  private _apiService = inject(ApiService);
+
   sortTickers = this._sortModeService.sortMode;
+  selectedAccountId = this._accountService.selectedAccountId;
+
+  instrumentsResource = resource({
+    request: () => ({
+      sort: this.sortTickers(),
+      accountId: this.selectedAccountId(),
+    }),
+    loader: ({ request }) => {
+      if (!request.accountId) {
+        return Promise.resolve([]);
+      }
+      return firstValueFrom(this._apiService.getInstruments(request.sort, request.accountId));
+    },
+  });
 
   ratingColumnTitle = computed<string>(() => {
     const mode = this.sortTickers();
@@ -65,7 +81,9 @@ export class TableFull3Component {
   });
 
   protected readonly CandleInterval = CandleInterval;
-  protected readonly tableItemHeightPx = 265;
+  protected readonly tableItemHeightPx = 350;
+  protected readonly tableMinBufferPx = 350 * 2;
+  protected readonly tableMaxBufferPx = 350 * 3;
 
   displayedColumns: string[] = [
     'logo',
@@ -75,22 +93,12 @@ export class TableFull3Component {
     'instrument_orders',
   ];
 
-  private appService = inject(ApiService);
-
-  @ViewChild(MatSort) sort!: MatSort;
-
   constructor() {
-    toObservable(this.sortTickers)
-      .pipe(
-        tap(() => this.isLoaded.set(false)),
-        switchMap((sortTickers) => this.appService.getInstruments(sortTickers)),
-        tap(() => this.isLoaded.set(true)),
-      )
-      .subscribe(instruments => this.dataSource.data = instruments);
-  }
-
-  handleChangeSort(): void {
-    // persisted via SortModeService
+    effect(() => {
+      const instruments = this.instrumentsResource.value();
+      const isLoading = this.instrumentsResource.isLoading();
+      this.dataSource.data = (isLoading ? [] : instruments) ?? [];
+    });
   }
 
 }

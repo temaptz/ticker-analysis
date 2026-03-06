@@ -17,7 +17,7 @@ from lib import cache, instruments, utils, logger, invest_calc, predictions, db_
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_balance(instrument_uid: str, account_id: int = None) -> int:
+def get_user_instrument_balance(instrument_uid: str, account_id: str = None) -> int:
     result = 0
 
     try:
@@ -34,16 +34,16 @@ def get_user_instrument_balance(instrument_uid: str, account_id: int = None) -> 
     return result
 
 
-def get_user_money_rub() -> int:
+def get_user_money_rub(account_id: str) -> int:
     result = 0
 
     try:
-        if account := get_analytics_account():
-            if positions := get_positions(account_id=account.id):
+        if account_id and (positions := get_positions(account_id=account_id)):
                 if positions.money and len(positions.money) > 0:
                     for m in positions.money:
                         if m.currency == 'rub':
                             result += utils.get_price_by_quotation(m)
+                if positions.blocked:
                     for b in positions.blocked:
                         if b.currency == 'rub':
                             result -= utils.get_price_by_quotation(b)
@@ -123,7 +123,7 @@ def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instruments_list(account_id: int = None) -> list[Instrument]:
+def get_user_instruments_list(account_id: str = None) -> list[Instrument]:
     result = []
 
     try:
@@ -138,7 +138,7 @@ def get_user_instruments_list(account_id: int = None) -> list[Instrument]:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_user_instrument_operations(instrument_figi: str, account_id: int = None) -> list[Operation]:
+def get_user_instrument_operations(instrument_figi: str, account_id: str = None) -> list[Operation]:
     result = []
 
     try:
@@ -190,17 +190,17 @@ def get_portfolio(account_id: str):
 
 
 @cache.ttl_cache(ttl=3600)
-def get_positions(account_id: int) -> PositionsResponse or None:
+def get_positions(account_id: str) -> PositionsResponse or None:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            return client.operations.get_positions(account_id=account_id)
+            return client.operations.get_positions(account_id=str(account_id))
 
     except Exception as e:
         logger.log_error(method_name='get_positions', error=e)
 
 
 @cache.ttl_cache(ttl=3600)
-def get_operations(account_id: int, figi: str) -> list[Operation] or None:
+def get_operations(account_id: str, figi: str) -> list[Operation] or None:
     try:
         resp = list()
 
@@ -228,89 +228,113 @@ def sort_instruments_by_balance(instruments_list: list[Instrument]) -> list[Inst
     return sorted(instruments_list, key=get_instrument_total_balance_for_sort, reverse=True)
 
 
-def sort_instruments_for_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_buy_rate_for_sort, reverse=True)
+def sort_instruments_cost(instruments_list: list[Instrument], account_id: str or None) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda instrument: get_instrument_cost_for_sort(
+            instrument_uid=instrument.uid,
+            account_id=account_id,
+        ),
+        reverse=True,
+    )
 
 
-def sort_instruments_for_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_sell_rate_for_sort, reverse=True)
-
-
-def sort_instruments_cost(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_cost_for_sort, reverse=True)
-
-
-def sort_instruments_last_operation(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=get_instrument_last_operation_seconds, reverse=False)
-
+def sort_instruments_last_operation(instruments_list: list[Instrument], account_id: str or None) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda instrument: get_instrument_last_operation_seconds(
+            instrument_figi=instrument.figi,
+            account_id=account_id,
+        ),
+    )
 
 def sort_instruments_by_volume_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.volume.get_volume_buy_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.volume.get_volume_buy_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_volume_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.volume.get_volume_sell_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.volume.get_volume_sell_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_macd_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.macd.macd_buy_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.macd.macd_buy_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_macd_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.macd.macd_sell_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.macd.macd_sell_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_rsi_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.rsi.rsi_buy_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.rsi.rsi_buy_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_rsi_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.rsi.rsi_sell_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.rsi.rsi_sell_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_tech_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.tech.get_tech_buy_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.tech.get_tech_buy_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_tech_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.tech.get_tech_sell_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.tech.get_tech_sell_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_news_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.news.get_news_buy_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.news.get_news_buy_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_news_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.news.get_news_sell_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.news.get_news_sell_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_fundamental_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.fundamental.get_fundamental_buy_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.fundamental.get_fundamental_buy_rate, i.uid), reverse=True)
 
 
 def sort_instruments_by_fundamental_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.fundamental.get_fundamental_sell_rate, i), reverse=True)
+    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.fundamental.get_fundamental_sell_rate, i.uid), reverse=True)
 
 
-def sort_instruments_by_profit_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.profit.get_profit_buy_rate, i), reverse=True)
+def sort_instruments_by_profit_buy(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda i: _get_agent_rate(agent.profit.get_profit_buy_rate, i.uid, account_id),
+        reverse=True,
+    )
 
 
-def sort_instruments_by_profit_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.profit.get_profit_sell_rate, i), reverse=True)
+def sort_instruments_by_profit_sell(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda i: _get_agent_rate(agent.profit.get_profit_sell_rate, i.uid, account_id),
+        reverse=True,
+    )
 
 
-def sort_instruments_by_total_rate_buy(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.buy_sell_rate.get_total_buy_rate, i), reverse=True)
+def sort_instruments_by_total_rate_buy(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda i: _get_agent_rate(agent.buy_sell_rate.get_total_buy_rate, i.uid, account_id),
+        reverse=True,
+    )
 
 
-def sort_instruments_by_total_rate_sell(instruments_list: list[Instrument]) -> list[Instrument]:
-    return sorted(instruments_list, key=lambda i: _get_agent_rate(agent.buy_sell_rate.get_total_sell_rate, i), reverse=True)
+def sort_instruments_by_total_rate_sell(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda i: _get_agent_rate(agent.buy_sell_rate.get_total_sell_rate, i.uid, account_id),
+        reverse=True,
+    )
 
 
-def _get_agent_rate(rate_fn, instrument: Instrument) -> float:
+def _get_agent_rate(rate_fn, instrument_uid: str, account_id: str = None) -> float:
     try:
-        result = rate_fn(instrument_uid=instrument.uid)
+        result = None
+        if account_id:
+            result = rate_fn(instrument_uid=instrument_uid, account_id=account_id)
+        else:
+            result = rate_fn(instrument_uid=instrument_uid)
         if result and result.get('rate') is not None:
             return result['rate']
     except Exception as e:
@@ -336,34 +360,10 @@ def get_instrument_total_balance_for_sort(instrument: Instrument) -> float:
     return float('-inf')
 
 
-def get_instrument_sell_rate_for_sort(instrument: Instrument) -> float:
-    try:
-        if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_sell_rate'):
-            if tag_value := tag.tag_value:
-                return int(tag_value)
-
-    except Exception as e:
-        logger.log_error(method_name='get_instrument_sell_rate_for_sort', error=e)
-
-    return float('-inf')
-
-
-def get_instrument_buy_rate_for_sort(instrument: Instrument) -> float:
-    try:
-        if tag := db_2.instrument_tags_db.get_tag(instrument_uid=instrument.uid, tag_name='llm_buy_rate'):
-            if tag_value := tag.tag_value:
-                return int(tag_value)
-
-    except Exception as e:
-        logger.log_error(method_name='get_instrument_buy_rate_for_sort', error=e)
-
-    return float('-inf')
-
-
 @cache.ttl_cache(ttl=3600)
-def get_instrument_last_operation_seconds(instrument: Instrument) -> float:
+def get_instrument_last_operation_seconds(instrument_figi: str, account_id: str) -> float:
     try:
-        if operations := get_operations(account_id=get_analytics_account().id, figi=instrument.figi):
+        if operations := get_operations(account_id=account_id, figi=instrument_figi):
             now = datetime.datetime.now(pytz.utc)
             closest_operation = min(operations, key=lambda op: abs(now - op.date))
             time_diff = now - closest_operation.date
@@ -377,9 +377,9 @@ def get_instrument_last_operation_seconds(instrument: Instrument) -> float:
 
 
 @cache.ttl_cache(ttl=3600)
-def get_instrument_cost_for_sort(instrument: Instrument) -> float:
+def get_instrument_cost_for_sort(instrument_uid: str, account_id: str) -> float:
     try:
-        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument.uid, account_id=get_analytics_account().id)
+        calc = invest_calc.get_invest_calc_by_instrument_uid(instrument_uid=instrument_uid, account_id=account_id)
 
         if calc and calc['market_value'] is not None:
             return calc['market_value']

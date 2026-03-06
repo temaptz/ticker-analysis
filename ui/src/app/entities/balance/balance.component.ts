@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
+import { AccountService } from '../../shared/services/account.service';
 import { InstrumentInList, InvestCalc, Operation } from '../../shared/types';
-import { getPriceByQuotation } from '../../utils';
 import { PreloaderComponent } from '../preloader/preloader.component';
 import { PriceByQuotationPipe } from '../../shared/pipes/price-by-quotation.pipe';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
@@ -12,11 +12,11 @@ import { OperationTypeEnum } from '../../shared/enums';
 
 
 @Component({
-    selector: 'balance',
+  selector: 'balance',
   imports: [CommonModule, PreloaderComponent, PriceByQuotationPipe, PriceFormatPipe],
-    providers: [],
-    templateUrl: './balance.component.html',
-    styleUrl: './balance.component.scss'
+  providers: [],
+  templateUrl: './balance.component.html',
+  styleUrl: './balance.component.scss'
 })
 export class BalanceComponent {
 
@@ -36,127 +36,78 @@ export class BalanceComponent {
   protected readonly infinity = Infinity;
 
   private apiService = inject(ApiService);
+  private accountService = inject(AccountService);
   private destroyRef = inject(DestroyRef);
 
   constructor() {
-    effect(() => this.apiService.getInvestCalc(this.instrumentUid())
-      .pipe(
-        finalize(() => this.isLoaded.set(true)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((investCalc: InvestCalc) => {
-        if (investCalc?.balance) {
-          this.balanceQty.set(investCalc.balance);
-        }
+    effect(() => {
+      const accountId = this.accountService.selectedAccountId();
+      const instrumentUid = this.instrumentUid();
 
-        if (investCalc?.current_price) {
-          this.currentPrice.set(investCalc.current_price);
-        }
+      this.isLoaded.set(false);
 
-        if (investCalc?.market_value) {
-          this.marketValue.set(investCalc.market_value);
-        }
+      if (accountId) {
+        this.apiService.getInvestCalc(instrumentUid, accountId)
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.isLoaded.set(true)),
+          )
+          .subscribe({
+            next: (investCalc: InvestCalc) => {
+              if (investCalc?.balance || investCalc?.balance === 0) {
+                this.balanceQty.set(investCalc.balance);
+              } else {
+                this.balanceQty.set(null);
+              }
 
-        if (investCalc?.potential_profit) {
-          this.potentialProfit.set(investCalc.potential_profit);
-        }
+              if (investCalc?.current_price) {
+                this.currentPrice.set(investCalc.current_price);
+              } else {
+                this.currentPrice.set(null);
+              }
 
-        if (investCalc?.potential_profit_percent) {
-          this.potentialProfitPercent.set(investCalc.potential_profit_percent);
-        }
+              if (investCalc?.market_value) {
+                this.marketValue.set(investCalc.market_value);
+              } else {
+                this.marketValue.set(null);
+              }
 
-        if (investCalc?.avg_price) {
-          this.avgPrice.set(investCalc.avg_price);
-        }
+              if (investCalc?.potential_profit) {
+                this.potentialProfit.set(investCalc.potential_profit);
+              } else {
+                this.potentialProfit.set(null);
+              }
 
-        if (investCalc?.operations) {
-          this.operations.set(investCalc.operations);
-        }
-      }));
-  }
+              if (investCalc?.potential_profit_percent) {
+                this.potentialProfitPercent.set(investCalc.potential_profit_percent);
+              } else {
+                this.potentialProfitPercent.set(null);
+              }
 
-  /**
-   * Возвращает среднюю цену покупки (Average Price) для текущего остатка бумаг.
-   * Если после всех операций бумаг не осталось, вернёт 0.
-   */
-  private getAveragePrice(operations: Operation[]): number {
-    // Храним "открытые лоты" (позиции), которые ещё не были полностью проданы.
-    // Каждый элемент массива: {quantity, costPerShare}
-    // - количество бумаг в данном лоте
-    // - цена покупки за бумагу (при BUY).
-    const openPositions: { quantity: number; costPerShare: number }[] = [];
+              if (investCalc?.avg_price) {
+                this.avgPrice.set(investCalc.avg_price);
+              } else {
+                this.avgPrice.set(null);
+              }
 
-    for (const o of operations) {
-      if (o.operation_type === OperationTypeEnum.Buy) {
-        // При покупке добавляем новый лот.
-        openPositions.push({
-          quantity: o.quantity,
-          costPerShare: getPriceByQuotation(o.price) ?? 0
-        });
-      } else if (o.operation_type === OperationTypeEnum.Sell) {
-        // При продаже уменьшаем лоты с начала (FIFO)
-        let remainToSell = o.quantity;
-
-        // Пока нужно что-то "продать" и есть открытые лоты
-        while (remainToSell > 0 && openPositions.length > 0) {
-          const firstPos = openPositions[0];
-
-          // Если первый лот целиком "закрывается" продажей
-          if (firstPos.quantity <= remainToSell) {
-            remainToSell -= firstPos.quantity;
-            // Удаляем лот из списка
-            openPositions.shift();
-          } else {
-            // Продаём часть лота
-            firstPos.quantity -= remainToSell;
-            remainToSell = 0;
-          }
-        }
+              if (investCalc?.operations) {
+                this.operations.set(investCalc.operations);
+              } else {
+                this.operations.set([]);
+              }
+            },
+            error: () => {
+              this.balanceQty.set(null);
+              this.currentPrice.set(null);
+              this.marketValue.set(null);
+              this.potentialProfit.set(null);
+              this.potentialProfitPercent.set(null);
+              this.avgPrice.set(null);
+              this.operations.set([]);
+            }
+          });
       }
-    }
-
-    // Подсчитаем, сколько всего бумаг осталось и какова их суммарная стоимость
-    let totalQty = 0;
-    let totalCost = 0;
-
-    for (const pos of openPositions) {
-      totalQty += pos.quantity;
-      totalCost += pos.quantity * pos.costPerShare;
-    }
-
-    // Средняя цена покупки = Общая стоимость / Количество
-    return totalQty > 0 ? totalCost / totalQty : 0;
-  }
-
-  /**
-   * Возвращает текущую рыночную стоимость всех оставшихся бумаг
-   * = (остаток бумаг) * (текущая цена)
-   */
-  private getMarketValue(currentPrice: number, balanceQty: number): number {
-    return balanceQty * currentPrice; // 10 * 3717 = 37170
-  }
-
-  /**
-   * Абсолютная прибыль (или убыток) в рублях
-   */
-  private getProfit(operations: Operation[], currentPrice: number, balanceQty: number): number {
-    const avgPrice = this.getAveragePrice(operations); // 1324.5
-    const costBasis = avgPrice * balanceQty;    // 13245
-    const marketValue = currentPrice * balanceQty; // 37170
-    return marketValue - costBasis;      // 23925
-  }
-
-  /**
-   * Доходность в процентах
-   */
-  private getProfitPercentage(operations: Operation[], currentPrice: number, balanceQty: number): number {
-    const profit = this.getProfit(operations, currentPrice, balanceQty); // 23925
-    // Себестоимость (сколько потрачено на покупку)
-    const avgPrice = this.getAveragePrice(operations); // 1324.5
-    const costBasis = avgPrice * balanceQty; // 13245
-
-    // (прибыль / себестоимость) * 100%
-    return (profit / costBasis) * 100;
+    });
   }
 
 }

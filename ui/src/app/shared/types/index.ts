@@ -314,4 +314,13 @@ export interface CreateOrderRequest {
   quantity_lots: number;
   price_rub: number;
   is_buy: boolean;
+  account_id?: number;
+}
+
+export interface Account {
+  id: number;
+  name: string;
+  status: string;
+  type: string;
+  access_level: string;
 }

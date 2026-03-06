@@ -1,8 +1,8 @@
 @defer (when isLoaded()) {
-  <ng-container *ngIf="balanceQty() as b">
+  <ng-container>
     <label>Количество:</label>
 
-    <div>{{ b }} Шт.</div>
+    <div>{{ balanceQty() }} Шт.</div>
 
     <label>История:</label>
 

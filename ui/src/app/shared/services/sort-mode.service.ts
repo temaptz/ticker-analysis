@@ -23,7 +23,7 @@ export class SortModeService {
         return JSON.parse(stored) ?? SortModeEnum.BuyPerspective;
       }
     } catch (e) {
-      // ignore
+      console.error('ERROR loadSortMode', e)
     }
     return SortModeEnum.BuyPerspective;
   }
@@ -32,7 +32,7 @@ export class SortModeService {
     try {
       localStorage.setItem(this.lsKey, JSON.stringify(mode));
     } catch (e) {
-      // ignore
+      console.error('ERROR saveSortMode', e)
     }
   }
 

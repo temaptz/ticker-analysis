@@ -35,35 +35,20 @@ class State(TypedDict, total=False):
     structured_response: StructuredResult
 
 
-def create_orders_2():
-    recommendations: list[BuyRecommendation] = []
-
-    for instrument in users.sort_instruments_for_buy(
-            instruments_list=instruments.get_instruments_white_list()
-    ):
-        if len(recommendations) <= 5:
-            if not instrument.for_qual_investor_flag:
-                if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
-                    if buy_rate >= 70:
-                        if rec := get_buy_recommendation_by_uid(
-                                instrument_uid=instrument.uid,
-                        ):
-                            recommendations.append(rec)
-                            logger.log_info(message='CREATED BUY RECOMMENDATION', output=rec, is_send_telegram=False)
-
-
-def create_orders_3():
+def create_orders_3(account_id: str):
     recommendations: list[BuyRecommendation] = []
 
     for instrument in users.sort_instruments_by_total_rate_buy(
-            instruments_list=instruments.get_instruments_white_list()
+        instruments_list=instruments.get_instruments_white_list(),
+        account_id=account_id,
     ):
         if len(recommendations) <= 5:
             if not instrument.for_qual_investor_flag:
-                if buy_rate := agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument.uid):
+                if buy_rate := agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument.uid, account_id=account_id):
                     if buy_rate.get('rate', 0) >= 0.7:
                         if rec := get_buy_recommendation_by_uid(
-                                instrument_uid=instrument.uid,
+                            instrument_uid=instrument.uid,
+                            account_id=account_id,
                         ):
                             recommendations.append(rec)
                             logger.log_info(message='Добавлена рекомендация на покупку', output=rec, is_send_telegram=False)
@@ -262,7 +247,7 @@ def final_parser(state: State) -> State:
     return result
 
 
-def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation:
+def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRecommendation:
     is_ok = False
     target_price = None
     qty_round = None
@@ -271,7 +256,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str) -> BuyRecommendation:
     try:
         target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
         balance_rub = users.get_user_money_rub()
-        buy_rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid)
+        buy_rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
         instr = instruments.get_instrument_by_uid(instrument_uid)
         lot_size = instr.lot or 1
         total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=(buy_rate.get('rate', 0) * 100))

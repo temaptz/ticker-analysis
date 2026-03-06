@@ -6,6 +6,7 @@ import { ApiService } from '../../../../shared/services/api.service';
 import { BuySellTotalRateResp } from '../../../../shared/types';
 import { GRAPH_COLORS } from '../../../../shared/const';
 import { VerticalScaleComponent } from '../vertical-scale/vertical-scale.component';
+import { AccountService } from '../../../../shared/services/account.service';
 
 @Component({
   selector: 'total',
@@ -19,15 +20,17 @@ export class TotalComponent {
   isBuy = input.required<boolean>();
 
   apiService = inject(ApiService);
+  accountService = inject(AccountService);
   decimalPipe = inject(DecimalPipe);
 
   totalColor = GRAPH_COLORS.total_rate;
 
-  rateData = resource<BuySellTotalRateResp, { uid: string, isBuy: boolean }>({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string, isBuy: boolean }>) => firstValueFrom(
+  rateData = resource<BuySellTotalRateResp, { uid: string, accountId: number, isBuy: boolean }>({
+    request: () => ({ uid: this.instrumentUid(), accountId: this.accountService.selectedAccountId() ?? 0, isBuy: this.isBuy() }),
+    loader: (params: ResourceLoaderParams<{ uid: string, accountId: number, isBuy: boolean }>) => firstValueFrom(
       this.apiService.getBuySellTotalRate(
         params.request.uid,
+        params.request.accountId,
         params.request.isBuy
       )
     )

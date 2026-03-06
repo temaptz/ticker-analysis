@@ -32,6 +32,7 @@ import {
   SellRecommendation,
   ActiveOrder,
   CreateOrderRequest,
+  Account,
 } from '../types';
 import { CandleInterval, IndicatorType } from '../enums';
 import { SortModeEnum } from '../types';
@@ -50,10 +51,11 @@ export class ApiService {
     private http: HttpClient,
   ) {}
 
-  getInstruments(sort: SortModeEnum): Observable<InstrumentInList[]> {
-    const params = new HttpParams({
+  getInstruments(sort: SortModeEnum, accountId: number): Observable<InstrumentInList[]> {
+    let params = new HttpParams({
       fromObject: {
-        sort
+        sort,
+        account_id: accountId,
       }
     })
     return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`, {params});
@@ -170,16 +172,18 @@ export class ApiService {
     return this.http.get<PredictionHistoryGraphResp>(`${this.apiUrl}/instrument/prediction_history_graph`, {params: params});
   }
 
-  getInstrumentOperations(figi: string): Observable<Operation[]> {
+  getInstrumentOperations(figi: string, accountId: number): Observable<Operation[]> {
     let params = new HttpParams();
     params = params.set('figi', figi);
+    params = params.set('account_id', accountId.toString());
 
     return this.http.get<Operation[]>(`${this.apiUrl}/instrument/operations`, {params: params});
   }
 
-  getInvestCalc(uid: string): Observable<InvestCalc> {
+  getInvestCalc(uid: string, accountId: number): Observable<InvestCalc> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('account_id', accountId.toString());
 
     return this.http.get<InvestCalc>(`${this.apiUrl}/instrument/invest_calc`, {params: params});
   }
@@ -250,6 +254,18 @@ export class ApiService {
     return this.http.get<string>(`${this.apiUrl}/instrument/tag`, {params: params});
   }
 
+  getAccounts(): Observable<Account[]> {
+    return this.http.get<Account[]>(`${this.apiUrl}/accounts`);
+  }
+
+  getUserMoneyRub(accountId?: number): Observable<number> {
+    let params = new HttpParams();
+    if (accountId) {
+      params = params.set('account_id', accountId.toString());
+    }
+    return this.http.get<number>(`${this.apiUrl}/user_money_rub`, {params: params});
+  }
+
 
   getTotalInfo(): Observable<TotalInfo> {
     return this.http.get<TotalInfo>(`${this.apiUrl}/total_info`);
@@ -315,17 +331,19 @@ export class ApiService {
     return this.http.get<VolumeRateResp>(`${this.apiUrl}/instrument/volume_rate`, {params});
   }
 
-  getInstrumentProfitRate(uid: string, isBuy: boolean): Observable<ProfitRateResp> {
+  getInstrumentProfitRate(uid: string, accountId: number, isBuy: boolean): Observable<ProfitRateResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('account_id', accountId);
     params = params.set('is_buy', isBuy.toString());
 
     return this.http.get<ProfitRateResp>(`${this.apiUrl}/instrument/profit_rate`, {params});
   }
 
-  getBuySellTotalRate(uid: string, isBuy: boolean): Observable<BuySellTotalRateResp> {
+  getBuySellTotalRate(uid: string, accountId: number, isBuy: boolean): Observable<BuySellTotalRateResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('account_id', accountId);
     params = params.set('is_buy', isBuy.toString());
 
     return this.http.get<BuySellTotalRateResp>(`${this.apiUrl}/instrument/buy_sell_total_rate`, {params});
@@ -345,15 +363,17 @@ export class ApiService {
     });
   }
 
-  getBuyRecommendation(uid: string): Observable<BuyRecommendation | null> {
+  getBuyRecommendation(uid: string, accountId: number): Observable<BuyRecommendation | null> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('account_id', accountId);
     return this.http.get<BuyRecommendation | null>(`${this.apiUrl}/instrument/buy_recommendation`, {params});
   }
 
-  getSellRecommendation(uid: string): Observable<SellRecommendation | null> {
+  getSellRecommendation(uid: string, accountId: number): Observable<SellRecommendation | null> {
     let params = new HttpParams();
     params = params.set('uid', uid);
+    params = params.set('account_id', accountId);
     return this.http.get<SellRecommendation | null>(`${this.apiUrl}/instrument/sell_recommendation`, {params});
   }
 
@@ -363,13 +383,19 @@ export class ApiService {
     return this.http.get<ActiveOrder[]>(`${this.apiUrl}/instrument/active_orders`, {params});
   }
 
-  createOrder(req: CreateOrderRequest): Observable<any> {
+  createOrder(req: CreateOrderRequest, accountId?: number): Observable<any> {
+    if (accountId) {
+      req.account_id = accountId;
+    }
     return this.http.post<any>(`${this.apiUrl}/instrument/order`, req);
   }
 
-  cancelOrder(orderId: string): Observable<any> {
+  cancelOrder(orderId: string, accountId?: number): Observable<any> {
     let params = new HttpParams();
     params = params.set('order_id', orderId);
+    if (accountId) {
+      params = params.set('account_id', accountId.toString());
+    }
     return this.http.delete<any>(`${this.apiUrl}/instrument/order`, {params});
   }
 

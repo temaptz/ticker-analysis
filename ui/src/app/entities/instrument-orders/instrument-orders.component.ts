@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../shared/services/api.service';
+import { AccountService } from '../../shared/services/account.service';
 import { ActiveOrder, BuyRecommendation, SellRecommendation } from '../../shared/types';
 import { OrderCardComponent } from '../order-card/order-card.component';
 
@@ -24,6 +25,7 @@ export class InstrumentOrdersComponent implements OnInit {
   instrumentUid = input.required<string>();
 
   private apiService = inject(ApiService);
+  private accountService = inject(AccountService);
 
   buyRecommendation = signal<BuyRecommendation | null>(null);
   sellRecommendation = signal<SellRecommendation | null>(null);
@@ -53,7 +55,7 @@ export class InstrumentOrdersComponent implements OnInit {
 
   loadBuyRecommendation(): void {
     this.isBuyRecLoading.set(true);
-    this.apiService.getBuyRecommendation(this.instrumentUid()).subscribe({
+    this.apiService.getBuyRecommendation(this.instrumentUid(), this.accountService.selectedAccountId() ?? 0).subscribe({
       next: (rec) => {
         this.buyRecommendation.set(rec);
         this.isBuyRecLoading.set(false);
@@ -64,7 +66,7 @@ export class InstrumentOrdersComponent implements OnInit {
 
   loadSellRecommendation(): void {
     this.isSellRecLoading.set(true);
-    this.apiService.getSellRecommendation(this.instrumentUid()).subscribe({
+    this.apiService.getSellRecommendation(this.instrumentUid(), this.accountService.selectedAccountId() ?? 0).subscribe({
       next: (rec) => {
         this.sellRecommendation.set(rec);
         this.isSellRecLoading.set(false);
@@ -75,6 +77,7 @@ export class InstrumentOrdersComponent implements OnInit {
 
   loadActiveOrders(): void {
     this.isOrdersLoading.set(true);
+    const accountId = this.accountService.selectedAccountId();
     this.apiService.getInstrumentActiveOrders(this.instrumentUid()).subscribe({
       next: (orders) => {
         this.activeOrders.set(orders || []);

@@ -30,6 +30,7 @@ import {
   ComplexGraphControlComponent,
   ComplexGraphControlOptions
 } from '../complex-graph-control/complex-graph-control.component';
+import { AccountService } from '../../shared/services/account.service';
 
 
 @Component({
@@ -56,6 +57,11 @@ export class ComplexGraphComponent {
   isShowPredictionsHistoryInput = input<boolean>(false);
   isShowNewsGraphInput = input<boolean>(false);
   isShowModelsGraphInput = input<boolean>(false);
+
+  private appService = inject(ApiService);
+  private priceFormatPipe = inject(PriceFormatPipe);
+  private graphControlSettingsService = inject(GraphControlSettingsService);
+  private accountService = inject(AccountService);
 
   historyInterval = signal<CandleInterval>(CandleInterval.CANDLE_INTERVAL_WEEK);
   daysHistory = signal<number>(90);
@@ -135,15 +141,16 @@ export class ComplexGraphComponent {
       toObservable(this.instrumentUid),
       toObservable(this.daysHistory),
       toObservable(this.isShowOperations),
+      toObservable(this.accountService.selectedAccountId),
     ])
       .pipe(
         debounceTime(0),
         tap(() => this.isLoadedOperations.set(false)),
-        switchMap(([uid, daysHistory, isShowOperations]) => isShowOperations
+        switchMap(([uid, daysHistory, isShowOperations, accountId]) => (isShowOperations && accountId)
           ? this.appService.getInstrument(uid)
             .pipe(
               switchMap((instrument: Instrument) =>
-                this.appService.getInstrumentOperations(instrument.figi)
+                this.appService.getInstrumentOperations(instrument.figi, accountId)
               ),
               map((operations: Operation[]) => {
                 const from = subDays(new Date(), daysHistory);
@@ -868,10 +875,6 @@ export class ComplexGraphComponent {
       series,
     }
   });
-
-  private appService = inject(ApiService);
-  private priceFormatPipe = inject(PriceFormatPipe);
-  private graphControlSettingsService = inject(GraphControlSettingsService);
 
   graphSettings = computed(() => this.graphControlSettingsService.settings());
 

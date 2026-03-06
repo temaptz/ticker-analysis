@@ -8,6 +8,7 @@ import { ProfitRateResp } from '../../../../shared/types';
 import { GRAPH_COLORS } from '../../../../shared/const';
 import { VerticalScaleComponent } from '../vertical-scale/vertical-scale.component';
 import { WeightIndicatorComponent } from '../../../../shared/components/weight-indicator/weight-indicator.component';
+import { AccountService } from '../../../../shared/services/account.service';
 
 @Component({
   selector: 'profit',
@@ -21,17 +22,21 @@ export class ProfitComponent {
   isBuy = input.required<boolean>();
 
   apiService = inject(ApiService);
+  accountService = inject(AccountService);
   private weightsService = inject(WeightsService);
-  decimalPipe = inject(DecimalPipe);
 
   profitColor = GRAPH_COLORS.profit_rate;
 
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'profit'));
 
   rateData = resource({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentProfitRate(params.request.uid, params.request.isBuy))
+    request: () => ({
+      uid: this.instrumentUid(),
+      accountId: this.accountService.selectedAccountId() ?? 0,
+      isBuy: this.isBuy(),
+    }),
+    loader: (params: ResourceLoaderParams<{ uid: string; accountId: number;  isBuy: boolean }>) =>
+      firstValueFrom(this.apiService.getInstrumentProfitRate(params.request.uid, params.request.accountId, params.request.isBuy))
   });
 
   getTooltip(data: ProfitRateResp): string {

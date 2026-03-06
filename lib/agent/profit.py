@@ -1,7 +1,7 @@
 from lib import logger, invest_calc, users, agent, cache
 
 
-def get_profit_buy_rate(instrument_uid: str):
+def get_profit_buy_rate(instrument_uid: str, account_id: str):
     final_rate = 0
 
     try:
@@ -19,14 +19,14 @@ def get_profit_buy_rate(instrument_uid: str):
 
 
 @cache.ttl_cache(ttl=3600)
-def get_profit_sell_rate(instrument_uid: str):
+def get_profit_sell_rate(instrument_uid: str, account_id: str):
     final_rate = 0
     potential_profit_percent = None
 
     try:
         if calc := invest_calc.get_invest_calc_by_instrument_uid(
                 instrument_uid=instrument_uid,
-                account_id=users.get_analytics_account().id,
+                account_id=account_id,
         ):
             if (p := calc['potential_profit_percent']) or p == 0:
                 if p <= 0:
