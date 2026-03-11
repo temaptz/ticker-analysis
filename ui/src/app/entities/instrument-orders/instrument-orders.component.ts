@@ -77,8 +77,10 @@ export class InstrumentOrdersComponent implements OnInit {
 
   loadActiveOrders(): void {
     this.isOrdersLoading.set(true);
-    const accountId = this.accountService.selectedAccountId();
-    this.apiService.getInstrumentActiveOrders(this.instrumentUid()).subscribe({
+    this.apiService.getInstrumentActiveOrders(
+      this.instrumentUid(),
+      this.accountService.selectedAccountId() ?? 0,
+    ).subscribe({
       next: (orders) => {
         this.activeOrders.set(orders || []);
         this.isOrdersLoading.set(false);

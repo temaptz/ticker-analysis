@@ -92,6 +92,26 @@ services:
       - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
     restart: unless-stopped
 
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile-python-services
+    container_name: mcp
+    volumes:
+      - /etc/is_my_prod:/container_host_is_prod:ro
+      - ./learn_models:/app/learn_models
+#    ports:
+#      - "8500:8500"
+    command: >
+      fastmcp run /app/mcp_server.py:mcp --transport sse --host 0.0.0.0 --port 8500 --path /sse
+
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
+    restart: unless-stopped
+
   ui:
     build:
       context: ./ui

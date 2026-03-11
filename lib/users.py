@@ -10,7 +10,7 @@ from t_tech.invest import (
     OperationState,
     OperationType,
     Instrument,
-    Account, PostOrderResponse, OrderType, OrderDirection,
+    Account, PostOrderResponse, OrderType, OrderDirection, OrderState,
 )
 from const import TINKOFF_INVEST_TOKEN
 from lib import cache, instruments, utils, logger, invest_calc, predictions, db_2, agent, serializer
@@ -34,8 +34,8 @@ def get_user_instrument_balance(instrument_uid: str, account_id: str = None) -> 
     return result
 
 
-def get_user_money_rub(account_id: str) -> int:
-    result = 0
+def get_user_money_rub(account_id: str) -> float:
+    result = 0.0
 
     try:
         if account_id and (positions := get_positions(account_id=account_id)):
@@ -54,7 +54,7 @@ def get_user_money_rub(account_id: str) -> int:
     return result
 
 
-def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float) -> PostOrderResponse or None:
+def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float, account_id: str) -> PostOrderResponse or None:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             price_increment = utils.get_price_by_quotation(
@@ -66,7 +66,7 @@ def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float) ->
                 instrument_id=instrument_uid,
                 quantity=quantity_lots,
                 price=price,
-                account_id=get_analytics_account().id,
+                account_id=account_id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
                 direction=OrderDirection.ORDER_DIRECTION_BUY,
             ):
@@ -88,7 +88,7 @@ def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float) ->
     return None
 
 
-def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -> PostOrderResponse or None:
+def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float, account_id: str) -> PostOrderResponse or None:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             price_increment = utils.get_price_by_quotation(
@@ -100,7 +100,7 @@ def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -
                 instrument_id=instrument_uid,
                 quantity=quantity_lots,
                 price=price,
-                account_id=get_analytics_account().id,
+                account_id=account_id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
                 direction=OrderDirection.ORDER_DIRECTION_SELL,
             ):
@@ -120,6 +120,21 @@ def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float) -
         )
 
     return None
+
+
+def get_active_orders(instrument_uid: str, account_id: str) -> list[OrderState]:
+    result = []
+
+    try:
+        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
+            orders_resp = client.orders.get_orders(account_id=account_id)
+            for order in (orders_resp.orders or []):
+                if order.instrument_uid == instrument_uid:
+                    result.append(order)
+    except Exception as e:
+        logger.log_error(method_name='users.get_active_orders', error=e)
+
+    return result
 
 
 @cache.ttl_cache(ttl=3600)

@@ -1,4 +1,3 @@
-import datetime
 import math
 from typing import TypedDict, Annotated
 
@@ -9,7 +8,7 @@ from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
-from lib import instruments, fundamentals, users, predictions, news, serializer, agent, db_2, logger, telegram, utils
+from lib import instruments, users, serializer, agent, logger, utils
 from lib.agent import llm
 
 
@@ -65,68 +64,13 @@ def create_orders_3(account_id: str):
                         qty=rec.qty,
                         instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
                     ),
+                    account_id=users.get_analytics_account().id,
             ):
                 name = instruments.get_instrument_human_name(rec.instrument_uid)
                 logger.log_info(
                     message=f'Создана заявка на покупку v2 для: "{name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей',
                     is_send_telegram=True,
                 )
-
-
-def create_orders():
-    graph = get_buy_graph()
-    # agent.utils.draw_graph(graph)
-
-    if top_instruments := users.sort_instruments_for_buy(
-            instruments_list=instruments.get_instruments_white_list()
-    ):
-        available_instruments_uids: list[str] = []
-
-        for instrument in top_instruments[:5]:
-            if not instrument.for_qual_investor_flag:
-                if buy_rate := agent.utils.get_buy_rate(instrument_uid=instrument.uid):
-                    if buy_rate > 50:
-                        available_instruments_uids.append(instrument.uid)
-
-        if len(available_instruments_uids) == 0:
-            logger.log_info(message='Нет активов для покупки > 50', is_send_telegram=True)
-            return
-
-        result = graph.invoke(
-            input={'instruments_uids': available_instruments_uids},
-            debug=True,
-            config=llm.config,
-        )
-
-        if rate := result.get('structured_response', None):
-            print('STRUCTURED FINAL RATE', rate)
-
-        print('RESULT', result)
-        agent.utils.output_json(result)
-        print('STRUCTURED RESULT', result.get('structured_response'))
-        print('STRUCTURED RESULT RECOMMENDATIONS', result.get('structured_response').buy_recommendations)
-
-        if structured_response := result.get('structured_response', None):
-            if recommendations := structured_response.buy_recommendations:
-                for recommendation in recommendations:
-                    rec: BuyRecommendation = recommendation
-                    print('CREATE ORDER FOR', instruments.get_instrument_by_uid(rec.instrument_uid).name)
-                    print('CREATE ORDER', rec)
-                    if rec.qty > 0:
-                        price = round(rec.target_price, 1)
-                        if users.post_buy_order(
-                            instrument_uid=rec.instrument_uid,
-                            price_rub=price,
-                            quantity_lots=utils.get_lots_qty(
-                                qty=rec.qty,
-                                instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
-                            ),
-                        ):
-                            instrument = instruments.get_instrument_by_uid(rec.instrument_uid)
-                            logger.log_info(
-                                message=f'Создана заявка на покупку для: "{instrument.name}" в количестве: "{rec.qty}" штук по цене: "{price}" рублей',
-                                is_send_telegram=True,
-                            )
 
 
 def get_buy_graph() -> CompiledStateGraph:
@@ -255,7 +199,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRe
 
     try:
         target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
-        balance_rub = users.get_user_money_rub()
+        balance_rub = users.get_user_money_rub(account_id=account_id)
         buy_rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
         instr = instruments.get_instrument_by_uid(instrument_uid)
         lot_size = instr.lot or 1

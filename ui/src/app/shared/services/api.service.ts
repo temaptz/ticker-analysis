@@ -377,9 +377,11 @@ export class ApiService {
     return this.http.get<SellRecommendation | null>(`${this.apiUrl}/instrument/sell_recommendation`, {params});
   }
 
-  getInstrumentActiveOrders(uid: string): Observable<ActiveOrder[]> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
+  getInstrumentActiveOrders(uid: string, accountId: number): Observable<ActiveOrder[]> {
+    let params = new HttpParams({fromObject: {
+        uid: uid,
+        account_id: accountId,
+      }});
     return this.http.get<ActiveOrder[]>(`${this.apiUrl}/instrument/active_orders`, {params});
   }
 

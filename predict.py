@@ -3,7 +3,8 @@ import datetime
 from lib import predictions, logger, date_utils, instruments, learn, predictions_cache, utils
 
 
-def finish_log(time_total: float, last_date: datetime.datetime):
+def finish_log(time_start: float, time_end: float, last_date: datetime.datetime):
+    time_total = time_end - time_start
     total_hours = time_total / 3600
     if total_hours >= 24:
         days = total_hours // 24
@@ -13,10 +14,10 @@ def finish_log(time_total: float, last_date: datetime.datetime):
         time_str = f"{total_hours:.2f} hours"
 
     logger.log_info(
-        message='Прогнозы обновлены. Запуск нового цикла прогнозов.',
+        message='Прогнозы обновлены',
         output={
-            'time': time_str,
-            'last_date': last_date,
+            'total_time': time_str,
+            'last_predicted_date': last_date,
         },
         is_send_telegram=True,
     )
@@ -42,11 +43,11 @@ def create_fundamental_predictions():
 
 def refresh_cache(finish_date: datetime.datetime):
     logger.log_info(
-        message='START REFRESH PREDICTIONS CACHE',
+        message='Начало обновления прогнозов',
         output={
             'finish_date': finish_date,
         },
-        is_send_telegram=False,
+        is_send_telegram=True,
     )
 
     try:
@@ -88,12 +89,13 @@ def refresh_cache(finish_date: datetime.datetime):
                     )
 
                     if datetime.datetime.now(tz=datetime.timezone.utc) >= finish_date:
-                        finish_log(time_total=(time.perf_counter() - time_start), last_date=date_target)
+                        finish_log(time_start=time_start, time_end=time.perf_counter(), last_date=date_target)
                         return None
 
-        finish_log(time_total=(time.perf_counter() - time_start), last_date=last_date)
+        finish_log(time_start=time_start, time_end=time.perf_counter(), last_date=last_date)
     except Exception as e:
         logger.log_error(method_name='refresh_cache_loop', error=e)
+    return None
 
 
 # 3:00 UTC следующего рабочего дня

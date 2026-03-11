@@ -8,6 +8,7 @@ export interface Instrument {
   figi: string;
   ticker: string;
   name: string;
+  lot: number;
   [key: string]: unknown;
 }
 
@@ -292,21 +293,21 @@ export interface SellRecommendation {
 
 export interface ActiveOrder {
   order_id: string;
-  execution_report_status: number;
+  // execution_report_status: number;
   lots_requested: number;
   lots_executed: number;
-  initial_order_price: any;
-  executed_order_price: any;
+  // initial_order_price: any;
+  // executed_order_price: any;
   total_order_amount: any;
-  average_position_price: any;
+  // average_position_price: any;
   initial_security_price: any;
-  figi: string;
+  // figi: string;
   direction: number;
-  currency: string;
-  order_type: number;
+  // currency: string;
+  // order_type: number;
   order_date: string;
-  instrument_uid: string;
-  order_request_id: string;
+  // instrument_uid: string;
+  // order_request_id: string;
 }
 
 export interface CreateOrderRequest {

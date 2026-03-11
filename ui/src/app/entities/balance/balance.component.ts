@@ -22,6 +22,7 @@ export class BalanceComponent {
 
   instrumentUid = input.required<InstrumentInList['uid']>();
   instrumentFigi = input.required<InstrumentInList['figi']>();
+  instrumentLotSize = input.required<InstrumentInList['lot']>();
 
   isLoaded = signal<boolean>(false);
   operations = signal<Operation[]>([]);

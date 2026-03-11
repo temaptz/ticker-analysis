@@ -61,7 +61,7 @@ def get_request_token(request: Request):
     return request.headers.get('Authorization')
 
 
-def instruments_list(sort: int or str, account_id: Optional[str]) -> list[Instrument]:
+def instruments_list(sort: int or str, account_id: Optional[str]) -> list:
     sorted_list = instruments.get_instruments_white_list()
 
     if sort and (sort == 3 or sort == '3'):
@@ -143,7 +143,18 @@ def instruments_list(sort: int or str, account_id: Optional[str]) -> list[Instru
             account_id=account_id,
         )
 
-    return sorted_list
+    return [{
+        'figi': i.figi,
+        'ticker': i.ticker,
+        'class_code': i.class_code,
+        'name': i.name,
+        'lot': i.lot,
+        'currency': i.currency,
+        'asset_uid': i.asset_uid,
+        'uid': i.uid,
+        'brand': i.brand,
+        'for_qual_investor_flag': i.for_qual_investor_flag,
+    } for i in sorted_list]
 
 
 def instrument_info(uid: str, ticker: str):
@@ -543,102 +554,36 @@ def get_sell_recommendation(instrument_uid: str, account_id: str):
     )
 
 
-def _serialize_money(mv) -> dict:
-    if not mv:
-        return {'units': 0, 'nano': 0, 'currency': ''}
-    return {'units': mv.units, 'nano': mv.nano, 'currency': mv.currency}
+def get_instrument_active_orders(instrument_uid: str, account_id: str):
+    return [{
+        'order_id': i.order_id,
+        'direction': i.direction,
+        'lots_requested': i.lots_requested,
+        'lots_executed': i.lots_executed,
+        'total_order_amount': i.total_order_amount,
+        'initial_security_price': i.initial_security_price,
+        'order_date': i.order_date,
+    } for i in users.get_active_orders(
+        instrument_uid=instrument_uid,
+        account_id=account_id,
+    )]
 
 
-def _serialize_order(order) -> dict:
-    return {
-        'order_id': order.order_id,
-        'direction': order.direction.value if hasattr(order.direction, 'value') else int(order.direction),
-        'execution_report_status': order.execution_report_status.value if hasattr(order.execution_report_status, 'value') else int(order.execution_report_status),
-        'lots_requested': order.lots_requested,
-        'lots_executed': order.lots_executed,
-        'initial_order_price': _serialize_money(order.initial_order_price),
-        'executed_order_price': _serialize_money(order.executed_order_price),
-        'total_order_amount': _serialize_money(order.total_order_amount),
-        'initial_security_price': _serialize_money(order.initial_security_price),
-        'figi': order.figi,
-        'instrument_uid': order.instrument_uid,
-        'currency': order.currency,
-        'order_date': str(order.order_date) if order.order_date else None,
-    }
-
-
-def get_instrument_active_orders(instrument_uid: str, account_id: Optional[int] = None):
-    from t_tech.invest import Client, constants
-    from const import TINKOFF_INVEST_TOKEN
-    from lib import instruments as _instr
-    result = []
-    try:
-        figi = None
-        try:
-            figi = _instr.get_instrument_by_uid(uid=instrument_uid).figi
-        except Exception:
-            pass
-        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            orders_resp = client.orders.get_orders(account_id=account_id)
-            for order in orders_resp.orders:
-                if order.instrument_uid == instrument_uid or (figi and order.figi == figi):
-                    result.append(_serialize_order(order))
-    except Exception as e:
-        print('ERROR get_instrument_active_orders', e)
-    return result
-
-
-def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: float, is_buy: bool, account_id: Optional[int] = None):
-    print(f'create_instrument_order uid={instrument_uid} qty={quantity_lots} price={price_rub} is_buy={is_buy} account_id={account_id}')
-    last_error = [None]
-
-    def _buy():
-        import math
-        from lib import instruments as _instr, utils as _utils
-        from t_tech.invest import Client, constants, OrderType, OrderDirection
-        from const import TINKOFF_INVEST_TOKEN
-        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            price_increment = _utils.get_price_by_quotation(
-                price=_instr.get_instrument_by_uid(uid=instrument_uid).min_price_increment
-            )
-            price = _utils.get_quotation_by_price(math.floor(price_rub / price_increment) * price_increment)
-            return client.orders.post_order(
-                instrument_id=instrument_uid,
-                quantity=quantity_lots,
-                price=price,
-                account_id=account_id,
-                order_type=OrderType.ORDER_TYPE_LIMIT,
-                direction=OrderDirection.ORDER_DIRECTION_BUY,
-            )
-
-    def _sell():
-        import math
-        from lib import instruments as _instr, utils as _utils
-        from t_tech.invest import Client, constants, OrderType, OrderDirection
-        from const import TINKOFF_INVEST_TOKEN
-        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            price_increment = _utils.get_price_by_quotation(
-                price=_instr.get_instrument_by_uid(uid=instrument_uid).min_price_increment
-            )
-            price = _utils.get_quotation_by_price(math.ceil(price_rub / price_increment) * price_increment)
-            return client.orders.post_order(
-                instrument_id=instrument_uid,
-                quantity=quantity_lots,
-                price=price,
-                account_id=account_id,
-                order_type=OrderType.ORDER_TYPE_LIMIT,
-                direction=OrderDirection.ORDER_DIRECTION_SELL,
-            )
-
-    try:
-        resp = _buy() if is_buy else _sell()
-        print(f'create_instrument_order resp={resp}')
-        if resp:
-            return serializer.get_dict_by_object_recursive(resp)
-        raise ValueError('Empty response from broker API')
-    except Exception as e:
-        print(f'create_instrument_order EXCEPTION: {e}')
-        raise e
+def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: float, is_buy: bool, account_id: str):
+    if is_buy:
+        users.post_buy_order(
+            instrument_uid=instrument_uid,
+            quantity_lots=quantity_lots,
+            price_rub=price_rub,
+            account_id=account_id,
+        )
+    else:
+        users.post_sell_order(
+            instrument_uid=instrument_uid,
+            quantity_lots=quantity_lots,
+            price_rub=price_rub,
+            account_id=account_id,
+        )
 
 
 def cancel_instrument_order(order_id: str, account_id: Optional[int] = None):
@@ -831,14 +776,12 @@ def total_info(user=Depends(verify_user_by_token)):
 
 @app.get('/accounts')
 def accounts_endpoint(user=Depends(verify_user_by_token)):
-    return [serializer.get_dict_by_object_recursive(a) for a in users.get_accounts()]
+    return [{'id': a.id, 'name': a.name} for a in users.get_accounts()]
 
 
 @app.get('/user_money_rub')
 def user_money_rub_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    account_id = request.query_params.get('account_id')
-    account_id_int = int(account_id) if account_id else None
-    return users.get_user_money_rub(account_id=account_id_int)
+    return users.get_user_money_rub(account_id=request.query_params.get('account_id'))
 
 
 @app.get('/current_user')
@@ -960,27 +903,22 @@ def sell_recommendation_endpoint(request: Request, user=Depends(verify_user_by_t
 
 @app.get('/instrument/active_orders')
 def instrument_active_orders_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    account_id = request.query_params.get('account_id')
-    account_id_int = int(account_id) if account_id else None
     return get_instrument_active_orders(
         instrument_uid=request.query_params.get('uid'),
-        account_id=account_id_int,
+        account_id=request.query_params.get('account_id'),
     )
 
 
 @app.post('/instrument/order')
 async def create_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
     body = await request.json()
-    print(f'POST /instrument/order body={body}')
-    account_id = body.get('account_id')
-    account_id_int = int(account_id) if account_id else None
     try:
         result = create_instrument_order(
             instrument_uid=body.get('instrument_uid'),
             quantity_lots=int(body.get('quantity_lots', 1)),
             price_rub=float(body.get('price_rub')),
             is_buy=bool(body.get('is_buy', True)),
-            account_id=account_id_int,
+            account_id=str(body.get('account_id')),
         )
         return result
     except Exception as e:

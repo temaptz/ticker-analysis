@@ -30,7 +30,8 @@ langchain_core==0.3.74
 langsmith==0.4.15
 python-dotenv
 restrictedpython==8.0
-fastapi==0.117.1
+fastapi
+fastmcp
 werkzeug
 ipywidgets
 ipython

@@ -23,7 +23,12 @@ def generate_data():
         instrument_index += 1
         print('INSTRUMENT', instrument.ticker)
 
-        for date in date_utils.get_dates_interval_list(date_from=date_start, date_to=date_end, is_skip_holidays=False, is_order_descending=not docker.is_docker()):
+        for date in date_utils.get_dates_interval_list(
+                date_from=date_start,
+                date_to=date_end,
+                is_skip_holidays=False,
+                is_order_descending=not docker.is_docker(),
+        ):
             print('DATE', date)
             record_cache_key = get_record_cache_key(
                 ticker=instrument.ticker,
