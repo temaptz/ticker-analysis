@@ -271,18 +271,6 @@ export class ApiService {
     return this.http.get<TotalInfo>(`${this.apiUrl}/total_info`);
   }
 
-  getCurrentUser(): Observable<CurrentUser> {
-    return this.http.get<CurrentUser>(`${this.apiUrl}/current_user`);
-  }
-
-  login(login: string, password: string): Observable<CurrentUser> {
-    let params = new HttpParams();
-    params = params.set('login', login);
-    params = params.set('password', password);
-
-    return this.http.get<CurrentUser>(`${this.apiUrl}/login`, {params});
-  }
-
   getInstrumentMacdRate(uid: string, isBuy: boolean): Observable<MacdRateResp> {
     let params = new HttpParams();
     params = params.set('uid', uid);

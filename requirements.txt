@@ -37,3 +37,4 @@ ipywidgets
 ipython
 sentry_sdk
 plotille
+python-jose[cryptography]

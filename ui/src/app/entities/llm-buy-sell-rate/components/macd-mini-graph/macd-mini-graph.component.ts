@@ -27,16 +27,11 @@ export class MacdMiniGraphComponent {
   private _startDateMini = subDays(startOfDay(this._endDate), 7);
 
   resource = resource<TechAnalysisGraphItem[], {uid: string, dateStartMini: Date, dateEnd: Date}>({
-    request: () => ({
-      uid: this.instrumentUid(),
-      dateStartMini: this._startDateMini,
-      dateEnd: this._endDate,
-    }),
-    loader: (params: ResourceLoaderParams<{uid: string, dateStartMini: Date, dateEnd: Date}>) => firstValueFrom(this._apiService.getInstrumentTechGraph(
-      params.request.uid,
+    loader: () => firstValueFrom(this._apiService.getInstrumentTechGraph(
+      this.instrumentUid(),
       IndicatorType.INDICATOR_TYPE_MACD,
-      params.request.dateStartMini,
-      params.request.dateEnd,
+      this._startDateMini,
+      this._endDate,
       CandleInterval.CANDLE_INTERVAL_DAY,
     )),
   });

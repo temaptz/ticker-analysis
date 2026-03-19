@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TableFull3Component } from '../../widgets/table-full-3/table-full-3.component';
+import { TableFullComponent } from '../../widgets/table-full/table-full.component';
 
 
 @Component({
   selector: 'list',
-  imports: [CommonModule, TableFull3Component],
+  imports: [CommonModule, TableFullComponent],
   providers: [],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss'

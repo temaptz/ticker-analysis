@@ -11,6 +11,8 @@ import { AccountService } from '../../shared/services/account.service';
 import { ComplexGraphControlComponent, ComplexGraphControlOptions } from '../complex-graph-control/complex-graph-control.component';
 import { WeightsEditorComponent } from '../weights-editor/weights-editor.component';
 import { AccountSwitchComponent } from '../account-switch/account-switch.component';
+import { AuthService } from '../../shared/services/auth.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -68,6 +70,8 @@ export class DrawerComponent {
   private _api = inject(ApiService);
   private _sortModeService = inject(SortModeService);
   private _graphControlSettingsService = inject(GraphControlSettingsService);
+  private _authService = inject(AuthService);
+  private _router = inject(Router);
 
   sort = model<SortModeEnum>(this._sortModeService.sortMode());
   graphSettings = this._graphControlSettingsService.settings;
@@ -83,6 +87,11 @@ export class DrawerComponent {
 
   handleChangeGraphSettings(options: ComplexGraphControlOptions): void {
     this._graphControlSettingsService.updateSettings(options);
+  }
+
+  handleLogout(): void {
+    this._authService.logout();
+    this._router.navigateByUrl('/login');
   }
 
 }

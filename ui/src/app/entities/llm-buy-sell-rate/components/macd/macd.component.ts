@@ -30,9 +30,8 @@ export class MacdComponent {
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'macd'));
 
   rateData = resource({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentMacdRate(params.request.uid, params.request.isBuy))
+    loader: () =>
+      firstValueFrom(this.apiService.getInstrumentMacdRate(this.instrumentUid(), this.isBuy()))
   });
 
   getTooltip(data: MacdRateResp): string {

@@ -30,9 +30,8 @@ export class TechComponent {
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'tech'));
 
   rateData = resource({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentTechRate(params.request.uid, params.request.isBuy))
+    loader: () =>
+      firstValueFrom(this.apiService.getInstrumentTechRate(this.instrumentUid(), this.isBuy()))
   });
 
   getTooltip(data: TechRateResp): string {

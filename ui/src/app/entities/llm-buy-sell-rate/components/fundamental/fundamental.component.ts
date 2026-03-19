@@ -29,9 +29,8 @@ export class FundamentalComponent {
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'fundamental'));
 
   rateData = resource({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentFundamentalRate(params.request.uid, params.request.isBuy))
+    loader: () =>
+      firstValueFrom(this.apiService.getInstrumentFundamentalRate(this.instrumentUid(), this.isBuy()))
   });
 
   getTooltip(data: FundamentalRateResp): string {

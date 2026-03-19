@@ -116,12 +116,16 @@ services:
     build:
       context: ./ui
       dockerfile: Dockerfile
+      args:
+        - AUTHENTIK_JWT_ISSUER=${AUTHENTIK_JWT_ISSUER}
+        - AUTHENTIK_CLIENT_ID=${AUTHENTIK_CLIENT_ID}
     container_name: ui
     ports:
       - "8081:80"
     depends_on:
       - apiserver
       - pgadmin
+      - nginx-proxy
     restart: unless-stopped
 
   ollama:
@@ -183,6 +187,14 @@ services:
 #    ports:
 #     - "6379:6379"
     restart: unless-stopped
+
+  nginx-proxy:
+    image: nginx:latest
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./cert:/etc/nginx/cert:ro
+    ports:
+      - "7443:7443"
 
 volumes:
   pg_data:

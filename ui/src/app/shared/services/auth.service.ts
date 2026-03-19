@@ -1,55 +1,52 @@
-import { computed, inject, Injectable, resource, signal } from '@angular/core';
-import { BehaviorSubject, firstValueFrom, Observable, switchMap, tap } from 'rxjs';
-import { ApiService } from './api.service';
-import { CurrentUser } from '../types';
+import { computed, inject, Injectable } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-
+import { filter, map, startWith, tap } from 'rxjs';
+import { OAuthService } from 'angular-oauth2-oidc';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  token = signal<string | null>(null);
+  private _lsKey = 'auth_token';
+  private _lsToken: string | null = null;
 
-  private _api = inject(ApiService);
+  private _oauthService = inject(OAuthService);
 
-  private _refreshUser$ = new BehaviorSubject<unknown>(null);
-  private _currentUser$ = this._refreshUser$.pipe(
-    switchMap(() => this._api.getCurrentUser()),
+  token = toSignal<string | null>(
+    this._oauthService.events.pipe(
+      filter(e => e.type === 'token_received' || e.type === 'token_refreshed'),
+      map(() => this._oauthService.getAccessToken() ?? null),
+      tap(token => this._saveLs(token)),
+      startWith(this._getFromLs()),
+    ),
+    { initialValue: null }
   );
 
-  constructor() {
-    const storedToken = this.getStoredToken();
+  isAuthenticated = computed<boolean>(() => !!this.token());
 
-    if (storedToken) {
-      this.token.set(storedToken);
+  login(): void {
+    this._oauthService.initLoginFlow();
+  }
+
+  logout(): void {
+    this._oauthService.logOut();
+    this._saveLs(null);
+  }
+
+  getAccessToken(): string | null {
+    return this.token() ?? this._getFromLs();
+  }
+
+  private _saveLs(token: string | null): void {
+    if (token) {
+      localStorage.setItem(this._lsKey, token);
+    } else {
+      localStorage.removeItem(this._lsKey);
     }
   }
 
-  login(login: string, password: string): Observable<CurrentUser> {
-    return this._api.login(login, password)
-      .pipe(
-        tap((user: CurrentUser) => {
-          if (user) {
-            this._refreshUser$.next(user);
-            this.storeToken(user.token);
-          }
-        })
-      );
+  private _getFromLs(): string | null {
+    return localStorage.getItem(this._lsKey) ?? null;
   }
-
-  getCurrentUser(): Observable<CurrentUser> {
-    return this._currentUser$;
-  }
-
-  private storeToken(token: string): void {
-    localStorage.setItem('ticker-analysis.token', token);
-    this.token.set(token);
-  }
-
-  private getStoredToken(): string | null {
-    return localStorage.getItem('ticker-analysis.token') ?? null;
-  }
-
 }

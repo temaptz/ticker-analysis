@@ -30,13 +30,8 @@ export class ProfitComponent {
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'profit'));
 
   rateData = resource({
-    request: () => ({
-      uid: this.instrumentUid(),
-      accountId: this.accountService.selectedAccountId() ?? 0,
-      isBuy: this.isBuy(),
-    }),
-    loader: (params: ResourceLoaderParams<{ uid: string; accountId: number;  isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentProfitRate(params.request.uid, params.request.accountId, params.request.isBuy))
+    loader: () =>
+      firstValueFrom(this.apiService.getInstrumentProfitRate(this.instrumentUid(), this.accountService.selectedAccountId()!, this.isBuy()))
   });
 
   getTooltip(data: ProfitRateResp): string {

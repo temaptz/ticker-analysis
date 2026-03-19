@@ -27,16 +27,11 @@ export class RsiMiniGraphComponent {
   private _endDate = new Date();
 
   resource = resource<TechAnalysisGraphItem[], {uid: string, dateStartMini: Date, dateEnd: Date}>({
-    request: () => ({
-      uid: this.instrumentUid(),
-      dateStartMini: subDays(startOfDay(this._endDate), RsiMiniGraphComponent.RSI_CANDLES_COUNT),
-      dateEnd: endOfDay(this._endDate),
-    }),
-    loader: (params: ResourceLoaderParams<{uid: string, dateStartMini: Date, dateEnd: Date}>) => firstValueFrom(this._apiService.getInstrumentTechGraph(
-      params.request.uid,
+    loader: () => firstValueFrom(this._apiService.getInstrumentTechGraph(
+      this.instrumentUid(),
       IndicatorType.INDICATOR_TYPE_RSI,
-      params.request.dateStartMini,
-      params.request.dateEnd,
+      subDays(startOfDay(this._endDate), RsiMiniGraphComponent.RSI_CANDLES_COUNT),
+      endOfDay(this._endDate),
       CandleInterval.CANDLE_INTERVAL_DAY,
       14,
     )),

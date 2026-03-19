@@ -17,10 +17,11 @@ export class AccountService {
   });
 
   userMoneyRub = resource({
-    request: () => ({ accountId: this.selectedAccountId() }),
-    loader: ({ request }) => {
-      if (!request.accountId) return Promise.resolve(0);
-      return firstValueFrom(this.api.getUserMoneyRub(request.accountId));
+    defaultValue: 0,
+    loader: () => {
+      const accountId = this.selectedAccountId();
+      if (!accountId) return Promise.resolve(0);
+      return firstValueFrom(this.api.getUserMoneyRub(accountId));
     },
   });
 

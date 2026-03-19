@@ -1,15 +1,25 @@
 import datetime
-from fastapi import FastAPI, Request, Header, HTTPException, status, Depends
+import os
+from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from sqladmin import Admin, ModelView
+from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
-from t_tech.invest import CandleInterval, Instrument, Quotation
+from t_tech.invest import CandleInterval, Quotation
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval, Deviation, Smoothing
+import requests
+import urllib3
+from jose import jwt, JWTError
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from lib import serializer, instruments, forecasts, predictions, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2, users, learn, docker, agent
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+from lib import serializer, instruments, forecasts, predictions, news, utils, fundamentals, date_utils, invest_calc, tech_analysis, db_2, users, learn, docker, agent, cache
+
+AUTHENTIK_JWT_JWKS_URL = os.getenv('AUTHENTIK_JWT_JWKS_URL', '')
+AUTHENTIK_CLIENT_ID = os.getenv('AUTHENTIK_CLIENT_ID', '')
+AUTHENTIK_JWT_ISSUER = os.getenv('AUTHENTIK_JWT_ISSUER', '')
 
 app = FastAPI(title='API')
 
@@ -22,43 +32,61 @@ if not docker.is_prod():
         allow_headers=['*'],
     )
 
-admin = Admin(app, db_2.connection.get_engine())
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
-class UserAdmin(ModelView, model=db_2.users_db.UserDB):
-    column_list = [
-        db_2.users_db.UserDB.id,
-        db_2.users_db.UserDB.login,
-        db_2.users_db.UserDB.date_create,
-    ]
+async def verify_user_by_token(token: str = Depends(oauth2_scheme)):
+    cache_ttl_sec = 3600
+    cache_key = f'token_verify_{token}'
+    cached = cache.cache_get(key=cache_key)
+    if cached:
+        return cached
 
-    form_columns = [
-        db_2.users_db.UserDB.login,
-        db_2.users_db.UserDB.password_hash,
-    ]
+    try:
+        jwks_response = requests.get(AUTHENTIK_JWT_JWKS_URL, verify=False)
+        jwks_response.raise_for_status()
+        jwks = jwks_response.json()
 
-    async def on_model_change(self, data, model, is_created, request) -> None:
-        if password := data.get('password_hash', None):
-            data['password_hash'] = db_2.users_db.hash_password(password=password)
+        unverified_header = jwt.get_unverified_header(token)
+        jwk_key = next(
+            (key for key in jwks.get('keys', []) if key.get('kid') == unverified_header.get('kid')),
+            None,
+        )
 
-admin.add_view(UserAdmin)
+        if not jwk_key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Signing key not found',
+            )
 
+        alg = unverified_header.get('alg')
 
-def verify_user_by_token(authorization: Optional[str] = Header(None)) -> db_2.users_db.UserDB:
-    if authorization:
-        if user := get_user_by_token(token=authorization):
-            return user
+        if not alg:
+            raise HTTPException(status_code=401, detail='Token algorithm is missing')
 
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-    )
+        payload = jwt.decode(
+            token,
+            jwk_key,
+            algorithms=[alg],
+            audience=AUTHENTIK_CLIENT_ID,
+            issuer=AUTHENTIK_JWT_ISSUER,
+            options={'leeway': 3600 * 24 * 5}
+        )
 
+        uid: str = payload.get('sub')
 
-def get_user_by_token(token: str) -> db_2.users_db.UserDB or None:
-    return db_2.users_db.get_user_by_token(token=token)
+        if uid is None:
+            raise HTTPException(status_code=401, detail='Invalid token payload')
 
+        cache.cache_set(key=cache_key, value=payload, ttl=cache_ttl_sec)
 
-def get_request_token(request: Request):
-    return request.headers.get('Authorization')
+        return payload
+    except JWTError as exc:
+        print('ERROR', exc)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Could not validate credentials',
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
 
 
 def instruments_list(sort: int or str, account_id: Optional[str]) -> list:
@@ -782,24 +810,6 @@ def accounts_endpoint(user=Depends(verify_user_by_token)):
 @app.get('/user_money_rub')
 def user_money_rub_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return users.get_user_money_rub(account_id=request.query_params.get('account_id'))
-
-
-@app.get('/current_user')
-async def current_user(request: Request, user=Depends(verify_user_by_token)):
-    return user
-
-
-@app.get('/login')
-def login(request: Request):
-    if user := users.get_user_by_login_password(
-        login=request.query_params.get('login'),
-        password=request.query_params.get('password'),
-    ):
-        if user.token:
-            return get_user_by_token(token=user.token)
-        elif user.id:
-            return get_user_by_token(token=users.get_user_token(user.id))
-    return None
 
 
 @app.get('/instrument/macd_rate')

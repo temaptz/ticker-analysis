@@ -30,9 +30,8 @@ export class RsiComponent {
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'rsi'));
 
   rateData = resource({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentRsiRate(params.request.uid, params.request.isBuy))
+    loader: () =>
+      firstValueFrom(this.apiService.getInstrumentRsiRate(this.instrumentUid(), this.isBuy()))
   });
 
   getTooltip(data: RsiRateResp): string {

@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatSortModule } from '@angular/material/sort';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { TableVirtualScrollDataSource, TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { ApiService } from '../../shared/services/api.service';
 import { SortModeService } from '../../shared/services/sort-mode.service';
@@ -23,7 +23,7 @@ import { InstrumentOrdersComponent } from '../../entities/instrument-orders/inst
 
 
 @Component({
-  selector: 'table-full-3',
+  selector: 'table-full',
   imports: [
     CommonModule,
     MatTableModule,
@@ -42,10 +42,10 @@ import { InstrumentOrdersComponent } from '../../entities/instrument-orders/inst
     InstrumentOrdersComponent,
   ],
   providers: [],
-  templateUrl: './table-full-3.component.html',
-  styleUrl: './table-full-3.component.scss'
+  templateUrl: './table-full.component.html',
+  styleUrl: './table-full.component.scss'
 })
-export class TableFull3Component {
+export class TableFullComponent {
   isLoaded = signal<boolean>(false);
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
 
@@ -54,18 +54,18 @@ export class TableFull3Component {
   private _apiService = inject(ApiService);
 
   sortTickers = this._sortModeService.sortMode;
-  selectedAccountId = this._accountService.selectedAccountId;
 
-  instrumentsResource = resource({
-    request: () => ({
-      sort: this.sortTickers(),
-      accountId: this.selectedAccountId(),
+  instrumentsResource = resource<InstrumentInList[], {accountId: number | null, sort: number | null}>({
+    defaultValue: [],
+    params: () => ({
+      accountId: this._accountService.selectedAccountId() ?? null,
+      sort: this._sortModeService.sortMode() ?? null,
     }),
-    loader: ({ request }) => {
-      if (!request.accountId) {
-        return Promise.resolve([]);
+    loader: (params) => {
+      if (!params?.params?.accountId || !params?.params?.sort) {
+        return firstValueFrom(of([]));
       }
-      return firstValueFrom(this._apiService.getInstruments(request.sort, request.accountId));
+      return firstValueFrom(this._apiService.getInstruments(params.params.sort, params.params.accountId));
     },
   });
 
@@ -82,8 +82,6 @@ export class TableFull3Component {
 
   protected readonly CandleInterval = CandleInterval;
   protected readonly tableItemHeightPx = 350;
-  protected readonly tableMinBufferPx = 350 * 2;
-  protected readonly tableMaxBufferPx = 350 * 3;
 
   displayedColumns: string[] = [
     'logo',

@@ -23,10 +23,10 @@ export class NewsComplexComponent {
   isLoaded = signal<boolean>(false);
 
   weeksResource = resource<NewsListRatedResponse[], string>({
-    request: () => this.instrumentUid(),
-    loader: (params: ResourceLoaderParams<string>) => firstValueFrom(
+    defaultValue: [],
+    loader: () => firstValueFrom(
       forkJoin([
-        ...this.weeks.map(([from, to]) => this.apiService.getInstrumentNewsListRated(params.request, from, to)
+        ...this.weeks.map(([from, to]) => this.apiService.getInstrumentNewsListRated(this.instrumentUid(), from, to)
         )
       ]).pipe(
         map((list: NewsListRatedResponse[]) => list?.sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())),

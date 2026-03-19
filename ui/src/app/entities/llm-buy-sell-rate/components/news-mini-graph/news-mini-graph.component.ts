@@ -28,15 +28,10 @@ export class NewsMiniGraphComponent {
   private _startDate = subDays(startOfDay(this._endDate), 14);
 
   resource = resource<NewsGraphItem[], {uid: string, dateStart: Date, dateEnd: Date}>({
-    request: () => ({
-      uid: this.instrumentUid(),
-      dateStart: this._startDate,
-      dateEnd: this._endDate,
-    }),
-    loader: (params: ResourceLoaderParams<{uid: string, dateStart: Date, dateEnd: Date}>) => firstValueFrom(this._apiService.getInstrumentNewsGraph(
-      params.request.uid,
-      params.request.dateStart,
-      params.request.dateEnd,
+    loader: () => firstValueFrom(this._apiService.getInstrumentNewsGraph(
+      this.instrumentUid(),
+      this._startDate,
+      this._endDate,
       CandleInterval.CANDLE_INTERVAL_DAY,
     )),
   });

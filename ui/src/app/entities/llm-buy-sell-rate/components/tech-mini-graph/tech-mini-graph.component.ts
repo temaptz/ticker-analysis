@@ -28,15 +28,10 @@ export class TechMiniGraphComponent {
   private _endDate = addDays(this._startDate, TARGET_MAX_DAYS_COUNT);
 
   resource = resource<PredictionGraphResp, {uid: string, dateStart: Date, dateEnd: Date}>({
-    request: () => ({
-      uid: this.instrumentUid(),
-      dateStart: this._startDate,
-      dateEnd: this._endDate,
-    }),
-    loader: (params: ResourceLoaderParams<{uid: string, dateStart: Date, dateEnd: Date}>) => firstValueFrom(this._apiService.getInstrumentPredictionGraph(
-      params.request.uid,
-      params.request.dateStart,
-      params.request.dateEnd,
+    loader: () => firstValueFrom(this._apiService.getInstrumentPredictionGraph(
+      this.instrumentUid(),
+      this._startDate,
+      this._endDate,
       CandleInterval.CANDLE_INTERVAL_DAY,
       [ModelNameEnum.Ta_3_tech]
     )),
@@ -53,11 +48,11 @@ export class TechMiniGraphComponent {
   private _getChartOptions(predictions: any[]): echarts.EChartsOption {
     const values = predictions.map((p: any) => p.prediction_percent);
     const dates = predictions.map((p: any) => new Date(p.date));
-    
+
     if (values.length === 0) {
       return {};
     }
-    
+
     const minValue = Math.min(...values, 0);
     const maxValue = Math.max(...values, 0);
     const padding = (maxValue - minValue) * 0.1 || 0.1;

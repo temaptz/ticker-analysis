@@ -1,7 +1,6 @@
 import { Injectable, signal, inject, effect } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
-import { AuthService } from './auth.service';
 import { BuySellWeights } from '../types';
 
 @Injectable({
@@ -9,7 +8,6 @@ import { BuySellWeights } from '../types';
 })
 export class WeightsService {
   private readonly _api = inject(ApiService);
-  private readonly _auth = inject(AuthService);
 
   private _buyWeights = signal<BuySellWeights | null>(null);
   private _sellWeights = signal<BuySellWeights | null>(null);
@@ -18,17 +16,10 @@ export class WeightsService {
   sellWeights = this._sellWeights.asReadonly();
 
   constructor() {
-    effect(() => {
-      const token = this._auth.token();
-      if (token) {
-        this.loadWeights();
-      }
-    });
+    this.loadWeights();
   }
 
   async loadWeights(): Promise<void> {
-    if (!this._auth.token()) return;
-    
     try {
       const [buy, sell] = await Promise.all([
         firstValueFrom(this._api.getBuySellWeights(true)),

@@ -21,18 +21,12 @@ export class TotalComponent {
 
   apiService = inject(ApiService);
   accountService = inject(AccountService);
-  decimalPipe = inject(DecimalPipe);
 
   totalColor = GRAPH_COLORS.total_rate;
 
   rateData = resource<BuySellTotalRateResp, { uid: string, accountId: number, isBuy: boolean }>({
-    request: () => ({ uid: this.instrumentUid(), accountId: this.accountService.selectedAccountId() ?? 0, isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string, accountId: number, isBuy: boolean }>) => firstValueFrom(
-      this.apiService.getBuySellTotalRate(
-        params.request.uid,
-        params.request.accountId,
-        params.request.isBuy
-      )
+    loader: () => firstValueFrom(
+      this.apiService.getBuySellTotalRate(this.instrumentUid(), this.accountService.selectedAccountId()!, this.isBuy())
     )
   });
 

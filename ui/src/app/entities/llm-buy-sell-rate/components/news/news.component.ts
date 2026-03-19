@@ -30,9 +30,8 @@ export class NewsComponent {
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'news'));
 
   rateData = resource({
-    request: () => ({ uid: this.instrumentUid(), isBuy: this.isBuy() }),
-    loader: (params: ResourceLoaderParams<{ uid: string; isBuy: boolean }>) =>
-      firstValueFrom(this.apiService.getInstrumentNewsRate(params.request.uid, params.request.isBuy))
+    loader: () =>
+      firstValueFrom(this.apiService.getInstrumentNewsRate(this.instrumentUid(), this.isBuy()))
   });
 
   getTooltip(data: NewsRateResp): string {
