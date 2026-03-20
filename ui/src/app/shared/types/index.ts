@@ -263,6 +263,29 @@ export interface ProfitRateResp {
   debug: Record<string, any>;
 }
 
+export interface ComponentRate {
+  rate: number;
+  debug?: Record<string, any>;
+  graph?: any[];
+}
+
+export interface BacktestRateItem {
+  total: number;
+  macd: ComponentRate | null;
+  rsi: ComponentRate | null;
+  tech: ComponentRate | null;
+  news: ComponentRate | null;
+  fundamental: ComponentRate | null;
+  volume: ComponentRate | null;
+  profit: ComponentRate | null;
+}
+
+export interface BacktestRateResp {
+  total_buy: BacktestRateItem;
+  total_sell: BacktestRateItem;
+}
+
+// Legacy interface for backward compatibility
 export interface BuySellTotalRateResp {
   rate: number;
   debug: Record<string, any>;

@@ -1,0 +1,47 @@
+<div class="backtest-page">
+  <div class="header">
+    <instrument-select #instrumentSelect class="instrument-select"></instrument-select>
+    
+    <div class="period-selector">
+      @for (opt of periodOptions; track opt.value) {
+        <button
+          class="period-btn"
+          [class.active]="opt.value === selectedPeriod()"
+          (click)="onSelectPeriod(opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (accountId(); as accId) {
+    <div class="content">
+      @if (instrumentSelect.selectedInstrument(); as inst) {
+        <div class="graph-section">
+          <backtest-graph
+            [instrumentUid]="inst.uid"
+            [selectedDate]="selectedDate()"
+            [periodYears]="selectedPeriod()"
+            (onChartClick)="onGraphClick($event)"
+          ></backtest-graph>
+        </div>
+
+        <div class="selected-date-display">
+          <span class="date-label">Выбранная дата:</span>
+          <span class="date-value">{{ selectedDate() | date:'dd MMMM yyyy' }}</span>
+        </div>
+
+        <div class="result-section">
+          <backtest-buy-sell-rate
+            [instrumentUid]="inst.uid"
+            [accountId]="accId"
+            [selectedDate]="selectedDate()"
+          ></backtest-buy-sell-rate>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<drawer></drawer>

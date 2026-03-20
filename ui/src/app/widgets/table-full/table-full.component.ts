@@ -16,7 +16,7 @@ import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.p
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
-import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
+import { BacktestBuySellRateComponent } from '../../entities/backtest-buy-sell-rate/backtest-buy-sell-rate.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { InstrumentOrdersComponent } from '../../entities/instrument-orders/instrument-orders.component';
@@ -36,7 +36,7 @@ import { InstrumentOrdersComponent } from '../../entities/instrument-orders/inst
     TableVirtualScrollModule,
     CurrentPriceByUidPipe,
     PriceFormatPipe,
-    LlmBuySellRateComponent,
+    BacktestBuySellRateComponent,
     DrawerComponent,
     PreloaderComponent,
     InstrumentOrdersComponent,
@@ -50,7 +50,7 @@ export class TableFullComponent {
   dataSource = new TableVirtualScrollDataSource<InstrumentInList>([])
 
   private _sortModeService = inject(SortModeService);
-  private _accountService = inject(AccountService);
+  public accountService = inject(AccountService);
   private _apiService = inject(ApiService);
 
   sortTickers = this._sortModeService.sortMode;
@@ -58,14 +58,14 @@ export class TableFullComponent {
   instrumentsResource = resource<InstrumentInList[], {accountId: number | null, sort: number | null}>({
     defaultValue: [],
     params: () => ({
-      accountId: this._accountService.selectedAccountId() ?? null,
+      accountId: this.accountService.selectedAccountId() ?? null,
       sort: this._sortModeService.sortMode() ?? null,
     }),
     loader: (params) => {
       if (!params?.params?.accountId || !params?.params?.sort) {
         return firstValueFrom(of([]));
       }
-      return firstValueFrom(this._apiService.getInstruments(params.params.sort, params.params.accountId));
+      return firstValueFrom(this._apiService.getInstruments(params.params.accountId, params.params.sort));
     },
   });
 
@@ -78,6 +78,40 @@ export class TableFullComponent {
     } else {
       return 'Рейтинг покупки и продажи';
     }
+  });
+
+  isShowBuy = computed<boolean>(() => {
+    const mode = this.sortTickers();
+    // Show buy row for buy-related sorts or when not specifically sell sort
+    return mode === SortModeEnum.BuyPerspective || 
+           mode === SortModeEnum.BuyVolume || 
+           mode === SortModeEnum.BuyMacd || 
+           mode === SortModeEnum.BuyRsi || 
+           mode === SortModeEnum.BuyTech || 
+           mode === SortModeEnum.BuyNews ||
+           (mode !== SortModeEnum.SellPerspective && 
+            mode !== SortModeEnum.SellVolume && 
+            mode !== SortModeEnum.SellMacd && 
+            mode !== SortModeEnum.SellRsi && 
+            mode !== SortModeEnum.SellTech && 
+            mode !== SortModeEnum.SellNews);
+  });
+
+  isShowSell = computed<boolean>(() => {
+    const mode = this.sortTickers();
+    // Show sell row for sell-related sorts or when not specifically buy sort
+    return mode === SortModeEnum.SellPerspective || 
+           mode === SortModeEnum.SellVolume || 
+           mode === SortModeEnum.SellMacd || 
+           mode === SortModeEnum.SellRsi || 
+           mode === SortModeEnum.SellTech || 
+           mode === SortModeEnum.SellNews ||
+           (mode !== SortModeEnum.BuyPerspective && 
+            mode !== SortModeEnum.BuyVolume && 
+            mode !== SortModeEnum.BuyMacd && 
+            mode !== SortModeEnum.BuyRsi && 
+            mode !== SortModeEnum.BuyTech && 
+            mode !== SortModeEnum.BuyNews);
   });
 
   protected readonly CandleInterval = CandleInterval;

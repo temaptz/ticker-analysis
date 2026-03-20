@@ -4,7 +4,7 @@ from lib.learn.ta_3_technical import TARGET_MAX_DAYS_COUNT
 
 
 @cache.ttl_cache(ttl=3600)
-def get_tech_buy_rate(instrument_uid: str):
+def get_tech_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate_value = 0
     target_prediction_value = 0.025 # +2.5%
     max_prediction = 0
@@ -14,7 +14,7 @@ def get_tech_buy_rate(instrument_uid: str):
     is_no_predictions = True
 
     try:
-        now = date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
+        now = date or date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
         date_from = now + datetime.timedelta(days=1)
         date_to = now + datetime.timedelta(days=TARGET_MAX_DAYS_COUNT)
 
@@ -56,20 +56,20 @@ def get_tech_buy_rate(instrument_uid: str):
             'max_prediction_date': max_prediction_date,
             'max_prediction_value': max_prediction,
             'target_prediction_value': target_prediction_value,
-            'predictions': predictions_list,
+            'graph': predictions_list,
         },
     }
 
 
 @cache.ttl_cache(ttl=3600)
-def get_tech_sell_rate(instrument_uid: str):
+def get_tech_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate_value = 0
     days_before_positive_prediction = None
     predictions_list = []
     is_no_predictions = True
 
     try:
-        now = date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
+        now = date or date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
         date_from = now + datetime.timedelta(days=1)
         date_to = now + datetime.timedelta(days=TARGET_MAX_DAYS_COUNT)
 
@@ -107,6 +107,6 @@ def get_tech_sell_rate(instrument_uid: str):
         'debug': {
             'rate': final_rate_value,
             'days_before_positive': days_before_positive_prediction,
-            'predictions': predictions_list,
+            'graph': predictions_list,
         },
     }

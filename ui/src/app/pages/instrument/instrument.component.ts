@@ -5,6 +5,7 @@ import { InstrumentComplexInfoComponent } from '../../widgets/instrument-complex
 import { NewsListAccordionComponent } from '../../entities/news-list-accordion/news-list-accordion.component';
 import { UidByTickerPipe } from '../../shared/pipes/uid-by-ticker.pipe';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
+import { AccountService } from '../../shared/services/account.service';
 
 
 @Component({
@@ -17,13 +18,16 @@ import { PreloaderComponent } from '../../entities/preloader/preloader.component
 export class InstrumentComponent {
 
   ticker = signal<string>('');
+  accountId = signal<number>(0);
 
   private activatedRoute = inject(ActivatedRoute);
+  private accountService = inject(AccountService);
 
   constructor() {
     this.ticker.set(
       this.activatedRoute.snapshot.params['ticker']
     );
+    this.accountId.set(this.accountService.selectedAccountId() || 0);
   }
 
 }

@@ -1,0 +1,30 @@
+<div class="timeline-container">
+  <div class="timeline-header">
+    <span class="period-label">Период анализа</span>
+    <span class="selected-date">{{ selectedDate() | date:'dd MMMM yyyy' }}</span>
+  </div>
+  
+  <div class="slider-wrapper">
+    <mat-slider
+      class="timeline-slider"
+      [min]="minTimestamp()"
+      [max]="maxTimestamp()"
+      [step]="dayStep"
+      discrete
+      [displayWith]="formatDateLabel"
+    >
+      <input matSliderThumb [(ngModel)]="sliderValue" (input)="onInputChange()">
+    </mat-slider>
+  </div>
+
+  <div class="timeline-labels">
+    <div class="label-item start">
+      <span class="label-date">{{ startDate() | date:'dd.MM.yyyy' }}</span>
+      <span class="label-text">Начало</span>
+    </div>
+    <div class="label-item end">
+      <span class="label-date">{{ endDate() | date:'dd.MM.yyyy' }}</span>
+      <span class="label-text">Сегодня</span>
+    </div>
+  </div>
+</div>

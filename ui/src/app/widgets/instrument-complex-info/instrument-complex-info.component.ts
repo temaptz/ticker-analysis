@@ -16,12 +16,12 @@ import { CurrentPriceComponent } from '../../entities/current-price/current-pric
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
-import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-buy-sell-rate.component';
+import { BacktestBuySellRateComponent } from '../../entities/backtest-buy-sell-rate/backtest-buy-sell-rate.component';
 
 
 @Component({
   selector: 'instrument-complex-info',
-  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent, BalanceComponent, LlmBuySellRateComponent],
+  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent, BalanceComponent, BacktestBuySellRateComponent],
   providers: [],
   templateUrl: './instrument-complex-info.component.html',
   styleUrl: './instrument-complex-info.component.scss'
@@ -29,6 +29,7 @@ import { LlmBuySellRateComponent } from '../../entities/llm-buy-sell-rate/llm-bu
 export class InstrumentComplexInfoComponent {
 
   instrumentUid = input.required<string>();
+  accountId = input.required<number>();
 
   instrument = signal<Instrument | null>(null);
   isLoaded = signal<boolean>(false);

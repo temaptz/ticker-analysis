@@ -35,6 +35,9 @@ if not docker.is_prod():
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 
 async def verify_user_by_token(token: str = Depends(oauth2_scheme)):
+    if not docker.is_prod():
+        return True
+
     cache_ttl_sec = 3600
     cache_key = f'token_verify_{token}'
     cached = cache.cache_get(key=cache_key)
@@ -416,7 +419,7 @@ def tech_analysis_graph(
     length = int(length_str) if length_str else None
     indicator_type = IndicatorType(int(indicator_type_str)) if indicator_type_str else None
 
-    if uid and date_from and date_to and interval and indicator_type:
+    if uid and date_from and date_to and interval and indicator_type is not None:
         deviation = Deviation(deviation_multiplier=Quotation(units=2, nano=0)) if indicator_type == IndicatorType.INDICATOR_TYPE_BB else None
         smoothing = Smoothing(fast_length=12, slow_length=26, signal_smoothing=9) if indicator_type == IndicatorType.INDICATOR_TYPE_MACD else None
 
@@ -552,6 +555,25 @@ def instrument_buy_sell_total_rate(instrument_uid: str, account_id: str, is_buy:
         return agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
     else:
         return agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
+
+
+def instrument_backtest_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None):
+    total_buy = agent.buy_sell_rate.get_total_buy_rate(
+        instrument_uid=instrument_uid,
+        account_id=account_id,
+        date=date,
+    )
+    
+    total_sell = agent.buy_sell_rate.get_total_sell_rate(
+        instrument_uid=instrument_uid,
+        account_id=account_id,
+        date=date,
+    )
+    
+    return {
+        'total_buy': total_buy,
+        'total_sell': total_sell,
+    }
 
 
 def get_buy_sell_weights(is_buy: bool):
@@ -944,3 +966,15 @@ async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify
     if result is not None:
         return result
     raise HTTPException(status_code=400, detail='Failed to cancel order')
+
+
+@app.get('/instrument/rate')
+async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
+    uid = request.query_params.get('uid')
+    account_id = request.query_params.get('account_id')
+    date = request.query_params.get('date')
+    date_parsed = date_utils.get_day_prediction_time(date=date_utils.parse_date(date=date)) if date else None
+    result = instrument_backtest_rate(instrument_uid=uid, account_id=account_id, date=date_parsed)
+    if result is not None:
+        return result
+    raise HTTPException(status_code=400, detail='Failed')

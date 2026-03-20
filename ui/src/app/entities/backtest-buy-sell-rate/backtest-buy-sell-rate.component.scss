@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+
+.backtest-rate-table {
+  position: relative;
+}
+
+.preloader-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.rate-row {
+  display: flex;
+  align-items: flex-end;
+  width: fit-content;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid grey;
+  border-radius: 10px;
+
+  &.loading {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.buy-row {
+  margin-bottom: 8px;
+}
+
+.sell-row {
+  // Additional styling if needed
+}

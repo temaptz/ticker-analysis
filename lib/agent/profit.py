@@ -1,4 +1,5 @@
-from lib import logger, invest_calc, users, agent, cache
+import datetime
+from lib import logger, invest_calc, agent, cache
 
 
 def get_profit_buy_rate(instrument_uid: str, account_id: str):
@@ -19,27 +20,28 @@ def get_profit_buy_rate(instrument_uid: str, account_id: str):
 
 
 @cache.ttl_cache(ttl=3600)
-def get_profit_sell_rate(instrument_uid: str, account_id: str):
+def get_profit_sell_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None):
     final_rate = 0
     potential_profit_percent = None
 
     try:
-        if calc := invest_calc.get_invest_calc_by_instrument_uid(
-                instrument_uid=instrument_uid,
-                account_id=account_id,
-        ):
-            if (p := calc['potential_profit_percent']) or p == 0:
-                if p <= 0:
-                    rate = 0
-                elif 0 < p <= 3:
-                    rate = agent.utils.lerp(p, 0, 3, 0, 0.5)
-                else:
-                    rate = min(1.00, agent.utils.lerp(p, 3, 15, 0.5, 1))
+        if date is None:
+            if calc := invest_calc.get_invest_calc_by_instrument_uid(
+                    instrument_uid=instrument_uid,
+                    account_id=account_id,
+            ):
+                if (p := calc['potential_profit_percent']) or p == 0:
+                    if p <= 0:
+                        rate = 0
+                    elif 0 < p <= 3:
+                        rate = agent.utils.lerp(p, 0, 3, 0, 0.5)
+                    else:
+                        rate = min(1.00, agent.utils.lerp(p, 3, 15, 0.5, 1))
 
 
-                if rate or rate == 0:
-                    final_rate = rate
-                potential_profit_percent = p
+                    if rate or rate == 0:
+                        final_rate = rate
+                    potential_profit_percent = p
     except Exception as e:
         logger.log_error(method_name='get_profit_sell_rate', error=e, is_telegram_send=False)
 

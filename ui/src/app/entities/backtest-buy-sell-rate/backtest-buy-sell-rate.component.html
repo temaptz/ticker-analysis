@@ -1,0 +1,65 @@
+<div class="backtest-rate-table">
+  @if (rateData.isLoading()) {
+    <div class="preloader-overlay">
+      <preloader></preloader>
+    </div>
+  }
+
+  @if (isShowBuy()) {
+    <div class="rate-row buy-row" [class.loading]="rateData.isLoading()" [style.border-color]="GRAPH_COLORS.buy">
+      <backtest-volume
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-macd
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-rsi
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-tech
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-news
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-fundamental
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-profit
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+      <backtest-total
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
+    </div>
+  }
+
+  @if (isShowSell()) {
+    <div class="rate-row sell-row" [class.loading]="rateData.isLoading()"  [style.border-color]="GRAPH_COLORS.sell">
+      <backtest-volume
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-macd
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-rsi
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-tech
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-news
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-fundamental
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-profit
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <backtest-total
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+    </div>
+  }
+</div>

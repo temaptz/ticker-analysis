@@ -7,6 +7,7 @@ import { OAuthService, provideOAuthClient } from 'angular-oauth2-oidc';
 import { routes } from './app.routes';
 import { authInterceptor } from './shared/interceptors/auth.interceptor';
 import { authConfig } from './auth.config';
+import { of } from 'rxjs';
 
 registerLocaleData(localeRu);
 
@@ -20,10 +21,13 @@ export const appConfig: ApplicationConfig = {
     ),
     provideOAuthClient(),
     provideAppInitializer(() => {
-      const oauthService = inject(OAuthService);
-      oauthService.configure(authConfig);
-      oauthService.setupAutomaticSilentRefresh();
-      return oauthService.loadDiscoveryDocumentAndTryLogin();
+      if (!window.location.origin.includes('localhost')) {
+        const oauthService = inject(OAuthService);
+        oauthService.configure(authConfig);
+        oauthService.setupAutomaticSilentRefresh();
+        return oauthService.loadDiscoveryDocumentAndTryLogin();
+      }
+      return of();
     }),
     { provide: LOCALE_ID, useValue: 'ru' },
   ],

@@ -1,7 +1,3 @@
-<div>
-  <button (click)="handleLogout()">Выход</button>
-</div>
-
 <div
   class="toggler"
   (click)="handleToggleDrawer()"
@@ -11,6 +7,15 @@
   class="drawer"
   [class.hidden]="!isDrawerOpen()"
 >
+  <div class="logout">
+    <button (click)="handleLogout()">Выход</button>
+  </div>
+
+  <div class="nav-links">
+    <a routerLink="/dashboard" class="nav-link">Дашборд</a>
+    <a routerLink="/backtest" class="nav-link">Backtest</a>
+  </div>
+
   <account-switch/>
 
   <div class="sort-section">

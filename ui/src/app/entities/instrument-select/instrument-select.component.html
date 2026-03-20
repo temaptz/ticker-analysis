@@ -1,0 +1,25 @@
+@if (instrumentsResource.isLoading()) {
+  <preloader></preloader>
+} @else if (instrumentsResource.value(); as instruments) {
+  <mat-form-field appearance="outline">
+    <mat-label>Инструмент</mat-label>
+    <mat-select [formControl]="selectControl" (selectionChange)="onSelectionChange($event.value)">
+      <mat-select-trigger>
+        @if (selectedInstrument(); as inst) {
+          <div class="trigger-content">
+            <instrument-logo [instrumentUid]="inst.uid"></instrument-logo>
+            <span class="trigger-text">[{{ inst.ticker }}] {{ inst.name }}</span>
+          </div>
+        }
+      </mat-select-trigger>
+      @for (inst of instruments; track inst.uid) {
+        <mat-option [value]="inst.uid">
+          <div class="option-content">
+            <instrument-logo [instrumentUid]="inst.uid"></instrument-logo>
+            <span>[{{ inst.ticker }}] {{ inst.name }}</span>
+          </div>
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+}

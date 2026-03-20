@@ -1,16 +1,20 @@
 import datetime
 from lib import logger, news, date_utils, cache
+from t_tech.invest import CandleInterval
+from t_tech.invest.schemas import IndicatorInterval
 
 NEWS_CANDLES_COUNT = 7
 
 
 @cache.ttl_cache(ttl=3600)
-def get_news_buy_rate(instrument_uid: str):
+def get_news_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     influence_score = None
+    date_from = _get_news_period(date=date)[0]
+    date_to = _get_news_period(date=date)[1]
 
     try:
-        influence_score = get_news_influence_score(instrument_uid=instrument_uid)
+        influence_score = _get_news_influence_score(instrument_uid=instrument_uid, date=date)
 
         if influence_score is not None and influence_score > 0:
             final_rate = 1
@@ -22,20 +26,28 @@ def get_news_buy_rate(instrument_uid: str):
         'debug': {
             'rate': final_rate,
             'influence_score': influence_score,
-            'news_count': get_news_count(instrument_uid=instrument_uid),
-            'from_date': get_news_period()[0],
-            'to_date': get_news_period()[1],
+            'news_count': _get_news_count(instrument_uid=instrument_uid, date=date),
+            'from_date': date_from,
+            'to_date': date_to,
+            'graph': news.news.get_rated_news_graph(
+                instrument_uid=instrument_uid,
+                start_date=date_from,
+                end_date=date_to,
+                interval=CandleInterval.CANDLE_INTERVAL_DAY,
+            ),
         },
     }
 
 
 @cache.ttl_cache(ttl=3600)
-def get_news_sell_rate(instrument_uid: str):
+def get_news_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     influence_score = None
+    date_from = _get_news_period(date=date)[0]
+    date_to = _get_news_period(date=date)[1]
 
     try:
-        influence_score = get_news_influence_score(instrument_uid=instrument_uid)
+        influence_score = _get_news_influence_score(instrument_uid=instrument_uid, date=date)
 
         if influence_score is not None and influence_score < 0:
             final_rate = 1
@@ -47,16 +59,22 @@ def get_news_sell_rate(instrument_uid: str):
         'debug': {
             'rate': final_rate,
             'influence_score': influence_score,
-            'news_count': get_news_count(instrument_uid=instrument_uid),
-            'from_date': get_news_period()[0],
-            'to_date': get_news_period()[1],
+            'news_count': _get_news_count(instrument_uid=instrument_uid, date=date),
+            'from_date': date_from,
+            'to_date': date_to,
+            'graph': news.news.get_rated_news_graph(
+                instrument_uid=instrument_uid,
+                start_date=date_from,
+                end_date=date_to,
+                interval=CandleInterval.CANDLE_INTERVAL_DAY,
+            ),
         },
     }
 
 
-def get_news_influence_score(instrument_uid: str) -> float:
+def _get_news_influence_score(instrument_uid: str, date: datetime.datetime or None = None) -> float:
     try:
-        period = get_news_period()
+        period = _get_news_period(date=date)
 
         return news.news.get_influence_score(
             instrument_uid=instrument_uid,
@@ -68,9 +86,9 @@ def get_news_influence_score(instrument_uid: str) -> float:
         logger.log_error(method_name='get_news_influence_score', error=e, is_telegram_send=False)
     return 0
 
-def get_news_count(instrument_uid: str) -> int:
+def _get_news_count(instrument_uid: str, date: datetime.datetime or None = None) -> int:
     try:
-        period = get_news_period()
+        period = _get_news_period(date=date)
         news_list = news.news.get_news_by_instrument_uid(
             instrument_uid=instrument_uid,
             start_date=period[0],
@@ -84,7 +102,7 @@ def get_news_count(instrument_uid: str) -> int:
     return 0
 
 
-def get_news_period() -> (datetime.datetime, datetime.datetime):
-    end_date = date_utils.get_day_prediction_time(date=datetime.datetime.now(datetime.timezone.utc))
+def _get_news_period(date: datetime.datetime or None = None) -> (datetime.datetime, datetime.datetime):
+    end_date = date or date_utils.get_day_prediction_time(date=datetime.datetime.now(datetime.timezone.utc))
     start_date = end_date - datetime.timedelta(days=14)
     return start_date, end_date

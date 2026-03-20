@@ -1,7 +1,9 @@
+import datetime
+
 from lib import agent, db_2, logger
 
 
-def get_total_buy_rate(instrument_uid: str, account_id: str) -> dict:
+def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     macd_rated_value = None
     rsi_rated_value =None
@@ -10,12 +12,12 @@ def get_total_buy_rate(instrument_uid: str, account_id: str) -> dict:
     fundamental_rated_value = None
     volume_rated_value = None
     profit_rated_value = None
-    macd_rated = agent.macd.macd_buy_rate(instrument_uid=instrument_uid)
-    rsi_rated = agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid)
-    tech_rated = agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid)
-    news_rated = agent.news.get_news_buy_rate(instrument_uid=instrument_uid)
-    fundamental_rated = agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid)
-    volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid)
+    macd_rated = agent.macd.macd_buy_rate(instrument_uid=instrument_uid, date=date)
+    rsi_rated = agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid, date=date)
+    tech_rated = agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid, date=date)
+    news_rated = agent.news.get_news_buy_rate(instrument_uid=instrument_uid, date=date)
+    fundamental_rated = agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid, date=date)
+    volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid, date=date)
     profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
 
     weights = get_buy_weights()
@@ -57,21 +59,18 @@ def get_total_buy_rate(instrument_uid: str, account_id: str) -> dict:
             )
 
     return {
-        'rate': final_rate,
-        'debug': {
-            'rate': final_rate,
-            'macd': macd_rated_value,
-            'rsi': rsi_rated_value,
-            'tech': tech_rated_value,
-            'news': news_rated_value,
-            'fundamental': fundamental_rated_value,
-            'volume': volume_rated_value,
-            'profit': profit_rated_value,
-        },
+        'total': final_rate,
+        'macd': macd_rated,
+        'rsi': rsi_rated,
+        'tech': tech_rated,
+        'news': news_rated,
+        'fundamental': fundamental_rated,
+        'volume': volume_rated,
+        'profit': profit_rated,
     }
 
 
-def get_total_sell_rate(instrument_uid: str, account_id: str) -> dict:
+def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     macd_rated_value = None
     rsi_rated_value = None
@@ -80,13 +79,13 @@ def get_total_sell_rate(instrument_uid: str, account_id: str) -> dict:
     fundamental_rated_value = None
     volume_rated_value = None
     profit_rated_value = None
-    macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid)
-    rsi_rated = agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid)
-    tech_rated = agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid)
-    news_rated = agent.news.get_news_sell_rate(instrument_uid=instrument_uid)
-    fundamental_rated = agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid)
-    volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid)
-    profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
+    macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid, date=date)
+    rsi_rated = agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid, date=date)
+    tech_rated = agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid, date=date)
+    news_rated = agent.news.get_news_sell_rate(instrument_uid=instrument_uid, date=date)
+    fundamental_rated = agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid, date=date)
+    volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid, date=date)
+    profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
 
     weights = get_sell_weights()
 
@@ -127,17 +126,14 @@ def get_total_sell_rate(instrument_uid: str, account_id: str) -> dict:
             )
 
     return {
-        'rate': final_rate,
-        'debug': {
-            'rate': final_rate,
-            'macd': macd_rated_value,
-            'rsi': rsi_rated_value,
-            'tech': tech_rated_value,
-            'news': news_rated_value,
-            'fundamental': fundamental_rated_value,
-            'volume': volume_rated_value,
-            'profit': profit_rated_value,
-        },
+        'total': final_rate,
+        'macd': macd_rated,
+        'rsi': rsi_rated,
+        'tech': tech_rated,
+        'news': news_rated,
+        'fundamental': fundamental_rated,
+        'volume': volume_rated,
+        'profit': profit_rated,
     }
 
 

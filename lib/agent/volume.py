@@ -1,13 +1,14 @@
-from lib import logger, learn, cache
+import datetime
+from lib import logger, learn, cache, predictions_cache
 
 
-@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True, cache_salt='_')
-def get_volume_buy_rate(instrument_uid: str):
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+def get_volume_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     prediction = None
 
     try:
-        prediction = learn.ta_3_volume_learn.predict_future(instrument_uid=instrument_uid)
+        prediction = _get_prediction(instrument_uid=instrument_uid, date=date)
 
         if prediction == 'upper':
             final_rate = 1
@@ -25,13 +26,13 @@ def get_volume_buy_rate(instrument_uid: str):
     }
 
 
-@cache.ttl_cache(ttl=3600 * 24, is_skip_empty=True, cache_salt='_')
-def get_volume_sell_rate(instrument_uid: str):
+@cache.ttl_cache(ttl=3600, is_skip_empty=True)
+def get_volume_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     prediction = None
 
     try:
-        prediction = learn.ta_3_volume_learn.predict_future(instrument_uid=instrument_uid)
+        prediction = _get_prediction(instrument_uid=instrument_uid, date=date)
 
         if prediction == 'lower':
             final_rate = 1
@@ -47,3 +48,13 @@ def get_volume_sell_rate(instrument_uid: str):
             'prediction': prediction,
         },
     }
+
+def _get_prediction(instrument_uid: str, date: datetime.datetime or None = None):
+    if not date:
+        if (cached := predictions_cache.get_prediction_cache(
+            instrument_uid=instrument_uid,
+            model_name=learn.model.TA_3_volume,
+        )) and cached:
+            return cached
+
+    return learn.ta_3_volume_learn.predict_future(instrument_uid=instrument_uid, date_current=date)

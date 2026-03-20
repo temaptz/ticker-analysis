@@ -6,16 +6,12 @@ RSI_CANDLES_COUNT = 7
 
 
 @cache.ttl_cache(ttl=3600)
-def rsi_buy_rate(instrument_uid: str):
+def rsi_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
-    rsi_value = None
-    rsi_date = None
-    rsi_candle = get_last_rsi_candle(instrument_uid=instrument_uid)
+    rsi_graph = _get_rsi_graph(instrument_uid=instrument_uid, date=date)
+    rsi_value = rsi_graph[-1] if rsi_graph else None
 
-    if rsi_candle:
-        rsi_value = utils.get_price_by_quotation(rsi_candle.signal)
-        rsi_date = rsi_candle.timestamp
-
+    if rsi_value is not None:
         if rsi_value <= 30:
             final_rate = agent.utils.linear_interpolation(rsi_value, 0, 30, 1, 0.75)
         elif rsi_value <= 50:
@@ -26,22 +22,18 @@ def rsi_buy_rate(instrument_uid: str):
         'debug': {
             'rate': final_rate,
             'rsi_value': rsi_value,
-            'rsi_date': rsi_date,
+            'graph': rsi_graph,
         },
     }
 
 
 @cache.ttl_cache(ttl=3600)
-def rsi_sell_rate(instrument_uid: str):
+def rsi_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
-    rsi_value = None
-    rsi_date = None
-    rsi_candle = get_last_rsi_candle(instrument_uid=instrument_uid)
+    rsi_graph = _get_rsi_graph(instrument_uid=instrument_uid, date=date)
+    rsi_value = rsi_graph[-1] if rsi_graph else None
 
-    if rsi_candle:
-        rsi_value = utils.get_price_by_quotation(rsi_candle.signal)
-        rsi_date = rsi_candle.timestamp
-
+    if rsi_value:
         if rsi_value > 50:
             final_rate = agent.utils.linear_interpolation(rsi_value, 50, 100, 0.001, 1)
 
@@ -55,14 +47,14 @@ def rsi_sell_rate(instrument_uid: str):
         'debug': {
             'rate': final_rate,
             'rsi_value': rsi_value,
-            'rsi_date': rsi_date,
+            'graph': rsi_graph,
         },
     }
 
 
-def get_last_rsi_candle(instrument_uid: str) -> TechAnalysisItem or None:
+def _get_rsi_graph(instrument_uid: str, date: datetime.datetime or None = None) -> list[float] or None:
     try:
-        now = date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
+        now = date or date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))
         graph = tech_analysis.get_tech_analysis(
             instrument_uid=instrument_uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_RSI,
@@ -73,10 +65,10 @@ def get_last_rsi_candle(instrument_uid: str) -> TechAnalysisItem or None:
         )
 
         if graph and len(graph):
-            graph_sorted = sorted(graph, key=lambda x: x.timestamp, reverse=True)[:RSI_CANDLES_COUNT]
+            graph_sorted = sorted(graph, key=lambda x: x.timestamp, reverse=False)[:RSI_CANDLES_COUNT]
 
-            if graph_sorted[0]:
-                return graph_sorted[0]
+            if len(graph_sorted) == RSI_CANDLES_COUNT:
+                return [utils.get_price_by_quotation(i.signal) for i in graph_sorted]
 
     except Exception as e:
         logger.log_error(method_name='get_last_rsi_value', error=e, is_telegram_send=False)

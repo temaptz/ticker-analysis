@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+mat-form-field {
+  width: 300px;
+}
+
+.trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trigger-text {
+  font-size: 0.9em;
+}

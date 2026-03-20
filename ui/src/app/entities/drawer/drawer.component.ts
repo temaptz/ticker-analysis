@@ -1,6 +1,7 @@
 import { Component, computed, inject, model, resource } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SortModeEnum } from '../../shared/types';
 import { ApiService } from '../../shared/services/api.service';
@@ -17,7 +18,7 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'drawer',
-  imports: [CommonModule, FormsModule, ComplexGraphControlComponent, WeightsEditorComponent, AccountSwitchComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ComplexGraphControlComponent, WeightsEditorComponent, AccountSwitchComponent],
   providers: [],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss'

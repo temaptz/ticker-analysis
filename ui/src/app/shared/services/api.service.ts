@@ -33,6 +33,7 @@ import {
   ActiveOrder,
   CreateOrderRequest,
   Account,
+  BacktestRateResp,
 } from '../types';
 import { CandleInterval, IndicatorType } from '../enums';
 import { SortModeEnum } from '../types';
@@ -51,13 +52,15 @@ export class ApiService {
     private http: HttpClient,
   ) {}
 
-  getInstruments(sort: SortModeEnum, accountId: number): Observable<InstrumentInList[]> {
+  getInstruments(accountId: number, sort?: SortModeEnum): Observable<InstrumentInList[]> {
     let params = new HttpParams({
       fromObject: {
-        sort,
         account_id: accountId,
       }
     })
+    if (sort) {
+      params = params.set('sort', sort);
+    }
     return this.http.get<InstrumentInList[]>(`${this.apiUrl}/instruments`, {params});
   }
 
@@ -389,4 +392,14 @@ export class ApiService {
     return this.http.delete<any>(`${this.apiUrl}/instrument/order`, {params});
   }
 
+  getRate(uid: string, accountId: number, date?: Date): Observable<BacktestRateResp> {
+    let params = new HttpParams();
+    params = params.set('uid', uid);
+    params = params.set('account_id', accountId);
+    if (date) {
+      params = params.set('date', date.toJSON());
+    }
+
+    return this.http.get<BacktestRateResp>(`${this.apiUrl}/instrument/rate`, {params});
+  }
 }

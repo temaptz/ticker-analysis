@@ -27,4 +27,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/instrument/instrument.component').then(c => c.InstrumentComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'backtest',
+    loadComponent: () => import('./pages/backtest/backtest.component').then(c => c.BacktestComponent),
+    canActivate: [authGuard]
+  },
 ];

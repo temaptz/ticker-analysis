@@ -1,0 +1,48 @@
+<div class="result-container">
+  @if (rateDataResource.isLoading()) {
+    <preloader></preloader>
+  } @else if (rateDataResource.value(); as data) {
+    <div class="date-display">
+      <span class="date-label">Выбранная дата:</span>
+      <span class="date-value">{{ formattedDate() }}</span>
+    </div>
+
+    <div class="rates-container">
+      <div class="rate-card buy-card">
+        <div class="card-header">
+          <span class="card-title">TOTAL BUY</span>
+          <vertical-scale [color]="buyColor" [value]="data.total_buy.rate"></vertical-scale>
+        </div>
+        <div class="total-rate">
+          {{ data.total_buy.rate | number:'1.2-2' }}
+        </div>
+        <div class="metrics-list">
+          @for (metric of metrics; track metric.key) {
+            <div class="metric-row">
+              <span class="metric-label">{{ metric.label }}</span>
+              <span class="metric-value">{{ data.total_buy.debug[metric.key] | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="rate-card sell-card">
+        <div class="card-header">
+          <span class="card-title">TOTAL SELL</span>
+          <vertical-scale [color]="sellColor" [value]="data.total_sell.rate"></vertical-scale>
+        </div>
+        <div class="total-rate">
+          {{ data.total_sell.rate | number:'1.2-2' }}
+        </div>
+        <div class="metrics-list">
+          @for (metric of metrics; track metric.key) {
+            <div class="metric-row">
+              <span class="metric-label">{{ metric.label }}</span>
+              <span class="metric-value">{{ data.total_sell.debug[metric.key] | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

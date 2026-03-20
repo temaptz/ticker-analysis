@@ -63,7 +63,10 @@
           <td>
             <h5>Рекомендации</h5>
 
-            <llm-buy-sell-rate [instrumentUid]="instr.uid"></llm-buy-sell-rate>
+            <backtest-buy-sell-rate 
+              [instrumentUid]="instr.uid"
+              [accountId]="accountId()"
+            ></backtest-buy-sell-rate>
 
 <!--            <recommendation-->
 <!--              [instrumentUid]="instr.uid"-->

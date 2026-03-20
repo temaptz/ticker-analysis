@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, input, OnChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, input, OnChanges, output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as echarts from 'echarts';
 
@@ -15,6 +15,8 @@ export class EchartsGraphComponent implements AfterViewInit, OnChanges {
   option = input.required<echarts.EChartsOption>();
   width = input<string>('auto');
   height = input<string>('auto');
+
+  onChartClick = output<Date>();
 
   private chart?: echarts.EChartsType;
   private isViewInit = false;
@@ -47,6 +49,14 @@ export class EchartsGraphComponent implements AfterViewInit, OnChanges {
     this.chart.setOption({
       animation: false,
       ...this.option(),
+    });
+
+    this.chart.on('click', (params) => {
+      const date = (params as any)?.data?.[0] as Date;
+
+      if (date) {
+        this.onChartClick.emit(date);
+      }
     });
   }
 
