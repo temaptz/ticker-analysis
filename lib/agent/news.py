@@ -29,11 +29,10 @@ def get_news_buy_rate(instrument_uid: str, date: datetime.datetime or None = Non
             'news_count': _get_news_count(instrument_uid=instrument_uid, date=date),
             'from_date': date_from,
             'to_date': date_to,
-            'graph': news.news.get_rated_news_graph(
+            'graph': _get_news_graph(
                 instrument_uid=instrument_uid,
-                start_date=date_from,
-                end_date=date_to,
-                interval=CandleInterval.CANDLE_INTERVAL_DAY,
+                date_from=date_from,
+                date_to=date_to,
             ),
         },
     }
@@ -62,11 +61,10 @@ def get_news_sell_rate(instrument_uid: str, date: datetime.datetime or None = No
             'news_count': _get_news_count(instrument_uid=instrument_uid, date=date),
             'from_date': date_from,
             'to_date': date_to,
-            'graph': news.news.get_rated_news_graph(
+            'graph': _get_news_graph(
                 instrument_uid=instrument_uid,
-                start_date=date_from,
-                end_date=date_to,
-                interval=CandleInterval.CANDLE_INTERVAL_DAY,
+                date_from=date_from,
+                date_to=date_to,
             ),
         },
     }
@@ -106,3 +104,12 @@ def _get_news_period(date: datetime.datetime or None = None) -> (datetime.dateti
     end_date = date or date_utils.get_day_prediction_time(date=datetime.datetime.now(datetime.timezone.utc))
     start_date = end_date - datetime.timedelta(days=14)
     return start_date, end_date
+
+
+def _get_news_graph(instrument_uid: str, date_from: datetime.datetime, date_to: datetime.datetime):
+    return [i.get('influence_score') for i in news.news.get_rated_news_graph(
+        instrument_uid=instrument_uid,
+        start_date=date_from,
+        end_date=date_to,
+        interval=CandleInterval.CANDLE_INTERVAL_DAY,
+    )]
