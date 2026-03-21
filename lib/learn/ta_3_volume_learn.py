@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-from catboost import CatBoostRegressor
+from catboost import CatBoostRegressor, CatBoostClassifier
 
 from lib import utils, instruments, learn, date_utils, serializer, redis_utils, yandex_disk, docker, logger
 
@@ -108,7 +108,7 @@ def predict_future(
     )
 
     if card.is_ok:
-        model_cb = CatBoostRegressor()
+        model_cb = CatBoostClassifier()
         model_cb.load_model(get_model_file_path())
         prediction = model_cb.predict(
             data=card.get_x(),

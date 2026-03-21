@@ -1,7 +1,7 @@
 <div class="backtest-page">
   <div class="header">
     <instrument-select #instrumentSelect class="instrument-select"></instrument-select>
-    
+
     <div class="period-selector">
       @for (opt of periodOptions; track opt.value) {
         <button
@@ -33,11 +33,11 @@
         </div>
 
         <div class="result-section">
-          <backtest-buy-sell-rate
+          <buy-sell-rate
             [instrumentUid]="inst.uid"
             [accountId]="accId"
             [selectedDate]="selectedDate()"
-          ></backtest-buy-sell-rate>
+          ></buy-sell-rate>
         </div>
       }
     </div>

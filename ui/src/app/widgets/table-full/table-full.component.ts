@@ -16,7 +16,7 @@ import { CurrentPriceByUidPipe } from '../../shared/pipes/current-price-by-uid.p
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 import { InstrumentInList, SortModeEnum } from '../../shared/types';
 import { CandleInterval } from '../../shared/enums';
-import { BacktestBuySellRateComponent } from '../../entities/backtest-buy-sell-rate/backtest-buy-sell-rate.component';
+import { BuySellRateComponent } from '../../entities/buy-sell-rate/buy-sell-rate.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { PreloaderComponent } from '../../entities/preloader/preloader.component';
 import { InstrumentOrdersComponent } from '../../entities/instrument-orders/instrument-orders.component';
@@ -36,7 +36,7 @@ import { InstrumentOrdersComponent } from '../../entities/instrument-orders/inst
     TableVirtualScrollModule,
     CurrentPriceByUidPipe,
     PriceFormatPipe,
-    BacktestBuySellRateComponent,
+    BuySellRateComponent,
     DrawerComponent,
     PreloaderComponent,
     InstrumentOrdersComponent,
@@ -61,58 +61,47 @@ export class TableFullComponent {
       accountId: this.accountService.selectedAccountId() ?? null,
       sort: this._sortModeService.sortMode() ?? null,
     }),
-    loader: (params) => {
-      if (!params?.params?.accountId || !params?.params?.sort) {
+    loader: ({params, abortSignal}) => {
+      if (!params?.accountId || !params?.sort) {
         return firstValueFrom(of([]));
       }
-      return firstValueFrom(this._apiService.getInstruments(params.params.accountId, params.params.sort));
+      return firstValueFrom(this._apiService.getInstruments(params.accountId, params.sort));
     },
   });
 
   ratingColumnTitle = computed<string>(() => {
-    const mode = this.sortTickers();
-    if (mode === SortModeEnum.BuyPerspective) {
+    if (this.isShowBuy()) {
       return 'Рейтинг покупки';
-    } else if (mode === SortModeEnum.SellPerspective) {
+    } else if (this.isShowSell()) {
       return 'Рейтинг продажи';
     } else {
       return 'Рейтинг покупки и продажи';
     }
   });
 
-  isShowBuy = computed<boolean>(() => {
-    const mode = this.sortTickers();
-    // Show buy row for buy-related sorts or when not specifically sell sort
-    return mode === SortModeEnum.BuyPerspective || 
-           mode === SortModeEnum.BuyVolume || 
-           mode === SortModeEnum.BuyMacd || 
-           mode === SortModeEnum.BuyRsi || 
-           mode === SortModeEnum.BuyTech || 
-           mode === SortModeEnum.BuyNews ||
-           (mode !== SortModeEnum.SellPerspective && 
-            mode !== SortModeEnum.SellVolume && 
-            mode !== SortModeEnum.SellMacd && 
-            mode !== SortModeEnum.SellRsi && 
-            mode !== SortModeEnum.SellTech && 
-            mode !== SortModeEnum.SellNews);
-  });
+  isShowBuy = computed<boolean>(() => [
+    SortModeEnum.BuyVolume,
+    SortModeEnum.BuyMacd,
+    SortModeEnum.BuyRsi,
+    SortModeEnum.BuyTech,
+    SortModeEnum.BuyFundamental,
+    SortModeEnum.BuyPerspective,
+    SortModeEnum.BuyProfit,
+    SortModeEnum.BuyNews,
+    SortModeEnum.BuyTotalRate,
+  ].includes(this.sortTickers()));
 
-  isShowSell = computed<boolean>(() => {
-    const mode = this.sortTickers();
-    // Show sell row for sell-related sorts or when not specifically buy sort
-    return mode === SortModeEnum.SellPerspective || 
-           mode === SortModeEnum.SellVolume || 
-           mode === SortModeEnum.SellMacd || 
-           mode === SortModeEnum.SellRsi || 
-           mode === SortModeEnum.SellTech || 
-           mode === SortModeEnum.SellNews ||
-           (mode !== SortModeEnum.BuyPerspective && 
-            mode !== SortModeEnum.BuyVolume && 
-            mode !== SortModeEnum.BuyMacd && 
-            mode !== SortModeEnum.BuyRsi && 
-            mode !== SortModeEnum.BuyTech && 
-            mode !== SortModeEnum.BuyNews);
-  });
+  isShowSell = computed<boolean>(() => [
+    SortModeEnum.SellVolume,
+    SortModeEnum.SellMacd,
+    SortModeEnum.SellRsi,
+    SortModeEnum.SellTech,
+    SortModeEnum.SellFundamental,
+    SortModeEnum.SellPerspective,
+    SortModeEnum.SellProfit,
+    SortModeEnum.SellNews,
+    SortModeEnum.SellTotalRate,
+  ].includes(this.sortTickers()));
 
   protected readonly CandleInterval = CandleInterval;
   protected readonly tableItemHeightPx = 350;

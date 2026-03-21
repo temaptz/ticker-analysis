@@ -26,7 +26,7 @@ const EMPTY_BACKTEST_ITEM: BacktestRateItem = {
 };
 
 @Component({
-  selector: 'backtest-buy-sell-rate',
+  selector: 'buy-sell-rate',
   imports: [
     CommonModule,
     PreloaderComponent,
@@ -39,10 +39,10 @@ const EMPTY_BACKTEST_ITEM: BacktestRateItem = {
     BacktestProfitComponent,
     BacktestTotalComponent,
   ],
-  templateUrl: './backtest-buy-sell-rate.component.html',
-  styleUrl: './backtest-buy-sell-rate.component.scss'
+  templateUrl: './buy-sell-rate.component.html',
+  styleUrl: './buy-sell-rate.component.scss'
 })
-export class BacktestBuySellRateComponent {
+export class BuySellRateComponent {
   readonly instrumentUid = input.required<string>();
   readonly accountId = input.required<number>();
   readonly isShowBuy = input<boolean>(true);
@@ -51,11 +51,13 @@ export class BacktestBuySellRateComponent {
 
   private apiService = inject(ApiService);
 
-  rateData = resource<BacktestRateResp, { uid: string; accountId: number; date: Date | undefined }>({
+  rateData = resource<BacktestRateResp, { uid: string; accountId: number; date: Date | undefined; isBuy: boolean, isSell: boolean }>({
     params: () => ({
       uid: this.instrumentUid(),
       accountId: this.accountId(),
       date: this.selectedDate(),
+      isBuy: this.isShowBuy(),
+      isSell: this.isShowSell(),
     }),
     loader: (params): Promise<BacktestRateResp> => {
       if (!params?.params?.uid || !params?.params?.accountId) {
@@ -68,7 +70,9 @@ export class BacktestBuySellRateComponent {
         this.apiService.getRate(
           params.params.uid,
           params.params.accountId,
-          params.params.date
+          params.params.date,
+          params.params.isBuy,
+          params.params.isSell
         )
       );
     },

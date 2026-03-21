@@ -501,78 +501,24 @@ def get_total_info():
     return resp
 
 
-def instrument_macd_rate(instrument_uid: str, is_buy: bool):
-    if is_buy:
-        return agent.macd.macd_buy_rate(instrument_uid=instrument_uid)
-    else:
-        return agent.macd.macd_sell_rate(instrument_uid=instrument_uid)
-
-
-def instrument_rsi_rate(instrument_uid: str, is_buy: bool):
-    if is_buy:
-        return agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid)
-    else:
-        return agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid)
-
-
-def instrument_tech_rate(instrument_uid: str, is_buy: bool):
-    if is_buy:
-        return agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid)
-    else:
-        return agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid)
-
-
-def instrument_news_rate(instrument_uid: str, is_buy: bool):
-    if is_buy:
-        return agent.news.get_news_buy_rate(instrument_uid=instrument_uid)
-    else:
-        return agent.news.get_news_sell_rate(instrument_uid=instrument_uid)
-
-
-def instrument_fundamental_rate(instrument_uid: str, is_buy: bool):
-    if is_buy:
-        return agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid)
-    else:
-        return agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid)
-
-
-def instrument_volume_rate(instrument_uid: str, is_buy: bool):
-    if is_buy:
-        return agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid)
-    else:
-        return agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid)
-
-
-def instrument_profit_rate(instrument_uid: str, account_id: str, is_buy: bool):
-    if is_buy:
-        return agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
-    else:
-        return agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
-
-
-def instrument_buy_sell_total_rate(instrument_uid: str, account_id: str, is_buy: bool):
-    if is_buy:
-        return agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
-    else:
-        return agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
-
-
-def instrument_backtest_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None):
-    total_buy = agent.buy_sell_rate.get_total_buy_rate(
-        instrument_uid=instrument_uid,
-        account_id=account_id,
-        date=date,
-    )
-    
-    total_sell = agent.buy_sell_rate.get_total_sell_rate(
-        instrument_uid=instrument_uid,
-        account_id=account_id,
-        date=date,
-    )
-    
+def instrument_buy_sell_rate(
+        instrument_uid: str,
+        account_id: str,
+        date: datetime.datetime or None = None,
+        is_buy: bool = True,
+        is_sell: bool = True,
+):
     return {
-        'total_buy': total_buy,
-        'total_sell': total_sell,
+        'total_buy': agent.buy_sell_rate.get_total_buy_rate(
+            instrument_uid=instrument_uid,
+            account_id=account_id,
+            date=date,
+        ) if is_buy else None,
+        'total_sell': agent.buy_sell_rate.get_total_sell_rate(
+            instrument_uid=instrument_uid,
+            account_id=account_id,
+            date=date,
+        ) if is_sell else None,
     }
 
 
@@ -834,72 +780,6 @@ def user_money_rub_endpoint(request: Request, user=Depends(verify_user_by_token)
     return users.get_user_money_rub(account_id=request.query_params.get('account_id'))
 
 
-@app.get('/instrument/macd_rate')
-def instrument_macd_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_macd_rate(
-        instrument_uid=request.query_params.get('uid'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/rsi_rate')
-def instrument_rsi_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_rsi_rate(
-        instrument_uid=request.query_params.get('uid'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/tech_rate')
-def instrument_tech_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_tech_rate(
-        instrument_uid=request.query_params.get('uid'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/news_rate')
-def instrument_news_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_news_rate(
-        instrument_uid=request.query_params.get('uid'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/fundamental_rate')
-def instrument_fundamental_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_fundamental_rate(
-        instrument_uid=request.query_params.get('uid'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/volume_rate')
-def instrument_volume_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_volume_rate(
-        instrument_uid=request.query_params.get('uid'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/profit_rate')
-def instrument_profit_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_profit_rate(
-        instrument_uid=request.query_params.get('uid'),
-        account_id=request.query_params.get('account_id'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
-@app.get('/instrument/buy_sell_total_rate')
-def instrument_buy_sell_total_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    return instrument_buy_sell_total_rate(
-        instrument_uid=request.query_params.get('uid'),
-        account_id=request.query_params.get('account_id'),
-        is_buy=request.query_params.get('is_buy') == 'true',
-    )
-
-
 @app.get('/buy_sell_weights')
 def buy_sell_weights_endpoint(request: Request, user=Depends(verify_user_by_token)):
     return get_buy_sell_weights(
@@ -970,11 +850,15 @@ async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify
 
 @app.get('/instrument/rate')
 async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
-    uid = request.query_params.get('uid')
-    account_id = request.query_params.get('account_id')
     date = request.query_params.get('date')
     date_parsed = date_utils.get_day_prediction_time(date=date_utils.parse_date(date=date)) if date else None
-    result = instrument_backtest_rate(instrument_uid=uid, account_id=account_id, date=date_parsed)
+    result = instrument_buy_sell_rate(
+        instrument_uid=request.query_params.get('uid'),
+        account_id=request.query_params.get('account_id'),
+        date=date_parsed,
+        is_buy=request.query_params.get('is_buy') == 'true',
+        is_sell=request.query_params.get('is_sell') == 'true',
+    )
     if result is not None:
         return result
     raise HTTPException(status_code=400, detail='Failed')

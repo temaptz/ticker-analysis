@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { subDays } from 'date-fns';
 import { InstrumentSelectComponent } from '../../entities/instrument-select/instrument-select.component';
 import { BacktestGraphComponent } from '../../entities/backtest-graph/backtest-graph.component';
-import { BacktestBuySellRateComponent } from '../../entities/backtest-buy-sell-rate/backtest-buy-sell-rate.component';
+import { BuySellRateComponent } from '../../entities/buy-sell-rate/buy-sell-rate.component';
 import { DrawerComponent } from '../../entities/drawer/drawer.component';
 import { AccountService } from '../../shared/services/account.service';
 
@@ -13,7 +13,7 @@ import { AccountService } from '../../shared/services/account.service';
     CommonModule,
     InstrumentSelectComponent,
     BacktestGraphComponent,
-    BacktestBuySellRateComponent,
+    BuySellRateComponent,
     DrawerComponent,
   ],
   templateUrl: './backtest.component.html',

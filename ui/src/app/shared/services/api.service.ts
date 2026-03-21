@@ -274,72 +274,6 @@ export class ApiService {
     return this.http.get<TotalInfo>(`${this.apiUrl}/total_info`);
   }
 
-  getInstrumentMacdRate(uid: string, isBuy: boolean): Observable<MacdRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<MacdRateResp>(`${this.apiUrl}/instrument/macd_rate`, {params});
-  }
-
-  getInstrumentRsiRate(uid: string, isBuy: boolean): Observable<RsiRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<RsiRateResp>(`${this.apiUrl}/instrument/rsi_rate`, {params});
-  }
-
-  getInstrumentTechRate(uid: string, isBuy: boolean): Observable<TechRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<TechRateResp>(`${this.apiUrl}/instrument/tech_rate`, {params});
-  }
-
-  getInstrumentNewsRate(uid: string, isBuy: boolean): Observable<NewsRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<NewsRateResp>(`${this.apiUrl}/instrument/news_rate`, {params});
-  }
-
-  getInstrumentFundamentalRate(uid: string, isBuy: boolean): Observable<FundamentalRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<FundamentalRateResp>(`${this.apiUrl}/instrument/fundamental_rate`, {params});
-  }
-
-  getInstrumentVolumeRate(uid: string, isBuy: boolean): Observable<VolumeRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<VolumeRateResp>(`${this.apiUrl}/instrument/volume_rate`, {params});
-  }
-
-  getInstrumentProfitRate(uid: string, accountId: number, isBuy: boolean): Observable<ProfitRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('account_id', accountId);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<ProfitRateResp>(`${this.apiUrl}/instrument/profit_rate`, {params});
-  }
-
-  getBuySellTotalRate(uid: string, accountId: number, isBuy: boolean): Observable<BuySellTotalRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('account_id', accountId);
-    params = params.set('is_buy', isBuy.toString());
-
-    return this.http.get<BuySellTotalRateResp>(`${this.apiUrl}/instrument/buy_sell_total_rate`, {params});
-  }
-
   getBuySellWeights(isBuy: boolean): Observable<BuySellWeights> {
     let params = new HttpParams();
     params = params.set('is_buy', isBuy.toString());
@@ -392,10 +326,16 @@ export class ApiService {
     return this.http.delete<any>(`${this.apiUrl}/instrument/order`, {params});
   }
 
-  getRate(uid: string, accountId: number, date?: Date): Observable<BacktestRateResp> {
-    let params = new HttpParams();
-    params = params.set('uid', uid);
-    params = params.set('account_id', accountId);
+  getRate(uid: string, accountId: number, date?: Date, isBuy = false, isSell = false): Observable<BacktestRateResp> {
+    let params = new HttpParams({
+      fromObject: {
+        uid: uid,
+        account_id: accountId,
+        is_buy: isBuy,
+        is_sell: isSell,
+      }
+    });
+
     if (date) {
       params = params.set('date', date.toJSON());
     }

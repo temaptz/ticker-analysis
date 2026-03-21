@@ -16,12 +16,12 @@ import { CurrentPriceComponent } from '../../entities/current-price/current-pric
 import { ComplexGraphComponent } from '../../entities/complex-graph/complex-graph.component';
 import { NewsComplexComponent } from '../../entities/news-complex/news-complex.component';
 import { BalanceComponent } from '../../entities/balance/balance.component';
-import { BacktestBuySellRateComponent } from '../../entities/backtest-buy-sell-rate/backtest-buy-sell-rate.component';
+import { BuySellRateComponent } from '../../entities/buy-sell-rate/buy-sell-rate.component';
 
 
 @Component({
   selector: 'instrument-complex-info',
-  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent, BalanceComponent, BacktestBuySellRateComponent],
+  imports: [CommonModule, PreloaderComponent, InstrumentLogoComponent, FundamentalsComponent, ForecastComponent, ForecastHistoryComponent, PredictionComponent, CurrentPriceComponent, FormsModule, ComplexGraphComponent, NewsComplexComponent, BalanceComponent, BuySellRateComponent],
   providers: [],
   templateUrl: './instrument-complex-info.component.html',
   styleUrl: './instrument-complex-info.component.scss'

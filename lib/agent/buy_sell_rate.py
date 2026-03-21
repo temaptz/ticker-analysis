@@ -5,13 +5,6 @@ from lib import agent, db_2, logger
 
 def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
-    macd_rated_value = None
-    rsi_rated_value =None
-    tech_rated_value =  None
-    news_rated_value = None
-    fundamental_rated_value = None
-    volume_rated_value = None
-    profit_rated_value = None
     macd_rated = agent.macd.macd_buy_rate(instrument_uid=instrument_uid, date=date)
     rsi_rated = agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid, date=date)
     tech_rated = agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid, date=date)
@@ -72,13 +65,6 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
 
 def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
-    macd_rated_value = None
-    rsi_rated_value = None
-    tech_rated_value = None
-    news_rated_value = None
-    fundamental_rated_value = None
-    volume_rated_value = None
-    profit_rated_value = None
     macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid, date=date)
     rsi_rated = agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid, date=date)
     tech_rated = agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid, date=date)
