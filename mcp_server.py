@@ -33,11 +33,12 @@ def get_instruments_to_sell(account_id: str, limit: int):
     tags={'rate', 'instruments', 'buy'},
 )
 def get_instrument_buy_rate(instrument_uid: str, account_id: str):
-    return fast_api.instrument_buy_sell_total_rate(
+    return fast_api.instrument_buy_sell_rate(
         instrument_uid=instrument_uid,
         account_id=account_id,
         is_buy=True,
-    )
+        is_sell=False,
+    ).get('total_buy', None)
 
 
 @mcp.tool(
@@ -45,8 +46,9 @@ def get_instrument_buy_rate(instrument_uid: str, account_id: str):
     tags={'rate', 'instruments', 'sell'},
 )
 def get_instrument_sell_rate(instrument_uid: str, account_id: str):
-    return fast_api.instrument_buy_sell_total_rate(
+    return fast_api.instrument_buy_sell_rate(
         instrument_uid=instrument_uid,
         account_id=account_id,
         is_buy=False,
-    )
+        is_sell=True,
+    ).get('total_sell', None)

@@ -343,18 +343,10 @@ def sort_instruments_by_total_rate_sell(instruments_list: list[Instrument], acco
     )
 
 
-def _get_agent_rate(rate_fn, instrument_uid: str, account_id: str = None) -> float:
-    try:
-        result = None
-        if account_id:
-            result = rate_fn(instrument_uid=instrument_uid, account_id=account_id)
-        else:
-            result = rate_fn(instrument_uid=instrument_uid)
-        if result and result.get('rate') is not None:
-            return result['rate']
-    except Exception as e:
-        logger.log_error(method_name='_get_agent_rate', error=e)
-    return float('-inf')
+def _get_agent_rate(rate_fn, instrument_uid: str, account_id: str) -> float:
+    result = rate_fn(instrument_uid=instrument_uid, account_id=account_id)
+
+    return result.get('rate') or result.get('total') or float('-inf')
 
 
 @cache.ttl_cache(ttl=3600)
