@@ -202,7 +202,7 @@ def get_sell_recommendation_by_uid(instrument_uid: str, account_id: str) -> Sell
         lot_size = instr.lot or 1
         qty_calc = balance_qty * agent.utils.get_sell_balance_multiply(sell_rate=(sell_rate.get('rate', 0) * 100))
         qty_round = math.ceil(qty_calc / lot_size) * lot_size
-        is_ok = (0 < qty_round <= qty_calc * 3)
+        is_ok = (0 < qty_round <= qty_calc * 2)
 
         logger.log_info(
             message='DEBUG SELL RECOMMENDATION',
