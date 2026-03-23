@@ -198,7 +198,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRe
     total_price = None
 
     try:
-        target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 0.995
+        target_price = agent.utils.get_buy_price(instrument_uid=instrument_uid)
         balance_rub = users.get_user_money_rub(account_id=account_id)
         buy_rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
         instr = instruments.get_instrument_by_uid(instrument_uid)
@@ -206,7 +206,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRe
         total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=(buy_rate.get('rate', 0) * 100))
         qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
         total_price = target_price * qty
-        is_ok = (total_price <= total_price_calc * 2)
+        is_ok = (total_price <= total_price_calc * 1.5)
 
         logger.log_info(
             message='DEBUG BUY RECOMMENDATION',

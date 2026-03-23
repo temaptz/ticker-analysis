@@ -192,7 +192,7 @@ def get_sell_recommendation_by_uid(instrument_uid: str, account_id: str) -> Sell
     qty_round = None
 
     try:
-        target_price = instruments.get_instrument_last_price_by_uid(instrument_uid) * 1.005
+        target_price = agent.utils.get_sell_price(instrument_uid=instrument_uid)
         balance_qty = users.get_user_instrument_balance(
             instrument_uid=instrument_uid,
             account_id=account_id,
