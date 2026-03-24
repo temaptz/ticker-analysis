@@ -14,4 +14,5 @@ from . import news
 from . import fundamental
 from . import volume
 from . import profit
+from . import consensus
 from . import buy_sell_rate

@@ -14,10 +14,11 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
     fundamental_rated = agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid, date=date)
     volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid, date=date)
     profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
+    consensus_rated = agent.consensus.get_consensus_buy_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
 
     weights = get_buy_weights()
 
-    if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated:
+    if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated and consensus_rated:
         macd_rated_value = macd_rated.get('rate', None)
         rsi_rated_value = rsi_rated.get('rate', None)
         tech_rated_value = tech_rated.get('rate', None)
@@ -25,6 +26,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
         fundamental_rated_value = fundamental_rated.get('rate', None)
         volume_rated_value = volume_rated.get('rate', None)
         profit_rated_value = profit_rated.get('rate', None)
+        consensus_rated_value = profit_rated.get('rate', None)
 
         if (
                 macd_rated_value is not None
@@ -34,6 +36,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
                 and fundamental_rated_value is not None
                 and volume_rated_value is not None
                 and profit_rated_value is not None
+                and consensus_rated_value is not None
         ):
             final_rate = (
                     (macd_rated_value * weights['macd'])
@@ -43,6 +46,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
                     + (fundamental_rated_value * weights['fundamental'])
                     + (volume_rated_value * weights['volume'])
                     + (profit_rated_value * weights['profit'])
+                    + (consensus_rated_value * weights['consensus'])
             ) / (
                     weights['macd']
                     + weights['rsi']
@@ -51,6 +55,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
                     + weights['fundamental']
                     + weights['volume']
                     + weights['profit']
+                    + weights['consensus']
             )
 
     return {
@@ -62,6 +67,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
         'fundamental': fundamental_rated,
         'volume': volume_rated,
         'profit': profit_rated,
+        'consensus': consensus_rated,
     }
 
 
@@ -75,10 +81,11 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
     fundamental_rated = agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid, date=date)
     volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid, date=date)
     profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
+    consensus_rated = agent.consensus.get_consensus_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
 
     weights = get_sell_weights()
 
-    if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated:
+    if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated and consensus_rated:
         macd_rated_value = macd_rated.get('rate', None)
         rsi_rated_value = rsi_rated.get('rate', None)
         tech_rated_value = tech_rated.get('rate', None)
@@ -86,6 +93,7 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
         fundamental_rated_value = fundamental_rated.get('rate', None)
         volume_rated_value = volume_rated.get('rate', None)
         profit_rated_value = profit_rated.get('rate', None)
+        consensus_rated_value = profit_rated.get('rate', None)
 
         if (
                 macd_rated_value is not None
@@ -95,6 +103,7 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
                 and fundamental_rated_value is not None
                 and volume_rated_value is not None
                 and profit_rated_value is not None
+                and consensus_rated_value is not None
         ):
             final_rate = (
                     (macd_rated_value * weights['macd'])
@@ -104,6 +113,7 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
                     + (fundamental_rated_value * weights['fundamental'])
                     + (volume_rated_value * weights['volume'])
                     + (profit_rated_value * weights['profit'])
+                    + (consensus_rated_value * weights['consensus'])
             ) / (
                     weights['macd']
                     + weights['rsi']
@@ -112,6 +122,7 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
                     + weights['fundamental']
                     + weights['volume']
                     + weights['profit']
+                    + weights['consensus']
             )
 
     return {
@@ -123,6 +134,7 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
         'fundamental': fundamental_rated,
         'volume': volume_rated,
         'profit': profit_rated,
+        'consensus': consensus_rated,
     }
 
 
@@ -135,6 +147,7 @@ def get_buy_weights() -> dict:
         'fundamental': get_weight_db(name='buy_fundamental') or 0,
         'volume': get_weight_db(name='buy_volume') or 0,
         'profit': get_weight_db(name='buy_profit') or 0,
+        'consensus': get_weight_db(name='buy_consensus') or 0,
     }
 
     return weights
@@ -149,6 +162,7 @@ def get_sell_weights() -> dict:
         'fundamental': get_weight_db(name='sell_fundamental') or 0,
         'volume': get_weight_db(name='sell_volume') or 0,
         'profit': get_weight_db(name='sell_profit') or 0,
+        'consensus': get_weight_db(name='buy_consensus') or 0,
     }
 
     return weights

@@ -11,17 +11,16 @@ export const GRAPH_COLORS = {
   history: '#99cfcf',
   news_influence_score: '#009900',
 
-  // Технические индикаторы (новые, уникальные цвета)
-  tech_rsi: '#FF3D00',     // ярко-оранжево-красный (контрастный к E91E63 и FF9800)
-  tech_bb: '#1DE9B6',      // бирюзово-зелёный (не пересекается с 00E5FF)
-  tech_ema: '#FFEA00',     // солнечно-жёлтый (отличается от AEEA00 и FDD835)
-  tech_sma: '#8BC34A',     // мягкий зелёный (не как 00FF6A)
-  tech_macd: '#651FFF',    // насыщенный синий-фиолетовый (уникальный, не как D500F9);
+  tech_rsi: '#FF3D00',
+  tech_bb: '#1DE9B6',
+  tech_ema: '#FFEA00',
+  tech_sma: '#8BC34A',
+  tech_macd: '#651FFF',
 
-  // Рейтинги агента
-  volume_rate: '#FF6D00',        // насыщенный оранжевый
-  profit_rate: '#00B0FF',        // яркий голубой
-  total_rate: '#ffd700',          // белый (итого)
+  volume_rate: '#FF6D00',
+  profit_rate: '#00B0FF',
+  consensus_rate: '#aa2e07',
+  total_rate: '#ffd700',
 
   buy: '#00ff00',
   sell: '#ff0000',

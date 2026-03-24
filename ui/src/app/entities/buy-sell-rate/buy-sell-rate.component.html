@@ -28,6 +28,9 @@
       <backtest-profit
         [rateData]="rateData.value()?.total_buy ?? null"
         [isBuy]="true" />
+      <buy-sell-consensus
+        [rateData]="rateData.value()?.total_buy ?? null"
+        [isBuy]="true" />
       <backtest-total
         [rateData]="rateData.value()?.total_buy ?? null"
         [isBuy]="true" />
@@ -55,6 +58,9 @@
         [rateData]="rateData.value()?.total_sell ?? null"
         [isBuy]="false" />
       <backtest-profit
+        [rateData]="rateData.value()?.total_sell ?? null"
+        [isBuy]="false" />
+      <buy-sell-consensus
         [rateData]="rateData.value()?.total_sell ?? null"
         [isBuy]="false" />
       <backtest-total

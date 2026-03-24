@@ -37,6 +37,8 @@
       <button class="sort-btn sort-btn--sell" [class.active]="sort() === sortModeEnum.SellFundamental" (click)="setSort(sortModeEnum.SellFundamental)">Фундам.</button>
       <button class="sort-btn sort-btn--buy" [class.active]="sort() === sortModeEnum.BuyProfit" (click)="setSort(sortModeEnum.BuyProfit)">Прибыль</button>
       <button class="sort-btn sort-btn--sell" [class.active]="sort() === sortModeEnum.SellProfit" (click)="setSort(sortModeEnum.SellProfit)">Прибыль</button>
+      <button class="sort-btn sort-btn--buy" [class.active]="sort() === sortModeEnum.BuyConsensus" (click)="setSort(sortModeEnum.BuyConsensus)">Consensus</button>
+      <button class="sort-btn sort-btn--sell" [class.active]="sort() === sortModeEnum.SellConsensus" (click)="setSort(sortModeEnum.SellConsensus)">Consensus</button>
       <button class="sort-btn sort-btn--buy" [class.active]="sort() === sortModeEnum.BuyVolume" (click)="setSort(sortModeEnum.BuyVolume)">Объём</button>
       <button class="sort-btn sort-btn--sell" [class.active]="sort() === sortModeEnum.SellVolume" (click)="setSort(sortModeEnum.SellVolume)">Объём</button>
     </div>

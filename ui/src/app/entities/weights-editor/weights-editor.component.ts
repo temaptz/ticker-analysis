@@ -16,6 +16,7 @@ const WEIGHT_LABELS: Record<keyof BuySellWeights, string> = {
   fundamental: 'Фундаментал',
   volume: 'Объём',
   profit: 'Прибыль',
+  consensus: 'Consensus',
 };
 
 type WeightKey = keyof BuySellWeights;
@@ -43,7 +44,7 @@ export class WeightsEditorComponent {
 
   isSaving = signal<boolean>(false);
 
-  weightKeys: WeightKey[] = ['macd', 'rsi', 'tech', 'news', 'fundamental', 'volume', 'profit'];
+  weightKeys: WeightKey[] = ['macd', 'rsi', 'tech', 'news', 'fundamental', 'volume', 'profit', 'consensus'];
 
   getLabel(key: WeightKey): string {
     return WEIGHT_LABELS[key];
@@ -80,7 +81,7 @@ export class WeightsEditorComponent {
   handleWeightChange(isBuy: boolean, key: WeightKey, event: Event): void {
     const value = parseFloat((event.target as HTMLInputElement).value) || 0;
     const current = this.getEditWeights(isBuy);
-    const updated = { ...(current ?? { macd: 0, rsi: 0, tech: 0, news: 0, fundamental: 0, volume: 0, profit: 0 }) };
+    const updated = { ...(current ?? { macd: 0, rsi: 0, tech: 0, news: 0, fundamental: 0, volume: 0, profit: 0, consensus: 0 }) };
     updated[key] = value;
 
     if (isBuy) {

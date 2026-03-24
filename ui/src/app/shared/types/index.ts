@@ -201,6 +201,8 @@ export enum SortModeEnum {
   SellFundamental = 16,
   BuyProfit = 17,
   SellProfit = 18,
+  BuyConsensus = 21,
+  SellConsensus = 22,
   BuyTotalRate = 19,
   SellTotalRate = 20,
 }
@@ -278,6 +280,7 @@ export interface BacktestRateItem {
   fundamental: ComponentRate | null;
   volume: ComponentRate | null;
   profit: ComponentRate | null;
+  consensus: ComponentRate | null;
 }
 
 export interface BacktestRateResp {
@@ -299,6 +302,7 @@ export interface BuySellWeights {
   fundamental: number;
   volume: number;
   profit: number;
+  consensus: number;
 }
 
 export interface BuyRecommendation {

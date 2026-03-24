@@ -327,6 +327,22 @@ def sort_instruments_by_profit_sell(instruments_list: list[Instrument], account_
     )
 
 
+def sort_instruments_by_consensus_buy(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda i: _get_agent_rate(agent.consensus.get_consensus_buy_rate, i.uid, account_id),
+        reverse=True,
+    )
+
+
+def sort_instruments_by_consensus_sell(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
+    return sorted(
+        instruments_list,
+        key=lambda i: _get_agent_rate(agent.consensus.get_consensus_sell_rate, i.uid, account_id),
+        reverse=True,
+    )
+
+
 def sort_instruments_by_total_rate_buy(instruments_list: list[Instrument], account_id: str) -> list[Instrument]:
     return sorted(
         instruments_list,
@@ -343,10 +359,18 @@ def sort_instruments_by_total_rate_sell(instruments_list: list[Instrument], acco
     )
 
 
-def _get_agent_rate(rate_fn, instrument_uid: str, account_id: str) -> float:
+def _get_agent_rate(rate_fn, instrument_uid: str, account_id: str | None = None) -> float:
     result = rate_fn(instrument_uid=instrument_uid, account_id=account_id)
+    if result:
+        rate = result.get('rate')
+        if rate or rate == 0:
+            return rate
 
-    return result.get('rate') or result.get('total') or float('-inf')
+        total = result.get('total')
+        if total or total == 0:
+            return total
+
+    return float('-inf')
 
 
 @cache.ttl_cache(ttl=3600)

@@ -88,6 +88,7 @@ export class TableFullComponent {
     SortModeEnum.BuyPerspective,
     SortModeEnum.BuyProfit,
     SortModeEnum.BuyNews,
+    SortModeEnum.BuyConsensus,
     SortModeEnum.BuyTotalRate,
   ].includes(this.sortTickers()));
 
@@ -100,6 +101,7 @@ export class TableFullComponent {
     SortModeEnum.SellPerspective,
     SortModeEnum.SellProfit,
     SortModeEnum.SellNews,
+    SortModeEnum.SellConsensus,
     SortModeEnum.SellTotalRate,
   ].includes(this.sortTickers()));
 

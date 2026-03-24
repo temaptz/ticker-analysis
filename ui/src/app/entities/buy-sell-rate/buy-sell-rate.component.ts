@@ -11,6 +11,7 @@ import { BacktestTechComponent } from './components/tech/tech.component';
 import { BacktestNewsComponent } from './components/news/news.component';
 import { BacktestFundamentalComponent } from './components/fundamental/fundamental.component';
 import { BacktestProfitComponent } from './components/profit/profit.component';
+import { BuySellConsensusComponent } from './components/consensus/consensus.component';
 import { BacktestTotalComponent } from './components/total/total.component';
 import { GRAPH_COLORS } from '../../shared/const';
 
@@ -23,6 +24,7 @@ const EMPTY_BACKTEST_ITEM: BacktestRateItem = {
   fundamental: null,
   volume: null,
   profit: null,
+  consensus: null,
 };
 
 @Component({
@@ -37,6 +39,7 @@ const EMPTY_BACKTEST_ITEM: BacktestRateItem = {
     BacktestNewsComponent,
     BacktestFundamentalComponent,
     BacktestProfitComponent,
+    BuySellConsensusComponent,
     BacktestTotalComponent,
   ],
   templateUrl: './buy-sell-rate.component.html',

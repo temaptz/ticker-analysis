@@ -163,6 +163,16 @@ def instruments_list(sort: int or str, account_id: Optional[str]) -> list:
             instruments_list=sorted_list,
             account_id=account_id,
         )
+    elif sort and (sort == 21 or sort == '21'):
+        sorted_list = users.sort_instruments_by_consensus_buy(
+            instruments_list=sorted_list,
+            account_id=account_id,
+        )
+    elif sort and (sort == 22 or sort == '22'):
+        sorted_list = users.sort_instruments_by_consensus_sell(
+            instruments_list=sorted_list,
+            account_id=account_id,
+        )
     elif sort and (sort == 19 or sort == '19'):
         sorted_list = users.sort_instruments_by_total_rate_buy(
             instruments_list=sorted_list,
