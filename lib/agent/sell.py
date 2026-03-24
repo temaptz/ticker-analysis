@@ -17,7 +17,10 @@ class StructuredList(BaseModel):
 
 class SellRecommendation(BaseModel):
     instrument_uid: str
-    target_price: float
+    price_default: float
+    price_l1: float
+    price_l2: float
+    price_l3: float
     qty: int
 
 
@@ -56,7 +59,7 @@ def create_orders_3(account_id: str):
 
     for rec in recommendations:
         if rec.qty > 0:
-            price = round(rec.target_price, 1)
+            price = round(rec.price_default, 1)
 
             if users.post_sell_order(
                     instrument_uid=rec.instrument_uid,
@@ -188,11 +191,13 @@ def final_parser(state: State) -> State:
 
 def get_sell_recommendation_by_uid(instrument_uid: str, account_id: str) -> SellRecommendation:
     is_ok = False
-    target_price = None
     qty_round = None
+    price_l1 = agent.utils.get_sell_price(instrument_uid=instrument_uid, l_level=1)
+    price_l2 = agent.utils.get_sell_price(instrument_uid=instrument_uid, l_level=2)
+    price_l3 = agent.utils.get_sell_price(instrument_uid=instrument_uid, l_level=3)
+    price_default = price_l1
 
     try:
-        target_price = agent.utils.get_sell_price(instrument_uid=instrument_uid)
         balance_qty = users.get_user_instrument_balance(
             instrument_uid=instrument_uid,
             account_id=account_id,
@@ -211,7 +216,7 @@ def get_sell_recommendation_by_uid(instrument_uid: str, account_id: str) -> Sell
                 'qty_round': qty_round,
                 'qty_calc': qty_calc,
                 'lot_size': lot_size,
-                'target_price': target_price,
+                'price_default': price_default,
                 'delta_percent': utils.round_float(num=((qty_round - qty_calc) / qty_calc * 100), decimals=2),
                 'is_ok': is_ok,
             },
@@ -222,6 +227,9 @@ def get_sell_recommendation_by_uid(instrument_uid: str, account_id: str) -> Sell
 
     return SellRecommendation(
         instrument_uid=instrument_uid,
-        target_price=target_price,
+        price_default=price_default,
+        price_l1=price_l1,
+        price_l2=price_l2,
+        price_l3=price_l3,
         qty=qty_round if is_ok else 0,
     )

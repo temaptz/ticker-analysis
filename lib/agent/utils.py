@@ -4,9 +4,10 @@ import re
 from langchain_core.runnables.graph import MermaidDrawMethod
 from io import BytesIO
 from PIL import Image
-from lib import serializer, db_2, agent, logger, instruments, utils
+from lib import serializer, db_2, agent, logger, instruments, utils, tech_analysis
 from rich import print_json
 from t_tech.invest import CandleInterval
+from t_tech.invest.schemas import IndicatorType
 
 
 def draw_graph(graph):
@@ -116,37 +117,56 @@ def get_sell_balance_multiply(sell_rate: float) -> float:
     return 0
 
 
-def get_buy_price(instrument_uid: str, l_level: int = 1) -> float:
-    if support_resistance := _get_support_resistance(instrument_uid=instrument_uid):
-        if k := _get_gold_k(support_resistance=support_resistance, l_level=l_level):
-            return min(support_resistance) + k
+def get_buy_price(instrument_uid: str, l_level: int = 1) -> float | None:
+    if last_price := _get_last_price(instrument_uid=instrument_uid):
+        if support_resistance := _get_support_resistance(instrument_uid=instrument_uid):
+            if k := _get_gold_k(support_resistance=support_resistance, l_level=l_level):
+                price = min(support_resistance) + k
+                max_price = last_price * 0.9975
+                if price < max_price:
+                    return price
+                else:
+                    return max_price
+    return None
 
 
-def get_sell_price(instrument_uid: str, l_level: int = 1) -> float:
-    if support_resistance := _get_support_resistance(instrument_uid=instrument_uid):
-        if k := _get_gold_k(support_resistance=support_resistance, l_level=l_level):
-            return max(support_resistance) - k
+def get_sell_price(instrument_uid: str, l_level: int = 1) -> float | None:
+    if last_price := _get_last_price(instrument_uid=instrument_uid):
+        if support_resistance := _get_support_resistance(instrument_uid=instrument_uid):
+            if k := _get_gold_k(support_resistance=support_resistance, l_level=l_level):
+                price = max(support_resistance) - k
+                min_price = last_price * 1.0025
+                if price > min_price:
+                    return price
+                else:
+                    return min_price
+    return None
 
 
 # Расчет коэфициента матожиданя цены сделки методом золотого сечения
-def _get_gold_k(support_resistance: [float, float], l_level: int = 1) -> float:
-    return abs(support_resistance[1] - support_resistance[0]) / 2.618 ** l_level
+def _get_gold_k(support_resistance: (float, float), l_level: int = 1) -> float:
+    return abs(support_resistance[1] - support_resistance[0]) / (2.618 ** l_level)
 
 
 # Минимумы максимумы цены за последнее время
-def _get_support_resistance(instrument_uid: str) -> [float, float] or None:
-    if candles := instruments.get_instrument_history_price_by_uid(
+def _get_support_resistance(instrument_uid: str) -> (float, float) or None:
+    candles_count = 48
+    if (candles := instruments.get_instrument_history_price_by_uid(
         uid=instrument_uid,
-        days_count=3,
+        days_count=10,
         interval=CandleInterval.CANDLE_INTERVAL_HOUR,
         to_date=datetime.datetime.now()
-    ):
-        prices_high = [utils.get_price_by_quotation(i.high) for i in candles]
-        prices_low = [utils.get_price_by_quotation(i.low) for i in candles]
+    )) and len(candles) >= candles_count:
+        lastest_candles = sorted(candles, key=lambda i: i.time)[candles_count:]
+        prices_high = [utils.get_price_by_quotation(i.close) for i in lastest_candles]
+        prices_low = [utils.get_price_by_quotation(i.close) for i in lastest_candles]
         highest = max(prices_high)
         lowest = min(prices_low)
 
         if highest and lowest:
-            return [lowest, highest]
+            return lowest, highest
 
     return None
+
+def _get_last_price(instrument_uid: str) -> float | None:
+    return instruments.get_instrument_last_price_by_uid(uid=instrument_uid)

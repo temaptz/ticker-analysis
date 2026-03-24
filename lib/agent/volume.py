@@ -1,5 +1,6 @@
 import datetime
 from lib import logger, learn, cache, predictions_cache
+from lib.learn import enum
 
 
 @cache.ttl_cache(ttl=3600, is_skip_empty=True)
@@ -8,12 +9,11 @@ def get_volume_buy_rate(instrument_uid: str, date: datetime.datetime or None = N
     prediction = None
 
     try:
-        prediction = _get_prediction(instrument_uid=instrument_uid, date=date)
-
-        if prediction == 'upper':
-            final_rate = 1
-        elif prediction == 'same':
-            final_rate = 0.3
+        if prediction := _get_prediction(instrument_uid=instrument_uid, date=date):
+            if prediction == enum.PriceDirection.PRICE_UP.value:
+                final_rate = 1
+            elif prediction == enum.PriceDirection.PRICE_SAME.value:
+                final_rate = 0.3
     except Exception as e:
         logger.log_error(method_name='get_volume_buy_rate', error=e, is_telegram_send=False)
 
@@ -32,12 +32,11 @@ def get_volume_sell_rate(instrument_uid: str, date: datetime.datetime or None = 
     prediction = None
 
     try:
-        prediction = _get_prediction(instrument_uid=instrument_uid, date=date)
-
-        if prediction == 'lower':
-            final_rate = 1
-        elif prediction == 'same':
-            final_rate = 0.3
+        if prediction := _get_prediction(instrument_uid=instrument_uid, date=date):
+            if prediction == enum.PriceDirection.PRICE_DOWN.value:
+                final_rate = 1
+            elif prediction == enum.PriceDirection.PRICE_SAME.value:
+                final_rate = 0.3
     except Exception as e:
         logger.log_error(method_name='get_volume_sell_rate', error=e, is_telegram_send=False)
 
@@ -51,10 +50,10 @@ def get_volume_sell_rate(instrument_uid: str, date: datetime.datetime or None = 
 
 def _get_prediction(instrument_uid: str, date: datetime.datetime or None = None):
     if not date:
-        if (cached := predictions_cache.get_prediction_cache(
+        if (cached := predictions_cache.get_classifier_prediction_cache(
             instrument_uid=instrument_uid,
             model_name=learn.model.TA_3_volume,
-        )) and cached:
+        )) and cached in [enum.PriceDirection.PRICE_UP.value, enum.PriceDirection.PRICE_SAME.value, enum.PriceDirection.PRICE_DOWN.value]:
             return cached
 
     return learn.ta_3_volume_learn.predict_future(instrument_uid=instrument_uid, date_current=date)

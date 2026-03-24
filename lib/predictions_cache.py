@@ -17,10 +17,43 @@ def get_prediction_cache(
     return None
 
 
+def get_classifier_prediction_cache(
+        instrument_uid: str,
+        model_name: learn.model,
+        date_target: datetime.datetime = None,
+) -> str or None:
+    if cache_key := get_cache_key(
+            instrument_uid=instrument_uid,
+            model_name=model_name,
+            date_target=date_target,
+    ):
+        if cached := redis_utils.storage_get(key=cache_key):
+            return str(cached)
+    return None
+
+
 def set_prediction_cache(
         instrument_uid: str,
         model_name: learn.model,
         prediction: float,
+        date_target: datetime.datetime = None,
+):
+    if cache_key := get_cache_key(
+            instrument_uid=instrument_uid,
+            model_name=model_name,
+            date_target=date_target,
+    ):
+        redis_utils.storage_set(
+            key=cache_key,
+            value=prediction,
+            ttl_sec=(3600 * 24 * 30 * 3),
+        )
+
+
+def set_classifier_prediction_cache(
+        instrument_uid: str,
+        model_name: learn.model,
+        prediction: str,
         date_target: datetime.datetime = None,
 ):
     if cache_key := get_cache_key(

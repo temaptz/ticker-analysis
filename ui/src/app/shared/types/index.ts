@@ -303,14 +303,20 @@ export interface BuySellWeights {
 
 export interface BuyRecommendation {
   instrument_uid: string;
-  target_price: number;
+  price_default: number;
+  price_l1: number;
+  price_l2: number;
+  price_l3: number;
   qty: number;
   total_price: number;
 }
 
 export interface SellRecommendation {
   instrument_uid: string;
-  target_price: number;
+  price_default: number;
+  price_l1: number;
+  price_l2: number;
+  price_l3: number;
   qty: number;
 }
 

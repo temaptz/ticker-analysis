@@ -9,7 +9,7 @@ MACD_CANDLES_COUNT = 7
 def macd_buy_rate(instrument_uid: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     graph = _get_last_macd_hist(instrument_uid=instrument_uid, date=date)
-    graph_hist = reversed(graph) if graph else None
+    graph_hist = graph[::-1] if graph else None
 
     if graph_hist:
         if all(i < 0 for i in graph_hist):
@@ -36,7 +36,7 @@ def macd_buy_rate(instrument_uid: str, date: datetime.datetime or None = None) -
 def macd_sell_rate(instrument_uid: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     graph = _get_last_macd_hist(instrument_uid=instrument_uid, date=date)
-    graph_hist = reversed(graph) if graph else None
+    graph_hist = graph[::-1] if graph else None
 
     if graph_hist:
         if all(i > 0 for i in graph_hist):

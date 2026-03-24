@@ -849,7 +849,7 @@ async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify
 
 
 @app.get('/instrument/rate')
-async def cancel_instrument_order_endpoint(request: Request, user=Depends(verify_user_by_token)):
+async def instrument_buy_sell_rate_endpoint(request: Request, user=Depends(verify_user_by_token)):
     date = request.query_params.get('date')
     date_parsed = date_utils.get_day_prediction_time(date=date_utils.parse_date(date=date)) if date else None
     result = instrument_buy_sell_rate(

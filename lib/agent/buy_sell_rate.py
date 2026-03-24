@@ -1,8 +1,10 @@
 import datetime
 
-from lib import agent, db_2, logger
+from lib import agent, db_2, logger, cache
 
+CACHE_TTL_SEC = 3600
 
+@cache.ttl_cache(ttl=CACHE_TTL_SEC, is_skip_empty=True, cache_salt='__')
 def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     macd_rated = agent.macd.macd_buy_rate(instrument_uid=instrument_uid, date=date)
@@ -63,6 +65,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
     }
 
 
+@cache.ttl_cache(ttl=CACHE_TTL_SEC, is_skip_empty=True, cache_salt='__')
 def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid, date=date)

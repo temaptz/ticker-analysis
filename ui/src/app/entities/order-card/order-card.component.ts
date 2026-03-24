@@ -1,6 +1,6 @@
-import { Component, input, output, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, input, output, inject, signal, effect } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -11,12 +11,12 @@ import { ActiveOrder, BuyRecommendation, SellRecommendation } from '../../shared
 
 @Component({
   selector: 'order-card',
-  imports: [CommonModule, FormsModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, ReactiveFormsModule],
   providers: [DecimalPipe],
   templateUrl: './order-card.component.html',
   styleUrl: './order-card.component.scss',
 })
-export class OrderCardComponent implements OnChanges {
+export class OrderCardComponent {
   instrumentUid = input.required<string>();
   isBuy = input.required<boolean>();
   recommendation = input<BuyRecommendation | SellRecommendation | null>(null);
@@ -28,22 +28,24 @@ export class OrderCardComponent implements OnChanges {
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
 
-  editPrice = signal<number | null>(null);
-  editQty = signal<number | null>(null);
+  form = new FormGroup({
+    price: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
+    qty: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
+  });
 
-  private initialized = false;
   private apiService = inject(ApiService);
   private accountService = inject(AccountService);
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['recommendation'] && !this.initialized) {
+  constructor() {
+    effect(() => {
       const rec = this.recommendation();
       if (rec) {
-        this.editPrice.set(rec.target_price);
-        this.editQty.set(rec.qty);
-        this.initialized = true;
+        this.form.setValue({
+          price: this._round(rec.price_default),
+          qty: rec.qty,
+        });
       }
-    }
+    });
   }
 
   get isBuyRec(): boolean {
@@ -83,8 +85,8 @@ export class OrderCardComponent implements OnChanges {
   }
 
   createOrder(): void {
-    const price = Number(this.editPrice());
-    const qty = Number(this.editQty());
+    const price = Number(this.form.get('price')?.value);
+    const qty = Number(this.form.get('qty')?.value);
     if (!price || !qty) return;
     this.isLoading.set(true);
 
@@ -120,5 +122,15 @@ export class OrderCardComponent implements OnChanges {
       },
       error: () => this.isLoading.set(false),
     });
+  }
+
+  handleSetPrice(price: number | null | undefined): void {
+    if (price) {
+      this.form.get('price')?.setValue(this._round(price));
+    }
+  }
+
+  private _round(num: number): number {
+    return Math.round(num * 100) / 100;
   }
 }

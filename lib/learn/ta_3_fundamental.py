@@ -1,14 +1,15 @@
 import numpy as np
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 
-from lib import utils, instruments, fundamentals, forecasts, learn, tech_analysis, date_utils, agent
+from lib import utils, instruments, fundamentals, forecasts, learn, tech_analysis
+from lib.learn import enum
 from t_tech.invest import StatisticResponse
 from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 
 MODEL_NAME = learn.model.TA_3_fundamental
-MIN_TARGET_DAYS = 90 # Минимальное количество дней до прогнозного периода
-MAX_TARGET_DAYS = 370 # Максимальное количество дней до прогнозного периода
+TARGET_DAYS_FROM = 90 # Минимальное количество дней до прогнозного периода
+TARGET_DAYS_TO = 90 + 180 # 370 # Максимальное количество дней до прогнозного периода
 REPORT_DURATION_DAYS = 90 # Это период за который собирается отчетность
 REPORTS_COUNT = 3 # Количество отчетов
 
@@ -43,7 +44,7 @@ class Ta3FundamentalAnalysisCard:
     date: Optional[datetime] = None
     price: Optional[float] = None
     forecast_price_change: Optional[float] = None
-    target_profit_percent: Optional[float] = None
+    result: Optional[enum.PriceDirection] = None
     fundamentals: Optional[StatisticResponse] = None
 
     fundamentals_history: List[Dict[str, Any]] = []
@@ -78,7 +79,9 @@ class Ta3FundamentalAnalysisCard:
             return
 
         self.price = instruments.get_instrument_price_by_date(uid=self.instrument.uid, date=self.date)
-        self.target_profit_percent = self._get_target_profit_percent()
+
+        if self.date < datetime.now(tz=timezone.utc):
+            self.result = self._get_target_price_direction()
 
         if f := fundamentals.get_db_fundamentals_by_asset_uid_date_2(
                 asset_uid=self.instrument.asset_uid,
@@ -102,20 +105,26 @@ class Ta3FundamentalAnalysisCard:
 
         return 0 if is_fill_empty else None
 
-    def _get_target_profit_percent(self) -> float or None:
+    def _get_target_price_direction(self) -> enum.PriceDirection or None:
         if (tech := tech_analysis.get_tech_analysis(
             instrument_uid=self.instrument.uid,
             indicator_type=IndicatorType.INDICATOR_TYPE_SMA,
-            date_from=(self.date + timedelta(days=MIN_TARGET_DAYS)),
-            date_to=(self.date + timedelta(days=MAX_TARGET_DAYS)),
+            date_from=(self.date + timedelta(days=TARGET_DAYS_FROM)),
+            date_to=(self.date + timedelta(days=TARGET_DAYS_TO)),
             interval=IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
             length=30,
         )) and len(tech):
             if max_sma_profit := max([utils.get_price_by_quotation(i.signal) for i in tech]):
-                return utils.get_change_relative(
+                if (max_price_change := utils.get_change_relative(
                     current_value=self.price,
                     next_value=max_sma_profit,
-                )
+                )) or max_price_change == 0:
+                    if max_price_change > 0.15:
+                        return enum.PriceDirection.PRICE_UP
+                    elif 0.15 >= max_price_change > 0.03:
+                        return enum.PriceDirection.PRICE_SAME
+                    elif 0.03 >= max_price_change:
+                        return enum.PriceDirection.PRICE_DOWN
 
         return None
 
@@ -169,8 +178,8 @@ class Ta3FundamentalAnalysisCard:
             learn.learn_utils.to_numpy_float(self.fundamentals.dividend_payout_ratio_fy),
         ]
 
-    def get_y(self) -> Optional[float]:
-        return self.target_profit_percent or None
+    def get_y(self) -> Optional[str]:
+        return self.result.value if self.result else None
 
     def get_csv_record(self) -> Dict[str, Any]:
         result = {}

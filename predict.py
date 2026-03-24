@@ -28,15 +28,33 @@ def create_fundamental_predictions():
         if (prediction := learn.ta_3_fundamental_learn.predict_future(
                 instrument_uid=instr.uid,
                 is_fill_empty=True,
-        )) is not None and -5 <= prediction <= 5:
-            predictions_cache.set_prediction_cache(
+        )) is not None:
+            predictions_cache.set_classifier_prediction_cache(
                 instrument_uid=instr.uid,
                 model_name=learn.model.TA_3_fundamental,
-                prediction=utils.round_float(prediction, 10),
+                prediction=prediction,
             )
 
         logger.log_info(
             message=f'TICKER: [{instr.ticker}] MODEL: {{{learn.model.TA_3_fundamental}}} PREDICTION: <{prediction if (prediction or prediction == 0) else None}>',
+            is_send_telegram=False,
+        )
+
+
+def create_volume_predictions():
+    for instr in instruments.get_instruments_white_list():
+        if (prediction := learn.ta_3_volume_learn.predict_future(
+                instrument_uid=instr.uid,
+                is_fill_empty=True,
+        )) is not None:
+            predictions_cache.set_classifier_prediction_cache(
+                instrument_uid=instr.uid,
+                model_name=learn.model.TA_3_volume,
+                prediction=prediction,
+            )
+
+        logger.log_info(
+            message=f'TICKER: [{instr.ticker}] MODEL: {{{learn.model.TA_3_volume}}} PREDICTION: <{prediction if (prediction or prediction == 0) else None}>',
             is_send_telegram=False,
         )
 
@@ -54,6 +72,11 @@ def refresh_cache(finish_date: datetime.datetime):
         create_fundamental_predictions()
     except Exception as e:
         logger.log_error(method_name='create_fundamental_predictions', error=e, is_telegram_send=False)
+
+    try:
+        create_volume_predictions()
+    except Exception as e:
+        logger.log_error(method_name='create_volume_predictions', error=e, is_telegram_send=False)
 
     try:
         time_start = time.perf_counter()

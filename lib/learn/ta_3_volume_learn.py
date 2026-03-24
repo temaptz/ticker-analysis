@@ -1,8 +1,8 @@
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-from catboost import CatBoostRegressor, CatBoostClassifier
-
+from catboost import CatBoostClassifier
 from lib import utils, instruments, learn, date_utils, serializer, redis_utils, yandex_disk, docker, logger
+from lib.learn import enum
 
 def generate_data():
     date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_volume.CANDLES_COUNT))
@@ -115,7 +115,7 @@ def predict_future(
             prediction_type='Class'
         )
 
-        if prediction is not None and prediction[0] and prediction[0] in ['upper', 'lower', 'same']:
+        if prediction is not None and prediction[0] and prediction[0] in [enum.PriceDirection.PRICE_UP.value, enum.PriceDirection.PRICE_DOWN.value, enum.PriceDirection.PRICE_SAME.value]:
             return prediction[0]
 
     return None

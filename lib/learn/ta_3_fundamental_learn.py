@@ -1,11 +1,12 @@
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-from catboost import CatBoostRegressor
+from catboost import CatBoostClassifier
 
-from lib import utils, instruments, learn, news, date_utils, serializer, redis_utils, yandex_disk, docker, logger
+from lib import utils, instruments, learn, date_utils, serializer, redis_utils, yandex_disk, docker, logger
+from lib.learn import enum
 
 def generate_data():
-    date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_fundamental.MAX_TARGET_DAYS))
+    date_end = date_utils.get_day_prediction_time(date=datetime.now(timezone.utc) - timedelta(days=learn.ta_3_fundamental.TARGET_DAYS_TO))
     date_start = date_utils.get_day_prediction_time(date=datetime(year=2025, month=2, day=1, tzinfo=timezone.utc))
     instruments_list = instruments.get_instruments_white_list()
     counter_total = 0
@@ -76,25 +77,26 @@ def generate_data():
     })
 
     data_frame = pd.DataFrame(records)
+    df_file_path = get_data_frame_csv_file_path()
 
     print(data_frame)
 
-    data_frame.to_csv(get_data_frame_csv_file_path(), index=False)
+    data_frame.to_csv(df_file_path, index=False)
 
-    print('DATA FRAME FILE SAVED')
+    print('DATA FRAME FILE SAVED', df_file_path, utils.get_file_size_readable(filepath=df_file_path))
 
     file_name = f'data_frame_ta_3_fundamental_{date_utils.get_local_time_log_str()}.csv'
 
-    yandex_disk.upload_file(file_path=get_data_frame_csv_file_path(), file_name=file_name)
+    yandex_disk.upload_file(file_path=df_file_path, file_name=file_name)
 
-    logger.log_info(message=f'TA-3 DATA FRAME file uploaded. NAME: {file_name}, SIZE: {utils.get_file_size_readable(filepath=get_data_frame_csv_file_path())}')
+    logger.log_info(message=f'TA-3 DATA FRAME file uploaded. NAME: {file_name}, SIZE: {utils.get_file_size_readable(filepath=df_file_path)}')
 
 
 def predict_future(
         instrument_uid: str,
         date_current: datetime | None = None,
-        is_fill_empty=False,
-) -> float | None:
+        is_fill_empty=True,
+) -> str | None:
     current_date = date_current if date_current else date_utils.get_day_prediction_time()
 
     card = learn.ta_3_fundamental.Ta3FundamentalAnalysisCard(
@@ -104,12 +106,15 @@ def predict_future(
     )
 
     if card.is_ok:
-        model_cb = CatBoostRegressor()
+        model_cb = CatBoostClassifier()
         model_cb.load_model(get_model_file_path())
-        prediction = model_cb.predict(data=card.get_x())
+        prediction = model_cb.predict(
+            data=card.get_x(),
+            prediction_type='Class'
+        )
 
-        if prediction is not None:
-            return utils.round_float(prediction)
+        if prediction is not None and prediction[0] and prediction[0] in [enum.PriceDirection.PRICE_UP.value, enum.PriceDirection.PRICE_DOWN.value, enum.PriceDirection.PRICE_SAME.value]:
+            return prediction[0]
 
     return None
 
@@ -133,7 +138,7 @@ def cache_record(card: learn.ta_3_fundamental.Ta3FundamentalAnalysisCard) -> Non
         ticker=card.instrument.ticker,
         date=card.date,
     )
-    redis_utils.storage_set(key=cache_key, value=serializer.to_json(card.get_csv_record()), ttl_sec=3600 * 24 * 30)
+    redis_utils.storage_set(key=cache_key, value=serializer.to_json(card.get_csv_record()), ttl_sec=3600 * 24 * 3)
 
 
 def cache_error(
@@ -144,7 +149,7 @@ def cache_error(
         ticker=ticker,
         date=date,
     )
-    redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24 * 3)
+    redis_utils.storage_set(key=cache_key, value='error', ttl_sec=3600 * 24)
 
 
 def get_record_cache(key: str) -> dict | str | None:
@@ -159,7 +164,7 @@ def get_record_cache(key: str) -> dict | str | None:
 
 def get_record_cache_key(ticker: str, date: datetime) -> str:
     return utils.get_md5(serializer.to_json({
-        'method': f'{learn.model.TA_3_fundamental}_record_cache_key_001',
+        'method': f'{learn.model.TA_3_fundamental}_cache_key_00001_',
         'ticker': ticker,
         'date': date,
     }))

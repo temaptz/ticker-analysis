@@ -1,19 +1,19 @@
 import datetime
-from lib import logger, predictions_cache, learn, agent, cache
+from lib import logger, predictions_cache, learn, cache
+from lib.learn import enum
 
 
-@cache.ttl_cache(ttl=(3600 * 24), is_skip_empty=True)
+@cache.ttl_cache(ttl=(3600 * 24), is_skip_empty=True, cache_salt='__')
 def get_fundamental_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
-    prediction = 0
+    prediction = None
 
     try:
-        prediction = _get_prediction(instrument_uid=instrument_uid, date=date)
-
-        if prediction and prediction > 0:
-            rate = agent.utils.linear_interpolation(prediction, 0, 0.2, 0, 1)
-            final_rate = min(rate, 1)
-
+        if prediction := _get_prediction(instrument_uid=instrument_uid, date=date):
+            if prediction == enum.PriceDirection.PRICE_UP.value:
+                final_rate = 1
+            elif prediction == enum.PriceDirection.PRICE_SAME.value:
+                final_rate = 0.5
     except Exception as e:
         logger.log_error(method_name='get_fundamental_buy_rate', error=e, is_telegram_send=False)
 
@@ -26,17 +26,17 @@ def get_fundamental_buy_rate(instrument_uid: str, date: datetime.datetime or Non
     }
 
 
-@cache.ttl_cache(ttl=(3600 * 24), is_skip_empty=True)
+@cache.ttl_cache(ttl=(3600 * 24), is_skip_empty=True, cache_salt='__')
 def get_fundamental_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
-    prediction = 0
+    prediction = None
 
     try:
-        prediction = _get_prediction(instrument_uid=instrument_uid, date=date)
-
-        if prediction and prediction < 0:
-            rate = agent.utils.linear_interpolation(abs(prediction), 0, 0.05, 0, 1)
-            final_rate = min(rate, 1)
+        if prediction := _get_prediction(instrument_uid=instrument_uid, date=date):
+            if prediction == enum.PriceDirection.PRICE_DOWN.value:
+                final_rate = 1
+            elif prediction == enum.PriceDirection.PRICE_SAME.value:
+                final_rate = 0.5
     except Exception as e:
         logger.log_error(method_name='get_fundamental_sell_rate', error=e, is_telegram_send=False)
 
@@ -51,10 +51,10 @@ def get_fundamental_sell_rate(instrument_uid: str, date: datetime.datetime or No
 
 def _get_prediction(instrument_uid: str, date: datetime.datetime or None = None):
     if not date:
-        if (cached := predictions_cache.get_prediction_cache(
+        if (cached := predictions_cache.get_classifier_prediction_cache(
                 instrument_uid=instrument_uid,
                 model_name=learn.model.TA_3_fundamental,
-        )) and cached:
+        )) and cached in [enum.PriceDirection.PRICE_UP.value, enum.PriceDirection.PRICE_SAME.value, enum.PriceDirection.PRICE_DOWN.value]:
             return cached
 
     return learn.ta_3_fundamental_learn.predict_future(instrument_uid=instrument_uid, date_current=date)

@@ -35,7 +35,7 @@ class Ta3VolumeAnalysisCard:
     date: datetime | None = None
     price: float | None = None
 
-    target_result: TargetResult | None = None
+    target_result: str | None = None
 
     candles: list = []
 
@@ -118,19 +118,6 @@ class Ta3VolumeAnalysisCard:
                 'rsi_norm': rsi_dict.get(candle_date) / 100,
             })
 
-        # volume_norm_data = [c['volume_norm'] for c in result]
-        # rsi_norm_data = [c['rsi_norm'] for c in result]
-        #
-        # print("\n" + "="*120)
-        # print("VOLUME NORM (PVO Histogram * 10)")
-        # print("="*120)
-        # graph_printing.print_graph(y_data=volume_norm_data, date_from=dates[0], date_to=dates[-1])
-        #
-        # print("="*120)
-        # print("RSI NORM (RSI / 100)")
-        # print("="*120)
-        # graph_printing.print_graph(y_data=rsi_norm_data, date_from=dates[0], date_to=dates[-1])
-
         return result
 
     def _get_target_result(self) -> str | None:
@@ -146,11 +133,11 @@ class Ta3VolumeAnalysisCard:
                 interval=tech_analysis.IndicatorInterval.INDICATOR_INTERVAL_ONE_DAY,
             )) and ema_graph is not None:
                 ema_sorted = sorted(ema_graph, key=lambda x: x.timestamp)
-                ema_newest = utils.get_price_by_quotation(ema_sorted[-1].signal) if ema_sorted[-1] else None
+                ema_last = utils.get_price_by_quotation(ema_sorted[-1].signal) if ema_sorted[-1] else None
                 ema_newest_change = utils.get_change_relative(
                     current_value=self.price,
-                    next_value=ema_newest,
-                ) if ema_newest else None
+                    next_value=ema_last,
+                ) if ema_last else None
 
                 if ema_newest_change is not None:
                     if ema_newest_change < -0.025:

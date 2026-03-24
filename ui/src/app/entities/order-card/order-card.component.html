@@ -50,7 +50,7 @@
 
   } @else if (!isReal) {
 
-    <div class="card-body">
+    <div [formGroup]="form" class="card-body">
       <div class="field-row">
         <span class="field-label">Цена ₽</span>
         <input
@@ -58,9 +58,29 @@
           type="number"
           step="0.01"
           min="0.01"
-          [ngModel]="editPrice()"
-          (ngModelChange)="editPrice.set($event)"
+          formControlName="price"
         >
+      </div>
+      <div class="field-row">
+        <span class="field-label">L1 ₽</span>
+        <span
+          class="recommend-price"
+          (click)="handleSetPrice((isBuy() ? buyRec : sellRec)?.price_l1)"
+        >{{ (isBuy() ? buyRec : sellRec)?.price_l1 | number:'1.2-2' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">L2 ₽</span>
+        <span
+          class="recommend-price"
+          (click)="handleSetPrice((isBuy() ? buyRec : sellRec)?.price_l2)"
+        >{{ (isBuy() ? buyRec : sellRec)?.price_l2 | number:'1.2-2' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">L3 ₽</span>
+        <span
+          class="recommend-price"
+          (click)="handleSetPrice((isBuy() ? buyRec : sellRec)?.price_l3)"
+        >{{ (isBuy() ? buyRec : sellRec)?.price_l3 | number:'1.2-2' }}</span>
       </div>
       <div class="field-row">
         <span class="field-label">Лотов</span>
@@ -69,8 +89,7 @@
           type="number"
           step="1"
           min="1"
-          [ngModel]="editQty()"
-          (ngModelChange)="editQty.set($event)"
+          formControlName="qty"
         >
       </div>
     </div>
@@ -84,7 +103,7 @@
           [class.create-btn-buy]="isBuyRec"
           [class.create-btn-sell]="!isBuyRec"
           (click)="createOrder()"
-          [disabled]="!recommendation() || !editPrice() || !editQty()"
+          [disabled]="form.invalid"
         >
           {{ isBuyRec ? 'Купить' : 'Продать' }}
         </button>

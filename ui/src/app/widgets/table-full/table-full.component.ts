@@ -109,8 +109,8 @@ export class TableFullComponent {
   displayedColumns: string[] = [
     'logo',
     'complex',
+    'buy_sell_rate',
     'balance',
-    'llm_buy_sell_rate',
     'instrument_orders',
   ];
 

@@ -18,7 +18,10 @@ class StructuredList(BaseModel):
 
 class BuyRecommendation(BaseModel):
     instrument_uid: str
-    target_price: float
+    price_default: float
+    price_l1: float
+    price_l2: float
+    price_l3: float
     qty: int
     total_price: float
 
@@ -56,7 +59,7 @@ def create_orders_3(account_id: str):
     for recommendation in recommendations:
         rec: BuyRecommendation = recommendation
         if rec.qty > 0:
-            price = round(rec.target_price, 1)
+            price = round(rec.price_default, 1)
             if users.post_buy_order(
                     instrument_uid=rec.instrument_uid,
                     price_rub=price,
@@ -193,19 +196,21 @@ def final_parser(state: State) -> State:
 
 def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRecommendation:
     is_ok = False
-    target_price = None
     qty_round = None
     total_price = None
+    price_l1 = agent.utils.get_buy_price(instrument_uid=instrument_uid, l_level=1)
+    price_l2 = agent.utils.get_buy_price(instrument_uid=instrument_uid, l_level=2)
+    price_l3 = agent.utils.get_buy_price(instrument_uid=instrument_uid, l_level=3)
+    price_default = price_l1
 
     try:
-        target_price = agent.utils.get_buy_price(instrument_uid=instrument_uid)
         balance_rub = users.get_user_money_rub(account_id=account_id)
         buy_rate = agent.buy_sell_rate.get_total_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
         instr = instruments.get_instrument_by_uid(instrument_uid)
         lot_size = instr.lot or 1
         total_price_calc = balance_rub * agent.utils.get_buy_balance_multiply(buy_rate=(buy_rate.get('rate', 0) * 100))
-        qty = max(1, math.ceil(total_price_calc / target_price / lot_size)) * lot_size
-        total_price = target_price * qty
+        qty = max(1, math.ceil(total_price_calc / price_default / lot_size)) * lot_size
+        total_price = price_default * qty
         is_ok = (total_price <= total_price_calc * 1.5)
 
         logger.log_info(
@@ -214,7 +219,7 @@ def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRe
                 'ticker': instr.ticker,
                 'qty': qty,
                 'lot_size': lot_size,
-                'target_price': target_price,
+                'price_default': price_default,
                 'total_price_calc': total_price_calc,
                 'total_price': total_price,
                 'delta_percent': utils.round_float(num=((total_price - total_price_calc) / total_price_calc * 100), decimals=2),
@@ -227,7 +232,10 @@ def get_buy_recommendation_by_uid(instrument_uid: str, account_id: str) -> BuyRe
 
     return BuyRecommendation(
         instrument_uid=instrument_uid,
-        target_price=target_price,
+        price_default=price_default,
+        price_l1=price_l1,
+        price_l2=price_l2,
+        price_l3=price_l3,
         qty=qty_round if is_ok else 0,
         total_price=total_price,
     )

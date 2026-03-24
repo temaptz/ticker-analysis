@@ -6,21 +6,18 @@ import { GRAPH_COLORS } from '../../../../shared/const';
 import { VerticalScaleComponent } from '../../../../shared/components/vertical-scale/vertical-scale.component';
 import { WeightIndicatorComponent } from '../../../../shared/components/weight-indicator/weight-indicator.component';
 import { WeightsService } from '../../../../shared/services/weights.service';
+import { TrendArrowComponent } from '../trend-arrow/trend-arrow.component';
 
 @Component({
   selector: 'backtest-fundamental',
-  imports: [CommonModule, MatTooltip, VerticalScaleComponent, WeightIndicatorComponent],
+  imports: [CommonModule, MatTooltip, VerticalScaleComponent, WeightIndicatorComponent, TrendArrowComponent],
   providers: [DecimalPipe],
   template: `
     <div class="rate-wrapper">
       <div class="rate-cell">
         @if (rateData(); as data) {
           <div class="value">
-            @if (data.fundamental?.debug?.['prediction'] != null) {
-              <span [style.color]="data.fundamental?.debug?.['prediction'] >= 0 ? GRAPH_COLORS.buy : GRAPH_COLORS.sell">
-                {{ data.fundamental?.debug?.['prediction'] >= 0 ? '+' : '' }}{{ (data.fundamental?.debug?.['prediction'] ?? 0) * 100 | number:'1.4-4' }}%
-              </span>
-            }
+            <trend-arrow [prediction]="data.fundamental?.debug?.['prediction']"/>
           </div>
           <div
             class="rate-value"
@@ -76,14 +73,14 @@ import { WeightsService } from '../../../../shared/services/weights.service';
 export class BacktestFundamentalComponent {
   readonly rateData = input<BacktestRateItem | null>(null);
   readonly isBuy = input.required<boolean>();
-  
+
   private weightsService = inject(WeightsService);
-  
+
   color = GRAPH_COLORS.ta_3_fundamental;
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'fundamental'));
-  
-  getTooltip(data: BacktestRateItem): string { 
-    return data.fundamental ? JSON.stringify(data.fundamental, null, 2) : 'Fundamental: -'; 
+
+  getTooltip(data: BacktestRateItem): string {
+    return data.fundamental ? JSON.stringify(data.fundamental, null, 2) : 'Fundamental: -';
   }
 
   protected readonly GRAPH_COLORS = GRAPH_COLORS;

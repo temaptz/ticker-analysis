@@ -6,23 +6,18 @@ import { GRAPH_COLORS } from '../../../../shared/const';
 import { VerticalScaleComponent } from '../../../../shared/components/vertical-scale/vertical-scale.component';
 import { WeightIndicatorComponent } from '../../../../shared/components/weight-indicator/weight-indicator.component';
 import { WeightsService } from '../../../../shared/services/weights.service';
+import { TrendArrowComponent } from '../trend-arrow/trend-arrow.component';
 
 @Component({
   selector: 'backtest-volume',
-  imports: [CommonModule, MatTooltip, VerticalScaleComponent, WeightIndicatorComponent],
+  imports: [CommonModule, MatTooltip, VerticalScaleComponent, WeightIndicatorComponent, TrendArrowComponent],
   providers: [DecimalPipe],
   template: `
     <div class="rate-wrapper">
       <div class="rate-cell">
         @if (rateData(); as data) {
           <div class="value">
-            @if (isPredictionUpper()) {
-              <span [style.color]="GRAPH_COLORS.buy">&nearr;</span>
-            } @else if (isPredictionLower()) {
-              <span [style.color]="GRAPH_COLORS.sell">&searr;</span>
-            } @else if (isPredictionSame()) {
-              <span>&rarrc;</span>
-            }
+            <trend-arrow [prediction]="data.volume?.debug?.['prediction']"/>
           </div>
           <div
             class="rate-value"
@@ -79,14 +74,14 @@ import { WeightsService } from '../../../../shared/services/weights.service';
 export class BacktestVolumeComponent {
   readonly rateData = input<BacktestRateItem | null>(null);
   readonly isBuy = input.required<boolean>();
-  
+
   private weightsService = inject(WeightsService);
-  
+
   color = GRAPH_COLORS.volume_rate;
   weight = computed(() => this.weightsService.getWeight(this.isBuy(), 'volume'));
-  
-  getTooltip(data: BacktestRateItem): string { 
-    return data.volume ? JSON.stringify(data.volume, null, 2) : 'Volume: -'; 
+
+  getTooltip(data: BacktestRateItem): string {
+    return data.volume ? JSON.stringify(data.volume, null, 2) : 'Volume: -';
   }
 
   prediction = computed<string>(() => (this.rateData()?.volume?.debug as any)?.['prediction']);

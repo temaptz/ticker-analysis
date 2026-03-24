@@ -14,7 +14,8 @@ def send_message(message: str) -> None:
     try:
         for chat_id in const.TELEGRAM_CHAT_IDS:
             requests.post(
-                get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
+                url=get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
+                timeout=60,
             )
             print('TELEGRAM SENT MESSAGE', message)
     except Exception as e:
