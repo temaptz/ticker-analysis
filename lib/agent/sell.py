@@ -61,14 +61,15 @@ def create_orders_3(account_id: str):
         if rec.qty > 0:
             price = round(rec.price_default, 1)
 
-            if users.post_sell_order(
+            if users.post_order(
                     instrument_uid=rec.instrument_uid,
+                    account_id=users.get_analytics_account().id,
                     price_rub=price,
                     quantity_lots=utils.get_lots_qty(
                         qty=rec.qty,
                         instrument_lot=instruments.get_instrument_by_uid(rec.instrument_uid).lot
                     ),
-                    account_id=users.get_analytics_account().id,
+                    is_buy=False,
             ):
                 name = instruments.get_instrument_human_name(rec.instrument_uid)
                 logger.log_info(
@@ -202,10 +203,10 @@ def get_sell_recommendation_by_uid(instrument_uid: str, account_id: str) -> Sell
             instrument_uid=instrument_uid,
             account_id=account_id,
         )
-        sell_rate = agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid, account_id=account_id)
+        sell_rate = agent.buy_sell_rate.get_total_sell_rate(instrument_uid=instrument_uid, account_id=account_id).get('rate', 0)
         instr = instruments.get_instrument_by_uid(instrument_uid)
         lot_size = instr.lot or 1
-        qty_calc = balance_qty * agent.utils.get_sell_balance_multiply(sell_rate=(sell_rate.get('rate', 0) * 100))
+        qty_calc = balance_qty * agent.utils.get_sell_balance_multiply(sell_rate=sell_rate)
         qty_round = math.ceil(qty_calc / lot_size) * lot_size
         is_ok = (0 < qty_round <= qty_calc * 2)
 

@@ -7,55 +7,47 @@ from t_tech.invest import CandleInterval
 
 def get_prediction(
         instrument_uid: str,
-        date_target: datetime.datetime,
         model_name: model = model.CONSENSUS,
+        date_target: datetime.datetime = None,
         date_current: datetime.datetime = None,
-        avg_days: int = 1,
         is_ignore_cache: bool = False,
+        is_only_cache: bool = False,
 ) -> float or None:
     try:
-        days = [date_target + datetime.timedelta(days=o) for o in ([0] + [d for k in range(1, avg_days) for d in (-k, k)])][:avg_days]
-        day_results: list[float] = []
+        date_prediction_target = date_utils.get_day_prediction_time(date_target) if date_target else None
+        prediction = None
 
-        for day in days:
-            day_target = date_utils.get_day_prediction_time(day)
-            predict_day = None
+        if is_ignore_cache is False and date_current is None and ((cached := get_prediction_cache(
+                instrument_uid=instrument_uid,
+                model_name=model_name,
+                date_target=date_target,
+                avg_days=1,
+        )) is not None):
+            prediction = cached
+        elif model_name == model.TA_2_1 and is_only_cache is False:
+            prediction = ta_2_1.predict_future_relative_change(
+                instrument_uid=instrument_uid,
+                date_target=date_prediction_target,
+                date_current=date_current,
+                is_fill_empty=True,
+            )
+        elif model_name == model.TA_3_tech and is_only_cache is False:
+            p = learn.ta_3_technical_learn.predict_future(
+                instrument_uid=instrument_uid,
+                date_target=date_prediction_target,
+                date_current=date_current,
+                is_fill_empty=True,
+            )
+            if p is not None and -2 < p < 2:
+                prediction = p
+        elif model_name == model.CONSENSUS:
+            prediction = get_relative_predictions_consensus(
+                instrument_uid=instrument_uid,
+                date_target=date_prediction_target,
+            )
 
-            if is_ignore_cache is False and date_current is None and ((cached := get_prediction_cache(
-                    instrument_uid=instrument_uid,
-                    model_name=model_name,
-                    date_target=date_target,
-                    avg_days=1,
-            )) is not None):
-                predict_day = cached
-            elif model_name == model.TA_2_1:
-                predict_day = ta_2_1.predict_future_relative_change(
-                    instrument_uid=instrument_uid,
-                    date_target=day_target,
-                    date_current=date_current,
-                    is_fill_empty=True,
-                )
-            elif model_name == model.TA_3_tech:
-                p = learn.ta_3_technical_learn.predict_future(
-                    instrument_uid=instrument_uid,
-                    date_target=day_target,
-                    date_current=date_current,
-                    is_fill_empty=True,
-                )
-                if p is not None and -2 < p < 2:
-                    predict_day = p
-            elif model_name == model.CONSENSUS:
-                predict_day = get_relative_predictions_consensus(
-                    instrument_uid=instrument_uid,
-                    date_target=day_target,
-                )
-
-            if predict_day:
-                if -3 < predict_day < 3:
-                    day_results.append(predict_day)
-
-        if len(day_results) > 0:
-            return sum(day_results) / len(day_results)
+        if prediction and -3 < prediction < 3:
+            return prediction
 
     except Exception as e:
         logger.log_error(method_name='get_prediction', error=e)

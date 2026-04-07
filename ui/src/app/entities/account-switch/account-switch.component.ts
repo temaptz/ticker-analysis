@@ -1,13 +1,11 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AccountService } from '../../shared/services/account.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 
 @Component({
   selector: 'account-switch',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule],
   providers: [],
   templateUrl: './account-switch.component.html',
   styleUrl: './account-switch.component.scss'
@@ -15,20 +13,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class AccountSwitchComponent {
 
   private _accountService = inject(AccountService);
-  private _destroyRef = inject(DestroyRef);
 
-  accounts = this._accountService.accounts;
+  accounts = computed(() => this._accountService.accounts.value());
+  accountId = computed(() => this._accountService.selectedAccountId());
+  userMoneyRub = computed(() => this._accountService.userMoneyRub.value());
 
-  userMoneyRub = this._accountService.userMoneyRub;
+  handleChange(event: Event): void {
+    const target = event?.target as HTMLSelectElement;
+    const accountId = target ? parseInt(target?.value) : null;
 
-  form = new FormGroup({
-    accountId: new FormControl(this._accountService.selectedAccountId()),
-  });
-
-  constructor() {
-    this.form.valueChanges.pipe(
-      takeUntilDestroyed(this._destroyRef)
-    ).subscribe((values) => this._accountService.setSelectedAccount(values.accountId ?? null));
+    if (accountId) {
+      this._accountService.setSelectedAccount(accountId);
+    }
   }
 
 }

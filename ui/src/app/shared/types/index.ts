@@ -272,7 +272,7 @@ export interface ComponentRate {
 }
 
 export interface BacktestRateItem {
-  total: number;
+  rate: number;
   macd: ComponentRate | null;
   rsi: ComponentRate | null;
   tech: ComponentRate | null;

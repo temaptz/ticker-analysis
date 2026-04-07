@@ -18,10 +18,12 @@ export class AccountService {
 
   userMoneyRub = resource({
     defaultValue: 0,
-    loader: () => {
-      const accountId = this.selectedAccountId();
-      if (!accountId) return Promise.resolve(0);
-      return firstValueFrom(this.api.getUserMoneyRub(accountId));
+    params: () => ({
+      accountId: this.selectedAccountId()
+    }),
+    loader: (params) => {
+      if (!params?.params?.accountId) return Promise.resolve(0);
+      return firstValueFrom(this.api.getUserMoneyRub(params.params.accountId));
     },
   });
 
@@ -33,7 +35,7 @@ export class AccountService {
   private loadAccountId(): number | null {
     try {
       const stored = localStorage.getItem(this.lsKey);
-      if (stored) return JSON.parse(stored);
+      if (stored) return +JSON.parse(stored);
     } catch (e) {
       console.error('ERROR loadAccountId', e);
     }

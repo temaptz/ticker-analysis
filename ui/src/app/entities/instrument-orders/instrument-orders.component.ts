@@ -1,4 +1,4 @@
-import { Component, inject, input, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, input, signal, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -42,6 +42,14 @@ export class InstrumentOrdersComponent implements OnInit {
   activeOrdersSell = computed(() =>
     this.activeOrders().filter(o => o.direction === 2)
   );
+
+  constructor() {
+    effect(() => {
+      if (this.accountService.selectedAccountId()) {
+        this.loadAll();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.loadAll();

@@ -1,9 +1,8 @@
 import datetime
-from lib import logger, learn, cache, predictions_cache
+from lib import logger, learn, cache, predictions_cache, date_utils
 from lib.learn import enum
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_volume_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     prediction = None
@@ -26,7 +25,6 @@ def get_volume_buy_rate(instrument_uid: str, date: datetime.datetime or None = N
     }
 
 
-@cache.ttl_cache(ttl=3600, is_skip_empty=True)
 def get_volume_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     prediction = None
@@ -48,8 +46,10 @@ def get_volume_sell_rate(instrument_uid: str, date: datetime.datetime or None = 
         },
     }
 
+
+@cache.ttl_cache(ttl=3600)
 def _get_prediction(instrument_uid: str, date: datetime.datetime or None = None):
-    if not date:
+    if not date or date_utils.is_same_day(a=date, b=date_utils.get_day_prediction_time()):
         if (cached := predictions_cache.get_classifier_prediction_cache(
             instrument_uid=instrument_uid,
             model_name=learn.model.TA_3_volume,

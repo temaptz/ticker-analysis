@@ -16,7 +16,7 @@ import { BacktestTotalComponent } from './components/total/total.component';
 import { GRAPH_COLORS } from '../../shared/const';
 
 const EMPTY_BACKTEST_ITEM: BacktestRateItem = {
-  total: 0,
+  rate: 0,
   macd: null,
   rsi: null,
   tech: null,

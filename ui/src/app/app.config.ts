@@ -25,7 +25,10 @@ export const appConfig: ApplicationConfig = {
         const oauthService = inject(OAuthService);
         oauthService.configure(authConfig);
         oauthService.setupAutomaticSilentRefresh();
-        return oauthService.loadDiscoveryDocumentAndTryLogin();
+        return oauthService.loadDiscoveryDocumentAndTryLogin().catch((e) => {
+          console.error('Failed to load discovery document', e);
+          return of();
+        });
       }
       return of();
     }),

@@ -19,7 +19,6 @@ def get_consensus_buy_rate(instrument_uid: str, account_id: str, date: datetime.
     }
 
 
-@cache.ttl_cache(ttl=3600)
 def get_consensus_sell_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None):
     final_rate = 0
 

@@ -19,7 +19,7 @@ import { WeightsService } from '../../../../shared/services/weights.service';
         <div class="rate-label" [style.color]="color">consensus</div>
         <weight-indicator [weight]="weight()"/>
       </div>
-      <vertical-scale [color]="color" [value]="rateData()?.profit?.rate ?? 0"/>
+      <vertical-scale [color]="color" [value]="rateData()?.consensus?.rate ?? 0"/>
     </div>
   `,
   styles: [`

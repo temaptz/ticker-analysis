@@ -26,9 +26,10 @@ def get_tech_buy_rate(instrument_uid: str, date: datetime.datetime or None = Non
             day_rate = None
 
             if (pred := predictions.get_prediction(
-                    instrument_uid=instrument_uid,
-                    date_target=day,
-                    model_name=learn.model.TA_3_tech,
+                instrument_uid=instrument_uid,
+                date_target=day,
+                model_name=learn.model.TA_3_tech,
+                is_only_cache=True,
             )) or pred == 0:
                 is_no_predictions = False
 
@@ -42,7 +43,7 @@ def get_tech_buy_rate(instrument_uid: str, date: datetime.datetime or None = Non
             predictions_list.append(utils.round_float(pred, 3) if (pred or pred == 0) else None)
             days_rates.append(day_rate)
 
-        final_rate = max(days_rates)
+        final_rate = max([r for r in days_rates if r is not None], default=0)
 
         final_rate_value = 0 if is_no_predictions else max(0, min(final_rate, 1))
 
@@ -82,6 +83,7 @@ def get_tech_sell_rate(instrument_uid: str, date: datetime.datetime or None = No
                 instrument_uid=instrument_uid,
                 date_target=day,
                 model_name=learn.model.TA_3_tech,
+                is_only_cache=True,
             )
 
             predictions_list.append(utils.round_float(pred or 0, 3))

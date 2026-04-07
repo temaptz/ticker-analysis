@@ -9,7 +9,6 @@ import { OAuthService } from 'angular-oauth2-oidc';
 export class AuthService {
 
   private _lsKey = 'auth_token';
-  private _lsToken: string | null = null;
 
   private _oauthService = inject(OAuthService);
 

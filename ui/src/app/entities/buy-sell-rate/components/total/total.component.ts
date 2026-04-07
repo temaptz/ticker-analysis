@@ -19,7 +19,7 @@ import { VerticalScaleComponent } from '../../../../shared/components/vertical-s
             [matTooltip]="getTooltip(data)"
             matTooltipClass="rate-tooltip"
           >
-            {{ data.total | number:'1.2-2' }}
+            {{ data.rate | number:'1.2-2' }}
           </div>
           <div class="rate-label" [style.color]="color">итого</div>
         } @else {
@@ -27,7 +27,7 @@ import { VerticalScaleComponent } from '../../../../shared/components/vertical-s
           <div class="rate-label" [style.color]="color">итого</div>
         }
       </div>
-      <vertical-scale [color]="color" [value]="rateData()?.total ?? 0"/>
+      <vertical-scale [color]="color" [value]="rateData()?.rate ?? 0"/>
     </div>
   `,
   styles: [`
@@ -60,15 +60,15 @@ export class BacktestTotalComponent {
   readonly isBuy = input.required<boolean>();
   color = GRAPH_COLORS.total_rate;
   getTooltip(data: BacktestRateItem): string {
-    const components = { 
-      macd: data.macd?.rate ?? 0, 
-      rsi: data.rsi?.rate ?? 0, 
-      tech: data.tech?.rate ?? 0, 
-      news: data.news?.rate ?? 0, 
-      fundamental: data.fundamental?.rate ?? 0, 
-      volume: data.volume?.rate ?? 0, 
-      profit: data.profit?.rate ?? 0 
+    const components = {
+      macd: data.macd?.rate ?? 0,
+      rsi: data.rsi?.rate ?? 0,
+      tech: data.tech?.rate ?? 0,
+      news: data.news?.rate ?? 0,
+      fundamental: data.fundamental?.rate ?? 0,
+      volume: data.volume?.rate ?? 0,
+      profit: data.profit?.rate ?? 0
     };
-    return `Total: ${data.total}\n\nComponents:\n${JSON.stringify(components, null, 2)}`;
+    return `Total: ${data.rate}\n\nComponents:\n${JSON.stringify(components, null, 2)}`;
   }
 }

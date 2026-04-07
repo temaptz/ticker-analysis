@@ -1,22 +1,49 @@
 import datetime
+import time
 
 from lib import agent, db_2, logger, cache
 
-CACHE_TTL_SEC = 3600
+CACHE_TTL_SEC = 60
 
 @cache.ttl_cache(ttl=CACHE_TTL_SEC, is_skip_empty=True, cache_salt='__')
 def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
-    macd_rated = agent.macd.macd_buy_rate(instrument_uid=instrument_uid, date=date)
-    rsi_rated = agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid, date=date)
-    tech_rated = agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid, date=date)
-    news_rated = agent.news.get_news_buy_rate(instrument_uid=instrument_uid, date=date)
-    fundamental_rated = agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid, date=date)
-    volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid, date=date)
-    profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
-    consensus_rated = agent.consensus.get_consensus_buy_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
 
+    t0 = time.time()
+    macd_rated = agent.macd.macd_buy_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[BUY] macd: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    rsi_rated = agent.rsi.rsi_buy_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[BUY] rsi: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    tech_rated = agent.tech.get_tech_buy_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[BUY] tech: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    news_rated = agent.news.get_news_buy_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[BUY] news: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    fundamental_rated = agent.fundamental.get_fundamental_buy_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[BUY] fundamental: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    volume_rated = agent.volume.get_volume_buy_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[BUY] volume: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    profit_rated = agent.profit.get_profit_buy_rate(instrument_uid=instrument_uid, account_id=account_id)
+    # print(f'[BUY] profit: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    consensus_rated = agent.consensus.get_consensus_buy_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
+    # print(f'[BUY] consensus: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
     weights = get_buy_weights()
+    # print(f'[BUY] weights: {time.time() - t0:.3f}s')
 
     if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated and consensus_rated:
         macd_rated_value = macd_rated.get('rate', None)
@@ -59,7 +86,7 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
             )
 
     return {
-        'total': final_rate,
+        'rate': final_rate,
         'macd': macd_rated,
         'rsi': rsi_rated,
         'tech': tech_rated,
@@ -74,16 +101,42 @@ def get_total_buy_rate(instrument_uid: str, account_id: str, date: datetime.date
 @cache.ttl_cache(ttl=CACHE_TTL_SEC, is_skip_empty=True, cache_salt='__')
 def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
-    macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid, date=date)
-    rsi_rated = agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid, date=date)
-    tech_rated = agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid, date=date)
-    news_rated = agent.news.get_news_sell_rate(instrument_uid=instrument_uid, date=date)
-    fundamental_rated = agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid, date=date)
-    volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid, date=date)
-    profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
-    consensus_rated = agent.consensus.get_consensus_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
 
+    t0 = time.time()
+    macd_rated = agent.macd.macd_sell_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[SELL] macd: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    rsi_rated = agent.rsi.rsi_sell_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[SELL] rsi: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    tech_rated = agent.tech.get_tech_sell_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[SELL] tech: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    news_rated = agent.news.get_news_sell_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[SELL] news: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    fundamental_rated = agent.fundamental.get_fundamental_sell_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[SELL] fundamental: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    volume_rated = agent.volume.get_volume_sell_rate(instrument_uid=instrument_uid, date=date)
+    # print(f'[SELL] volume: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    profit_rated = agent.profit.get_profit_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
+    # print(f'[SELL] profit: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
+    consensus_rated = agent.consensus.get_consensus_sell_rate(instrument_uid=instrument_uid, account_id=account_id, date=date)
+    # print(f'[SELL] consensus: {time.time() - t0:.3f}s')
+
+    t0 = time.time()
     weights = get_sell_weights()
+    # print(f'[SELL] weights: {time.time() - t0:.3f}s')
 
     if macd_rated and rsi_rated and tech_rated and news_rated and fundamental_rated and volume_rated and profit_rated and consensus_rated:
         macd_rated_value = macd_rated.get('rate', None)
@@ -126,7 +179,7 @@ def get_total_sell_rate(instrument_uid: str, account_id: str, date: datetime.dat
             )
 
     return {
-        'total': final_rate,
+        'rate': final_rate,
         'macd': macd_rated,
         'rsi': rsi_rated,
         'tech': tech_rated,

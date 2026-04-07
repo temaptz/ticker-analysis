@@ -6,7 +6,6 @@ from t_tech.invest.schemas import IndicatorInterval
 NEWS_CANDLES_COUNT = 7
 
 
-@cache.ttl_cache(ttl=3600)
 def get_news_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     influence_score = None
@@ -38,7 +37,6 @@ def get_news_buy_rate(instrument_uid: str, date: datetime.datetime or None = Non
     }
 
 
-@cache.ttl_cache(ttl=3600)
 def get_news_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     influence_score = None
@@ -70,6 +68,7 @@ def get_news_sell_rate(instrument_uid: str, date: datetime.datetime or None = No
     }
 
 
+@cache.ttl_cache(ttl=(3600 * 5))
 def _get_news_influence_score(instrument_uid: str, date: datetime.datetime or None = None) -> float:
     try:
         period = _get_news_period(date=date)
@@ -84,6 +83,8 @@ def _get_news_influence_score(instrument_uid: str, date: datetime.datetime or No
         logger.log_error(method_name='get_news_influence_score', error=e, is_telegram_send=False)
     return 0
 
+
+@cache.ttl_cache(ttl=(3600 * 5))
 def _get_news_count(instrument_uid: str, date: datetime.datetime or None = None) -> int:
     try:
         period = _get_news_period(date=date)
@@ -106,6 +107,7 @@ def _get_news_period(date: datetime.datetime or None = None) -> (datetime.dateti
     return start_date, end_date
 
 
+@cache.ttl_cache(ttl=(3600 * 5))
 def _get_news_graph(instrument_uid: str, date_from: datetime.datetime, date_to: datetime.datetime):
     return [i.get('influence_score') for i in news.news.get_rated_news_graph(
         instrument_uid=instrument_uid,

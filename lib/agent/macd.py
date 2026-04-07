@@ -5,7 +5,6 @@ from t_tech.invest.schemas import IndicatorType, IndicatorInterval
 MACD_CANDLES_COUNT = 7
 
 
-@cache.ttl_cache(ttl=3600)
 def macd_buy_rate(instrument_uid: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     graph = _get_last_macd_hist(instrument_uid=instrument_uid, date=date)
@@ -32,7 +31,6 @@ def macd_buy_rate(instrument_uid: str, date: datetime.datetime or None = None) -
     }
 
 
-@cache.ttl_cache(ttl=3600)
 def macd_sell_rate(instrument_uid: str, date: datetime.datetime or None = None) -> dict:
     final_rate = 0
     graph = _get_last_macd_hist(instrument_uid=instrument_uid, date=date)
@@ -58,6 +56,8 @@ def macd_sell_rate(instrument_uid: str, date: datetime.datetime or None = None) 
         },
     }
 
+
+@cache.ttl_cache(ttl=3600)
 def _get_last_macd_hist(instrument_uid: str, date: datetime.datetime or None = None) -> list[float] or None:
     try:
         now = date or datetime.datetime.now(tz=datetime.timezone.utc)

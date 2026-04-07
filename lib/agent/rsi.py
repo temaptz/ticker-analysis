@@ -5,7 +5,6 @@ from t_tech.invest.schemas import IndicatorType, IndicatorInterval, TechAnalysis
 RSI_CANDLES_COUNT = 7
 
 
-@cache.ttl_cache(ttl=3600)
 def rsi_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     rsi_graph = _get_rsi_graph(instrument_uid=instrument_uid, date=date)
@@ -27,13 +26,12 @@ def rsi_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     }
 
 
-@cache.ttl_cache(ttl=3600)
 def rsi_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     rsi_graph = _get_rsi_graph(instrument_uid=instrument_uid, date=date)
     rsi_value = rsi_graph[-1] if rsi_graph else None
 
-    if rsi_value:
+    if rsi_value is not None:
         if rsi_value > 50:
             final_rate = agent.utils.linear_interpolation(rsi_value, 50, 100, 0.001, 1)
 
@@ -52,6 +50,7 @@ def rsi_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     }
 
 
+@cache.ttl_cache(ttl=3600)
 def _get_rsi_graph(instrument_uid: str, date: datetime.datetime or None = None) -> list[float] or None:
     try:
         now = date or date_utils.get_day_prediction_time(date=datetime.datetime.now(tz=datetime.timezone.utc))

@@ -576,20 +576,13 @@ def get_instrument_active_orders(instrument_uid: str, account_id: str):
 
 
 def create_instrument_order(instrument_uid: str, quantity_lots: int, price_rub: float, is_buy: bool, account_id: str):
-    if is_buy:
-        users.post_buy_order(
-            instrument_uid=instrument_uid,
-            quantity_lots=quantity_lots,
-            price_rub=price_rub,
-            account_id=account_id,
-        )
-    else:
-        users.post_sell_order(
-            instrument_uid=instrument_uid,
-            quantity_lots=quantity_lots,
-            price_rub=price_rub,
-            account_id=account_id,
-        )
+    return users.post_order(
+        instrument_uid=instrument_uid,
+        account_id=account_id,
+        price_rub=price_rub,
+        quantity_lots=quantity_lots,
+        is_buy=is_buy,
+    )
 
 
 def cancel_instrument_order(order_id: str, account_id: Optional[int] = None):
@@ -782,7 +775,7 @@ def total_info(user=Depends(verify_user_by_token)):
 
 @app.get('/accounts')
 def accounts_endpoint(user=Depends(verify_user_by_token)):
-    return [{'id': a.id, 'name': a.name} for a in users.get_accounts()]
+    return [{'id': int(a.id), 'name': a.name} for a in users.get_accounts()]
 
 
 @app.get('/user_money_rub')
@@ -839,10 +832,10 @@ async def create_instrument_order_endpoint(request: Request, user=Depends(verify
             instrument_uid=body.get('instrument_uid'),
             quantity_lots=int(body.get('quantity_lots', 1)),
             price_rub=float(body.get('price_rub')),
-            is_buy=bool(body.get('is_buy', True)),
             account_id=str(body.get('account_id')),
+            is_buy=bool(body.get('is_buy', True)),
         )
-        return result
+        return {'status': 'ok' if result else 'error'}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

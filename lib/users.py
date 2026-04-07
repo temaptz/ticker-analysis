@@ -1,5 +1,6 @@
 import math
 import datetime
+import inspect
 import pytz
 from t_tech.invest import (
     Client,
@@ -13,7 +14,7 @@ from t_tech.invest import (
     Account, PostOrderResponse, OrderType, OrderDirection, OrderState,
 )
 from const import TINKOFF_INVEST_TOKEN
-from lib import cache, instruments, utils, logger, invest_calc, predictions, db_2, agent, serializer
+from lib import cache, instruments, utils, logger, invest_calc, date_utils, db_2, agent, serializer
 
 
 @cache.ttl_cache(ttl=3600)
@@ -54,7 +55,13 @@ def get_user_money_rub(account_id: str) -> float:
     return result
 
 
-def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float, account_id: str) -> PostOrderResponse or None:
+def post_order(
+        instrument_uid: str,
+        account_id: str,
+        price_rub: float,
+        quantity_lots: int,
+        is_buy: bool,
+) -> PostOrderResponse or None:
     try:
         with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
             price_increment = utils.get_price_by_quotation(
@@ -68,47 +75,13 @@ def post_buy_order(instrument_uid: str, quantity_lots: int, price_rub: float, ac
                 price=price,
                 account_id=account_id,
                 order_type=OrderType.ORDER_TYPE_LIMIT,
-                direction=OrderDirection.ORDER_DIRECTION_BUY,
+                direction=(OrderDirection.ORDER_DIRECTION_BUY if is_buy else OrderDirection.ORDER_DIRECTION_SELL),
             ):
                 return order
 
     except Exception as e:
         logger.log_error(
-            method_name='post_buy_order',
-            error=e,
-            debug_info=serializer.to_json({
-                'instrument_name': instruments.get_instrument_by_uid(instrument_uid).name,
-                'quantity_lots': quantity_lots,
-                'price_rub': price_rub,
-                'price_increment': price_increment,
-                'price_quotation': price,
-            }),
-        )
-
-    return None
-
-
-def post_sell_order(instrument_uid: str, quantity_lots: int, price_rub: float, account_id: str) -> PostOrderResponse or None:
-    try:
-        with Client(TINKOFF_INVEST_TOKEN, target=constants.INVEST_GRPC_API) as client:
-            price_increment = utils.get_price_by_quotation(
-                price=instruments.get_instrument_by_uid(uid=instrument_uid).min_price_increment
-            )
-            price = utils.get_quotation_by_price(math.ceil(price_rub / price_increment) * price_increment)
-
-            if order := client.orders.post_order(
-                instrument_id=instrument_uid,
-                quantity=quantity_lots,
-                price=price,
-                account_id=account_id,
-                order_type=OrderType.ORDER_TYPE_LIMIT,
-                direction=OrderDirection.ORDER_DIRECTION_SELL,
-            ):
-                return order
-
-    except Exception as e:
-        logger.log_error(
-            method_name='post_sell_order',
+            method_name='post_order',
             error=e,
             debug_info=serializer.to_json({
                 'instrument_name': instruments.get_instrument_by_uid(instrument_uid).name,
@@ -360,17 +333,17 @@ def sort_instruments_by_total_rate_sell(instruments_list: list[Instrument], acco
 
 
 def _get_agent_rate(rate_fn, instrument_uid: str, account_id: str | None = None) -> float:
-    result = rate_fn(instrument_uid=instrument_uid, account_id=account_id)
-    if result:
-        rate = result.get('rate')
-        if rate or rate == 0:
-            return rate
+    rate = float('-inf')
+    params = inspect.signature(rate_fn).parameters
+    kwargs = dict(instrument_uid=instrument_uid)
 
-        total = result.get('total')
-        if total or total == 0:
-            return total
+    if 'account_id' in params:
+        kwargs['account_id'] = account_id
+    if result := rate_fn(**kwargs):
+        if (r := result.get('rate', None)) is not None:
+            rate = r
 
-    return float('-inf')
+    return rate
 
 
 @cache.ttl_cache(ttl=3600)

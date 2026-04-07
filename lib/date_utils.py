@@ -91,6 +91,10 @@ def get_local_time_log_str(date=None) -> str:
     return (date or datetime.datetime.now()).strftime('%Y-%m-%d_%H-%M-%S')
 
 
+def get_hour_start(date: datetime.datetime) -> datetime.datetime:
+    return date.replace(minute=0, second=0, microsecond=0)
+
+
 def get_day_start(date: datetime.datetime) -> datetime.datetime:
     return date.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -101,3 +105,7 @@ def get_day_end(date: datetime.datetime) -> datetime.datetime:
 
 def get_day_prediction_time(date: datetime.datetime = None) -> datetime.datetime:
     return (date or datetime.datetime.now(datetime.timezone.utc)).replace(hour=11, minute=0, second=0, microsecond=0)
+
+
+def is_same_day(a: datetime.datetime, b: datetime.datetime) -> bool:
+    return a.date() == b.date()

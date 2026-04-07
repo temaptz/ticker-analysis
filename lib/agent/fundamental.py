@@ -1,9 +1,8 @@
 import datetime
-from lib import logger, predictions_cache, learn, cache
+from lib import logger, predictions_cache, learn, cache, date_utils
 from lib.learn import enum
 
 
-@cache.ttl_cache(ttl=(3600 * 24), is_skip_empty=True, cache_salt='__')
 def get_fundamental_buy_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     prediction = None
@@ -26,7 +25,6 @@ def get_fundamental_buy_rate(instrument_uid: str, date: datetime.datetime or Non
     }
 
 
-@cache.ttl_cache(ttl=(3600 * 24), is_skip_empty=True, cache_salt='__')
 def get_fundamental_sell_rate(instrument_uid: str, date: datetime.datetime or None = None):
     final_rate = 0
     prediction = None
@@ -49,8 +47,9 @@ def get_fundamental_sell_rate(instrument_uid: str, date: datetime.datetime or No
     }
 
 
+@cache.ttl_cache(ttl=3600 * 24 * 3, is_skip_empty=True)
 def _get_prediction(instrument_uid: str, date: datetime.datetime or None = None):
-    if not date:
+    if not date or date_utils.is_same_day(a=date, b=date_utils.get_day_prediction_time()):
         if (cached := predictions_cache.get_classifier_prediction_cache(
                 instrument_uid=instrument_uid,
                 model_name=learn.model.TA_3_fundamental,

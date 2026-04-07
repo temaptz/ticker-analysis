@@ -1,20 +1,12 @@
-@if (accounts.hasValue()) {
-  @let accountsList = accounts.value();
-  <div [formGroup]="form" class="account-section">
-    <p class="account-label">Портфель</p>
-    <select
-      class="account-select"
-      formControlName="accountId"
-    >
-      @for (account of accountsList; track account.id) {
-        <option [value]="account.id">{{ account.name }}</option>
-      }
-    </select>
-
-    @if (userMoneyRub.value() !== undefined) {
-      <p class="account-balance">Баланс: {{ userMoneyRub.value() | number:'1.2-2' }} ₽</p>
-    } @else if (userMoneyRub.isLoading()) {
-      <p class="account-balance">Загрузка баланса...</p>
+<div class="account-section">
+  <p class="account-label">Портфель</p>
+  <select class="account-select" (change)="handleChange($event)">
+    @for (account of accounts(); track account.id) {
+      <option [value]="account.id" [selected]="account.id === accountId()">{{ account.name }}</option>
     }
-  </div>
-}
+  </select>
+
+  @let money = userMoneyRub();
+
+  <p class="account-balance">Баланс: {{ money ? (money | number:'1.2-2') : '-' }} ₽</p>
+</div>
