@@ -1,6 +1,6 @@
 import { Component, ViewChild, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { subDays } from 'date-fns';
+import { addDays, subDays } from 'date-fns';
 import { InstrumentSelectComponent } from '../../entities/instrument-select/instrument-select.component';
 import { BacktestGraphComponent } from '../../entities/backtest-graph/backtest-graph.component';
 import { BuySellRateComponent } from '../../entities/buy-sell-rate/buy-sell-rate.component';
@@ -43,5 +43,13 @@ export class BacktestComponent {
 
   onGraphClick(date: Date): void {
     this.selectedDate.set(date);
+  }
+
+  handlePrevDay(): void {
+    this.selectedDate.update((date) => subDays(date, 1));
+  }
+
+  handleNextDay(): void {
+    this.selectedDate.update((date) => addDays(date, 1));
   }
 }

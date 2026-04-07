@@ -28,8 +28,10 @@
         </div>
 
         <div class="selected-date-display">
+          <button (click)="handlePrevDay()"><</button>
           <span class="date-label">Выбранная дата:</span>
           <span class="date-value">{{ selectedDate() | date:'dd MMMM yyyy' }}</span>
+          <button (click)="handleNextDay()">></button>
         </div>
 
         <div class="result-section">
