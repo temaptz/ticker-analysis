@@ -361,13 +361,13 @@ def instrument_prediction_consensus(uid: Optional[str], date_str: Optional[str])
     return resp
 
 
-def instrument_balance(uid: Optional[str], account_id: Optional[int] = None):
+def instrument_balance(uid: Optional[str], account_id: Optional[str] = None):
     if not uid:
         return None
     return users.get_user_instrument_balance(instrument_uid=uid, account_id=account_id)
 
 
-def instrument_operations(figi: Optional[str], account_id: Optional[int] = None):
+def instrument_operations(figi: Optional[str], account_id: Optional[str] = None):
     if not figi or not account_id:
         return None
     return users.get_user_instrument_operations(instrument_figi=figi, account_id=account_id)
@@ -706,16 +706,14 @@ def instrument_prediction_consensus_endpoint(request: Request, user=Depends(veri
 def instrument_balance_endpoint(request: Request, user=Depends(verify_user_by_token)):
     uid = request.query_params.get('uid')
     account_id = request.query_params.get('account_id')
-    account_id_int = int(account_id) if account_id else None
-    return instrument_balance(uid, account_id_int)
+    return instrument_balance(uid, account_id)
     
 
 @app.get('/instrument/operations')
 def instrument_operations_endpoint(request: Request, user=Depends(verify_user_by_token)):
     figi = request.query_params.get('figi')
     account_id = request.query_params.get('account_id')
-    account_id_int = int(account_id) if account_id else None
-    return instrument_operations(figi, account_id_int)
+    return instrument_operations(figi, account_id)
     
 
 @app.get('/instrument/news_list_rated')

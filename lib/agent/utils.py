@@ -98,7 +98,7 @@ def linear_interpolation(x: float, a: float, b: float, y0: float, y1: float) -> 
 
 
 def get_buy_balance_multiply(buy_rate: float) -> float:
-    if 0.7 < buy_rate <= 0.9:
+    if 0.7 <= buy_rate <= 0.9:
         return linear_interpolation(buy_rate, 0.7, 0.9, 0.1, 0.5)
     elif 0.9 < buy_rate <= 1:
         return 0.5
@@ -107,10 +107,8 @@ def get_buy_balance_multiply(buy_rate: float) -> float:
 
 
 def get_sell_balance_multiply(sell_rate: float) -> float:
-    if 0 < sell_rate <= 0.7:
-        return linear_interpolation(sell_rate, 0, 0.7, 0.01, 0.25)
-    elif 0.7 < sell_rate <= 0.9:
-        return linear_interpolation(sell_rate, 0.7, 0.9, 0.25, 1)
+    if 0.7 <= sell_rate <= 0.9:
+        return linear_interpolation(sell_rate, 0.7, 0.9, 0.5, 1)
     elif 0.9 < sell_rate <= 1:
         return 1
 

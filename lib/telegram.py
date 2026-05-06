@@ -4,7 +4,7 @@ from lib import docker
 
 
 def get_bot_url() -> str:
-    return 'https://api.telegram.org/bot' + const.TELEGRAM_BOT_API_KEY
+    return 'http://urvanov.pro:8083/bot' + const.TELEGRAM_BOT_API_KEY
 
 
 def send_message(message: str) -> None:
