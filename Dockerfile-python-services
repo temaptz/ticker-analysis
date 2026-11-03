@@ -17,7 +17,9 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 COPY ./requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt --index-url https://mirror.yandex.ru/pypi/web/simple/
+RUN pip install --no-cache-dir -r requirements.txt \
+    --index-url https://mirror.yandex.ru/pypi/web/simple/ \
+    --extra-index-url https://pypi.org/simple/
 
 
 FROM requirements
