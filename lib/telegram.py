@@ -4,7 +4,9 @@ from lib import docker
 
 
 def get_bot_url() -> str:
-    return 'http://api.telegram.org/bot' + const.TELEGRAM_BOT_API_KEY
+    return 'https://api.telegram.org/bot' + const.TELEGRAM_BOT_API_KEY
+
+PROXIES = {}
 
 
 def send_message(message: str) -> None:
@@ -16,6 +18,7 @@ def send_message(message: str) -> None:
             requests.post(
                 url=get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
                 timeout=30,
+                proxies=PROXIES,
             )
             print('TELEGRAM SENT MESSAGE', message)
     except Exception as e:
@@ -27,7 +30,8 @@ def get_updates(offset_update_id: int = None) -> list:
         res = requests.get(
             get_bot_url()
             + '/getUpdates'
-            + (('?offset=' + str(offset_update_id)) if offset_update_id else '')
+            + (('?offset=' + str(offset_update_id)) if offset_update_id else ''),
+            proxies=PROXIES,
         )
 
         if res:
