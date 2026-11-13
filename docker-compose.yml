@@ -149,7 +149,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:alpine  # или другая стабильная версия PostgreSQL
+    image: dockerhub.timeweb.cloud/library/postgres:alpine  # или другая стабильная версия PostgreSQL
     container_name: postgres
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -168,7 +168,7 @@ services:
     restart: unless-stopped
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dockerhub.timeweb.cloud/dpage/pgadmin4:latest
     container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: temaptz@gmail.com
@@ -178,7 +178,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:alpine
+    image: dockerhub.timeweb.cloud/library/redis:alpine
     container_name: redis
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
@@ -189,7 +189,7 @@ services:
     restart: unless-stopped
 
   nginx-proxy:
-    image: nginx:latest
+    image: dockerhub.timeweb.cloud/library/nginx:latest
     volumes:
       - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
       - ./cert:/etc/nginx/cert:ro

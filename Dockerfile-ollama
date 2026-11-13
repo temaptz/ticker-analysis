@@ -1,4 +1,4 @@
-FROM ollama/ollama:latest
+FROM dockerhub.timeweb.cloud/ollama/ollama:latest
 
 WORKDIR /app
 
