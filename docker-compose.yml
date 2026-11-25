@@ -155,7 +155,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: dockerhub.timeweb.cloud/library/postgres:alpine  # или другая стабильная версия PostgreSQL
+    image: dockerhub.timeweb.cloud/library/postgres:17-alpine
     container_name: postgres
     volumes:
       - pg_data:/var/lib/postgresql/data

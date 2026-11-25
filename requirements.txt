@@ -38,3 +38,4 @@ ipython
 sentry_sdk
 plotille
 python-jose[cryptography]
+openai
