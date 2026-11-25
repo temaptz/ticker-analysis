@@ -1,4 +1,6 @@
 import os
+
+from langchain_community.chat_models import ChatOpenAI
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
@@ -20,7 +22,8 @@ tools = [
 checkpointer = MemorySaver()
 
 model_name = os.getenv('OLLAMA_MODEL_NAME')
-llm = ChatOllama(
+
+llm_local = ChatOllama(
     base_url=f'http://{'ollama' if docker.is_docker() else 'localhost'}:11434',
     model=model_name,
     verbose=True,
@@ -28,7 +31,17 @@ llm = ChatOllama(
     num_ctx=16384,
     temperature=0.01,
 ) if model_name else None
-llm_with_tools = llm.bind_tools(tools=tools) if llm else None
+
+llm_remote = ChatOpenAI(
+    base_url=os.getenv('OPENAI_BASE_URL'),
+    api_key=os.getenv('OPENAI_API_KEY'),
+    model=os.getenv('LLM_MODEL_NAME'),
+    verbose=True,
+    name='llm_remote',
+    temperature=0.1,
+) if model_name else None
+
+llm_with_tools = llm_local.bind_tools(tools=tools) if llm_local else None
 # llm_agent = create_react_agent(
 #     llm=llm,
 #     tools=tools,

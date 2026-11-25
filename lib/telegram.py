@@ -1,3 +1,4 @@
+import os
 import requests
 import const
 from lib import docker
@@ -6,7 +7,10 @@ from lib import docker
 def get_bot_url() -> str:
     return 'https://api.telegram.org/bot' + const.TELEGRAM_BOT_API_KEY
 
-PROXIES = {}
+
+def get_proxies() -> dict | None:
+    proxy_url = os.getenv('TELEGRAM_PROXY', '')  # логин/пароль только в .env
+    return {'http': proxy_url, 'https': proxy_url} if proxy_url else None
 
 
 def send_message(message: str) -> None:
@@ -18,7 +22,7 @@ def send_message(message: str) -> None:
             requests.post(
                 url=get_bot_url() + '/sendMessage?chat_id=' + str(chat_id) + '&text=' + message,
                 timeout=30,
-                proxies=PROXIES,
+                proxies=get_proxies(),
             )
             print('TELEGRAM SENT MESSAGE', message)
     except Exception as e:
@@ -31,7 +35,7 @@ def get_updates(offset_update_id: int = None) -> list:
             get_bot_url()
             + '/getUpdates'
             + (('?offset=' + str(offset_update_id)) if offset_update_id else ''),
-            proxies=PROXIES,
+            proxies=get_proxies(),
         )
 
         if res:

@@ -1,4 +1,4 @@
-FROM node:20-slim AS deps
+FROM dockerhub.timeweb.cloud/library/node:20-slim AS deps
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ COPY package.json .
 RUN npm install --force
 
 
-FROM node:20-slim AS build
+FROM dockerhub.timeweb.cloud/library/node:20-slim AS build
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN sed -i "s|{AUTHENTIK_CLIENT_ID}|$AUTHENTIK_CLIENT_ID|g" /app/src/app/auth.co
 
 RUN npm run build
 
-FROM nginx:1.27-alpine
+FROM dockerhub.timeweb.cloud/library/nginx:1.27-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY htpasswd /etc/nginx/.htpasswd

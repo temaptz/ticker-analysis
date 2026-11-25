@@ -157,7 +157,7 @@ def instrument_recommendation_create(state: State) -> State:
 
         print('RECOMMENDATION CREATE PROMPT', prompt)
 
-        if response := llm.llm.with_structured_output(SellRecommendation).invoke(
+        if response := llm.llm_local.with_structured_output(SellRecommendation).invoke(
                 [
                     SystemMessage(content=agent.prompts.get_system_invest_prompt()),
                     SystemMessage(content=agent.prompts.get_missed_data_prompt()),
@@ -179,7 +179,7 @@ def instrument_recommendation_create(state: State) -> State:
 def final_parser(state: State) -> State:
     result: State = {}
 
-    if response := llm.llm.with_structured_output(StructuredResult).invoke(
+    if response := llm.llm_local.with_structured_output(StructuredResult).invoke(
             [HumanMessage(content=serializer.to_json(i)) for i in state.get('instruments_recommendations', [])],
             config=llm.config
     ):

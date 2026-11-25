@@ -19,9 +19,10 @@ from lib import (
     # utils,
     # date_utils,
     # yandex_disk,
-    # agent,
+    agent,
     # invest_calc,
-    # learn,
+    learn,
+    instruments
 )
 from lib.db_2 import init, db_utils, predictions_db
 # from lib.learn import model
@@ -41,7 +42,13 @@ else:
 
     # schedule_llm.test_run()
 
-    # learn.consensus.learn()
+    uid = instruments.get_instrument_by_ticker(ticker='MAGN').uid
+    print(agent.buy.get_buy_recommendation_by_uid(instrument_uid=uid, account_id='2165141843'))
+    # print(agent.utils.get_buy_price(instrument_uid=uid, l_level=1))
+    # print(agent.utils.get_buy_price(instrument_uid=uid, l_level=2))
+    # print(agent.utils.get_buy_price(instrument_uid=uid, l_level=3))
+
+    # learn.ta_consensus_learn.generate_data()
 
     # agent.get_invest_recommendation()
     # agent.instrument_rank_buy.update_recommendations()

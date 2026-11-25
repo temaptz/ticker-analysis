@@ -13,8 +13,8 @@ services:
     depends_on:
       - redis
       - postgres
-    environment:
-      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
+    env_file:
+      - .env
     restart: unless-stopped
 
   learn:
@@ -31,6 +31,8 @@ services:
     depends_on:
       - redis
       - postgres
+    env_file:
+      - .env
     restart: no
 
   predict:
@@ -47,6 +49,8 @@ services:
     depends_on:
       - redis
       - postgres
+    env_file:
+      - .env
     restart: no
 
   news:
@@ -63,6 +67,8 @@ services:
       - redis
       - postgres
       - ollama
+    env_file:
+      - .env
     restart: no
 
   apiserver:
@@ -88,8 +94,8 @@ services:
     depends_on:
       - redis
       - postgres
-    environment:
-      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
+    env_file:
+      - .env
     restart: unless-stopped
 
   mcp:
@@ -108,8 +114,8 @@ services:
     depends_on:
       - redis
       - postgres
-    environment:
-      - OLLAMA_MODEL_NAME=${OLLAMA_MODEL_NAME}
+    env_file:
+      - .env
     restart: unless-stopped
 
   ui:

@@ -16,7 +16,6 @@ import {
   PredictionGraph,
   PredictionGraphResp,
   PredictionHistoryGraphResp,
-  TechAnalysisGraphItem,
   TechAnalysisOptions,
   TechAnalysisResp,
 } from '../../shared/types';
@@ -339,118 +338,6 @@ export class ComplexGraphComponent {
         getPriceByQuotation(i.low) ?? 0,   // low
         getPriceByQuotation(i.high) ?? 0   // high
       ]) ?? [],
-    } as echarts.SeriesOption;
-  });
-
-  seriesTa_1 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_1] ?? [];
-
-    return {
-      name: 'Предсказания TA_1',
-      type: 'line',
-      showSymbol: true,
-      symbol: 'circle',
-      symbolSize: 2.5,
-      itemStyle: {
-        color: GRAPH_COLORS.ta_1
-      },
-      lineStyle: {
-        width: 1,
-      },
-      encode: {
-        x: 0,
-        y: 1,
-        tooltip: 2,
-      },
-      data: predictions?.map(i => [
-        parseJSON(i.date),
-        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        this.formatPredictionTooltip(i)
-      ]) ?? []
-    } as echarts.SeriesOption;
-  });
-
-  seriesTa_1_1 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_1_1] ?? [];
-
-    return {
-      name: 'Предсказания TA_1_1',
-      type: 'line',
-      showSymbol: true,
-      symbol: 'circle',
-      symbolSize: 2.5,
-      itemStyle: {
-        color: GRAPH_COLORS.ta_1_1
-      },
-      lineStyle: {
-        width: 1,
-      },
-      encode: {
-        x: 0,
-        y: 1,
-        tooltip: 2,
-      },
-      data: predictions?.map(i => [
-        parseJSON(i.date),
-        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        this.formatPredictionTooltip(i)
-      ]) ?? []
-    } as echarts.SeriesOption;
-  });
-
-  seriesTa_1_2 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_1_2] ?? [];
-
-    return {
-      name: 'Предсказания TA_1_2',
-      type: 'line',
-      showSymbol: true,
-      symbol: 'circle',
-      symbolSize: 2.5,
-      itemStyle: {
-        color: GRAPH_COLORS.ta_1_2
-      },
-      lineStyle: {
-        width: 1,
-      },
-      encode: {
-        x: 0,
-        y: 1,
-        tooltip: 2,
-      },
-      data: predictions?.map(i => [
-        parseJSON(i.date),
-        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        this.formatPredictionTooltip(i)
-      ]) ?? []
-    } as echarts.SeriesOption;
-  });
-
-  seriesTa_2 = computed<echarts.SeriesOption>(() => {
-    const predictions = this.predictionResp()?.[ModelNameEnum.Ta_2] ?? [];
-
-    return {
-      name: 'Предсказания TA_2',
-      type: 'line',
-      showSymbol: true,
-      symbol: 'circle',
-      symbolSize: 2.5,
-      itemStyle: {
-        color: GRAPH_COLORS.ta_2
-      },
-      lineStyle: {
-        width: 1,
-      },
-      encode: {
-        x: 0,
-        y: 1,
-        tooltip: 2,
-      },
-      data: predictions?.map(i => [
-        parseJSON(i.date),
-        getRoundPrice(i.prediction > 0 ? i.prediction : 0),
-        this.formatPredictionTooltip(i)
-      ]) ?? []
     } as echarts.SeriesOption;
   });
 
@@ -795,10 +682,6 @@ export class ComplexGraphComponent {
 
       if (this.isShowModelsGraph()) {
         series.push(
-          this.seriesTa_1(),
-          this.seriesTa_1_1(),
-          this.seriesTa_1_2(),
-          this.seriesTa_2(),
           this.seriesTa_2_1(),
           this.seriesTa_3_tech(),
         );

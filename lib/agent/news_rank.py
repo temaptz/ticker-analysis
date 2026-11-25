@@ -51,7 +51,7 @@ def rank_last_news():
                     print('NEWS RATE GRAPH RESULT', result)
 
 
-                    if structured_response := result.get('structured_response', None):
+                    if (structured_response := result.get('structured_response', None)) and structured_response is not None:
                         sentiment = structured_response.get('sentiment', None)
                         impact_strength = structured_response.get('impact_strength', None)
                         mention_focus = structured_response.get('mention_focus', None)
@@ -151,7 +151,7 @@ def sentiment_rate(state: State):
                 {news_text}
                 '''
 
-                if result := agent.llm.llm.with_structured_output(Value).invoke(
+                if result := agent.llm.llm_remote.with_structured_output(Value).invoke(
                         [
                             SystemMessage(content=main_news_prompt),
                             HumanMessage(content=prompt),
@@ -192,7 +192,7 @@ def impact_strength_rate(state: State):
                 {news_text}
                 '''
 
-                if result := agent.llm.llm.with_structured_output(Value).invoke(
+                if result := agent.llm.llm_remote.with_structured_output(Value).invoke(
                         [
                             SystemMessage(content=main_news_prompt),
                             HumanMessage(content=prompt),
@@ -235,7 +235,7 @@ def mention_focus_rate(state: State):
                 {news_text}
                 '''
 
-                if result := agent.llm.llm.with_structured_output(Value).invoke(
+                if result := agent.llm.llm_remote.with_structured_output(Value).invoke(
                         [
                             SystemMessage(content=main_news_prompt),
                             HumanMessage(content=prompt),
